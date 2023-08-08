@@ -1,0 +1,44 @@
+= SOARCA Executer Module
+
+SOARCA is extendable by modules. Modules allow for new steps in playbook and added capability. 
+
+== Requirements
+Modules should be build in GO or Python and contain the following components.
+
+. CACAO template to allow their capability to extend coarse of actions playbooks.
+. protocol buffer implementation to communicate with the SOARCA executer.
+
+---
+
+== Protocol buffer interface
+
+Protocol buffer 
+
+
+``` proto
+syntax = "proto3";
+package module;
+
+message Command {
+    repeated string command = 1;
+    repeated string variable = 2;
+    optional Result result = 3;
+}
+
+message Return {
+    enum Result {
+        OK = 0;
+        RESPONSE = 1;
+        ERROR = 2;
+    }
+    optional Result result = 1
+    optional int code = 2;
+    optional string message = 3;
+}
+```
+
+
+== Project structure
+
+== Loading your module
+

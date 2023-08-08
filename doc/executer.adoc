@@ -1,0 +1,89 @@
+= SOARCA Executer design
+
+The document contains the design considerations of the executer of SOARCA
+
+== Components
+
+The executer consists of 3 components. 
+
+. The playbook decomposer (parser)
+. The command executor
+. The command queue
+
+
+[plantuml, target=soar-ca-executer-components]
+....
+@startuml
+
+package "Controller" {
+component Decomposer as parser
+component Queue as queue
+}
+package "Executor" {
+component Executor2 as exe2
+component Executor1 as exe1
+}
+parser -- queue
+queue -- Executor
+@enduml
+....
+
+
+
+== Executor interface
+
+[plantuml, target=soar-ca-executer-interface]
+....
+@startuml
+
+interface IExecutor {
+    void Do(Step)
+    void RegisterOnCompletionHandler(OnCompletion)
+    void SetState(State)
+}
+
+struct State{
+    stopped
+    running
+    paused
+}
+
+
+struct Step {
+    type
+    name
+    description
+    external_reference
+    delay
+    timeout
+    step_variable
+    owner
+    on_completion
+    on_succes
+    on_failure
+    step_extensions
+}
+
+
+interface IModule {
+    void Execute(command, variable, module)
+    void RegisterOnCompletionHandler(OnCompletion)
+}
+
+
+class Executor 
+class Module
+protocol ProtoBuffer
+
+IExecutor <|.. Executor
+Executor -> IModule
+IModule <|.. Module
+Module - ProtoBuffer
+
+
+@enduml
+....
+
+
+== Sequences 
+
