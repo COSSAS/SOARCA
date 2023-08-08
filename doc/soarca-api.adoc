@@ -1,0 +1,792 @@
+# SOAR-CA API 
+
+This document describes the SOAR-CA API 
+
+
+We will use HTTP status codes https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
+
+
+
+[plantuml, target=soar-ca-sequences-ui-api]
+....
+@startuml
+participant "GUI" as gui
+participant "TAXII server" as caller
+control "SOAR-CA API" as api
+control "controller" as controller
+database "Mongo" as db
+control "Executor" as exe
+control "Assets" as asset
+control "SSH-module" as ssh
+
+caller -> api : STIX message
+api -> controller : start STIX workflow for malicious url
+controller -> db : get workflow #xxx
+controller <-- db : return
+controller -> exe : executeworkflow #xxx
+exe -> asset : execute workflow step asset
+exe <-- asset : return affected assets
+
+exe -> exe : get coa's for workflow/ assets
+controller <- exe : return coa's
+
+... determine automatic coa execution ...
+
+gui -> api : /operator/coa/coa-id
+api -> controller : schedule coa execution
+controller -> controller : determine step batch size
+controller -> exe : execute coa 
+exe -> ssh : get url from log
+exe <-- ssh : return result
+controller <-- exe : results
+
+
+
+
+
+
+
+
+@enduml
+....
+
+[plantuml, target=soar-ca-classes, format=png]
+....
+@startuml
+protocol UiEndpoint {
+    GET     /workflow
+    POST    /workflow
+    GET     /workflow/workflow-id
+    PUT     /workflow/workflow-id
+    DELETE  /workflow/workflow-id
+
+    GET     /coa
+    POST    /coa
+    GET     /coa/coa-id
+    PUT     /coa/coa-id
+    DELETE  /coa/coa-id
+
+
+    POST    /operator/coa/coa-id
+
+
+    GET     /asset
+    POST    /asset
+    GET     /asset/id
+    PUT     /asset/id
+    DELETE  /asset
+
+    GET     /step
+
+    GET     /status
+    GET     /status/workflow
+    GET     /status/workflow/id
+    GET     /status/coa/id
+    GET     /status/history
+
+}
+
+
+
+
+@enduml
+....
+
+
+## Endpoint description
+
+### General messages
+
+#### Error
+When an error occurs a 400 status is returned with the following JSON payload, the original call can be omitted in production for security reasons.
+
+responses: 400/Bad request
+
+[plantuml, target=soar-ca-trigger-worklow-response, format=png]
+....
+@startjson
+{
+    "status": "400",
+    "message": "What went wrong.",
+    "original-call": "<optional> Request JSON data",
+    "downstream-call" : "<optional> downstream call JSON"
+}
+@endjson
+....
+
+#### Unauthorized
+When the caller does not have valid authentication 401/unauthorized will be returned.
+
+
+#### cacao playbook JSON
+
+[plantuml, target=soar-ca-trigger-worklow-uuid-id, format=png]
+....
+@startjson
+{
+            "type": "playbook",
+            "spec_version": "1.1",
+            "id": "playbook--91220064-3c6f-4b58-99e9-196e64f9bde7",
+            "name": "coa flow",
+            "description": "This playbook will trigger a specific coa",
+            "playbook_types": ["notification"],
+            "created_by": "identity--06d8f218-f4e9-4f9f-9108-501de03d419f",
+            "created": "2020-03-04T15:56:00.123456Z",
+            "modified": "2020-03-04T15:56:00.123456Z",
+            "revoked": false,
+            "valid_from": "2020-03-04T15:56:00.123456Z",
+            "valid_until": "2020-07-31T23:59:59.999999Z",
+            "derived_from": [],
+            "priority": 1,
+            "severity": 1,
+            "impact": 1,
+            "industry_sectors": ["information-communications-technology", "research", "non-profit"],
+            "labels": ["soarca"],
+            "external_references": [
+                {
+                    "name": "TNO SOARCA",
+                    "description": "SOARCA Homepage",
+                    "source": "TNO - COSSAS - HxxPS://LINK-TO-CODE-REPO.TLD",
+                    "url": "HxxPS://LINK-TO-CODE-REPO.TLD",
+                    "hash": "00000000000000000000000000000000000000000000000000000000000",
+                    "external_id": "TNO/SOARCA 2023.01"
+                }
+            ],
+            "features": {
+                "if_logic": true,
+                "data_markings": false
+            },
+            "markings": [],
+            "playbook_variables": {
+                "$$flow_data_location$$": {
+                    "type": "string",
+                    "value": "<mongodb_location>",
+                    "description": "location of event and flow data",
+                    "constant": true
+                },
+                "$$event_type$$": {
+                    "type" : "string",
+                    "value": "<event_type_string>",
+                    "description": "type of incomming event / trigger",
+                    "constant": true	
+                }
+            },
+            "workflow_start": "step--d737c35f-595e-4abf-83ef-d0b6793556b9",
+            "workflow_exception": "step--40131926-89e9-44df-a018-5f92f2df7914",
+            "workflow": {
+                "step--5ea28f63-ac32-4e5e-bd0c-757a50a3a0d7":{
+                    "type": "single",
+                    "name": "BI for CoAs",
+                    "delay": 0,
+                    "timeout": 30000,
+                    "command": {
+                        "type": "http-api",
+                        "command": "hxxps://our.bi/key=VALUE"
+                    },
+                    "on_success": "step--71b15428-275a-49b5-9f09-3944972a0054",
+                    "on_failure": "step--71b15428-275a-49b5-9f09-3944972a0054"
+                },
+                "step--71b15428-275a-49b5-9f09-3944972a0054": {
+                    "type": "end",
+                    "name": "End Playbook SOARCA Main Flow"
+                }
+            },
+            "targets": { 
+
+            },
+            "extension_definitions": { }
+        }
+@endjson
+....
+
+
+---
+
+### /workflow
+The workflow endpoinst are used to create workflows in SOAR-CA, new playbook can be added, current ones edited and deleted. 
+
+#### GET /workflow
+Get all workflow id's that are currently stored in SOAR-CA.
+
+##### Call payload
+None
+
+##### Response
+200/OK with payload:
+
+[plantuml, target=soar-ca-get-workflow]
+....
+@startjson
+{
+    "workflows": [
+        {
+            "workflow-id": "xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx",
+            "workflowType": 1
+        }
+    ]
+}
+@endjson
+....
+
+##### Error
+400/BAD REQUEST with payload:
+General error
+
+
+#### POST /workflow
+Create a new workflow that and store it in SOAR-CA. The format is 
+
+
+##### Payload
+[plantuml, target=soar-ca-worklow-type, format=png]
+....
+@startjson
+{
+    "type": "<workflowTyp> (int)",
+    "data": "<cacao-playbook> (json)"
+}
+@endjson
+....
+
+The types are:
+[plantuml, target=soar-ca-workflow-types, format=png]
+....
+@startuml
+enum workflowType {
+    STIX
+    openC2
+    raw CACAO
+    etc...
+}
+@enduml
+....
+
+##### Response
+201/CREATED
+
+[plantuml, target=soar-ca-post-workflow, ]
+....
+@startjson
+{
+    "workflowType": 1,
+    "workflow-id": "xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx"
+}
+@endjson
+....
+
+##### Error
+400/BAD REQUEST with payload: General error
+
+
+#### GET /workflow/{workflow-id}
+Get workflow details
+
+##### Call payload
+None
+
+##### Response
+200/OK with payload:
+
+[plantuml, target=soar-ca-trigger-worklow, format=png]
+....
+@startjson
+{
+    "workflow-id": "xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx",
+    "impact-score": "1-5",
+    "assets":[{
+        "uuid": "xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx",
+        "ipv4": "1.2.3.4/24",
+        "impactscore": 1,
+        "componentname": "Name here",
+        "triggerid": "Which trigger affected this component"
+    }]
+    
+}
+@endjson
+....
+
+##### Error
+400/BAD REQUEST, 409/CONFLICT if the entry already exists
+
+#### PUT /workflow/{workflow-id}
+An existing workflow can be updated with PUT. 
+
+##### Call payload
+A playbook like <<cacao playbook JSON>>
+
+
+##### Response
+200/OK with the edited playbook <<cacao playbook JSON>>
+
+##### Error
+400/BAD REQUEST for malformed request
+
+When updated it will return 200/OK or General error in case of an error.
+
+#### DELETE /workflow/{workflow-id}
+An existing workflow can be deleted with DELETE. When removed it will return 200/OK or general error in case of an error.
+
+##### Call payload
+None
+
+##### Response
+200/OK if deleted
+
+##### Error
+400/BAD REQUEST if resource does not exist
+
+---
+
+### /coa
+Define coarse of actions to execute for an asset.
+
+#### GET /coa
+Get all coa playbooks.
+
+##### Call payload
+Searching for different coa's can be done by adding `?attribute=<some-string>` so searching for description will be like:
+
+```
+<your-api-host>/coa?description=soarcaisawesome
+```
+
+##### Response
+200/OK 
+
+[plantuml, target=soar-ca-get-coa, format=png]
+....
+@startjson
+{
+    "coas": ["<paybook JSON>"]
+}
+@endjson
+....
+
+##### Error
+400/BAD REQUEST general error on error.
+
+#### POST /coa
+Create a coarse of action
+
+##### Call payload
+A playbook like <<cacao playbook JSON>>
+
+##### Response
+Will return 200/OK when it succeeds or will return general error. 
+
+[plantuml, target=soar-ca-get-coa, format=png]
+....
+@startjson
+{
+    "playbook": "<paybook JSON>"
+}
+@endjson
+....
+
+##### Error
+400/BAD REQUEST general error on error.
+
+
+#### GET /coa/xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx
+Get the specific coa JSON
+
+##### Call payload
+200/OK
+
+[plantuml, target=soar-ca-get-coa, format=png]
+....
+@startjson
+{
+    "cacao-playbook": "<paybook JSON>"
+}
+@endjson
+....
+
+See <<cacao playbook JSON>>
+
+##### Response
+Will return 200/OK when finished with coa playbook. When still busy it will return 204/No payload
+
+##### Error
+400/BAD REQUEST general error on error.
+
+
+#### PUT /coa/xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx
+Update existing COA.
+
+##### Call payload
+<<cacao playbook JSON>>
+
+##### Response
+200/OK with no payload
+
+##### Error
+400/BAD REQUEST general error on error.
+
+
+#### DELETE /coa/xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx
+Remove an existing coa
+
+##### Call payload
+None
+
+##### Response
+200/OK with no payload
+
+##### Error
+400/BAD REQUEST general error on error when it does not exist.
+
+---
+
+### /operator
+Operator endpoint to control coa execution and facilitate manual intervention.
+
+#### POST /operator/coa/xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx
+Execute coa with specific id
+
+##### Call payload
+None
+
+##### Response
+Will return 200/OK when finished with coa playbook.
+
+##### Error
+400/BAD REQUEST general error on error.
+
+
+
+---
+
+### /asset
+The assets endpoint to manage assets in SOARCA
+
+#### GET /asset
+Get current assets
+
+##### Call payload
+None
+
+##### Response
+[plantuml, target=soar-ca-get-assets, format=png]
+....
+@startjson
+{
+    "assets": [{
+        "asset-id": "id",
+        "external-reference": [{
+            "key": "value"
+            }],
+        "Asset-type": "Firewall",
+        "ip-addresses": ["10.10.10.10", "2001::1"]
+        }
+    ]
+}
+@endjson
+....
+
+Asset
+[plantuml, target=soar-ca-workflow-types]
+....
+@startuml
+enum workflowType {
+    firewall
+    switch
+    windows
+    linux
+    etc...
+}
+@enduml
+....
+
+##### Error
+400/BAD REQUEST general error on error.
+
+#### POST /asset
+Add a new asset
+
+##### Call payload
+[plantuml, target=soar-ca-create-asset, format=png]
+....
+@startjson
+{
+    "Asset-type": "Firewall",
+    "external-reference": "",
+    "ip-addres": "10.10.10.10"
+
+}
+@endjson
+....
+
+##### Response
+[plantuml, target=soar-ca-create-asset-response, format=png]
+....
+@startjson
+{
+    "asset-id": "id",
+    "external-reference": "",
+    "Asset-type": "Firewall",
+    "ip-addres": "10.10.10.10"
+}
+@endjson
+....
+
+##### Error
+400/BAD REQUEST general error on error when it already exist.
+
+#### PUT /asset/id
+Update an asset
+
+##### Call payload
+[plantuml, target=soar-ca-update-asset, format=png]
+....
+@startjson
+{
+    "Asset-type": "Firewall",
+    "external-reference": "",
+    "ip-addres": "10.10.10.10"
+
+}
+@endjson
+....
+
+
+##### Response
+200/OK
+[plantuml, target=soar-ca-update-asset-response, format=png]
+....
+@startjson
+{
+    "asset-id": "id",
+    "external-reference": "",
+    "Asset-type": "Firewall",
+    "ip-addres": "10.10.10.10"
+}
+@endjson
+....
+
+##### Error
+400/BAD REQUEST general error on error
+
+#### DELETE /asset/id
+Delete an asset
+
+##### Call payload
+None
+
+##### Response
+200/OK
+
+##### Error
+400/BAD REQUEST general error on error when it does not exist.
+
+
+---
+
+### /step
+Get capable steps for SOARCA to allow a coa builder to generate or build valid coa's
+
+#### GET /step
+Get all available steps for SOARCA. 
+
+##### Call payload
+None
+
+##### Response
+200/OK
+
+[plantuml, target=soar-ca-status, format=png]
+....
+@startjson
+{
+    
+    "steps": [{
+        "module": "executor-module",
+        "category" : "analyses",
+        "context" : "external",
+        "step--5ea28f63-ac32-4e5e-bd0c-757a50a3a0d7":{
+                    "type": "single",
+                    "name": "BI for CoAs",
+                    "delay": 0,
+                    "timeout": 30000,
+                    "command": {
+                        "type": "http-api",
+                        "command": "hxxps://our.bi/key=VALUE"
+                    },
+                    "on_success": "step--71b15428-275a-49b5-9f09-3944972a0054",
+                    "on_failure": "step--71b15428-275a-49b5-9f09-3944972a0054"
+                }}]
+}
+@endjson
+....
+
+Module is the executing module name that will do the executer call.
+
+Category defines what kind of step is executed:
+[plantuml, target=soar-ca-category-types]
+....
+@startuml
+enum workflowType {
+    analyses
+    action
+    asset-look-up
+    etc...
+}
+@enduml
+....
+
+
+Context will define whether the call is internal or external:
+[plantuml, target=soar-ca-context-types]
+....
+@startuml
+enum workflowType {
+    internal
+    external
+}
+@enduml
+....
+
+##### Error
+400/BAD REQUEST general error on error.
+
+
+
+---
+
+### /status
+The status endpoints are used to get various statuses. 
+
+#### GET /status
+Call this endpoint to see if SOAR-CA is up and ready. This call has no payload body.
+
+##### Call payload
+None
+
+##### Response
+200/OK
+
+[plantuml, target=soar-ca-status, format=png]
+....
+@startjson
+{
+    "version": "1.0.0",
+    "components": [
+        {
+            "name": "Component name",
+            "status": "ready/running/failed/stopped/...",
+            "message": "Some message",
+            "version": "semver verison: 1.0.0"
+        }
+    ]
+}
+@endjson
+....
+
+##### Error
+5XX/Internal error, 500/503/504 message.
+
+#### GET /status/workflow
+
+##### Call payload
+
+##### Response
+200/OK
+
+[plantuml, target=soar-ca-status-worklow, format=png]
+....
+@startjson
+{
+            "workflows": [
+                {"type": "playbook",
+                "spec_version": "1.1",
+                "id": "playbook--91220064-3c6f-4b58-99e9-196e64f9bde7",
+                "name": "SOARCA Main Flow",
+                "description": "This playbook will run for each trigger event in SOARCA",
+                "playbook_types": ["notification"],
+                "created_by": "identity--06d8f218-f4e9-4f9f-9108-501de03d419f",
+                "created": "2020-03-04T15:56:00.123456Z",
+                "modified": "2020-03-04T15:56:00.123456Z",
+                "revoked": false,
+                "valid_from": "2020-03-04T15:56:00.123456Z",
+                "valid_until": "2020-07-31T23:59:59.999999Z",
+                "derived_from": [],
+                "priority": 1,
+                "severity": 1,
+                "impact": 1}
+            ]
+
+}
+@endjson
+....
+
+##### Error
+400/BAD REQUEST general error on error.
+
+
+#### GET /status/workflow/xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx (workflow-id)
+Get workflow details which is running which will return cacao playbook JSON
+
+##### Call payload
+None
+
+##### Response
+200/OK
+
+See <<cacao playbook JSON>>
+Empty payload if no workflows are running
+
+##### Error
+400/BAD REQUEST general error on error.
+
+
+#### GET /status/coa/{coa-id}
+Get coarse of action list for coa awaiting action.
+
+##### Call payload
+None
+
+##### Response
+200/OK
+[plantuml, target=soar-ca-status-coa, format=png]
+....
+@startjson
+{
+            "actions": [
+                {
+                    "id": "playbook--91220064-3c6f-4b58-99e9-196e64f9bde7",
+                    "status": "running/finished/failed/stopped/paused"
+                }
+            ]
+
+}
+@endjson
+....
+
+##### Error
+400/BAD REQUEST general error on error.
+
+#### GET /status/history
+Get all workflow and coarse of action id's and statuses that have been run excluded those that are running or paused.
+
+##### Call payload
+None
+
+##### Response
+200/OK
+[plantuml, target=soar-ca-status-history, format=png]
+....
+@startjson
+{
+            "actions": [
+                {
+                    "id": "playbook--91220064-3c6f-4b58-99e9-196e64f9bde7",
+                    "status": "running/finished/failed/stopped/paused"
+                }
+            ]
+
+}
+@endjson
+....
+
+##### Error
+400/BAD REQUEST general error on error.

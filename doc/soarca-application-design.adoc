@@ -1,0 +1,51 @@
+= Application design
+
+[plantuml, target=soar-ca-class-diagram, format=png]
+....
+@startuml
+set separator ::
+
+
+protocol /stix
+protocol /coa
+protocol /step
+protocol /workflow
+protocol /asset
+protocol /trusted/variables
+protocol /status
+
+
+
+class endpoints::api
+class endpoints::taxiiconsumer
+
+class controller
+class database
+class assets
+class log
+
+"/coa" *-- endpoints::coa
+"/step" *-- endpoints::step
+"/workflow" *-- endpoints::workflow
+"/status" *-- endpoints::api
+"/trusted/variables" *-- endpoints::api
+"/asset" *-- endpoints::api
+"/stix" *-- endpoints::taxiiconsumer
+
+endpoints -down-> controller
+
+controller -* database
+controller -* assets
+log *- controller
+controller -down-* cacao::executer
+
+class cacao::modules::openC2
+class cacao::modules::http
+
+cacao::executer --> cacao::modules::openC2
+cacao::executer --> cacao::modules::http
+cacao::executer --> cacao::modules::asset
+cacao::executer --> cacao::modules::ssh
+
+@enduml
+....
