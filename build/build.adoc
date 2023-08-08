@@ -1,0 +1,8 @@
+= Build folder
+
+To build the project use the make file in the root.
+
+
+```
+make build 
+```

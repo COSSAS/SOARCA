@@ -4,8 +4,11 @@ SOARCA the TNO orchestrator for Open-C2, CACAO and STIX
 
 
 == building / starting / stopping  
+Install go via https://go.dev/doc/install 
 
+Install go plugin in VSCode
 
+project layout https://github.com/golang-standards/project-layout
 
 == Documentation
 For documentation we use link:https://docs.asciidoctor.org/asciidoc/latest/[asciidoc] and link:https://plantuml.com/[plantUML]. 

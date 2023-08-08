@@ -6,3 +6,6 @@
 logs/*
 plugins/*
 .vscode/*
+build/*
+!build/build.adoc
+bin/*
