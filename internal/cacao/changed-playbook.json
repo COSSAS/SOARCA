@@ -1,0 +1,90 @@
+{
+    "type": "playbook",
+    "spec_version": "cacao-2.0",
+    "id": "playbook--61a6c41e-6efc-4516-a242-dfbc5c89d562",
+    "name": "SOARCA Main Flow",
+    "description": "This playbook will run for each trigger event in SOARCA",
+    "playbook_types": [
+        "notification"
+    ],
+    "created_by": "identity--5abe695c-7bd5-4c31-8824-2528696cdbf1",
+    "created": "2023-05-26T15:56:00.123456Z",
+    "modified": "2023-05-26T15:56:00.123456Z",
+    "valid_from": "2023-05-26T15:56:00.123456Z",
+    "valid_until": "2337-05-26T15:56:00.123456Z",
+    "priority": 1,
+    "severity": 1,
+    "impact": 1,
+    "labels": [
+        "soarca"
+    ],
+    "external_references": [
+        {
+            "name": "TNO SOARCA",
+            "description": "SOARCA Homepage",
+            "source": "TNO CST",
+            "url": "http://tno.nl/cst"
+        }
+    ],
+    "workflow_start": "step--a76dbc32-b739-427b-ae13-4ec703d5797e",
+    "workflow_exception": "step--40131926-89e9-44df-a018-5f92f2df7914",
+    "workflow": [
+        {
+            "step_uuid": "step--a76dbc32-b739-427b-ae13-4ec703d5797e",
+            "type": "action",
+            "name": "IMC assets by CVE",
+            "description": "Check the IMC for affected assets by CVE",
+            "on_completion": "step--9fcc5c3b-0b70-4d73-b922-cf5491dcd1a4",
+            "commands": [
+                {
+                    "type": "http-api",
+                    "command": "GET http://__imc_address__/by/__cve__"
+                }
+            ]
+        },
+        {
+            "step_uuid": "step--9fcc5c3b-0b70-4d73-b922-cf5491dcd1a4",
+            "type": "action",
+            "name": "BIA for CVE",
+            "description": "Perform Business Impact Analysis for CVE",
+            "on_completion": "step--09b97fab-56a1-45dc-a88f-be3cde3eac33",
+            "commands": [
+                {
+                    "type": "http-api",
+                    "command": "GET http://__bia_address__/analysisreport/__cve__"
+                }
+            ]
+        },
+        {
+            "step_uuid": "step--09b97fab-56a1-45dc-a88f-be3cde3eac33",
+            "type": "action",
+            "name": "Generate CoAs",
+            "description": "Generate Courses of Action",
+            "on_completion": "step--2190f685-1857-44ac-ad0e-0ded6c6ef3cc",
+            "commands": [
+                {
+                    "type": "http-api",
+                    "command": "GET http://__coagenerator_address__/coa/__assetuuid__"
+                }
+            ]
+        },
+        {
+            "step_uuid": "step--2190f685-1857-44ac-ad0e-0ded6c6ef3cc",
+            "type": "action",
+            "name": "BIA for CoAs",
+            "description": "Perform Business Impact Analysis for Courses of Action",
+            "on_completion": "end--6b23c237-ade8-4d00-9aa1-75999738d557",
+            "commands": [
+                {
+                    "type": "http-api",
+                    "command": "GET http://__bia_address__/analysisreport/__coa_list__"
+                }
+            ]
+        },
+        {
+            "step_uuid": "step--2190f685-1857-44ac-ad0e-0ded6c6ef3cc",
+            "type": "end",
+            "name": "End SOARCA Main Flow"
+        }
+    ]
+}

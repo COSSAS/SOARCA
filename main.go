@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"soarca/internal/lib1"
+	"soarca/internal/cacao"
 )
 
 func main() {
 	fmt.Println("Let's do some soarca")
-	some := lib1.Somestruct{Name: "test"}
-	fmt.Println(some.Name)
+	p := cacao.Playbook{}
+	fmt.Println(p.Name)
 }
