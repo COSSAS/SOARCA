@@ -1,0 +1,6 @@
+info:
+  contact: {}
+  title: Swagger Example API
+  version: "1.0"
+paths: {}
+swagger: "2.0"
