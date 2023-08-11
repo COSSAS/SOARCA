@@ -1,7 +1,8 @@
-package coa
+package workflow
 
 import (
 	"net/http"
+	// cacao "soarca/internal/cacao"
 
 	"github.com/gin-gonic/gin"
 )
@@ -10,7 +11,6 @@ import (
 func Helloworld(g *gin.Context) {
 	g.JSON(http.StatusOK, "helloworld from /workdlow")
 }
-
 
 // GET     /workflow
 // POST    /workflow
@@ -22,8 +22,7 @@ func Routes(route *gin.Engine){
 	workflow := route.Group("/workflow")
 	{
 		workflow.GET("/", Helloworld)
-		workflow.POST("/",Helloworld)
-		//workflow.POST()
+		workflow.POST("/", SubmitWorkflow)
 	}
 
 }

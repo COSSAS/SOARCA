@@ -15,7 +15,6 @@ func Routes(route *gin.Engine){
 	coa := route.Group("/operator")
 	{
 		coa.POST("/coa/:coa-id", Helloworld)
-		//workflow.POST()
 	}
 	
 }

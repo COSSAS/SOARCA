@@ -16,8 +16,6 @@ func Routes(route *gin.Engine){
 	coa := route.Group("/step")
 	{
 		coa.GET("/", Helloworld)
-		
-		//workflow.POST()
 	}
 	
 }
