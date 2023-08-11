@@ -2,7 +2,7 @@
 
 The SOARCA controller will control the incoming calls and the execution of steps. 
 
-[plantuml, target=soar-ca-controller-components]
+[plantuml, target=soar-ca-class-diagram]
 ....
 @startuml
 
@@ -31,36 +31,29 @@ interface ITrigger{
     void LoadAndStartPlaybook(PlaybookId id)
 }
 
-Interface IPlaybookDatabase
+Interface IWorkflowDatabase
 
-Interface IDatabase
-Interface IQueue
 Interface IDecomposer
 Interface IExecuter
 
 class Controller
 class Decomposer
-class PlaybookDatabase
-class File
-class Mongo
-class Queue
-Class Executer
-
 
 IWorkflow <|.. Controller
 ICoa <|.. Controller
 ITrigger <|.. Controller
 IStatus <|.. Controller
-IQueue <|.. Queue
-IExecuter <|.. Executer
-Controller -> IPlaybookDatabase
-IPlaybookDatabase <|.. PlaybookDatabase
-IDatabase <-up- PlaybookDatabase
-IDatabase <|.. File
-IDatabase <|.. Mongo
+
+Controller -> IWorkflowDatabase
+IWorkflowDatabase <|.. WorkflowDatabase
+
+
 IDecomposer <- Controller
 IDecomposer <|.. Decomposer
 IExecuter -> Decomposer
-IQueue -> Executer
+
 @enduml
 ....
+
+== Main application flow
+
