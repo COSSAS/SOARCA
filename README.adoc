@@ -10,6 +10,8 @@ Install go plugin in VSCode
 
 project layout https://github.com/golang-standards/project-layout
 
+for installation and build instructions see: link:build/build.adoc[build] 
+
 == Documentation
 For documentation we use link:https://docs.asciidoctor.org/asciidoc/latest/[asciidoc] and link:https://plantuml.com/[plantUML]. 
 

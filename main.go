@@ -4,6 +4,7 @@ import (
 
 	// docs "github.com/go-project-name/docs"
 	routes "soarca/routes"
+	"fmt"
 )
 
 //	@title			Swagger Example API
@@ -73,6 +74,8 @@ import (
 
 func main() {
 	api := routes.Setup()
-	api.Run(":8080")
-
+	var err = api.Run(":8080")
+	if err != nil{
+		fmt.Println(err)
+	}
 }

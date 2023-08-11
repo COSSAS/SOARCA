@@ -1,7 +1,12 @@
 # SOAR-CA API 
-
 This document describes the SOAR-CA API 
+:toc: left
+:toclevels: 3
 
+SOAR-CA is developed by TNO Cybersecurity & Technology department (CST)
+
+
+## Endpoint description
 
 We will use HTTP status codes https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
 
@@ -16,7 +21,7 @@ control "SOAR-CA API" as api
 control "controller" as controller
 database "Mongo" as db
 control "Executor" as exe
-control "Assets" as asset
+
 control "SSH-module" as ssh
 
 caller -> api : STIX message
@@ -24,10 +29,8 @@ api -> controller : start STIX workflow for malicious url
 controller -> db : get workflow #xxx
 controller <-- db : return
 controller -> exe : executeworkflow #xxx
-exe -> asset : execute workflow step asset
-exe <-- asset : return affected assets
 
-exe -> exe : get coa's for workflow/ assets
+exe -> exe : get coa's for workflow
 controller <- exe : return coa's
 
 ... determine automatic coa execution ...
@@ -74,7 +77,7 @@ protocol UiEndpoint {
     POST    /asset
     GET     /asset/id
     PUT     /asset/id
-    DELETE  /asset
+    DELETE  /asset/id
 
     GET     /step
 
@@ -93,7 +96,7 @@ protocol UiEndpoint {
 ....
 
 
-## Endpoint description
+
 
 ### General messages
 
@@ -734,6 +737,20 @@ None
 
 See <<cacao playbook JSON>>
 Empty payload if no workflows are running
+
+##### Error
+400/BAD REQUEST general error on error.
+
+#### GET /status/workflow/xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx/coas
+Get workflow details which is running which will return cacao playbook JSON
+
+##### Call payload
+None
+
+##### Response
+200/OK
+
+list of caoids
 
 ##### Error
 400/BAD REQUEST general error on error.

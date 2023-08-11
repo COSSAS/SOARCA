@@ -7,6 +7,10 @@ Modules should be build in GO or Python and contain the following components.
 
 . CACAO template to allow their capability to extend coarse of actions playbooks.
 . protocol buffer implementation to communicate with the SOARCA executer.
+. Module specifies which `variables` it exposes for return types. These `variables` should be defined when submitting a module. These `variables` are available within playbooks that use the module after it has outputted these variables. Varianames are mod_$module_id$$_variable (example usage: virustotal returns a true/false for a malicious url and the affected ip. The variables would be mod_virustotal_malicious and mod_virustotal_ip.)
+
+
+
 
 ---
 
@@ -39,6 +43,16 @@ message Return {
 
 
 == Project structure
+soarca
+module_meta.json
+protocol.proto
+main.py
+
 
 == Loading your module
+
+. Needs module ID, some string that uniquely identifies the module
+. Needs return/ result typ definition
+. Needs definition of exposed variables
+. etc.
 

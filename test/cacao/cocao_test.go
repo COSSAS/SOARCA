@@ -3,13 +3,13 @@ package cacao_test
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"soarca/internal/cacao"
 	"testing"
 )
 
-func TestAbs(t *testing.T) {
+func TestCacao(t *testing.T) {
 	p := cacao.Playbook{}
 	fmt.Println(p)
 
@@ -21,10 +21,15 @@ func TestAbs(t *testing.T) {
 
 	defer jsonFile.Close()
 
-	byteValue, _ := ioutil.ReadAll(jsonFile)
+	byteValue, _ := io.ReadAll(jsonFile)
 
 	var playbook cacao.Playbook
-	json.Unmarshal(byteValue, &playbook)
+	err = json.Unmarshal(byteValue, &playbook)
+
+	if err !=nil{
+		fmt.Println("Not valid JSON")
+		return
+	}
 
 	for i := 0; i < len(playbook.Workflow); i++ {
 		fmt.Println(playbook.Workflow[i].UUID)
