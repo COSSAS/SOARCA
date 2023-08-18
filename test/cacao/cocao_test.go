@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"soarca/internal/cacao"
+	cacao "soarca/models/cacao"
 	"testing"
 )
 
@@ -23,16 +23,16 @@ func TestCacao(t *testing.T) {
 
 	byteValue, _ := io.ReadAll(jsonFile)
 
-	var playbook cacao.Playbook
-	err = json.Unmarshal(byteValue, &playbook)
+	var workflow cacao.Playbook
+	err = json.Unmarshal(byteValue, &workflow)
 
 	if err !=nil{
 		fmt.Println("Not valid JSON")
 		return
 	}
 
-	for i := 0; i < len(playbook.Workflow); i++ {
-		fmt.Println(playbook.Workflow[i].UUID)
+	for i := 0; i < len(workflow.Workflow); i++ {
+		fmt.Println(workflow.Workflow[i].UUID)
 
 	}
 

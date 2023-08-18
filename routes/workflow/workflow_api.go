@@ -3,8 +3,8 @@ package workflow
 import (
 	"io"
 	"net/http"
-	cacao "soarca/internal/cacao"
 	validator "soarca/internal/validators"
+	cacao "soarca/models/cacao"
 
 	"github.com/gin-gonic/gin"
 )
