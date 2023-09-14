@@ -4,9 +4,11 @@ import "time"
 
 type Metadata struct{}
 
-type Target struct{}
-type DataMarkings struct{}
-type Extensions struct{}
+type (
+	Target       struct{}
+	DataMarkings struct{}
+	Extensions   struct{}
+)
 
 type Playbook struct {
 	ID                 string               `bson:"_id" json:"id" validate:"required"`
@@ -16,7 +18,7 @@ type Playbook struct {
 	Description        string               `bson:"description" json:"description" validate:"required"`
 	PlaybookTypes      []string             `bson:"playbook_types" json:"playbook_types" validate:"required"`
 	CreatedBy          string               `bson:"created_by" json:"created_by"  validate:"required"`
-	Created            time.Time            `bson:"created" json:"created"  validate:"required"`  //date time is already validate by the field type!
+	Created            time.Time            `bson:"created" json:"created"  validate:"required"`  // date time is already validate by the field type!
 	Modified           time.Time            `bson:"modified" json:"modified" validate:"required"` //,datetime=2006-01-02T15:04:05Z07:00"`
 	ValidFrom          time.Time            `bson:"valid_from" json:"valid_from" validate:"required,ltecsfield=ValidUntil"`
 	ValidUntil         time.Time            `bson:"valid_until" json:"valid_until" validate:"required,gtcsfield=ValidFrom"`
@@ -30,10 +32,10 @@ type Playbook struct {
 	Workflow           []Step               `bson:"workflow"  json:"workflow" validate:"required"`
 }
 type ExternalReferences struct {
-	Name        string 	`bson:"name" json:"name" validate:"required"`
-	Description string 	`bson:"description" json:"description" validate:"required"`
-	Source      string 	`bson:"source" json:"source" validate:"required"`
-	URL         string 	`bson:"url"  json:"url" validate:"required,url"`
+	Name        string `bson:"name" json:"name" validate:"required"`
+	Description string `bson:"description" json:"description" validate:"required"`
+	Source      string `bson:"source" json:"source" validate:"required"`
+	URL         string `bson:"url"  json:"url" validate:"required,url"`
 }
 type Commands struct {
 	Type    string `bson:"type"  json:"type" validate:"required"`
