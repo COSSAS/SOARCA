@@ -4,15 +4,14 @@ import (
 
 	// docs "github.com/go-project-name/docs"
 
-	routes "soarca/routes"
 	"fmt"
+	routes "soarca/routes"
 )
-
 
 func main() {
 	api := routes.Setup()
 	var err = api.Run(":8080")
-	if err != nil{
+	if err != nil {
 		fmt.Println(err)
 	}
 }

@@ -1,15 +1,13 @@
 package workflow
 
 import (
-	loggerfactory "soarca/loggerfactory"
-
-	logrus "github.com/sirupsen/logrus"
+	"soarca/logger"
 )
 
-const component  = "WORKFLOW"
-var logger *logrus.Logger
+const component = "WORKFLOW"
 
-func init(){
-	loggerFactory := loggerfactory.NewDefaultLoggerFactory(logrus.InfoLevel, component)
-	logger = loggerFactory.NewLogger()
+var log *logger.Log
+
+func init() {
+	log = logger.Logger(component, logger.Info, "", logger.Json)
 }

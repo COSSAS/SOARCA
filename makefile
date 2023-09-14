@@ -11,7 +11,8 @@ build:
 	go build -o ./build/soarca main.go
 
 test:
-	go test test/**/*_test.go -v
+	go test test/cacao/*_test.go -v
+	go test test/logger/*_test.go -v
 
 
 clean:

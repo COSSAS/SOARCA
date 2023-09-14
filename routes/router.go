@@ -17,7 +17,7 @@ func Setup() *gin.Engine {
 
 	gin.SetMode(gin.ReleaseMode)
 	app := gin.New()
-	app.Use(middelware.LoggingMiddleware(logger))
+	app.Use(middelware.LoggingMiddleware(log.Entry.Logger))
 	coa_routes.Routes(app)
 	workflow_routes.Routes(app)
 	status.Routes(app)
@@ -26,5 +26,3 @@ func Setup() *gin.Engine {
 
 	return app
 }
-
-

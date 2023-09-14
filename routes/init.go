@@ -1,15 +1,13 @@
 package routes
 
 import (
-	loggerfactory "soarca/loggerfactory"
-
-	logrus "github.com/sirupsen/logrus"
+	"soarca/logger"
 )
 
-var logger *logrus.Logger
+var log *logger.Log
+
 const component = "api"
 
-func init(){
-	loggerFactory := loggerfactory.NewDefaultLoggerFactory(logrus.InfoLevel, component)
-	logger = loggerFactory.NewLogger()
+func init() {
+	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
