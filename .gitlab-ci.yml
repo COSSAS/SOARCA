@@ -1,5 +1,3 @@
-image: golang:latest
-
 .go-cache:
     variables:
         GOPATH: $CI_PROJECT_DIR/.go
@@ -7,12 +5,11 @@ image: golang:latest
       paths:
         - .go/pkg/mod/
 
-
-
 stages:          # List of stages for jobs, and their order of execution
   - lint
   - build
   - test
+  - docker
   # - deploy
 
 lint:
@@ -22,31 +19,67 @@ lint:
     allow_failure: false
     script:
       - golangci-lint run -v
+    rules:
+      - if: '$CI_COMMIT_REF_NAME != "master" && $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event"'
 
 
 
 build-job:       # This job runs in the build stage, which runs first.
+  image: golang:latest
   stage: build
   script:
     - make build
-    - echo "Compile complete."
+  rules:
+    - if: '$CI_COMMIT_REF_NAME != "master" && $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event"'
 
 cross-compile:
+  image: golang:latest
   stage: build
   artifacts:
     name: "$CI_JOB_NAME"
     paths: 
       - bin/
     expire_in: 2 hrs
-
   script:
     - make compile
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_NAME == "master" || $CI_PIPELINE_SOURCE == "merge_request_event"'
 
 
 unit-test-job:   # This job runs in the test stage.
+  image: golang:latest
   stage: test    # It only starts when the job in the build stage completes successfully.
   script:
     - make test
+  rules:
+    - when: always
+
+
+docker-build:   # This job will build the soar-ca docker image on merge request
+  image: docker
+  services:
+    - docker:dind
+  before_script:
+    - docker info
+  dependencies:
+    - cross-compile
+  variables:
+    # Tell docker CLI how to talk to Docker daemon; see
+    # https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#use-docker-in-docker-executor
+    DOCKER_HOST: tcp://docker:2375/
+    # Use the overlayfs driver for improved performance:
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+
+  stage: docker
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_NAME == "master" || $CI_PIPELINE_SOURCE == "merge_request_event"'
+  script: 
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
+    - apk add git
+    - export VERSION=$(git describe --tags --dirty)
+    - echo $VERSION
+    - docker build --build-arg VERSION -t $CI_REGISTRY_IMAGE .
 
 
 
