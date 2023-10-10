@@ -72,13 +72,6 @@ protocol UiEndpoint {
 
     POST    /operator/coa/coa-id
 
-
-    GET     /asset
-    POST    /asset
-    GET     /asset/id
-    PUT     /asset/id
-    DELETE  /asset/id
-
     GET     /step
 
     GET     /status
@@ -278,7 +271,7 @@ enum workflowType {
 ....
 
 ##### Error
-400/BAD REQUEST with payload: General error
+400/BAD REQUEST with payload: General error, 409/CONFLICT if the entry already exists
 
 
 #### GET /workflow/{workflow-id}
@@ -309,7 +302,7 @@ None
 ....
 
 ##### Error
-400/BAD REQUEST, 409/CONFLICT if the entry already exists
+400/BAD REQUEST
 
 #### PUT /workflow/{workflow-id}
 An existing workflow can be updated with PUT. 
@@ -455,133 +448,6 @@ Will return 200/OK when finished with coa playbook.
 
 ##### Error
 400/BAD REQUEST general error on error.
-
-
-
----
-
-### /asset
-The assets endpoint to manage assets in SOARCA
-
-#### GET /asset
-Get current assets
-
-##### Call payload
-None
-
-##### Response
-[plantuml, target=soar-ca-get-assets, format=png]
-....
-@startjson
-{
-    "assets": [{
-        "asset-id": "id",
-        "external-reference": [{
-            "key": "value"
-            }],
-        "Asset-type": "Firewall",
-        "ip-addresses": ["10.10.10.10", "2001::1"]
-        }
-    ]
-}
-@endjson
-....
-
-Asset
-[plantuml, target=soar-ca-workflow-types]
-....
-@startuml
-enum workflowType {
-    firewall
-    switch
-    windows
-    linux
-    etc...
-}
-@enduml
-....
-
-##### Error
-400/BAD REQUEST general error on error.
-
-#### POST /asset
-Add a new asset
-
-##### Call payload
-[plantuml, target=soar-ca-create-asset, format=png]
-....
-@startjson
-{
-    "Asset-type": "Firewall",
-    "external-reference": "",
-    "ip-addres": "10.10.10.10"
-
-}
-@endjson
-....
-
-##### Response
-[plantuml, target=soar-ca-create-asset-response, format=png]
-....
-@startjson
-{
-    "asset-id": "id",
-    "external-reference": "",
-    "Asset-type": "Firewall",
-    "ip-addres": "10.10.10.10"
-}
-@endjson
-....
-
-##### Error
-400/BAD REQUEST general error on error when it already exist.
-
-#### PUT /asset/id
-Update an asset
-
-##### Call payload
-[plantuml, target=soar-ca-update-asset, format=png]
-....
-@startjson
-{
-    "Asset-type": "Firewall",
-    "external-reference": "",
-    "ip-addres": "10.10.10.10"
-
-}
-@endjson
-....
-
-
-##### Response
-200/OK
-[plantuml, target=soar-ca-update-asset-response, format=png]
-....
-@startjson
-{
-    "asset-id": "id",
-    "external-reference": "",
-    "Asset-type": "Firewall",
-    "ip-addres": "10.10.10.10"
-}
-@endjson
-....
-
-##### Error
-400/BAD REQUEST general error on error
-
-#### DELETE /asset/id
-Delete an asset
-
-##### Call payload
-None
-
-##### Response
-200/OK
-
-##### Error
-400/BAD REQUEST general error on error when it does not exist.
-
 
 ---
 
