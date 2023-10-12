@@ -4,12 +4,41 @@ The document contains the design considerations of the executer of SOARCA
 
 == Components
 
-The executer consists of 3 components. 
+The executer consists of the following components. 
 
-. The playbook decomposer (parser)
-. The command executor
-. The command queue
+. The capability selector
+. Native capabilities (command executors)
+. MQTT capability to interact with: Fin capabilities (third party executors)
 
+=== Capability selector (Executor)
+
+The capability selector will select the implementation which is capable of executing the incoming command. There are native capabilities which are based on the CACAO `command-type-ov`:
+
+* Currently implemented:
+- ssh
+- http-api
+* Later:
+- open-C2
+- manual
+* Future:
+- bash
+- caldera-cmd
+- elastic
+- jupyter
+- kestrel
+- sigma
+- yara
+
+
+=== Native capabilities
+The Executor will select a module which is capable of execution the command and pass the detail to it. The results will be returned to the decomposer. Result can be output variables or error status.
+
+
+=== MQTT executor -> Fin capabilities
+The Executor will put the command on the MQTT topic that is offered by the module. How a module handles this is described in the link:modules.adoc[module documentation]
+
+
+== Component overview
 
 [plantuml, target=soar-ca-executer-components]
 ....
@@ -17,26 +46,38 @@ The executer consists of 3 components.
 
 package "Controller" {
 component Decomposer as parser
-component "Queue MQTT" as queue
+
 }
 package "Executor" {
-component Executor2 as exe2
-component Executor1 as exe1
+    component SSH as exe2
+    component "HTTP-API" as exe1
+    component MQTT as exe3
 }
-parser -- queue
-queue -- Executor
+
+package "Fins" {
+    component "Virus Total" as virustotal
+    component "E-Sender" as email
+}
+
+parser -- Executor
+exe3 -- Fins : " MQTT topics"
+
 @enduml
 ....
 
 
 
-== Executor interface
+== Executor classes
 
 [plantuml, target=soar-ca-executer-interface]
 ....
 @startuml
 
 interface IExecutor {
+    void Execute(ExecutionId, CommandData, variable[], target, module, completionCallback(variables[]))
+    void Pause(CommandData, module)
+    void Resume(CommandData, module)
+    void Kill(CommandData, module)
 }
 
 struct State{
@@ -46,48 +87,36 @@ struct State{
 }
 
 
-struct Step {
-    type
-    name
-    description
-    external_reference
-    delay
-    timeout
-    step_variable
-    owner
-    on_completion
-    on_succes
-    on_failure
-    step_extensions
+interface ICapability{
+    void Execute(ExecutionId, CommandData, variable[], target, completionCallback(variables[]))
+    module GetModuleName()
 }
 
 
-interface IModule {
-    void Execute(command, variable, module)
-    void RegisterOnCompletionHandler(OnCompletion)
-}
+class Executor 
 
+class "Ssh" as ssh
+class "OpenC2" as openc2
+class "HttpApi" as api
 
-class Executor {
-    void SetState(State)
-}
-
-class Module
-protocol ProtoBuffer
 
 IExecutor <|.. Executor
-Executor -> IModule
-IModule <|.. Module
-Module - ProtoBuffer
+Executor -> ICapability
+ICapability <|.. ssh
+ICapability <|.. openc2
+ICapability <|.. api
+
+
 
 
 @enduml
 ....
 
 
-https://github.com/phf/go-queue
 
-== Protocol
+
+== Protocol (WIP)
+https://github.com/phf/go-queue
 
 === Sending a step
 
@@ -161,4 +190,29 @@ output: var_1
 
 
 == Sequences 
+
+Example execution for SSH commands with SOARCA native capability. 
+
+[plantuml, target=soar-ca-executor-execution-ssh-command]
+....
+@startuml
+
+participant Decomposer as decomposer
+participant "Capability selector" as selector
+participant "SSH executor" as ssh
+
+decomposer -> selector : Execute(...)
+alt capability in SOARCA
+    selector -> ssh : execute ssh command
+    ssh -> ssh : 
+    selector <-- ssh : results
+    decomposer <-- selector : OnCompletionCallback
+else capability not available 
+    decomposer <-- selector : Execution failure
+    note right: No capability can handle command \nor capability crashed etc..
+end
+
+
+@enduml
+....
 
