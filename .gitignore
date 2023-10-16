@@ -9,3 +9,5 @@ plugins/*
 build/*
 !build/build.adoc
 bin/*
+test/cacao/flatfile-db-example.json
+test/routes/__debug_bin2988553005

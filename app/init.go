@@ -1,4 +1,4 @@
-package routes
+package app
 
 import (
 	"reflect"
@@ -10,6 +10,6 @@ var log *logger.Log
 
 type Empty struct{}
 
-func init() {
+func LoadComponent() {
 	log = logger.Logger(reflect.TypeOf(Empty{}).PkgPath(), logger.Info, "", logger.Json)
 }

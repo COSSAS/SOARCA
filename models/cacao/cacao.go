@@ -129,7 +129,7 @@ type DataMarking struct {
 	AffectedPartyNotifications string               `json:"affected_party_notifications,omitempty"`
 	Attribution                string               `json:"attribution,omitempty"`
 	UnmodifiedResale           string               `json:"unmodified_resale,omitempty"`
-	//marking_extensions
+	// marking_extensions
 }
 
 func Decode(data []byte) *Playbook {

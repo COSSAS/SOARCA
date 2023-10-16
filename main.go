@@ -1,17 +1,27 @@
 package main
 
 import (
+	app "soarca/app"
+	"soarca/logger"
 
-	// docs "github.com/go-project-name/docs"
-
-	"fmt"
-	routes "soarca/routes"
+	"github.com/joho/godotenv"
 )
 
+var log *logger.Log
+
+func init() {
+	log = logger.Logger("MAIN", logger.Info, "", logger.Json)
+}
+
 func main() {
-	api := routes.Setup()
-	var err = api.Run(":8080")
+	err := godotenv.Load(".env.example")
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal("Failed to read env variable")
+	}
+	app.LoadComponent()
+	err = app.SetupAndRunApp()
+	if err != nil {
+		log.Fatal("Something Went wrong with setting-up the app, msg: ", err)
+		panic(err)
 	}
 }

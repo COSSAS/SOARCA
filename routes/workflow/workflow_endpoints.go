@@ -1,28 +1,26 @@
 package workflow
 
 import (
-	"net/http"
-	// cacao "soarca/internal/cacao"
+	workflowRepository "soarca/database/workflow"
 
 	"github.com/gin-gonic/gin"
 )
 
-
-func Helloworld(g *gin.Context) {
-	g.JSON(http.StatusOK, "helloworld from /workdlow")
-}
-
+// Main Router for the following endpoints:
 // GET     /workflow
 // POST    /workflow
 // GET     /workflow/workflow-id
 // PUT     /workflow/workflow-id
 // DELETE  /workflow/workflow-id
-
-func Routes(route *gin.Engine){
+func Routes(route *gin.Engine, workflowRepo workflowRepository.IWorkflowRepository) {
+	workflowController := NewWorkflowController(workflowRepo)
 	workflow := route.Group("/workflow")
 	{
-		workflow.GET("/", Helloworld)
-		workflow.POST("/", SubmitWorkflow)
-	}
+		workflow.GET("/", workflowController.getAllWorkFlowIds)
+		workflow.POST("/", workflowController.submitWorkflow)
+		workflow.GET("/:id", workflowController.getWorkflowByID)
+		workflow.PUT("/:id", workflowController.updateWorkflowByID)
+		workflow.DELETE("/:id", workflowController.deleteWorkflowByID)
 
+	}
 }

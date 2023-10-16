@@ -1,13 +1,15 @@
 package workflow
 
 import (
+	"reflect"
+
 	"soarca/logger"
 )
 
-const component = "WORKFLOW"
-
 var log *logger.Log
 
+type Empty struct{}
+
 func init() {
-	log = logger.Logger(component, logger.Info, "", logger.Json)
+	log = logger.Logger(reflect.TypeOf(Empty{}).PkgPath(), logger.Debug, "", logger.Json)
 }
