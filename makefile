@@ -13,6 +13,7 @@ build:
 test:
 	go test test/cacao/*_test.go -v
 	go test test/logger/*_test.go -v
+	go test test/decomposer/*_test.go -v
 
 
 clean:

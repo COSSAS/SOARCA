@@ -1,0 +1,75 @@
+= Decomposer
+
+The decomposer will parse playbook objects to individual steps. This allows it to schedule new executor tasks. 
+
+Each incoming playbook will be stored and executed individually. Decomposing is done to the step level. 
+
+[plantuml, target=soar-ca-class-diagram]
+....
+@startuml
+
+struct ExecutionDetails{
+    uuid executionId 
+    uuid playbookId
+}
+
+Interface IDecomposer{
+ExecutionDetails, error Execute(cacao playbook)
+error getStatus(uuid playbookId)    
+}
+Interface IExecuter
+
+class Controller
+class Decomposer
+
+
+
+IDecomposer <- Controller
+IDecomposer <|.. Decomposer
+IExecuter -> Decomposer
+
+@enduml
+....
+
+[plantuml, target=soar-ca-class-execute]
+....
+@startuml
+
+Decomposer as decomposer
+
+
+@enduml
+....
+
+== Decomposition of playbook
+
+[plantuml, target=soar-ca-playbook-decomposition]
+....
+@startuml
+
+participant caller 
+participant "Playbook decomposer" as decomposer
+participant "Playbook state" as queue
+participant Executor as exe
+
+
+
+caller -> decomposer: Execute
+caller <-- decomposer: ExecutionStatus
+
+decomposer -> queue: store state
+decomposer <-- queue:
+
+loop for all playbook steps
+    decomposer -> queue: load state
+    decomposer <-- queue: 
+    decomposer -> decomposer: parse step
+    decomposer -> decomposer: parse command
+    note over decomposer: correct executer is selected
+    decomposer -> exe: execute command
+    ... Time has passed ...
+    decomposer <-- exe
+end loop
+
+@enduml
+....
