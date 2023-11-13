@@ -1,65 +1,59 @@
 package executer
 
 import (
+	"errors"
+	"reflect"
+	"soarca/internal/capability"
+	"soarca/logger"
 	"soarca/models/cacao"
 
 	"github.com/google/uuid"
 )
 
-type CommandData struct {
-	// id       string
-	// command  string
-	// isBase64 bool
-}
+type Empty struct{}
 
-type Variable struct{}
-type AuthInfo struct{}
-type Target struct{}
-type Module struct{}
+var component = reflect.TypeOf(Empty{}).PkgPath()
+var log *logger.Log
 
 type IExecuter interface {
 	Execute(executionId uuid.UUID,
 		command cacao.Command,
+		authentication cacao.AuthenticationInformation,
+		target cacao.Target,
 		variable map[string]cacao.Variables,
 		module string) (uuid.UUID, map[string]cacao.Variables, error)
-	ExecuteAsync(command cacao.Command, variable map[string]cacao.Variables, module string, callback func(uuid.UUID, map[string]cacao.Variables)) error
-	Pause(command CommandData, module string) error
-	Resume(command CommandData, module string) error
-	Kill(command CommandData, module string) error
+}
+
+func init() {
+	log = logger.Logger(component, logger.Trace, "", logger.Json)
+}
+
+func New(capabilities map[string]capability.ICapability) *Executer {
+	var instance = Executer{}
+	instance.capabilities = capabilities
+	return &instance
 }
 
 type Executer struct {
+	capabilities map[string]capability.ICapability
 }
 
 func (executer *Executer) Execute(executionId uuid.UUID,
 	command cacao.Command,
+	authentication cacao.AuthenticationInformation,
+	target cacao.Target,
 	variable map[string]cacao.Variables,
 	module string) (uuid.UUID, map[string]cacao.Variables, error) {
 
-	var vars = map[string]cacao.Variables{"test": {Name: "test"}}
-	var id = uuid.New()
+	if capability, ok := executer.capabilities[module]; ok {
+		returnVariables, err := capability.Execute(executionId, command, authentication, target, variable)
+		return executionId, returnVariables, err
+	} else {
+		empty := map[string]cacao.Variables{}
+		message := "executor is not available in soarca"
+		err := errors.New(message)
+		log.Error(message)
+		return executionId, empty, err
+	}
 
-	return id, vars, nil
-}
-
-func (executer *Executer) ExecuteAsync(command cacao.Command,
-	variable map[string]cacao.Variables,
-	module string,
-	callback func(uuid.UUID, map[string]cacao.Variables)) error {
-	return nil
-}
-
-func (executer *Executer) Pause(command CommandData, module string) error {
-
-	return nil
-}
-
-func (executer *Executer) Resume(command CommandData, module string) error {
-
-	return nil
-}
-
-func (executer *Executer) Kill(command CommandData, module string) error {
-
-	return nil
 }

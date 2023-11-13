@@ -25,6 +25,20 @@
             "password": "super-secure-password"
         }
     },
+    "agent_definitions": {
+        "http-api--7e9174ec-a293-43df-a72d-471c79e276bf": {
+            "type": "http-api",
+            "name": "Firewall 1",
+            "http_url": "hxxp://example.com/v1/",
+            "authentication_info": "http-basic--76c26f7f-9a15-40ff-a90a-7b19e23372ae",
+            "category": [
+                "firewall"
+            ],
+            "location": {
+                "name": "Eindhoven"
+            }
+        }
+    },
     "external_references": [
         {
             "name": "TNO SOARCA",

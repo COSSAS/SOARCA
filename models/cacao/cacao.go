@@ -9,10 +9,43 @@ import (
 type Metadata struct{}
 
 type (
-	Target       struct{}
 	DataMarkings struct{}
 	Extensions   struct{}
+	Contact      struct{}
 )
+
+type CivicLocation struct {
+	Name               string `bson:"name" json:"name" validate:"optional"`
+	Description        string `bson:"description" json:"description" validate:"optional"`
+	BuildingDetails    string `bson:"building_details" json:"building_details" validate:"optional"`
+	NetworkDetails     string `bson:"network_details" json:"network_details" validate:"optional"`
+	Region             string `bson:"region" json:"region" validate:"optional"`
+	Country            string `bson:"country" json:"country" validate:"optional"`
+	AdministrativeArea string `bson:"administrative_area" json:"administrative_area" validate:"optional"`
+	City               string `bson:"city" json:"city" validate:"optional"`
+	StreetAddress      string `bson:"street_address" json:"street_address" validate:"optional"`
+	PostalCode         string `bson:"postal_code" json:"postal_code" validate:"optional"`
+	Latitude           string `bson:"latitude" json:"latitude" validate:"optional"`
+	Longitude          string `bson:"longitude" json:"longitude" validate:"optional"`
+	Precision          string `bson:"precision" json:"precision" validate:"optional"`
+}
+
+type Target struct {
+	ID                    string              `bson:"_id" json:"id" validate:"required"`
+	Type                  string              `bson:"type" json:"type" validate:"required" `
+	Name                  string              `bson:"name" json:"name" validate:"required"`
+	Description           string              `bson:"description" json:"description" validate:"optional"`
+	Location              CivicLocation       `bson:"location" json:"location" validate:"optional"`
+	AgentTargetExtensions []string            `bson:"agent_target_extensions" json:"agent_target_extensions" validate:"optional"`
+	Contact               Contact             `bson:"contact" json:"contact" validate:"optional"`
+	Logical               []string            `bson:"logical" json:"logical" validate:"optional"`
+	Sector                string              `bson:"sector" json:"sector" validate:"optional"`
+	HttpUrl               string              `bson:"http_url" json:"http_url" validate:"optional"`
+	AuthInfoIdentifier    string              `bson:"authentication_info" json:"authentication_info" validate:"optional"`
+	Category              []string            `bson:"category" json:"category" validate:"optional"`
+	Address               map[string][]string `bson:"address" json:"address" validate:"optional"`
+	Port                  string              `bson:"port" json:"port" validate:"optional"`
+}
 
 type Playbook struct {
 	ID                            string                               `bson:"_id" json:"id" validate:"required"`
@@ -38,9 +71,12 @@ type Playbook struct {
 	Workflow                      map[string]Step                      `bson:"workflow"  json:"workflow" validate:"required"`
 	DataMarkingDefs               DataMarking                          `bson:"data_markings" json:"data_marking_definitions" validate:"omitempty"`
 	AuthenticationInfoDefinitions map[string]AuthenticationInformation `bson:"authentication_information" json:"authentication_info_definitions" validate:"omitempty"`
+	AgentDefinitions              map[string]Target                    `bson:"agent_definitions" json:"agent_definitions" validate:"omitempty"`
+	TargetDefinitions             map[string]Target                    `bson:"target_definitions" json:"target_definitions" validate:"omitempty"`
 }
 
 type AuthenticationInformation struct {
+	ID               string `bson:"_id" json:"id" validate:"required"`
 	Type             string `bson:"type"  json:"type" validate:"required"`
 	Name             string `bson:"name" json:"name" validate:"omitempty"`
 	Description      string `bson:"description" json:"description" validate:"omitempty"`
@@ -142,6 +178,21 @@ func Decode(data []byte) *Playbook {
 	for key, workflow := range playbook.Workflow {
 		workflow.ID = key
 		playbook.Workflow[key] = workflow
+	}
+
+	for key, target := range playbook.TargetDefinitions {
+		target.ID = key
+		playbook.TargetDefinitions[key] = target
+	}
+
+	for key, agent := range playbook.AgentDefinitions {
+		agent.ID = key
+		playbook.AgentDefinitions[key] = agent
+	}
+
+	for key, auth := range playbook.AuthenticationInfoDefinitions {
+		auth.ID = key
+		playbook.AuthenticationInfoDefinitions[key] = auth
 	}
 
 	return &playbook

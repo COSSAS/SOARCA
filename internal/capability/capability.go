@@ -7,5 +7,10 @@ import (
 )
 
 type ICapability interface {
-	Execute(executionId uuid.UUID, command cacao.Command, variables cacao.Variables, target cacao.Target, OnCompletionCallback func(vars cacao.Variables))
+	Execute(executionId uuid.UUID,
+		command cacao.Command,
+		authentication cacao.AuthenticationInformation,
+		target cacao.Target,
+		variables map[string]cacao.Variables) (map[string]cacao.Variables, error)
+	GetType() string
 }

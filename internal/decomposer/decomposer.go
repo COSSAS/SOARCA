@@ -74,7 +74,16 @@ func (decomposer *Decomposer) Execute(playbook cacao.Playbook) (*ExecutionDetail
 		}
 		if len(playbook.Workflow[stepId].Commands) > 0 {
 			for _, command := range playbook.Workflow[stepId].Commands {
-				var id, vars, _ = decomposer.executor.Execute(executionId, command, playbook.Workflow[stepId].StepVariables, playbook.Workflow[stepId].ObjectType)
+
+				agent := playbook.AgentDefinitions[playbook.Workflow[stepId].Agent]
+				auth := playbook.AuthenticationInfoDefinitions[agent.AuthInfoIdentifier]
+
+				var id, vars, _ = decomposer.executor.Execute(executionId,
+					command,
+					auth,
+					agent,
+					playbook.Workflow[stepId].StepVariables,
+					playbook.Workflow[stepId].ObjectType)
 				log.Trace(id)
 				log.Trace(vars)
 
