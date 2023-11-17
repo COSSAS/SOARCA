@@ -16,6 +16,7 @@ test:
 	go test test/decomposer/*_test.go -v
 	go test test/executor/*_test.go -v
 	go test test/routes/*_test.go -v
+	go test test/capability/ssh/*_test.go -v
 
 
 clean:
