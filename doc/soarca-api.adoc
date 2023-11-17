@@ -70,7 +70,7 @@ protocol UiEndpoint {
     DELETE  /coa/coa-id
 
 
-    POST    /operator/coa/coa-id
+    POST    /trigger/coa/coa-id
 
     GET     /step
 
@@ -239,6 +239,7 @@ Create a new workflow that and store it in SOAR-CA. The format is
 @startjson
 {
     "type": "<workflowTyp> (int)",
+    "trigger": "<trigger> (like open c2 command type etc.)",
     "data": "<cacao-playbook> (json)"
 }
 @endjson
@@ -249,9 +250,9 @@ The types are:
 ....
 @startuml
 enum workflowType {
+    raw CACAO    
     STIX
     openC2
-    raw CACAO
     etc...
 }
 @enduml
@@ -434,10 +435,10 @@ None
 
 ---
 
-### /operator
-Operator endpoint to control coa execution and facilitate manual intervention.
+### /trigger
+Trigger endpoint to control coa execution and facilitate manual intervention.
 
-#### POST /operator/coa/xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx
+#### POST /trigger/coa/xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx
 Execute coa with specific id
 
 ##### Call payload
@@ -445,6 +446,33 @@ None
 
 ##### Response
 Will return 200/OK when finished with coa playbook.
+Execution run ID
+
+##### Error
+400/BAD REQUEST general error on error.
+
+#### POST /trigger/workflow/xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx
+Execute workflow with specific id
+
+##### Call payload
+None
+
+##### Response
+Will return 200/OK when finished with coa playbook.
+Execution run ID
+
+##### Error
+400/BAD REQUEST general error on error.
+
+#### POST /trigger/workflow
+Execute an adhoc playbook
+
+##### Call payload
+A playbook like <<cacao playbook JSON>>
+
+##### Response
+Will return 200/OK when finished with playbook.
+Execution run ID
 
 ##### Error
 400/BAD REQUEST general error on error.
