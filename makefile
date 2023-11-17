@@ -15,7 +15,8 @@ test:
 	go test test/logger/*_test.go -v
 	go test test/decomposer/*_test.go -v
 	go test test/executor/*_test.go -v
-	go test test/routes/*_test.go -v
+	go test test/routes/workflow_api/*_test.go -v
+	go test test/routes/trigger_api/*_test.go -v
 	go test test/capability/ssh/*_test.go -v
 
 

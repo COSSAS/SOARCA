@@ -6,6 +6,11 @@ import (
 
 	mongo "soarca/database/mongodb"
 	workflowRepo "soarca/database/workflow"
+	"soarca/internal/capability"
+	"soarca/internal/capability/ssh"
+	"soarca/internal/decomposer"
+	"soarca/internal/executer"
+	"soarca/internal/guid"
 	routes "soarca/routes"
 	"soarca/utils"
 )
@@ -30,7 +35,12 @@ func SetupAndRunApp() error {
 	// defer database.GetMongoClient().CloseMongoDB()
 
 	workflowrepo := workflowRepo.SetupWorkflowRepository(mongo.GetCacaoRepo(), mongo.DefaultLimitOpts())
-	api := routes.SetupRoutes(workflowrepo)
+	ssh := new(ssh.SshCapability)
+	capabilities := map[string]capability.ICapability{ssh.GetType(): ssh}
+	executer := executer.New(capabilities)
+	guid := new(guid.Guid)
+	decompose := decomposer.New(executer, guid)
+	api := routes.SetupRoutes(workflowrepo, decompose)
 	// get the port and start
 	port := utils.GetEnv("PORT", "8080")
 

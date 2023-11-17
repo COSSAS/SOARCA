@@ -22,6 +22,10 @@ func init() {
 	log = logger.Logger(component, logger.Trace, "", logger.Json)
 }
 
+func (sshCapability *SshCapability) GetType() string {
+	return "ssh"
+}
+
 func (sshCapability *SshCapability) Execute(executionId uuid.UUID,
 	command cacao.Command,
 	authentication cacao.AuthenticationInformation,
