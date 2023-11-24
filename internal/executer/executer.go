@@ -21,7 +21,7 @@ type IExecuter interface {
 		authentication cacao.AuthenticationInformation,
 		target cacao.Target,
 		variable map[string]cacao.Variables,
-		module string) (uuid.UUID, map[string]cacao.Variables, error)
+		module cacao.Target) (uuid.UUID, map[string]cacao.Variables, error)
 }
 
 func init() {
@@ -43,9 +43,9 @@ func (executer *Executer) Execute(executionId uuid.UUID,
 	authentication cacao.AuthenticationInformation,
 	target cacao.Target,
 	variable map[string]cacao.Variables,
-	module string) (uuid.UUID, map[string]cacao.Variables, error) {
+	agent cacao.Target) (uuid.UUID, map[string]cacao.Variables, error) {
 
-	if capability, ok := executer.capabilities[module]; ok {
+	if capability, ok := executer.capabilities[agent.Name]; ok {
 		returnVariables, err := capability.Execute(executionId, command, authentication, target, variable)
 		return executionId, returnVariables, err
 	} else {

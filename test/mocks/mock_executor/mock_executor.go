@@ -18,9 +18,9 @@ func (executer *Mock_Executor) Execute(
 	authentication cacao.AuthenticationInformation,
 	target cacao.Target,
 	variable map[string]cacao.Variables,
-	module string) (uuid.UUID,
+	agent cacao.Target) (uuid.UUID,
 	map[string]cacao.Variables,
 	error) {
-	args := executer.Called(executionId, command, authentication, target, variable, module)
+	args := executer.Called(executionId, command, authentication, target, variable, agent)
 	return args.Get(0).(uuid.UUID), args.Get(1).(map[string]cacao.Variables), args.Error(2)
 }

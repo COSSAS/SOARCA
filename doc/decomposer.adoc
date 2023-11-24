@@ -65,8 +65,9 @@ loop for all playbook steps
     decomposer <-- queue: 
     decomposer -> decomposer: parse step
     decomposer -> decomposer: parse command
-    note over decomposer: correct executer is selected
+   
     decomposer -> exe: execute command
+    note over exe: correct executer is selected
     ... Time has passed ...
     decomposer <-- exe
 end loop

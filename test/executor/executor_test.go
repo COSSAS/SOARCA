@@ -41,6 +41,11 @@ func TestExecuteStep(t *testing.T) {
 		Name: "sometarget",
 	}
 
+	agent := cacao.Target{
+		Type: "ssh",
+		Name: "ssh",
+	}
+
 	mock_ssh.On("Execute",
 		id,
 		expectedCommand,
@@ -54,7 +59,8 @@ func TestExecuteStep(t *testing.T) {
 		expectedCommand,
 		expectedAuth,
 		expectedTarget,
-		map[string]cacao.Variables{expectedVariables.Name: expectedVariables}, "ssh")
+		map[string]cacao.Variables{expectedVariables.Name: expectedVariables},
+		agent)
 
 	assert.Equal(t, err, nil)
 	mock_ssh.AssertExpectations(t)
@@ -71,7 +77,7 @@ func TestNonExistingCapabilityStep(t *testing.T) {
 	var id, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
 	expectedCommand := cacao.Command{
-		Type:    "non-existing",
+		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
 
@@ -89,11 +95,17 @@ func TestNonExistingCapabilityStep(t *testing.T) {
 		Name: "sometarget",
 	}
 
+	agent := cacao.Target{
+		Type: "ssh",
+		Name: "non-existing",
+	}
+
 	_, _, err := executerObject.Execute(id,
 		expectedCommand,
 		expectedAuth,
 		expectedTarget,
-		map[string]cacao.Variables{expectedVariables.Name: expectedVariables}, "non-existing")
+		map[string]cacao.Variables{expectedVariables.Name: expectedVariables},
+		agent)
 
 	assert.Equal(t, err, errors.New("executor is not available in soarca"))
 	mock_ssh.AssertExpectations(t)

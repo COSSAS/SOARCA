@@ -23,7 +23,7 @@ func init() {
 }
 
 func (sshCapability *SshCapability) GetType() string {
-	return "ssh"
+	return "soarca-ssh-capability"
 }
 
 func (sshCapability *SshCapability) Execute(executionId uuid.UUID,

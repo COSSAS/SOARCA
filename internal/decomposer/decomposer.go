@@ -76,16 +76,20 @@ func (decomposer *Decomposer) Execute(playbook cacao.Playbook) (*ExecutionDetail
 			for _, command := range playbook.Workflow[stepId].Commands {
 
 				agent := playbook.AgentDefinitions[playbook.Workflow[stepId].Agent]
-				auth := playbook.AuthenticationInfoDefinitions[agent.AuthInfoIdentifier]
 
-				var id, vars, _ = decomposer.executor.Execute(executionId,
-					command,
-					auth,
-					agent,
-					playbook.Workflow[stepId].StepVariables,
-					playbook.Workflow[stepId].ObjectType)
-				log.Trace(id)
-				log.Trace(vars)
+				for _, element := range playbook.Workflow[stepId].Targets {
+					target := playbook.TargetDefinitions[element]
+					auth := playbook.AuthenticationInfoDefinitions[target.AuthInfoIdentifier]
+
+					var id, vars, _ = decomposer.executor.Execute(executionId,
+						command,
+						auth,
+						target,
+						playbook.Workflow[stepId].StepVariables,
+						agent)
+					log.Trace(id)
+					log.Trace(vars)
+				}
 
 			}
 		}
