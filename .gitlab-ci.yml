@@ -18,7 +18,7 @@ lint:
     extends: .go-cache
     allow_failure: false
     script:
-      - golangci-lint run -v
+      - golangci-lint run --timeout 5m -v
     rules:
       - if: '$CI_COMMIT_REF_NAME != "master" && $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event"'
 
