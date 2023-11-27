@@ -14,7 +14,7 @@ type Mock_Capability struct {
 func (capability *Mock_Capability) Execute(executionId uuid.UUID,
 	command cacao.Command,
 	authentication cacao.AuthenticationInformation,
-	target cacao.Target,
+	target cacao.AgentTarget,
 	variables map[string]cacao.Variables) (map[string]cacao.Variables, error) {
 	args := capability.Called(executionId, command, authentication, target, variables)
 	return args.Get(0).(map[string]cacao.Variables), args.Error(1)

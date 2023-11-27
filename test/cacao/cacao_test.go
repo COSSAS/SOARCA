@@ -75,7 +75,7 @@ func TestCacaoDecode(t *testing.T) {
 	assert.Equal(t, len(workflow.Workflow), 5)
 	step1 := workflow.Workflow["step--a76dbc32-b739-427b-ae13-4ec703d5797e"]
 	assert.Equal(t, step1.ID, "step--a76dbc32-b739-427b-ae13-4ec703d5797e")
-	assert.Equal(t, step1.ObjectType, "action")
+	assert.Equal(t, step1.Type, "action")
 	assert.Equal(t, step1.Name, "IMC assets by CVE")
 	assert.Equal(t, step1.Description, "Check the IMC for affected assets by CVE")
 	assert.Equal(t, step1.OnCompletion, "step--9fcc5c3b-0b70-4d73-b922-cf5491dcd1a4")
@@ -85,7 +85,7 @@ func TestCacaoDecode(t *testing.T) {
 
 	step2 := workflow.Workflow["step--9fcc5c3b-0b70-4d73-b922-cf5491dcd1a4"]
 	assert.Equal(t, step2.ID, "step--9fcc5c3b-0b70-4d73-b922-cf5491dcd1a4")
-	assert.Equal(t, step2.ObjectType, "action")
+	assert.Equal(t, step2.Type, "action")
 	assert.Equal(t, step2.Name, "BIA for CVE")
 	assert.Equal(t, step2.Description, "Perform Business Impact Analysis for CVE")
 	assert.Equal(t, step2.OnCompletion, "step--09b97fab-56a1-45dc-a88f-be3cde3eac33")
@@ -95,7 +95,7 @@ func TestCacaoDecode(t *testing.T) {
 
 	step3 := workflow.Workflow["step--09b97fab-56a1-45dc-a88f-be3cde3eac33"]
 	assert.Equal(t, step3.ID, "step--09b97fab-56a1-45dc-a88f-be3cde3eac33")
-	assert.Equal(t, step3.ObjectType, "action")
+	assert.Equal(t, step3.Type, "action")
 	assert.Equal(t, step3.Name, "Generate CoAs")
 	assert.Equal(t, step3.Description, "Generate Courses of Action")
 	assert.Equal(t, step3.OnCompletion, "step--2190f685-1857-44ac-ad0e-0ded6c6ef3ce")
@@ -105,7 +105,7 @@ func TestCacaoDecode(t *testing.T) {
 
 	step4 := workflow.Workflow["step--2190f685-1857-44ac-ad0e-0ded6c6ef3ce"]
 	assert.Equal(t, step4.ID, "step--2190f685-1857-44ac-ad0e-0ded6c6ef3ce")
-	assert.Equal(t, step4.ObjectType, "action")
+	assert.Equal(t, step4.Type, "action")
 	assert.Equal(t, step4.Name, "BIA for CoAs")
 	assert.Equal(t, step4.Description, "Perform Business Impact Analysis for Courses of Action")
 	assert.Equal(t, step4.OnCompletion, "end--6b23c237-ade8-4d00-9aa1-75999738d557")
@@ -115,7 +115,7 @@ func TestCacaoDecode(t *testing.T) {
 
 	step5 := workflow.Workflow["end--6b23c237-ade8-4d00-9aa1-75999738d557"]
 	assert.Equal(t, step5.ID, "end--6b23c237-ade8-4d00-9aa1-75999738d557")
-	assert.Equal(t, step5.ObjectType, "end")
+	assert.Equal(t, step5.Type, "end")
 	assert.Equal(t, step5.Name, "End SOARCA Main Flow")
 
 	assert.Equal(t, workflow.AgentDefinitions["http-api--7e9174ec-a293-43df-a72d-471c79e276bf"].Name, "Firewall 1")

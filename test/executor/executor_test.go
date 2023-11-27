@@ -28,20 +28,20 @@ func TestExecuteStep(t *testing.T) {
 	}
 
 	expectedVariables := cacao.Variables{
-		ObjectType: "string",
-		Name:       "var1",
-		Value:      "testing",
+		Type:  "string",
+		Name:  "var1",
+		Value: "testing",
 	}
 
 	expectedAuth := cacao.AuthenticationInformation{
 		Name: "user",
 	}
 
-	expectedTarget := cacao.Target{
+	expectedTarget := cacao.AgentTarget{
 		Name: "sometarget",
 	}
 
-	agent := cacao.Target{
+	agent := cacao.AgentTarget{
 		Type: "ssh",
 		Name: "ssh",
 	}
@@ -82,20 +82,20 @@ func TestNonExistingCapabilityStep(t *testing.T) {
 	}
 
 	expectedVariables := cacao.Variables{
-		ObjectType: "string",
-		Name:       "var1",
-		Value:      "testing",
+		Type:  "string",
+		Name:  "var1",
+		Value: "testing",
 	}
 
 	expectedAuth := cacao.AuthenticationInformation{
 		Name: "user",
 	}
 
-	expectedTarget := cacao.Target{
+	expectedTarget := cacao.AgentTarget{
 		Name: "sometarget",
 	}
 
-	agent := cacao.Target{
+	agent := cacao.AgentTarget{
 		Type: "ssh",
 		Name: "non-existing",
 	}

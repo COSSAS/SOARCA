@@ -25,7 +25,7 @@ func TestSshConnection(t *testing.T) {
 		Username: "root",
 		Password: "\"mIUpk_6O\"c9ECziTM67fu,c`gy6PK6:"}
 
-	expectedTarget := cacao.Target{
+	expectedTarget := cacao.AgentTarget{
 		Type:    "ssh",
 		Address: map[string][]string{"ipv4": {"134.221.49.62"}},
 		// Port:               "22",
@@ -33,9 +33,9 @@ func TestSshConnection(t *testing.T) {
 	}
 
 	expectedVariables := cacao.Variables{
-		ObjectType: "string",
-		Name:       "var1",
-		Value:      "testing",
+		Type:  "string",
+		Name:  "var1",
+		Value: "testing",
 	}
 
 	var id, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")

@@ -62,8 +62,8 @@ func (decomposer *Decomposer) Execute(playbook cacao.Playbook) (*ExecutionDetail
 
 	for {
 		if playbook.Workflow[stepId].OnCompletion == "" &&
-			playbook.Workflow[stepId].ObjectType == "end" ||
-			playbook.Workflow[stepId].ObjectType == "end" {
+			playbook.Workflow[stepId].Type == "end" ||
+			playbook.Workflow[stepId].Type == "end" {
 			break
 		} else if playbook.Workflow[stepId].OnCompletion == "" {
 			err := errors.New("empty on_completion_id")
@@ -90,7 +90,6 @@ func (decomposer *Decomposer) Execute(playbook cacao.Playbook) (*ExecutionDetail
 					log.Trace(id)
 					log.Trace(vars)
 				}
-
 			}
 		}
 		stepId = playbook.Workflow[stepId].OnCompletion

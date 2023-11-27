@@ -19,9 +19,9 @@ type IExecuter interface {
 	Execute(executionId uuid.UUID,
 		command cacao.Command,
 		authentication cacao.AuthenticationInformation,
-		target cacao.Target,
+		target cacao.AgentTarget,
 		variable map[string]cacao.Variables,
-		module cacao.Target) (uuid.UUID, map[string]cacao.Variables, error)
+		module cacao.AgentTarget) (uuid.UUID, map[string]cacao.Variables, error)
 }
 
 func init() {
@@ -41,9 +41,9 @@ type Executer struct {
 func (executer *Executer) Execute(executionId uuid.UUID,
 	command cacao.Command,
 	authentication cacao.AuthenticationInformation,
-	target cacao.Target,
+	target cacao.AgentTarget,
 	variable map[string]cacao.Variables,
-	agent cacao.Target) (uuid.UUID, map[string]cacao.Variables, error) {
+	agent cacao.AgentTarget) (uuid.UUID, map[string]cacao.Variables, error) {
 
 	if capability, ok := executer.capabilities[agent.Name]; ok {
 		returnVariables, err := capability.Execute(executionId, command, authentication, target, variable)

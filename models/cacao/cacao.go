@@ -30,7 +30,7 @@ type CivicLocation struct {
 	Precision          string `bson:"precision" json:"precision" validate:"optional"`
 }
 
-type Target struct {
+type AgentTarget struct {
 	ID                    string              `bson:"_id" json:"id" validate:"required"`
 	Type                  string              `bson:"type" json:"type" validate:"required" `
 	Name                  string              `bson:"name" json:"name" validate:"required"`
@@ -71,8 +71,8 @@ type Playbook struct {
 	Workflow                      map[string]Step                      `bson:"workflow"  json:"workflow" validate:"required"`
 	DataMarkingDefs               DataMarking                          `bson:"data_markings" json:"data_marking_definitions" validate:"omitempty"`
 	AuthenticationInfoDefinitions map[string]AuthenticationInformation `bson:"authentication_information" json:"authentication_info_definitions" validate:"omitempty"`
-	AgentDefinitions              map[string]Target                    `bson:"agent_definitions" json:"agent_definitions" validate:"omitempty"`
-	TargetDefinitions             map[string]Target                    `bson:"target_definitions" json:"target_definitions" validate:"omitempty"`
+	AgentDefinitions              map[string]AgentTarget               `bson:"agent_definitions" json:"agent_definitions" validate:"omitempty"`
+	TargetDefinitions             map[string]AgentTarget               `bson:"target_definitions" json:"target_definitions" validate:"omitempty"`
 }
 
 type AuthenticationInformation struct {
@@ -106,7 +106,7 @@ type Command struct {
 }
 
 type Variables struct {
-	ObjectType  string `json:"type,omitempty"`
+	Type        string `json:"type,omitempty"`
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
 	Value       string `json:"value,omitempty"`
@@ -115,7 +115,7 @@ type Variables struct {
 }
 
 type Step struct {
-	ObjectType         string               `json:"type,omitempty"`
+	Type               string               `json:"type,omitempty"`
 	ID                 string               `json:"id,omitempty"`
 	Name               string               `json:"name,omitempty"`
 	Description        string               `json:"description,omitempty"`
@@ -139,11 +139,11 @@ type Step struct {
 	OnTrue             []string             `json:"on_true,omitempty"`
 	OnFalse            []string             `json:"on_false,omitempty"`
 	Switch             string               `json:"switch,omitempty"`
-	Cases              map[string][]string  `json:"cases,omitempty"`
+	Cases              map[string]string    `json:"cases,omitempty"`
 }
 
 type DataMarking struct {
-	ObjectType                 string               `json:"type,omitempty"`
+	Type                       string               `json:"type,omitempty"`
 	ID                         string               `json:"id,omitempty"`
 	Name                       string               `json:"name,omitempty"`
 	Description                string               `json:"description,omitempty"`

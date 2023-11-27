@@ -29,7 +29,7 @@ func (sshCapability *SshCapability) GetType() string {
 func (sshCapability *SshCapability) Execute(executionId uuid.UUID,
 	command cacao.Command,
 	authentication cacao.AuthenticationInformation,
-	target cacao.Target,
+	target cacao.AgentTarget,
 	variables map[string]cacao.Variables) (map[string]cacao.Variables, error) {
 
 	host := CombinePortAndAddress(target.Address, target.Port)
