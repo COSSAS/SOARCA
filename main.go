@@ -1,7 +1,7 @@
 package main
 
 import (
-	app "soarca/app"
+	"soarca/application"
 	"soarca/logger"
 
 	"github.com/joho/godotenv"
@@ -14,14 +14,14 @@ func init() {
 }
 
 func main() {
-	err := godotenv.Load(".env.example")
-	if err != nil {
+	errenv := godotenv.Load(".env.example")
+	if errenv != nil {
 		log.Fatal("Failed to read env variable")
 	}
-	app.LoadComponent()
-	err = app.SetupAndRunApp()
-	if err != nil {
-		log.Fatal("Something Went wrong with setting-up the app, msg: ", err)
-		panic(err)
+
+	errinit := application.InitialiseAppComponents()
+	if errinit != nil {
+		log.Fatal("Something Went wrong with setting-up the app, msg: ", errinit)
+		panic(errinit)
 	}
 }

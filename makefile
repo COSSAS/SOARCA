@@ -8,6 +8,7 @@ lint:
 	golangci-lint run -v
 
 build:
+	swag init
 	go build -o ./build/soarca main.go
 
 test:
@@ -27,6 +28,7 @@ clean:
 compile:
 	echo "Compiling for every OS and Platform"
 	
+	swag init
 	GOOS=linux GOARCH=amd64 go build -o bin/${BINARY_NAME}-${VERSION}-linux-amd64 main.go
 	GOOS=darwin GOARCH=arm64 go build -o bin/${BINARY_NAME}-${VERSION}-darwin-arm64 main.go
 	GOOS=windows GOARCH=amd64 go build -o bin/${BINARY_NAME}-${VERSION}-windows-amd64 main.go

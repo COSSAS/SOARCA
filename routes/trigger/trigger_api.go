@@ -35,8 +35,9 @@ func New(decomposer decomposer.IDecomposer) *TriggerApi {
 }
 
 func (trigger *TriggerApi) Execute(context *gin.Context) {
-	jsonData, errio := io.ReadAll(context.Request.Body)
-	if errio != nil {
+	log.Trace("test")
+	jsonData, errIo := io.ReadAll(context.Request.Body)
+	if errIo != nil {
 		log.Error("failed")
 		error.SendErrorResponse(context, http.StatusBadRequest,
 			"Failed to marshall json on server side",
@@ -50,8 +51,8 @@ func (trigger *TriggerApi) Execute(context *gin.Context) {
 			"POST /trigger/workflow", "")
 		return
 	}
-	executionDetail, errdecomposer := trigger.decomposer.Execute(*playbook)
-	if errdecomposer != nil {
+	executionDetail, errDecomposer := trigger.decomposer.Execute(*playbook)
+	if errDecomposer != nil {
 		error.SendErrorResponse(context, http.StatusBadRequest,
 			"Failed to decode playbook",
 			"POST /trigger/workflow",
@@ -59,6 +60,7 @@ func (trigger *TriggerApi) Execute(context *gin.Context) {
 	} else {
 		msg := gin.H{
 			"execution_id": executionDetail.ExecutionId.String(),
+			"payload":      executionDetail.PlaybookId,
 		}
 		context.JSON(http.StatusOK, msg)
 	}

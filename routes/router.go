@@ -17,21 +17,33 @@ import (
 
 // Function setup the required routes for the API layout.
 // Requires database dependency injection.
-func SetupRoutes(workflowRepo *workflowRepository.WorkflowRepository,
-	decomposer decomposer.IDecomposer) *gin.Engine {
+
+func Database(app *gin.Engine,
+	workflowRepo workflowRepository.IWorkflowRepository) error {
+	workflow_routes.Routes(app, workflowRepo)
+	return nil
+}
+
+func Logging(app *gin.Engine) {
+	//app.Use(middelware.LoggingMiddleware(log.Logger))
+}
+
+func Api(app *gin.Engine,
+	decomposer decomposer.IDecomposer) error {
 	log.Trace("Trying to setup all Routes")
 	// gin.SetMode(gin.ReleaseMode)
 
 	trigger_api := trigger.New(decomposer)
 
-	app := gin.New()
-	// app.Use(middelware.LoggingMiddleware(log.Logger))
 	coa_routes.Routes(app)
-	workflow_routes.Routes(app, workflowRepo)
+
 	status.Routes(app)
 	operator.Routes(app)
-	swagger.Routes(app)
 	trigger.Routes(app, trigger_api)
 
-	return app
+	return nil
+}
+
+func Swagger(app *gin.Engine) {
+	swagger.Routes(app)
 }

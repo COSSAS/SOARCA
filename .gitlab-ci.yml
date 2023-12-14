@@ -28,6 +28,7 @@ build-job:       # This job runs in the build stage, which runs first.
   image: golang:latest
   stage: build
   script:
+    - go install github.com/swaggo/swag/cmd/swag@latest
     - make build
   rules:
     - if: '$CI_COMMIT_REF_NAME != "master" && $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -41,6 +42,7 @@ cross-compile:
       - bin/
     expire_in: 2 hrs
   script:
+    - go install github.com/swaggo/swag/cmd/swag@latest
     - make compile
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_NAME == "master" || $CI_PIPELINE_SOURCE == "merge_request_event"'

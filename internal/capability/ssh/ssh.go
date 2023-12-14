@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"soarca/models/cacao"
 	"strings"
+	"time"
 
 	"soarca/logger"
 
@@ -31,14 +32,17 @@ func (sshCapability *SshCapability) Execute(executionId uuid.UUID,
 	authentication cacao.AuthenticationInformation,
 	target cacao.AgentTarget,
 	variables map[string]cacao.Variables) (map[string]cacao.Variables, error) {
+	log.Trace(executionId)
 
 	host := CombinePortAndAddress(target.Address, target.Port)
 
-	errauth := CheckSshAuthenticationInfo(authentication)
+	errAuth := CheckSshAuthenticationInfo(authentication)
 
-	if errauth != nil {
-		log.Error("No valid authentication information")
-		return map[string]cacao.Variables{}, errauth
+	if errAuth != nil {
+		log.Error(errAuth)
+		return map[string]cacao.Variables{}, errAuth
+	} else {
+		log.Trace(host)
 	}
 
 	var config ssh.ClientConfig
@@ -50,12 +54,13 @@ func (sshCapability *SshCapability) Execute(executionId uuid.UUID,
 				ssh.Password(authentication.Password),
 			},
 			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+			Timeout:         time.Duration(time.Second * 20),
 		}
 	} else if authentication.Type == "private-key" {
-		signer, errkey := ssh.ParsePrivateKey([]byte(authentication.PrivateKey))
-		if errkey != nil || authentication.Password == "" {
-			log.Error("No valid authentication information")
-			return map[string]cacao.Variables{}, errkey
+		signer, errKey := ssh.ParsePrivateKey([]byte(authentication.PrivateKey))
+		if errKey != nil || authentication.Password == "" {
+			log.Error("no valid authentication information: ", errKey)
+			return map[string]cacao.Variables{}, errKey
 		}
 		config = ssh.ClientConfig{
 			User: authentication.Username,
@@ -63,6 +68,7 @@ func (sshCapability *SshCapability) Execute(executionId uuid.UUID,
 				ssh.PublicKeys(signer),
 			},
 			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+			Timeout:         time.Duration(time.Second * 20),
 		}
 
 	}
@@ -71,11 +77,13 @@ func (sshCapability *SshCapability) Execute(executionId uuid.UUID,
 
 	conn, err := ssh.Dial("tcp", host, &config)
 	if err != nil {
+		log.Error(err)
 		return map[string]cacao.Variables{}, err
 	}
 	var session *ssh.Session
 	session, err = conn.NewSession()
 	if err != nil {
+		log.Error(err)
 		return map[string]cacao.Variables{}, err
 	}
 
@@ -83,9 +91,12 @@ func (sshCapability *SshCapability) Execute(executionId uuid.UUID,
 	defer session.Close()
 
 	if err != nil {
+		log.Error(err)
 		return map[string]cacao.Variables{"result": {Name: "result", Value: string(response)}}, err
 	}
-	return map[string]cacao.Variables{"result": {Name: "result", Value: string(response)}}, err
+	results := map[string]cacao.Variables{"result": {Name: "result", Value: string(response)}}
+	log.Trace("Finished ssh execution will return the variables: ", results)
+	return results, err
 }
 
 func CombinePortAndAddress(addresses map[string][]string, port string) string {
