@@ -1,12 +1,25 @@
 package cacao
 
 import (
-	//"strconv"
 	"encoding/json"
 	"time"
 )
 
 type Metadata struct{}
+
+const (
+	StepTypeEnd             = "end"
+	StepTypeStart           = "start"
+	StepTypeAction          = "action"
+	StepTypePlaybook        = "playbook-action"
+	StepTypeParallel        = "parallel"
+	StepTypeIfCondition     = "if-condition"
+	StepTypeWhileCondition  = "while-condition"
+	StepTypeSwitchCondition = "switch-condition"
+
+	CACAO_VERSION_1 = "cacao-1.0"
+	CACAO_VERSION_2 = "cacao-2.0"
+)
 
 type (
 	DataMarkings struct{}
@@ -14,38 +27,7 @@ type (
 	Contact      struct{}
 )
 
-type CivicLocation struct {
-	Name               string `bson:"name" json:"name" validate:"optional"`
-	Description        string `bson:"description" json:"description" validate:"optional"`
-	BuildingDetails    string `bson:"building_details" json:"building_details" validate:"optional"`
-	NetworkDetails     string `bson:"network_details" json:"network_details" validate:"optional"`
-	Region             string `bson:"region" json:"region" validate:"optional"`
-	Country            string `bson:"country" json:"country" validate:"optional"`
-	AdministrativeArea string `bson:"administrative_area" json:"administrative_area" validate:"optional"`
-	City               string `bson:"city" json:"city" validate:"optional"`
-	StreetAddress      string `bson:"street_address" json:"street_address" validate:"optional"`
-	PostalCode         string `bson:"postal_code" json:"postal_code" validate:"optional"`
-	Latitude           string `bson:"latitude" json:"latitude" validate:"optional"`
-	Longitude          string `bson:"longitude" json:"longitude" validate:"optional"`
-	Precision          string `bson:"precision" json:"precision" validate:"optional"`
-}
-
-type AgentTarget struct {
-	ID                    string              `bson:"_id" json:"id" validate:"required"`
-	Type                  string              `bson:"type" json:"type" validate:"required" `
-	Name                  string              `bson:"name" json:"name" validate:"required"`
-	Description           string              `bson:"description" json:"description" validate:"optional"`
-	Location              CivicLocation       `bson:"location" json:"location" validate:"optional"`
-	AgentTargetExtensions []string            `bson:"agent_target_extensions" json:"agent_target_extensions" validate:"optional"`
-	Contact               Contact             `bson:"contact" json:"contact" validate:"optional"`
-	Logical               []string            `bson:"logical" json:"logical" validate:"optional"`
-	Sector                string              `bson:"sector" json:"sector" validate:"optional"`
-	HttpUrl               string              `bson:"http_url" json:"http_url" validate:"optional"`
-	AuthInfoIdentifier    string              `bson:"authentication_info" json:"authentication_info" validate:"optional"`
-	Category              []string            `bson:"category" json:"category" validate:"optional"`
-	Address               map[string][]string `bson:"address" json:"address" validate:"optional"`
-	Port                  string              `bson:"port" json:"port" validate:"optional"`
-}
+type Workflow map[string]Step
 
 type Playbook struct {
 	ID                            string                               `bson:"_id" json:"id" validate:"required"`
@@ -68,11 +50,44 @@ type Playbook struct {
 	Markings                      []string                             `bson:"markings" json:"markings"`
 	WorkflowStart                 string                               `bson:"workflow_start" json:"workflow_start" validate:"required"`
 	WorkflowException             string                               `bson:"workflow_exception" json:"workflow_exception" validate:"required"`
-	Workflow                      map[string]Step                      `bson:"workflow"  json:"workflow" validate:"required"`
+	Workflow                      Workflow                             `bson:"workflow"  json:"workflow" validate:"required"`
 	DataMarkingDefs               DataMarking                          `bson:"data_markings" json:"data_marking_definitions" validate:"omitempty"`
 	AuthenticationInfoDefinitions map[string]AuthenticationInformation `bson:"authentication_information" json:"authentication_info_definitions" validate:"omitempty"`
 	AgentDefinitions              map[string]AgentTarget               `bson:"agent_definitions" json:"agent_definitions" validate:"omitempty"`
 	TargetDefinitions             map[string]AgentTarget               `bson:"target_definitions" json:"target_definitions" validate:"omitempty"`
+}
+
+type CivicLocation struct {
+	Name               string `bson:"name" json:"name" validate:"optional"`
+	Description        string `bson:"description" json:"description" validate:"optional"`
+	BuildingDetails    string `bson:"building_details" json:"building_details" validate:"optional"`
+	NetworkDetails     string `bson:"network_details" json:"network_details" validate:"optional"`
+	Region             string `bson:"region" json:"region" validate:"optional"`
+	Country            string `bson:"country" json:"country" validate:"optional"`
+	AdministrativeArea string `bson:"administrative_area" json:"administrative_area" validate:"optional"`
+	City               string `bson:"city" json:"city" validate:"optional"`
+	StreetAddress      string `bson:"street_address" json:"street_address" validate:"optional"`
+	PostalCode         string `bson:"postal_code" json:"postal_code" validate:"optional"`
+	Latitude           string `bson:"latitude" json:"latitude" validate:"optional"`
+	Longitude          string `bson:"longitude" json:"longitude" validate:"optional"`
+	Precision          string `bson:"precision" json:"precision" validate:"optional"`
+}
+
+type AgentTarget struct {
+	ID                    string              `bson:"_id" json:"id" validate:"required"`
+	Type                  string              `bson:"type" json:"type" validate:"required"`
+	Name                  string              `bson:"name" json:"name" validate:"required"`
+	Description           string              `bson:"description" json:"description" validate:"optional"`
+	Location              CivicLocation       `bson:"location" json:"location" validate:"optional"`
+	AgentTargetExtensions []string            `bson:"agent_target_extensions" json:"agent_target_extensions" validate:"optional"`
+	Contact               Contact             `bson:"contact" json:"contact" validate:"optional"`
+	Logical               []string            `bson:"logical" json:"logical" validate:"optional"`
+	Sector                string              `bson:"sector" json:"sector" validate:"optional"`
+	HttpUrl               string              `bson:"http_url" json:"http_url" validate:"optional"`
+	AuthInfoIdentifier    string              `bson:"authentication_info" json:"authentication_info" validate:"optional"`
+	Category              []string            `bson:"category" json:"category" validate:"optional"`
+	Address               map[string][]string `bson:"address" json:"address" validate:"optional"`
+	Port                  string              `bson:"port" json:"port" validate:"optional"`
 }
 
 type AuthenticationInformation struct {
@@ -136,10 +151,11 @@ type Step struct {
 	PlaybookVersion    string               `json:"playbook_version,omitempty"`
 	NextSteps          []string             `json:"next_steps,omitempty"`
 	Condition          string               `json:"condition,omitempty"`
-	OnTrue             []string             `json:"on_true,omitempty"`
-	OnFalse            []string             `json:"on_false,omitempty"`
+	OnTrue             string               `json:"on_true,omitempty"`
+	OnFalse            string               `json:"on_false,omitempty"`
 	Switch             string               `json:"switch,omitempty"`
 	Cases              map[string]string    `json:"cases,omitempty"`
+	AuthenticationInfo string               `json:"authentication_info,omitempty"`
 }
 
 type DataMarking struct {
@@ -168,6 +184,7 @@ type DataMarking struct {
 	// marking_extensions
 }
 
+// Deprecated
 func Decode(data []byte) *Playbook {
 	var playbook Playbook
 

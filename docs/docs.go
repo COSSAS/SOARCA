@@ -452,10 +452,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "workflow": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/cacao.Step"
-                    }
+                    "$ref": "#/definitions/cacao.Workflow"
                 },
                 "workflow_exception": {
                     "type": "string"
@@ -469,6 +466,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "agent": {
+                    "type": "string"
+                },
+                "authentication_info": {
                     "type": "string"
                 },
                 "cases": {
@@ -523,19 +523,13 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "on_false": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "string"
                 },
                 "on_success": {
                     "type": "string"
                 },
                 "on_true": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "string"
                 },
                 "out_args": {
                     "type": "array",
@@ -596,6 +590,12 @@ const docTemplate = `{
                 "value": {
                     "type": "string"
                 }
+            }
+        },
+        "cacao.Workflow": {
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "#/definitions/cacao.Step"
             }
         }
     }

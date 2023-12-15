@@ -440,10 +440,7 @@
                     "type": "string"
                 },
                 "workflow": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/cacao.Step"
-                    }
+                    "$ref": "#/definitions/cacao.Workflow"
                 },
                 "workflow_exception": {
                     "type": "string"
@@ -457,6 +454,9 @@
             "type": "object",
             "properties": {
                 "agent": {
+                    "type": "string"
+                },
+                "authentication_info": {
                     "type": "string"
                 },
                 "cases": {
@@ -511,19 +511,13 @@
                     "type": "string"
                 },
                 "on_false": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "string"
                 },
                 "on_success": {
                     "type": "string"
                 },
                 "on_true": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "string"
                 },
                 "out_args": {
                     "type": "array",
@@ -584,6 +578,12 @@
                 "value": {
                     "type": "string"
                 }
+            }
+        },
+        "cacao.Workflow": {
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "#/definitions/cacao.Step"
             }
         }
     }

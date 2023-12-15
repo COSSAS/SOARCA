@@ -11,6 +11,13 @@ import (
 	"github.com/go-playground/assert/v2"
 )
 
+// NOTE: using CACAO V2 CDS01 SCHEMA because schema for CDS03 has bug:
+// https://raw.githubusercontent.com/cyentific-rni/cacao-json-schemas/cacao-v2.0-csd03/schemas/data-markings/string returned status code 404
+// The schemas are CDS01 compatible as they have the following properties renamed:
+//   - "agents" from CDS01 instead of "agent_definitions" from CDS03+
+//   - "targets" from CDS01 instead of "target_definitions" from CDS03+
+var PB_PATH string = "playbooks/"
+
 func getTime(data string) time.Time {
 	res, _ := time.Parse(time.RFC3339, data)
 	return res
@@ -20,7 +27,7 @@ func TestCacaoDecode(t *testing.T) {
 	// p := cacao.Playbook{}
 	// fmt.Println(p)
 
-	jsonFile, err := os.Open("playbook.json")
+	jsonFile, err := os.Open(PB_PATH + "playbook.json")
 	if err != nil {
 		fmt.Println(err)
 		t.Fail()
@@ -65,46 +72,46 @@ func TestCacaoDecode(t *testing.T) {
 	assert.Equal(t, workflow.ExternalReferences[0].Description, "SOARCA Homepage")
 	assert.Equal(t, workflow.ExternalReferences[0].Source, "TNO CST")
 	assert.Equal(t, workflow.ExternalReferences[0].URL, "http://tno.nl/cst")
-	assert.Equal(t, workflow.WorkflowStart, "step--a76dbc32-b739-427b-ae13-4ec703d5797e")
-	assert.Equal(t, workflow.WorkflowException, "step--40131926-89e9-44df-a018-5f92f2df7914")
+	assert.Equal(t, workflow.WorkflowStart, "action--a76dbc32-b739-427b-ae13-4ec703d5797e")
+	assert.Equal(t, workflow.WorkflowException, "end--40131926-89e9-44df-a018-5f92f2df7914")
 
 	assert.Equal(t, len(workflow.AuthenticationInfoDefinitions), 1)
 	assert.Equal(t, workflow.AuthenticationInfoDefinitions["http-basic--76c26f7f-9a15-40ff-a90a-7b19e23372ae"].UserId, "admin")
 	assert.Equal(t, workflow.AuthenticationInfoDefinitions["http-basic--76c26f7f-9a15-40ff-a90a-7b19e23372ae"].Password, "super-secure-password")
 
 	assert.Equal(t, len(workflow.Workflow), 5)
-	step1 := workflow.Workflow["step--a76dbc32-b739-427b-ae13-4ec703d5797e"]
-	assert.Equal(t, step1.ID, "step--a76dbc32-b739-427b-ae13-4ec703d5797e")
+	step1 := workflow.Workflow["action--a76dbc32-b739-427b-ae13-4ec703d5797e"]
+	assert.Equal(t, step1.ID, "action--a76dbc32-b739-427b-ae13-4ec703d5797e")
 	assert.Equal(t, step1.Type, "action")
 	assert.Equal(t, step1.Name, "IMC assets by CVE")
 	assert.Equal(t, step1.Description, "Check the IMC for affected assets by CVE")
-	assert.Equal(t, step1.OnCompletion, "step--9fcc5c3b-0b70-4d73-b922-cf5491dcd1a4")
+	assert.Equal(t, step1.OnCompletion, "action--9fcc5c3b-0b70-4d73-b922-cf5491dcd1a4")
 	assert.Equal(t, len(step1.Commands), 1)
 	assert.Equal(t, step1.Commands[0].Command, "GET http://__imc_address__/by/__cve__")
 	assert.Equal(t, step1.Commands[0].Type, "http-api")
 
-	step2 := workflow.Workflow["step--9fcc5c3b-0b70-4d73-b922-cf5491dcd1a4"]
-	assert.Equal(t, step2.ID, "step--9fcc5c3b-0b70-4d73-b922-cf5491dcd1a4")
+	step2 := workflow.Workflow["action--9fcc5c3b-0b70-4d73-b922-cf5491dcd1a4"]
+	assert.Equal(t, step2.ID, "action--9fcc5c3b-0b70-4d73-b922-cf5491dcd1a4")
 	assert.Equal(t, step2.Type, "action")
 	assert.Equal(t, step2.Name, "BIA for CVE")
 	assert.Equal(t, step2.Description, "Perform Business Impact Analysis for CVE")
-	assert.Equal(t, step2.OnCompletion, "step--09b97fab-56a1-45dc-a88f-be3cde3eac33")
+	assert.Equal(t, step2.OnCompletion, "action--09b97fab-56a1-45dc-a88f-be3cde3eac33")
 	assert.Equal(t, len(step2.Commands), 1)
 	assert.Equal(t, step2.Commands[0].Command, "GET http://__bia_address__/analysisreport/__cve__")
 	assert.Equal(t, step2.Commands[0].Type, "http-api")
 
-	step3 := workflow.Workflow["step--09b97fab-56a1-45dc-a88f-be3cde3eac33"]
-	assert.Equal(t, step3.ID, "step--09b97fab-56a1-45dc-a88f-be3cde3eac33")
+	step3 := workflow.Workflow["action--09b97fab-56a1-45dc-a88f-be3cde3eac33"]
+	assert.Equal(t, step3.ID, "action--09b97fab-56a1-45dc-a88f-be3cde3eac33")
 	assert.Equal(t, step3.Type, "action")
 	assert.Equal(t, step3.Name, "Generate CoAs")
 	assert.Equal(t, step3.Description, "Generate Courses of Action")
-	assert.Equal(t, step3.OnCompletion, "step--2190f685-1857-44ac-ad0e-0ded6c6ef3ce")
+	assert.Equal(t, step3.OnCompletion, "action--2190f685-1857-44ac-ad0e-0ded6c6ef3ce")
 	assert.Equal(t, len(step3.Commands), 1)
 	assert.Equal(t, step3.Commands[0].Command, "GET http://__coagenerator_address__/coa/__assetuuid__")
 	assert.Equal(t, step3.Commands[0].Type, "http-api")
 
-	step4 := workflow.Workflow["step--2190f685-1857-44ac-ad0e-0ded6c6ef3ce"]
-	assert.Equal(t, step4.ID, "step--2190f685-1857-44ac-ad0e-0ded6c6ef3ce")
+	step4 := workflow.Workflow["action--2190f685-1857-44ac-ad0e-0ded6c6ef3ce"]
+	assert.Equal(t, step4.ID, "action--2190f685-1857-44ac-ad0e-0ded6c6ef3ce")
 	assert.Equal(t, step4.Type, "action")
 	assert.Equal(t, step4.Name, "BIA for CoAs")
 	assert.Equal(t, step4.Description, "Perform Business Impact Analysis for Courses of Action")

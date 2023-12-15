@@ -25,20 +25,6 @@
             "password": "super-secure-password"
         }
     },
-    "agent_definitions": {
-        "http-api--7e9174ec-a293-43df-a72d-471c79e276bf": {
-            "type": "http-api",
-            "name": "Firewall 1",
-            "http_url": "hxxp://example.com/v1/",
-            "authentication_info": "http-basic--76c26f7f-9a15-40ff-a90a-7b19e23372ae",
-            "category": [
-                "firewall"
-            ],
-            "location": {
-                "name": "Eindhoven"
-            }
-        }
-    },
     "external_references": [
         {
             "name": "TNO SOARCA",
@@ -47,61 +33,70 @@
             "url": "http://tno.nl/cst"
         }
     ],
-    "workflow_start": "step--a76dbc32-b739-427b-ae13-4ec703d5797e",
-    "workflow_exception": "step--40131926-89e9-44df-a018-5f92f2df7914",
+    "workflow_start": "action--a76dbc32-b739-427b-ae13-4ec703d5797e",
+    "workflow_exception": "end--40131926-89e9-44df-a018-5f92f2df7914",
     "workflow": {
-        "step--a76dbc32-b739-427b-ae13-4ec703d5797e": {
+        "action--a76dbc32-b739-427b-ae13-4ec703d5797e": {
             "type": "action",
             "name": "IMC assets by CVE",
             "description": "Check the IMC for affected assets by CVE",
-            "on_completion": "step--9fcc5c3b-0b70-4d73-b922-cf5491dcd1a4",
+            "on_completion": "action--9fcc5c3b-0b70-4d73-b922-cf5491dcd1a4",
             "commands": [
                 {
                     "type": "http-api",
                     "command": "GET http://__imc_address__/by/__cve__"
                 }
-            ]
+            ],
+            "agent": "individual--6b23a237-ade8-4d00-9aa1-75999732d557"
         },
-        "step--9fcc5c3b-0b70-4d73-b922-cf5491dcd1a4": {
+        "action--9fcc5c3b-0b70-4d73-b922-cf5491dcd1a4": {
             "type": "action",
             "name": "BIA for CVE",
             "description": "Perform Business Impact Analysis for CVE",
-            "on_completion": "step--09b97fab-56a1-45dc-a88f-be3cde3eac33",
+            "on_completion": "action--09b97fab-56a1-45dc-a88f-be3cde3eac33",
             "commands": [
                 {
                     "type": "http-api",
                     "command": "GET http://__bia_address__/analysisreport/__cve__"
                 }
-            ]
+            ],
+            "agent": "individual--6b23a237-ade8-4d00-9aa1-75999732d557"
         },
-        "step--09b97fab-56a1-45dc-a88f-be3cde3eac33": {
+        "action--09b97fab-56a1-45dc-a88f-be3cde3eac33": {
             "type": "action",
             "name": "Generate CoAs",
             "description": "Generate Courses of Action",
-            "on_completion": "step--2190f685-1857-44ac-ad0e-0ded6c6ef3ce",
+            "on_completion": "action--2190f685-1857-44ac-ad0e-0ded6c6ef3ce",
             "commands": [
                 {
                     "type": "http-api",
                     "command": "GET http://__coagenerator_address__/coa/__assetuuid__"
                 }
             ],
-            "target": []
+            "agent": "individual--6b23a237-ade8-4d00-9aa1-75999732d557"
         },
-        "step--2190f685-1857-44ac-ad0e-0ded6c6ef3ce": {
+        "action--2190f685-1857-44ac-ad0e-0ded6c6ef3ce": {
             "type": "action",
             "name": "BIA for CoAs",
             "description": "Perform Business Impact Analysis for Courses of Action",
-            "on_completion": "end--6b23c237-ade8-4d00-9aa1-75999738d557",
+            "on_completion": "end--6b23c237-ade8-4d00-9aa1-75999738d558",
             "commands": [
                 {
                     "type": "http-api",
                     "command": "GET http://__bia_address__/analysisreport/__coa_list__"
                 }
-            ]
+            ],
+            "agent": "individual--6b23a237-ade8-4d00-9aa1-75999732d557"
         },
         "end--6b23c237-ade8-4d00-9aa1-75999738d557": {
             "type": "end",
             "name": "End SOARCA Main Flow"
+        }
+    },
+    "agent_definitions": {
+        "individual--6b23a237-ade8-4d00-9aa1-75999732d557": {
+            "name": "banana rama",
+            "banana": "rama"
         }
     }
 }

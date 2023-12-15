@@ -25,9 +25,9 @@
             "password": "super-secure-password"
         }
     },
-    "agent_definitions": {
+    "agents": {
         "http-api--7e9174ec-a293-43df-a72d-471c79e276bf": {
-            "type": "http-api",
+            
             "name": "Firewall 1",
             "http_url": "hxxp://example.com/v1/",
             "authentication_info": "http-basic--76c26f7f-9a15-40ff-a90a-7b19e23372ae",
@@ -37,10 +37,6 @@
             "location": {
                 "name": "Eindhoven"
             }
-        },
-        "individual--6b23a237-ade8-4d00-9aa1-75999732d557": {
-            "name": "banana rama",
-            "banana": "rama"
         }
     },
     "external_references": [

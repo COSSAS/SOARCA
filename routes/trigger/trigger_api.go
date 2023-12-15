@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"soarca/internal/decomposer"
 	"soarca/logger"
-	"soarca/models/cacao"
+	"soarca/models/decoder"
 	"soarca/routes/error"
 
 	"github.com/gin-gonic/gin"
@@ -35,7 +35,6 @@ func New(decomposer decomposer.IDecomposer) *TriggerApi {
 }
 
 func (trigger *TriggerApi) Execute(context *gin.Context) {
-	log.Trace("test")
 	jsonData, errIo := io.ReadAll(context.Request.Body)
 	if errIo != nil {
 		log.Error("failed")
@@ -44,7 +43,8 @@ func (trigger *TriggerApi) Execute(context *gin.Context) {
 			"POST /trigger/workflow", "")
 		return
 	}
-	playbook := cacao.Decode(jsonData)
+	// playbook := cacao.Decode(jsonData)
+	playbook := decoder.DecodeValidate(jsonData)
 	if playbook == nil {
 		error.SendErrorResponse(context, http.StatusBadRequest,
 			"Failed to decode playbook",

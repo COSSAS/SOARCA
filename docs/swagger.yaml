@@ -255,9 +255,7 @@ definitions:
       valid_until:
         type: string
       workflow:
-        additionalProperties:
-          $ref: '#/definitions/cacao.Step'
-        type: object
+        $ref: '#/definitions/cacao.Workflow'
       workflow_exception:
         type: string
       workflow_start:
@@ -286,6 +284,8 @@ definitions:
   cacao.Step:
     properties:
       agent:
+        type: string
+      authentication_info:
         type: string
       cases:
         additionalProperties:
@@ -322,15 +322,11 @@ definitions:
       on_failure:
         type: string
       on_false:
-        items:
-          type: string
-        type: array
+        type: string
       on_success:
         type: string
       on_true:
-        items:
-          type: string
-        type: array
+        type: string
       out_args:
         items:
           type: string
@@ -370,6 +366,10 @@ definitions:
         type: string
       value:
         type: string
+    type: object
+  cacao.Workflow:
+    additionalProperties:
+      $ref: '#/definitions/cacao.Step'
     type: object
 info:
   contact: {}

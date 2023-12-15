@@ -74,7 +74,6 @@ func (decomposer *Decomposer) Execute(playbook cacao.Playbook) (*ExecutionDetail
 		}
 		if len(playbook.Workflow[stepId].Commands) > 0 {
 			for _, command := range playbook.Workflow[stepId].Commands {
-
 				agent := playbook.AgentDefinitions[playbook.Workflow[stepId].Agent]
 
 				for _, element := range playbook.Workflow[stepId].Targets {
