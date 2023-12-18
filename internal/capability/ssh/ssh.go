@@ -92,9 +92,9 @@ func (sshCapability *SshCapability) Execute(executionId uuid.UUID,
 
 	if err != nil {
 		log.Error(err)
-		return map[string]cacao.Variables{"result": {Name: "result", Value: string(response)}}, err
+		return map[string]cacao.Variables{"__soarca_ssh_result__": {Name: "result", Value: string(response)}}, err
 	}
-	results := map[string]cacao.Variables{"result": {Name: "result", Value: string(response)}}
+	results := map[string]cacao.Variables{"__soarca_ssh_result__": {Name: "result", Value: string(response)}}
 	log.Trace("Finished ssh execution will return the variables: ", results)
 	return results, err
 }
