@@ -218,8 +218,20 @@ const docTemplate = `{
                 "command_b64": {
                     "type": "string"
                 },
+                "content": {
+                    "type": "string"
+                },
+                "content_b64": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
+                },
+                "headers": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "playbook_activity": {
                     "type": "string"

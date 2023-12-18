@@ -19,6 +19,7 @@ test:
 	go test test/routes/workflow_api/*_test.go -v
 	go test test/routes/trigger_api/*_test.go -v
 	go test test/capability/ssh/*_test.go -v
+	go test test/capability/http/*_test.go -v
 
 
 clean:

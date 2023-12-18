@@ -109,8 +109,16 @@ definitions:
         type: string
       command_b64:
         type: string
+      content:
+        type: string
+      content_b64:
+        type: string
       description:
         type: string
+      headers:
+        additionalProperties:
+          type: string
+        type: object
       playbook_activity:
         type: string
       type:

@@ -17,6 +17,9 @@ const (
 	StepTypeWhileCondition  = "while-condition"
 	StepTypeSwitchCondition = "switch-condition"
 
+	AuthInfoOAuth2Type    = "oauth2"
+	AuthInfoHTTPBasicType = "http-basic"
+
 	CACAO_VERSION_1 = "cacao-1.0"
 	CACAO_VERSION_2 = "cacao-2.0"
 )
@@ -112,12 +115,15 @@ type ExternalReferences struct {
 	URL         string `bson:"url"  json:"url" validate:"required,url"`
 }
 type Command struct {
-	Type             string `bson:"type"  json:"type" validate:"required"`
-	Command          string `bson:"command" json:"command" validate:"required"`
-	Description      string `bson:"description" json:"description" validate:"omitempty"`
-	CommandB64       string `bson:"base-64-command-string" json:"command_b64" validate:"omitempty"`
-	Version          string `bson:"version" json:"version" validate:"omitempty"`
-	PlaybookActivity string `bson:"playbook-activity" json:"playbook_activity" validate:"omitempty"`
+	Type             string            `bson:"type"  json:"type" validate:"required"`
+	Command          string            `bson:"command" json:"command" validate:"required"`
+	Description      string            `bson:"description" json:"description" validate:"omitempty"`
+	CommandB64       string            `bson:"base-64-command-string" json:"command_b64" validate:"omitempty"`
+	Version          string            `bson:"version" json:"version" validate:"omitempty"`
+	PlaybookActivity string            `bson:"playbook-activity" json:"playbook_activity" validate:"omitempty"`
+	Headers          map[string]string `bson:"headers" json:"headers" validate:"omitempty"`
+	Content          string            `bson:"content" json:"content" validate:"omitempty"`
+	ContentB64       string            `bson:"base-64-content" json:"content_b64" validate:"omitempty"`
 }
 
 type Variables struct {
