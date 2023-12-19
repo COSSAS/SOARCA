@@ -82,7 +82,7 @@ docker-build:   # This job will build the soar-ca docker image on merge request
     - apk add git
     - export VERSION=$(git describe --tags --dirty)
     - echo $VERSION
-    - docker build --build-arg VERSION -t $CI_REGISTRY_IMAGE .
+    - docker build --build-arg VERSION -t $CI_REGISTRY_IMAGE:$VERSION .
 
 
 release-docker:
