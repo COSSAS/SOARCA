@@ -10,6 +10,7 @@ stages:          # List of stages for jobs, and their order of execution
   - build
   - test
   - docker
+  - release
   # - deploy
 
 lint:
@@ -20,7 +21,7 @@ lint:
     script:
       - golangci-lint run --timeout 5m -v
     rules:
-      - if: '$CI_COMMIT_REF_NAME != "master" && $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event"'
+      - if: '$CI_COMMIT_REF_NAME != "master" && $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_TAG'
 
 
 
@@ -31,7 +32,7 @@ build-job:       # This job runs in the build stage, which runs first.
     - go install github.com/swaggo/swag/cmd/swag@latest
     - make build
   rules:
-    - if: '$CI_COMMIT_REF_NAME != "master" && $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_REF_NAME != "master" && $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_TAG'
 
 cross-compile:
   image: golang:latest
@@ -45,7 +46,7 @@ cross-compile:
     - go install github.com/swaggo/swag/cmd/swag@latest
     - make compile
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_NAME == "master" || $CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_NAME == "master" || $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_TAG'
 
 
 unit-test-job:   # This job runs in the test stage.
@@ -83,6 +84,46 @@ docker-build:   # This job will build the soar-ca docker image on merge request
     - echo $VERSION
     - docker build --build-arg VERSION -t $CI_REGISTRY_IMAGE .
 
+
+release-docker:
+  stage: release
+  only:
+    - tags
+  image: docker
+  services:
+    - docker:dind
+  before_script:
+    - docker info
+  variables:
+    # Tell docker CLI how to talk to Docker daemon; see
+    # https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#use-docker-in-docker-executor
+    DOCKER_HOST: tcp://docker:2375/
+    # Use the overlayfs driver for improved performance:
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+
+  script:
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
+    - apk add git
+    - export VERSION=$(git describe --tags --dirty)
+    - echo $VERSION
+    - docker build --build-arg VERSION -t $CI_REGISTRY_IMAGE:$VERSION .
+    - docker push $CI_REGISTRY_IMAGE:$VERSION
+    - docker tag $CI_REGISTRY_IMAGE:$VERSION $CI_REGISTRY_IMAGE:latest
+    - docker push $CI_REGISTRY_IMAGE:latest
+
+release-bin:
+  stage: release
+  only:
+    - tags
+  image: golang:latest
+  artifacts:
+    name: "$CI_COMMIT_TAG"
+    paths: 
+      - bin/
+  script:
+    - go install github.com/swaggo/swag/cmd/swag@latest
+    - make compile
 
 
 # deploy-job:      # This job runs in the deploy stage.
