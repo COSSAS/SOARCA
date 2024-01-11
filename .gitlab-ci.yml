@@ -53,6 +53,11 @@ unit-test-job:   # This job runs in the test stage.
   image: golang:latest
   stage: test    # It only starts when the job in the build stage completes successfully.
   script:
+    - apt update
+    - apt install openssh-server -y
+    - useradd sshtest
+    - echo "sshtest:pdKY77qNxpI5MAizirtjCVOcm0KFKIs" | chpasswd
+    - service ssh start
     - make test
   rules:
     - when: always

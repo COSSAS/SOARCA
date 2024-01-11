@@ -22,12 +22,12 @@ func TestSshConnection(t *testing.T) {
 	expectedAuthenticationInformation := cacao.AuthenticationInformation{
 		ID:       "some-authid-1",
 		Type:     "user-auth",
-		Username: "root",
-		Password: "\"mIUpk_6O\"c9ECziTM67fu,c`gy6PK6:"}
+		Username: "sshtest",
+		Password: "pdKY77qNxpI5MAizirtjCVOcm0KFKIs"}
 
 	expectedTarget := cacao.AgentTarget{
 		Type:    "ssh",
-		Address: map[string][]string{"ipv4": {"134.221.49.62"}},
+		Address: map[string][]string{"ipv4": {"localhost"}},
 		// Port:               "22",
 		AuthInfoIdentifier: "some-authid-1",
 	}
