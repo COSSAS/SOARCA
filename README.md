@@ -13,6 +13,13 @@ project layout https://github.com/golang-standards/project-layout
 
 for installation and build instructions see: [see](build/build.md)
 
+
+## Quick Run
+```bash
+make run
+```
+
+
 ## Documentation
 For documentation we use Markdown + [plantUML](https://plantuml.com/). 
 

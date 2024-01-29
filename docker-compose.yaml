@@ -1,0 +1,37 @@
+version: '3.7'
+services:
+  mongodb_container:
+    image: mongo:latest
+    container_name: mongo_soarca_stack
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "root"
+      MONGO_INITDB_ROOT_PASSWORD: "rootpassword"
+    networks:
+      - db-net
+    volumes:
+      - mongodb_data_container:/data/db
+
+  soarca:
+    build:
+      dockerfile: Dockerfile
+      args:
+        VERSION: "${GIT_VERSION}"
+    container_name: soarca_server
+    environment:
+      PORT: 8080
+      MONGODB_URI: "mongodb://mongodb_container:27017"
+      DATABASE_NAME: "soarca"
+      DB_USERNAME: "root"
+      DB_PASSWORD: "rootpassword"
+      WORKFLOW_API_LOG_LEVEL: trace
+      DATABASE: "false"
+    ports:
+      - 127.0.0.1:8080:8080
+    depends_on:
+      - mongodb_container
+
+networks:
+  db-net:
+
+volumes:
+  mongodb_data_container:

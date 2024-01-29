@@ -14,9 +14,9 @@ func init() {
 }
 
 func main() {
-	errenv := godotenv.Load(".env.example")
+	errenv := godotenv.Load(".env")
 	if errenv != nil {
-		log.Fatal("Failed to read env variable")
+		log.Warning("Failed to read env variable, but will continue")
 	}
 
 	errinit := application.InitialiseAppComponents()

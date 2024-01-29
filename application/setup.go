@@ -9,7 +9,7 @@ import (
 func InitialiseAppComponents() error {
 	app := gin.New()
 
-	initDatabase := utils.GetEnv("DATABASE", "true")
+	initDatabase := utils.GetEnv("DATABASE", "false")
 	if initDatabase == "true" {
 		errDatabase := InitialliseDatabase(app)
 		if errDatabase != nil {
