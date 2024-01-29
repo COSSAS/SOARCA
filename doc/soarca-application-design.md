@@ -1,11 +1,10 @@
-= Application design
+# Application design
 
 The application consist of the endpoint which control the workflows/ Coarse of Actions and steps that are available.
 
-== Component 
+## Component 
 
-[plantuml, target=soar-ca-component-diagram, format=png]
-....
+```plantuml
 @startuml
 set separator ::
 
@@ -40,14 +39,13 @@ cacao::executer --> cacao::modules::http
 cacao::executer --> cacao::modules::asset
 cacao::executer --> cacao::modules::ssh
 @enduml
-....
+```
 
-== Classes
+## Classes
 
 This diagram consists of the class structure used by SOAR-CA
 
-[plantuml, target=soar-ca-class-diagram]
-....
+```plantuml
 @startuml
 
 interface IWorkflow
@@ -85,4 +83,4 @@ IDecomposer <|.. Decomposer
 IExecuter -> Decomposer
 IQueue -> Executer
 @enduml
-....
+```

@@ -1,7 +1,6 @@
 # SOAR-CA API 
 This document describes the SOAR-CA API 
-:toc: left
-:toclevels: 3
+
 
 SOAR-CA is developed by TNO Cybersecurity & Technology department (CST)
 
@@ -11,8 +10,7 @@ SOAR-CA is developed by TNO Cybersecurity & Technology department (CST)
 We will use HTTP status codes https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
 
 
-[plantuml, target=soar-ca-classes, format=png]
-....
+```plantuml
 @startuml
 protocol UiEndpoint {
     GET     /workflow
@@ -33,12 +31,8 @@ protocol UiEndpoint {
     GET     /status/history
 
 }
-
-
-
-
 @enduml
-....
+```
 
 
 
@@ -50,8 +44,7 @@ When an error occurs a 400 status is returned with the following JSON payload, t
 
 responses: 400/Bad request
 
-[plantuml, target=soar-ca-trigger-worklow-response, format=png]
-....
+```plantuml
 @startjson
 {
     "status": "400",
@@ -60,7 +53,7 @@ responses: 400/Bad request
     "downstream-call" : "<optional> downstream call JSON"
 }
 @endjson
-....
+```
 
 #### Unauthorized
 When the caller does not have valid authentication 401/unauthorized will be returned.
@@ -68,8 +61,7 @@ When the caller does not have valid authentication 401/unauthorized will be retu
 
 #### cacao playbook JSON
 
-[plantuml, target=soar-ca-trigger-worklow-uuid-id, format=png]
-....
+```plantuml
 @startjson
 {
             "type": "playbook",
@@ -145,15 +137,13 @@ When the caller does not have valid authentication 401/unauthorized will be retu
             "extension_definitions": { }
         }
 @endjson
-....
-
----
----
+```
+---- 
 
 ### /workflow
 The workflow endpoinst are used to create workflows in SOAR-CA, new playbook can be added, current ones edited and deleted. 
 
-#### GET /workflow
+#### GET `/workflow`
 Get all workflow id's that are currently stored in SOAR-CA.
 
 ##### Call payload
@@ -162,8 +152,7 @@ None
 ##### Response
 200/OK with payload:
 
-[plantuml, target=soar-ca-get-workflow]
-....
+```plantuml
 @startjson
 {
     "workflows": [
@@ -175,46 +164,45 @@ None
     ]
 }
 @endjson
-....
+```
 
 ##### Error
 400/BAD REQUEST with payload:
 General error
 
 
-#### POST /workflow
+#### POST `/workflow`
 Create a new workflow that and store it in SOAR-CA. The format is 
 
 
 ##### Payload
-[plantuml, target=soar-ca-worklow-type, format=png]
-....
+
+```plantuml
 @startjson
 {
     "workflow": "<cacao-playbook> (json)"
 }
 @endjson
-....
+```
 
 
 
 ##### Response
 201/CREATED
 
-[plantuml, target=soar-ca-post-workflow, ]
-....
+```plantuml
 @startjson
 {
     "workflow-id": "xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx"
 }
 @endjson
-....
+```
 
 ##### Error
 400/BAD REQUEST with payload: General error, 409/CONFLICT if the entry already exists
 
 
-#### GET /workflow/{workflow-id}
+#### GET `/workflow/{workflow-id}`
 Get workflow details
 
 ##### Call payload
@@ -223,8 +211,7 @@ None
 ##### Response
 200/OK with payload:
 
-[plantuml, target=soar-ca-trigger-worklow, format=png]
-....
+```plantuml
 @startjson
 {
     "workflow-id": "xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx",
@@ -232,14 +219,13 @@ None
     
 }
 @endjson
-....
-
+```
 ##### Error
 400/BAD REQUEST
 
----
+----
 
-#### PUT /workflow/{workflow-id}
+#### PUT `/workflow/{workflow-id}``
 An existing workflow can be updated with PUT. 
 
 ##### Call payload
@@ -254,10 +240,10 @@ A playbook like <<cacao playbook JSON>>
 
 When updated it will return 200/OK or General error in case of an error.
 
----
+----
 
 
-#### DELETE /workflow/{workflow-id}
+#### DELETE `/workflow/{workflow-id}`
 An existing workflow can be deleted with DELETE. When removed it will return 200/OK or general error in case of an error.
 
 ##### Call payload
@@ -271,7 +257,7 @@ None
 
 ---
 
-#### POST /trigger/workflow/xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx
+#### POST `/trigger/workflow/xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx` 
 Execute workflow with specific id
 
 ##### Call payload
@@ -279,22 +265,22 @@ None
 
 ##### Response
 Will return 200/OK when finished with workflow playbook.
-[plantuml, target=soar-ca-post-trigger-id-workflow, ]
-....
+
+```plantuml
 @startjson
 {
     "execution-id": "xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx",
     "playbook-id": "xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx"
 }
 @endjson
-....
+```
 
 ##### Error
 400/BAD REQUEST general error on error.
 
 ---
 
-#### POST /trigger/workflow
+#### POST `/trigger/workflow`
 Execute an adhoc playbook
 
 ##### Call payload
@@ -303,26 +289,24 @@ A playbook like <<cacao playbook JSON>>
 ##### Response
 Will return 200/OK when finished with playbook.
 
-[plantuml, target=soar-ca-post-trigger-workflow, ]
-....
+```plantuml
 @startjson
 {
     "execution-id": "xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx",
     "playbook-id": "xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx"
 }
 @endjson
-....
+```
 
 ##### Error
 400/BAD REQUEST general error on error.
 
----
----
+----
 
 ### /step
 Get capable steps for SOARCA to allow a coa builder to generate or build valid coa's
 
-#### GET /step
+#### GET `/step`
 Get all available steps for SOARCA. 
 
 ##### Call payload
@@ -331,8 +315,8 @@ None
 ##### Response
 200/OK
 
-[plantuml, target=soar-ca-status, format=png]
-....
+
+```plantuml
 @startjson
 {
     
@@ -354,13 +338,12 @@ None
                 }}]
 }
 @endjson
-....
+```
 
 Module is the executing module name that will do the executer call.
 
 Category defines what kind of step is executed:
-[plantuml, target=soar-ca-category-types]
-....
+```plantuml
 @startuml
 enum workflowType {
     analyses
@@ -369,30 +352,27 @@ enum workflowType {
     etc...
 }
 @enduml
-....
-
-
+```
 Context will define whether the call is internal or external:
-[plantuml, target=soar-ca-context-types]
-....
+
+```plantuml
 @startuml
 enum workflowType {
     internal
     external
 }
 @enduml
-....
+```
 
 ##### Error
 400/BAD REQUEST general error on error.
 
----
----
+----
 
 ### /status
 The status endpoints are used to get various statuses. 
 
-#### GET /status
+#### GET `/status`
 Call this endpoint to see if SOAR-CA is up and ready. This call has no payload body.
 
 ##### Call payload
@@ -401,8 +381,7 @@ None
 ##### Response
 200/OK
 
-[plantuml, target=soar-ca-status, format=png]
-....
+```plantuml
 @startjson
 {
     "version": "1.0.0",
@@ -416,7 +395,7 @@ None
     ]
 }
 @endjson
-....
+```
 
 ##### Error
 5XX/Internal error, 500/503/504 message.
@@ -430,8 +409,7 @@ None
 ##### Response
 200/OK
 
-[plantuml, target=soar-ca-status-worklow, format=png]
-....
+```plantuml
 @startjson
 {
             "workflows": [
@@ -455,14 +433,14 @@ None
 
 }
 @endjson
-....
+```
 
 ##### Error
 400/BAD REQUEST general error on error.
 
----
+---- 
 
-#### GET /status/workflow/xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx (workflow-id)
+#### GET `/status/workflow/xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx (workflow-id)`
 Get workflow details which is running which will return cacao playbook JSON
 
 ##### Call payload
@@ -477,9 +455,9 @@ Empty payload if no workflows are running
 ##### Error
 400/BAD REQUEST general error on error.
 
----
+----
 
-#### GET /status/workflow/xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx/coas
+#### GET `/status/workflow/xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx/coas`
 Get workflow details which is running which will return cacao playbook JSON
 
 ##### Call payload
@@ -495,7 +473,7 @@ list of caoids
 
 ---
 
-#### GET /status/workflow/{playbook-id}
+#### GET `/status/workflow/{playbook-id}`
 Get coarse of action list for coa awaiting action.
 
 ##### Call payload
@@ -503,8 +481,8 @@ None
 
 ##### Response
 200/OK
-[plantuml, target=soar-ca-status-coa, format=png]
-....
+
+```plantuml
 @startjson
 {
             "actions": [
@@ -516,7 +494,7 @@ None
 
 }
 @endjson
-....
+```
 
 ##### Error
 400/BAD REQUEST general error on error.
@@ -531,8 +509,8 @@ None
 
 ##### Response
 200/OK
-[plantuml, target=soar-ca-status-history, format=png]
-....
+
+```plantuml
 @startjson
 {
             "actions": [
@@ -544,7 +522,7 @@ None
 
 }
 @endjson
-....
+```
 
 ##### Error
 400/BAD REQUEST general error on error.
@@ -554,8 +532,7 @@ None
 
 ### Stand alone
 
-[plantuml, target=soarca-sequences-ui-api]
-....
+```plantuml
 @startuml
 participant "SWAGGER" as gui
 control "SOAR-CA API" as api
@@ -573,12 +550,11 @@ controller <-- exe : results
 api <-- controller: results
 
 @enduml
-....
+```
 
 ### Database load and execution
 
-[plantuml, target=soarca-sequences-ui-api-database]
-....
+```plantuml
 @startuml
 participant "SWAGGER" as gui
 control "SOAR-CA API" as api
@@ -600,4 +576,4 @@ controller <-- exe : results
 api <-- controller: results
 
 @enduml
-....
+```

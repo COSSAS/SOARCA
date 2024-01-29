@@ -1,4 +1,4 @@
-= SOARCA Database
+# SOARCA Database
 
 SOARCA Database architecture
 
@@ -9,9 +9,7 @@ Mongo has different collections for SOARCA we use a database object per collecti
 * Step
 
 
-[plantuml, target=soar-ca-database-classes]
-....
-@startuml
+```plantuml
 Interface IDatabase{
     void create(JsonData playbook)
     JsonData read(Id playbookId)
@@ -35,16 +33,12 @@ CoaDatabase -> IDatabase
 IDatabase <- WorkflowDatabase
 IDatabase <|.. File
 IDatabase <|.. Mongo
+```
+## Getting data
 
-@enduml
-....
+### Getting workflow playbook data
 
-== Getting data
-
-=== Getting workflow playbook data
-[plantuml, target=soar-ca-database-classes]
-....
-@startuml
+```plantuml
 participant Controller as controller
 participant "Workflow Database" as workflow
 database Database as db
@@ -56,13 +50,10 @@ note right
 end note
 workflow <-- db : "playbook JSON"
 controller <-- workflow: "CacaoPlaybook Object"
-@enduml
-....
+```
 
-=== Writing workflow playbook data
-[plantuml, target=soar-ca-database-classes]
-....
-@startuml
+### Writing workflow playbook data
+```plantuml
 participant Controller as controller
 participant "Workflow Database" as workflow
 database Database as db
@@ -72,14 +63,10 @@ workflow -> db : create(playbook JSON)
 note right
     When the create fails a error will be thrown
 end note
-@enduml
-....
+```
 
-
-=== Update workflow playbook data
-[plantuml, target=soar-ca-database-classes]
-....
-@startuml
+### Update workflow playbook data
+```plantuml
 participant Controller as controller
 participant "Workflow Database" as workflow
 database Database as db
@@ -91,14 +78,11 @@ note right
 end note
 workflow <-- db : true
 controller <-- workflow: true
+```
 
-@enduml
-....
+### Delete workflow playbook data
+```plantuml
 
-=== Delete workflow playbook data
-[plantuml, target=soar-ca-database-classes]
-....
-@startuml
 participant Controller as controller
 participant "Workflow Database" as workflow
 database Database as db
@@ -108,14 +92,10 @@ workflow -> db : remove(playbook id)
 note right
     When the create fails a error will be thrown
 end note
+```
 
-@enduml
-....
-
-=== Handling a error
-[plantuml, target=soar-ca-database-classes]
-....
-@startuml
+### Handling an error
+```plantuml
 participant Controller as controller
 participant "Workflow Database" as workflow
 database Database as db
@@ -128,5 +108,4 @@ note right
 end note
 controller <-- workflow: error 
 
-@enduml
-....
+```

@@ -8,7 +8,7 @@ As seen in the overall design the fins are communicating via MQTT.
 
 == Protocol
 
-See the link:fin-protocol.adoc[protocol document].
+See the [protocol document](fin-protocol.md).
 
 == Loading your module
 Once you have developed your module you need to load it so SOARCA can use it for the playbooks it executes. You can load your modules in two ways via docker or stand alone.
@@ -19,4 +19,4 @@ The Docker engine allows for easy loading but requires you to package your capab
 === Stand alone
 SOARCA can be used without Docker. To use it whit your module you need to start it and have an MQTT broker running already before starting your Fin. *The method is for more complex setups and not recommended for first use.*
 
-First set up SOARCA link:setup.adoc[stand alone].
+First set up SOARCA [stand alone](setup.md).

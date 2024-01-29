@@ -1,11 +1,8 @@
-= SOARCA controller
+# SOARCA controller
 
 The SOARCA controller will control the incoming calls and the execution of steps. 
 
-[plantuml, target=soar-ca-class-diagram]
-....
-@startuml
-
+```plantuml
 interface IWorkflow{
     void Get()
     void Get(PlaybookId id)
@@ -52,8 +49,7 @@ IDecomposer <- Controller
 IDecomposer <|.. Decomposer
 IExecuter -> Decomposer
 
-@enduml
-....
+```
 
-== Main application flow
+## Main application flow
 

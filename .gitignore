@@ -7,7 +7,7 @@ logs/*
 plugins/*
 .vscode/*
 build/*
-!build/build.adoc
+!build/build.md
 bin/*
 test/cacao/flatfile-db-example.json
 test/routes/__debug_bin2988553005

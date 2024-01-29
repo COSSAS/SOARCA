@@ -1,13 +1,13 @@
-= Build folder
+# Build folder
 
 To build the project use the make file in the root.
 
 
-```
+```bash
 make build 
 ```
 
-== Installing packages
+## Installing packages
 Install gin:
 
 see https://github.com/gin-gonic/gin

@@ -1,8 +1,8 @@
-= SOARCA Executer design
+# SOARCA Executer design
 
 The document contains the design considerations of the executer of SOARCA
 
-== Components
+## Components
 
 The executer consists of the following components. 
 
@@ -10,39 +10,34 @@ The executer consists of the following components.
 . Native capabilities (command executors)
 . MQTT capability to interact with: Fin capabilities (third party executors)
 
-=== Capability selector (Executor)
+### Capability selector (Executor)
 
 The capability selector will select the implementation which is capable of executing the incoming command. There are native capabilities which are based on the CACAO `command-type-ov`:
 
 * Currently implemented:
-- ssh
-- http-api
+    * ssh
+    * http-api
 * Later:
-- open-C2
-- manual
+    * open-C2
+    * manual
 * Future:
-- bash
-- caldera-cmd
-- elastic
-- jupyter
-- kestrel
-- sigma
-- yara
+    * bash
+    * caldera-cmd
+    * elastic
+    * jupyter
+    * kestrel
+    * sigma
+    * yara
 
-
-=== Native capabilities
+### Native capabilities
 The Executor will select a module which is capable of execution the command and pass the detail to it. The results will be returned to the decomposer. Result can be output variables or error status.
 
-
-=== MQTT executor -> Fin capabilities
+### MQTT executor -> Fin capabilities
 The Executor will put the command on the MQTT topic that is offered by the module. How a module handles this is described in the link:modules.adoc[module documentation]
 
+### Component overview
 
-== Component overview
-
-[plantuml, target=soar-ca-executer-components]
-....
-@startuml
+```plantuml
 
 package "Controller" {
 component Decomposer as parser
@@ -61,17 +56,13 @@ package "Fins" {
 
 parser -- Executor
 exe3 -- Fins : " MQTT topics"
-
-@enduml
-....
+```
 
 
+## Executor classes
 
-== Executor classes
 
-[plantuml, target=soar-ca-executer-interface]
-....
-@startuml
+```plantuml
 
 interface IExecutor {
     void Execute(ExecutionId, CommandData, variable[], target, module, completionCallback(variables[]))
@@ -106,19 +97,15 @@ ICapability <|.. ssh
 ICapability <|.. openc2
 ICapability <|.. api
 
-
-
-
-@enduml
-....
+```
 
 
 
 
-== Protocol (WIP)
+## Protocol (WIP)
 https://github.com/phf/go-queue
 
-=== Sending a step
+### Sending a step
 
 Variables can be input and output the CACAO spec should declare the following fields for variables:
 direction : input|output
@@ -127,8 +114,7 @@ direction : input|output
 And every step that will output any variables should declare a list of output variables:
 output: var_1
 
-[plantuml, target=soar-ca-executer-step-message]
-....
+```plantuml
 @startjson
 {
         "execute-id" : "uuid",
@@ -147,13 +133,11 @@ output: var_1
             ]
         }
 }
-@endjson
-....
+```
 
-=== Result
+### Result
 
-[plantuml, target=soar-ca-executer-result-message]
-....
+```plantuml
 @startjson
 {
        
@@ -173,28 +157,27 @@ output: var_1
         }
         ]
 }
-@endjson
-....
+```
 
-==== Default schemas
+#### Default schemas
 
-. bool
-. int
-. ip-address
-. uri
-. mac-address
-. domain-name
-
-
-==== Example schema
+* bool
+* int
+* ip-address
+* uri
+* mac-address
+* domain-name
 
 
-== Sequences 
+#### Example schema
+
+
+## Sequences 
 
 Example execution for SSH commands with SOARCA native capability. 
 
-[plantuml, target=soar-ca-executor-execution-ssh-command]
-....
+
+```plantuml
 @startuml
 
 participant Decomposer as decomposer
@@ -211,8 +194,5 @@ else capability not available
     decomposer <-- selector : Execution failure
     note right: No capability can handle command \nor capability crashed etc..
 end
-
-
-@enduml
-....
+```
 
