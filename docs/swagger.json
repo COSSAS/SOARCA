@@ -14,7 +14,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "workflow"
+                    "trigger"
                 ],
                 "summary": "trigger a workflow with via cacao payload",
                 "parameters": [
@@ -31,6 +31,159 @@
                 "responses": {
                     "200": {
                         "description": "{\"execution_id\":\"uuid\",\"payload\":\"playbook--uuid\"}"
+                    }
+                }
+            }
+        },
+        "/workflow/": {
+            "get": {
+                "description": "get UUIDs for workflow",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "workflow"
+                ],
+                "summary": "gets all the UUIDs for the stored workflows",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "submit a new workflow api",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "workflow"
+                ],
+                "summary": "submit workflow via the api",
+                "parameters": [
+                    {
+                        "description": "workflow",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cacao.Playbook"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/cacao.Playbook"
+                        }
+                    }
+                }
+            }
+        },
+        "/workflow/{id}": {
+            "get": {
+                "description": "get workflow by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "workflow"
+                ],
+                "summary": "get CACAO playbook workflow by its ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "workflow ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/cacao.Playbook"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "update workflow by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "workflow"
+                ],
+                "summary": "update workflow",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "workflow ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "workflow",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cacao.Playbook"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/cacao.Playbook"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "delete workflow by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "workflow"
+                ],
+                "summary": "delete worflow",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "workflow ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
                     }
                 }
             }

@@ -8,7 +8,7 @@ import (
 // @Summary trigger a workflow with via cacao payload
 // @Schemes
 // @Description trigger workflow
-// @Tags workflow
+// @Tags trigger
 // @Accept json
 // @Produce json
 // @Param  playbook body cacao.Playbook true "execute playbook by payload"
@@ -20,5 +20,4 @@ func Routes(route *gin.Engine, trigger *TriggerApi) {
 	{
 		group.POST("/workflow", trigger.Execute)
 	}
-
 }

@@ -20,7 +20,15 @@ func NewWorkflowController(workflowRepo workflowRepository.IWorkflowRepository) 
 	return &workflowController{workflowRepo: workflowRepo}
 }
 
-// getWorflow GET handler for obtaining all the workflowIDs in the database and return this to the gin context in json format
+// getAllsWorkflows GET handler for obtaining all the workflowIDs in the database and return this to the gin context in json format
+// @Summary gets all the UUIDs for the stored workflows
+// @Schemes
+// @Description get UUIDs for workflow
+// @Tags workflow
+// @Produce json
+// @success 200 {array} string
+// @error	400
+// @Router /workflow/ [GET]
 func (workflowctrl *workflowController) getAllWorkFlowIds(g *gin.Context) {
 	log.Trace("Trying to obtain all workflow IDs")
 
@@ -36,6 +44,16 @@ func (workflowctrl *workflowController) getAllWorkFlowIds(g *gin.Context) {
 }
 
 // submitWorkflow POST handler for creating worflows.
+// @Summary submit workflow via the api
+// @Schemes
+// @Description submit a new workflow api
+// @Tags workflow
+// @Produce json
+// @Accept json
+// @Param data body cacao.Playbook true "workflow"
+// @Success 200  {object} cacao.Playbook
+// @error 400
+// @Router /workflow/ [POST]
 func (workflowctrl *workflowController) submitWorkflow(g *gin.Context) {
 	jsonData, err := io.ReadAll(g.Request.Body)
 	if err != nil {
@@ -61,6 +79,16 @@ func (workflowctrl *workflowController) submitWorkflow(g *gin.Context) {
 }
 
 // getWorkflowbyID GET handler that finds workflow by id
+// @Summary get CACAO playbook workflow by its ID
+// @Schemes
+// @Description get workflow by ID
+// @Tags workflow
+// @Produce json
+// @Accept json
+// @Param id path string true "workflow ID"
+// @Success 200  {object} cacao.Playbook
+// @error 400
+// @Router /workflow/{id} [GET]
 func (workflowctrl *workflowController) getWorkflowByID(g *gin.Context) {
 	id := g.Param("id")
 	log.Trace("Trying to obtain Workflow for id: ", id)
@@ -75,6 +103,17 @@ func (workflowctrl *workflowController) getWorkflowByID(g *gin.Context) {
 }
 
 // updateWorkFlowbyID PUT handler that allows updating workflow object by ID.
+// @Summary update workflow
+// @Schemes
+// @Description update workflow by ID
+// @Tags workflow
+// @Produce json
+// @Accept json
+// @Param id path string true "workflow ID"
+// @Param data body cacao.Playbook true "workflow"
+// @Success 200  {object} cacao.Playbook
+// @error 400
+// @Router /workflow/{id} [PUT]
 func (workflowctrl *workflowController) updateWorkflowByID(g *gin.Context) {
 	id := g.Param("id")
 	log.Trace("Trying to update Workflow for id: ", id)
@@ -95,6 +134,16 @@ func (workflowctrl *workflowController) updateWorkflowByID(g *gin.Context) {
 }
 
 // deleteWorkflowbyID DELETE handler for deleting workflow by ID.
+// @Summary delete worflow
+// @Schemes
+// @Description delete workflow by ID
+// @Tags workflow
+// @Produce json
+// @Accept json
+// @Param id path string true "workflow ID"
+// @Success 200
+// @error 400
+// @Router /workflow/{id} [DELETE]
 func (workflowctrl *workflowController) deleteWorkflowByID(g *gin.Context) {
 	id := g.Param("id")
 	err := workflowctrl.workflowRepo.Delete(id)
