@@ -11,5 +11,5 @@ var log *logger.Log
 type Empty struct{}
 
 func init() {
-	log = logger.Logger(reflect.TypeOf(Empty{}).PkgPath(), logger.Debug, "", logger.Json)
+	log = logger.Logger(reflect.TypeOf(Empty{}).PkgPath(), logger.Info, "", logger.Json)
 }

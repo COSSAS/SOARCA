@@ -14,7 +14,7 @@ var component = reflect.TypeOf(Empty{}).PkgPath()
 var log *logger.Log
 
 func init() {
-	log = logger.Logger(component, logger.Trace, "", logger.Json)
+	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
 func DecodeValidate(data []byte) *cacao.Playbook {

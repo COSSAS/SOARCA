@@ -23,7 +23,7 @@ var cacao_v2_csd01_http string = "https://raw.githubusercontent.com/cyentific-rn
 //var cacao_v2_csd03_http string = "https://raw.githubusercontent.com/cyentific-rni/cacao-json-schemas/cacao-v2.0-csd03/schemas/playbook.json"
 
 func init() {
-	log = logger.Logger(component, logger.Trace, "", logger.Json)
+	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
 // function unmarshalls and validates againts the generic object type and return a pointer

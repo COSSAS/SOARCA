@@ -20,7 +20,7 @@ var component = reflect.TypeOf(SshCapability{}).PkgPath()
 var log *logger.Log
 
 func init() {
-	log = logger.Logger(component, logger.Trace, "", logger.Json)
+	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
 func (sshCapability *SshCapability) GetType() string {

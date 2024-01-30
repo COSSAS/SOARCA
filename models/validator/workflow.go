@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	log = logger.Logger(component, logger.Trace, "", logger.Json)
+	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
 func IsSafeCacaoWorkflow(playbook *cacao.Playbook) error {

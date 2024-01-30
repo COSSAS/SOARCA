@@ -28,7 +28,7 @@ var component = reflect.TypeOf(Empty{}).PkgPath()
 var log *logger.Log
 
 func init() {
-	log = logger.Logger(component, logger.Trace, "", logger.Json)
+	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
 // What to do if there is no agent or target?

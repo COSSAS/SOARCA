@@ -21,7 +21,7 @@ type ITrigger interface {
 }
 
 func init() {
-	log = logger.Logger(reflect.TypeOf(Empty{}).PkgPath(), logger.Trace, "", logger.Json)
+	log = logger.Logger(reflect.TypeOf(Empty{}).PkgPath(), logger.Info, "", logger.Json)
 }
 
 type TriggerApi struct {

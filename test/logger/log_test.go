@@ -1,12 +1,14 @@
 package logger_test
 
 import (
+	"os"
 	"testing"
 
 	logger "soarca/logger"
 )
 
-func TestLogTrace(t *testing.T) {
+func TestDebugModeLogTrace(t *testing.T) {
+	os.Setenv("LOG_MODE", "development")
 	log := logger.Logger("testing", logger.Trace, "", logger.Json)
 
 	log.Info("info")
@@ -14,7 +16,8 @@ func TestLogTrace(t *testing.T) {
 	log.Trace("trace")
 }
 
-func TestLogDebug(t *testing.T) {
+func TestDebugModeLogDebug(t *testing.T) {
+	os.Setenv("LOG_MODE", "development")
 	log := logger.Logger("testing", logger.Debug, "", logger.Json)
 
 	log.Info("info")
@@ -22,7 +25,8 @@ func TestLogDebug(t *testing.T) {
 	log.Trace("trace")
 }
 
-func TestLogInfo(t *testing.T) {
+func TestDebugModeLogInfo(t *testing.T) {
+	os.Setenv("LOG_MODE", "development")
 	log := logger.Logger("testing", logger.Info, "", logger.Json)
 
 	log.Info("info")
@@ -30,7 +34,8 @@ func TestLogInfo(t *testing.T) {
 	log.Trace("trace")
 }
 
-func TestLogInfoToFile(t *testing.T) {
+func TestDebugModeLogInfoToFile(t *testing.T) {
+	os.Setenv("LOG_MODE", "development")
 	log := logger.Logger("testing", logger.Info, "test.log", logger.Json)
 
 	log.Info("info")
@@ -38,7 +43,21 @@ func TestLogInfoToFile(t *testing.T) {
 	log.Trace("trace")
 }
 
-func TestLogInfoMultiple(t *testing.T) {
+func TestDebugModeLogInfoMultiple(t *testing.T) {
+	os.Setenv("LOG_MODE", "development")
+	log := logger.Logger("logger 1", logger.Info, "", logger.Json)
+	log2 := logger.Logger("logger 2", logger.Debug, "", logger.Json)
+
+	log.Info("info")
+	log.Debug("debug")
+	log.Trace("trace")
+	log2.Info("info")
+	log2.Debug("debug")
+	log2.Trace("trace")
+}
+
+func TestProductionModeLogInfoMultiple(t *testing.T) {
+	os.Setenv("LOG_MODE", "production")
 	log := logger.Logger("logger 1", logger.Info, "", logger.Json)
 	log2 := logger.Logger("logger 2", logger.Debug, "", logger.Json)
 
