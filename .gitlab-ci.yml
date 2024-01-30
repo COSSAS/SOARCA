@@ -38,7 +38,7 @@ cross-compile:
   image: golang:latest
   stage: build
   artifacts:
-    name: "$CI_JOB_NAME"
+    name: "$CI_COMMIT_REF_NAME"
     paths: 
       - bin/
     expire_in: 2 hrs
@@ -85,6 +85,7 @@ docker-build:   # This job will build the soar-ca docker image on merge request
   script: 
     - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
     - apk add git
+    - ls bin
     - export VERSION=$(git describe --tags --dirty)
     - echo $VERSION
     - docker build --build-arg VERSION -t $CI_REGISTRY_IMAGE:$VERSION .
