@@ -11,3 +11,11 @@ build/*
 bin/*
 test/cacao/flatfile-db-example.json
 test/routes/__debug_bin2988553005
+
+
+documentation/public
+documentation/resources/
+documentation/node_modules/
+documentation/package-lock.json
+documentation/.hugo_build.lock
+**.hugo_build.lock
