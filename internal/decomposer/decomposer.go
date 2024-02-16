@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"soarca/internal/executer"
 	"soarca/internal/guid"
+	"soarca/internal/stix"
 	"soarca/logger"
 	"soarca/models/cacao"
 	"soarca/models/execution"
@@ -131,6 +132,8 @@ func (decomposer *Decomposer) ExecuteStep(step cacao.Step, scopeVariables cacao.
 	switch step.Type {
 	case "action":
 		return decomposer.ExecuteActionStep(step, variables)
+	case "if-condition":
+		return decomposer.ExecuteIfConditionStep(step, variables)
 	default:
 		// NOTE: This currently silently handles unknown step types. Should we return an error instead?
 		return cacao.NewVariables(), nil
@@ -185,4 +188,32 @@ func (decomposer *Decomposer) ExecuteActionStep(step cacao.Step, scopeVariables 
 	}
 
 	return returnVariables, nil
+}
+
+// Execute a step of type if-condition
+func (decomposer *Decomposer) ExecuteIfConditionStep(step cacao.Step, variables cacao.Variables) (cacao.Variables, error) {
+	pattern := stix.NewPattern(step.Condition)
+
+	isTrue, err := pattern.IsTrue(variables)
+
+	log.Debugf("If-condition %s value %t", step.Condition, isTrue)
+
+	if err != nil {
+		return cacao.NewVariables(), err
+	}
+
+	var branchStart string
+
+	if isTrue {
+		branchStart = step.OnTrue
+	} else {
+		if step.OnFalse == "" {
+			// No on_false step, simply return
+			return cacao.NewVariables(), nil
+		}
+
+		branchStart = step.OnFalse
+	}
+
+	return decomposer.ExecuteBranch(branchStart, variables)
 }
