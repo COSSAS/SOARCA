@@ -136,6 +136,8 @@ func (decomposer *Decomposer) ExecuteStep(step cacao.Step, scopeVariables cacao.
 		return decomposer.ExecuteIfConditionStep(step, variables)
 	case "parallel":
 		return decomposer.ExecuteParallelStep(step, variables)
+	case "while-condition":
+		return decomposer.ExecuteWhileStep(step, variables)
 	default:
 		// NOTE: This currently silently handles unknown step types. Should we return an error instead?
 		return cacao.NewVariables(), nil
@@ -235,4 +237,36 @@ func (decomposer *Decomposer) ExecuteParallelStep(step cacao.Step, scopeVariable
 
 	}
 	return returnVariables, nil
+}
+
+func (decomposer *Decomposer) ExecuteWhileStep(step cacao.Step, scopeVariables cacao.Variables) (cacao.Variables, error) {
+	pattern := stix.NewPattern(step.Condition)
+
+	executionCount := 1
+	returnVariables := cacao.NewVariables()
+
+	for {
+		// Re-evaluate variables since they (hopefully) changed
+		// because of the executed branch
+		isTrue, err := pattern.IsTrue(scopeVariables)
+
+		log.Debugf("While-condition %s value %t (execution %d)", step.Condition, isTrue, executionCount)
+
+		if err != nil {
+			return cacao.NewVariables(), err
+		}
+
+		if !isTrue {
+			return returnVariables, nil
+		}
+
+		outputVariables, err := decomposer.ExecuteBranch(step.OnTrue, scopeVariables)
+		if err != nil {
+			return cacao.NewVariables(), err
+		}
+
+		returnVariables.Merge(outputVariables)
+		scopeVariables.Merge(outputVariables)
+		executionCount += 1
+	}
 }
