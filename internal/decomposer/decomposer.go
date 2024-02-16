@@ -134,6 +134,8 @@ func (decomposer *Decomposer) ExecuteStep(step cacao.Step, scopeVariables cacao.
 		return decomposer.ExecuteActionStep(step, variables)
 	case "if-condition":
 		return decomposer.ExecuteIfConditionStep(step, variables)
+	case "parallel":
+		return decomposer.ExecuteParallelStep(step, variables)
 	default:
 		// NOTE: This currently silently handles unknown step types. Should we return an error instead?
 		return cacao.NewVariables(), nil
@@ -216,4 +218,21 @@ func (decomposer *Decomposer) ExecuteIfConditionStep(step cacao.Step, variables 
 	}
 
 	return decomposer.ExecuteBranch(branchStart, variables)
+}
+
+func (decomposer *Decomposer) ExecuteParallelStep(step cacao.Step, scopeVariables cacao.Variables) (cacao.Variables, error) {
+	returnVariables := cacao.NewVariables()
+
+	// FIXME: Actually perform steps in parallel
+	for _, nextStep := range step.NextSteps {
+		outputVariables, err := decomposer.ExecuteBranch(nextStep, scopeVariables)
+		if err != nil {
+			return cacao.NewVariables(), err
+		}
+
+		returnVariables.Merge(outputVariables)
+		scopeVariables.Merge(outputVariables)
+
+	}
+	return returnVariables, nil
 }
