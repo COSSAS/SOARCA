@@ -345,7 +345,7 @@ definitions:
         type: string
       playbook_variables:
         additionalProperties:
-          $ref: '#/definitions/cacao.Variables'
+          $ref: '#/definitions/cacao.Variable'
         type: object
       playbook_version:
         type: string
@@ -360,7 +360,7 @@ definitions:
       type:
         type: string
     type: object
-  cacao.Variables:
+  cacao.Variable:
     properties:
       constant:
         type: boolean

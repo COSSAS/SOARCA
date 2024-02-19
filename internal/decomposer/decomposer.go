@@ -48,7 +48,7 @@ type Decomposer struct {
 	guid      guid.IGuid
 }
 
-func Callback(executionId uuid.UUID, outputVariables map[string]cacao.Variables) {
+func Callback(executionId uuid.UUID, outputVariables map[string]cacao.Variable) {
 
 }
 

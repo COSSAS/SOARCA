@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func InitialliseDatabase(app *gin.Engine) error {
+func InitializeDatabase(app *gin.Engine) error {
 	mongo.LoadComponent()
 
 	log.Info("SOARCA API Trying to start")

@@ -710,7 +710,7 @@ const docTemplate = `{
                 "playbook_variables": {
                     "type": "object",
                     "additionalProperties": {
-                        "$ref": "#/definitions/cacao.Variables"
+                        "$ref": "#/definitions/cacao.Variable"
                     }
                 },
                 "playbook_version": {
@@ -733,7 +733,7 @@ const docTemplate = `{
                 }
             }
         },
-        "cacao.Variables": {
+        "cacao.Variable": {
             "type": "object",
             "properties": {
                 "constant": {

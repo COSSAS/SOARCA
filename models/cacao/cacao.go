@@ -56,7 +56,7 @@ type Playbook struct {
 	AgentDefinitions              map[string]AgentTarget               `bson:"agent_definitions,omitempty" json:"agent_definitions,omitempty"`
 	TargetDefinitions             map[string]AgentTarget               `bson:"target_definitions,omitempty" json:"target_definitions,omitempty"`
 	ExtensionDefinitions          map[string]ExtensionDefinition       `bson:"extension_definitions,omitempty" json:"extension_definitions,omitempty"`
-	PlaybookVariables             map[string]Variables                 `bson:"playbook_variables,omitempty" json:"playbook_variables,omitempty"`
+	PlaybookVariables             map[string]Variable                  `bson:"playbook_variables,omitempty" json:"playbook_variables,omitempty"`
 	PlaybookExtensions            Extensions                           `bson:"playbook_extensions,omitempty" json:"playbook_extensions,omitempty"`
 }
 
@@ -131,7 +131,7 @@ type ExtensionDefinition struct {
 	ExternalReferences []ExternalReferences `bson:"external_references,omitempty" json:"external_references,omitempty"`
 }
 
-type Variables struct {
+type Variable struct {
 	Type        string `bson:"type" json:"type" validate:"required"`
 	Name        string `bson:"name,omitempty" json:"name,omitempty"`
 	Description string `bson:"description,omitempty" json:"description,omitempty"`
@@ -160,7 +160,7 @@ type Step struct {
 	ExternalReferences []ExternalReferences `bson:"external_references,omitempty" json:"external_references,omitempty"`
 	Delay              int                  `bson:"delay,omitempty" json:"delay,omitempty"`
 	Timeout            int                  `bson:"timeout,omitempty" json:"timeout,omitempty"`
-	StepVariables      map[string]Variables `bson:"step_variables,omitempty" json:"step_variables,omitempty"`
+	StepVariables      map[string]Variable  `bson:"step_variables,omitempty" json:"step_variables,omitempty"`
 	Owner              string               `bson:"owner,omitempty" json:"owner,omitempty"`
 	OnCompletion       string               `bson:"on_completion,omitempty" json:"on_completion,omitempty"`
 	OnSuccess          string               `bson:"on_success,omitempty" json:"on_success,omitempty"`

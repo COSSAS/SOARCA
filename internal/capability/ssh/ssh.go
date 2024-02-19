@@ -31,7 +31,7 @@ func (sshCapability *SshCapability) Execute(executionId uuid.UUID,
 	command cacao.Command,
 	authentication cacao.AuthenticationInformation,
 	target cacao.AgentTarget,
-	variables map[string]cacao.Variables) (map[string]cacao.Variables, error) {
+	variables map[string]cacao.Variable) (map[string]cacao.Variable, error) {
 	log.Trace(executionId)
 
 	host := CombinePortAndAddress(target.Address, target.Port)
@@ -40,7 +40,7 @@ func (sshCapability *SshCapability) Execute(executionId uuid.UUID,
 
 	if errAuth != nil {
 		log.Error(errAuth)
-		return map[string]cacao.Variables{}, errAuth
+		return map[string]cacao.Variable{}, errAuth
 	} else {
 		log.Trace(host)
 	}
@@ -60,7 +60,7 @@ func (sshCapability *SshCapability) Execute(executionId uuid.UUID,
 		signer, errKey := ssh.ParsePrivateKey([]byte(authentication.PrivateKey))
 		if errKey != nil || authentication.Password == "" {
 			log.Error("no valid authentication information: ", errKey)
-			return map[string]cacao.Variables{}, errKey
+			return map[string]cacao.Variable{}, errKey
 		}
 		config = ssh.ClientConfig{
 			User: authentication.Username,
@@ -78,13 +78,13 @@ func (sshCapability *SshCapability) Execute(executionId uuid.UUID,
 	conn, err := ssh.Dial("tcp", host, &config)
 	if err != nil {
 		log.Error(err)
-		return map[string]cacao.Variables{}, err
+		return map[string]cacao.Variable{}, err
 	}
 	var session *ssh.Session
 	session, err = conn.NewSession()
 	if err != nil {
 		log.Error(err)
-		return map[string]cacao.Variables{}, err
+		return map[string]cacao.Variable{}, err
 	}
 
 	response, err := session.Output(StripSshPrepend(command.Command))
@@ -92,9 +92,9 @@ func (sshCapability *SshCapability) Execute(executionId uuid.UUID,
 
 	if err != nil {
 		log.Error(err)
-		return map[string]cacao.Variables{"__soarca_ssh_result__": {Name: "result", Value: string(response)}}, err
+		return map[string]cacao.Variable{"__soarca_ssh_result__": {Name: "result", Value: string(response)}}, err
 	}
-	results := map[string]cacao.Variables{"__soarca_ssh_result__": {Name: "result", Value: string(response)}}
+	results := map[string]cacao.Variable{"__soarca_ssh_result__": {Name: "result", Value: string(response)}}
 	log.Trace("Finished ssh execution will return the variables: ", results)
 	return results, err
 }

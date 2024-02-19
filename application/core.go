@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func InitialiseCore(app *gin.Engine) error {
+func InitializeCore(app *gin.Engine) error {
 	ssh := new(ssh.SshCapability)
 	capabilities := map[string]capability.ICapability{ssh.GetType(): ssh}
 	executer := executer.New(capabilities)

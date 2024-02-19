@@ -6,18 +6,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func InitialiseAppComponents() error {
+func InitializeAppComponents() error {
 	app := gin.New()
+	log.Info("Testing if this works")
 
 	initDatabase := utils.GetEnv("DATABASE", "false")
 	if initDatabase == "true" {
-		errDatabase := InitialliseDatabase(app)
+		errDatabase := InitializeDatabase(app)
 		if errDatabase != nil {
 			log.Error("Failed to init core")
 			return errDatabase
 		}
 	}
-	errCore := InitialiseCore(app)
+	errCore := InitializeCore(app)
 
 	if errCore != nil {
 		log.Error("Failed to init core")

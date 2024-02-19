@@ -15,9 +15,9 @@ func (capability *Mock_Capability) Execute(executionId uuid.UUID,
 	command cacao.Command,
 	authentication cacao.AuthenticationInformation,
 	target cacao.AgentTarget,
-	variables map[string]cacao.Variables) (map[string]cacao.Variables, error) {
+	variables map[string]cacao.Variable) (map[string]cacao.Variable, error) {
 	args := capability.Called(executionId, command, authentication, target, variables)
-	return args.Get(0).(map[string]cacao.Variables), args.Error(1)
+	return args.Get(0).(map[string]cacao.Variable), args.Error(1)
 }
 
 func (capability *Mock_Capability) GetType() string {

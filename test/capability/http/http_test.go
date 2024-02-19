@@ -21,7 +21,7 @@ func TestHttpConnection(t *testing.T) {
 		Headers: map[string]string{"accept": "application/json"},
 	}
 
-	var variable1 = cacao.Variables{
+	var variable1 = cacao.Variable{
 		Type:  "string",
 		Name:  "test_auth",
 		Value: "",
@@ -33,7 +33,7 @@ func TestHttpConnection(t *testing.T) {
 		id, expectedCommand,
 		cacao.AuthenticationInformation{},
 		cacao.AgentTarget{},
-		map[string]cacao.Variables{"test": variable1})
+		map[string]cacao.Variable{"test": variable1})
 	if err != nil {
 		fmt.Println(err)
 		t.Fail()
@@ -57,7 +57,7 @@ func TestHttpOAuth2(t *testing.T) {
 		Headers: map[string]string{"accept": "application/json"},
 	}
 
-	var variable1 = cacao.Variables{
+	var variable1 = cacao.Variable{
 		Type:  "string",
 		Name:  "test_auth",
 		Value: "",
@@ -73,7 +73,7 @@ func TestHttpOAuth2(t *testing.T) {
 	var id, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
 	results, err := httpCapability.Execute(
-		id, expectedCommand, oauth2_info, target, map[string]cacao.Variables{"test": variable1})
+		id, expectedCommand, oauth2_info, target, map[string]cacao.Variable{"test": variable1})
 	if err != nil {
 		fmt.Println(err)
 		t.Fail()
@@ -97,7 +97,7 @@ func TestHttpBasicAuth(t *testing.T) {
 		Headers: map[string]string{"accept": "application/json"},
 	}
 
-	var variable1 = cacao.Variables{
+	var variable1 = cacao.Variable{
 		Type:  "string",
 		Name:  "test_auth",
 		Value: "",
@@ -112,7 +112,7 @@ func TestHttpBasicAuth(t *testing.T) {
 	var id, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
 	results, err := httpCapability.Execute(
-		id, expectedCommand, basicauth_info, target, map[string]cacao.Variables{"test": variable1})
+		id, expectedCommand, basicauth_info, target, map[string]cacao.Variable{"test": variable1})
 	if err != nil {
 		fmt.Println(err)
 		t.Fail()

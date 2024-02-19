@@ -27,7 +27,7 @@ func TestExecuteStep(t *testing.T) {
 		Command: "ssh ls -la",
 	}
 
-	expectedVariables := cacao.Variables{
+	expectedVariables := cacao.Variable{
 		Type:  "string",
 		Name:  "var1",
 		Value: "testing",
@@ -51,15 +51,15 @@ func TestExecuteStep(t *testing.T) {
 		expectedCommand,
 		expectedAuth,
 		expectedTarget,
-		map[string]cacao.Variables{expectedVariables.Name: expectedVariables}).
-		Return(map[string]cacao.Variables{expectedVariables.Name: expectedVariables},
+		map[string]cacao.Variable{expectedVariables.Name: expectedVariables}).
+		Return(map[string]cacao.Variable{expectedVariables.Name: expectedVariables},
 			nil)
 
 	_, _, err := executerObject.Execute(id,
 		expectedCommand,
 		expectedAuth,
 		expectedTarget,
-		map[string]cacao.Variables{expectedVariables.Name: expectedVariables},
+		map[string]cacao.Variable{expectedVariables.Name: expectedVariables},
 		agent)
 
 	assert.Equal(t, err, nil)
@@ -81,7 +81,7 @@ func TestNonExistingCapabilityStep(t *testing.T) {
 		Command: "ssh ls -la",
 	}
 
-	expectedVariables := cacao.Variables{
+	expectedVariables := cacao.Variable{
 		Type:  "string",
 		Name:  "var1",
 		Value: "testing",
@@ -104,7 +104,7 @@ func TestNonExistingCapabilityStep(t *testing.T) {
 		expectedCommand,
 		expectedAuth,
 		expectedTarget,
-		map[string]cacao.Variables{expectedVariables.Name: expectedVariables},
+		map[string]cacao.Variable{expectedVariables.Name: expectedVariables},
 		agent)
 
 	assert.Equal(t, err, errors.New("executor is not available in soarca"))

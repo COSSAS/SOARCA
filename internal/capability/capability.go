@@ -11,6 +11,6 @@ type ICapability interface {
 		command cacao.Command,
 		authentication cacao.AuthenticationInformation,
 		target cacao.AgentTarget,
-		variables map[string]cacao.Variables) (map[string]cacao.Variables, error)
+		variables map[string]cacao.Variable) (map[string]cacao.Variable, error)
 	GetType() string
 }
