@@ -3,6 +3,7 @@ package validator
 import (
 	"errors"
 	"fmt"
+	"net/mail"
 	"soarca/logger"
 	"soarca/models/cacao"
 )
@@ -58,12 +59,8 @@ func isSafeWorkflowStep(playbook *cacao.Playbook, stepId string) error {
 	if err := checkStepSubStepsExist(workflow, step); err != nil {
 		return err
 	}
-	// Check agents exist
-	if err := checkStepAgentsExist(playbook, step); err != nil {
-		return err
-	}
-	// Check targets exist
-	if err := checkStepTargetsExist(playbook, step); err != nil {
+	// Check step agents and targets
+	if err := checkStepAgentTargetsSafe(playbook, step); err != nil {
 		return err
 	}
 	// Check auth info exists
@@ -74,26 +71,43 @@ func isSafeWorkflowStep(playbook *cacao.Playbook, stepId string) error {
 	return nil
 }
 
-func checkStepAgentsExist(playbook *cacao.Playbook, s cacao.Step) error {
-	if s.Agent != "" {
-		if _, ok := playbook.AgentDefinitions[s.Agent]; !ok {
-			return errors.New("agent " + s.Agent +
+func checkStepAgentTargetsSafe(playbook *cacao.Playbook, step cacao.Step) error {
+	// Check agent
+	if step.Agent != "" {
+		if _, ok := playbook.AgentDefinitions[step.Agent]; !ok {
+			return errors.New("agent " + step.Agent +
 				"not found in agent_definitions")
+		}
+		err, email := validateTargetAgentEmails(playbook.AgentDefinitions[step.Agent])
+		if err != nil {
+			return errors.New("agent " + step.Agent +
+				"has invalid email address: " + email)
+		}
+	}
+	// Check targets
+	if len(step.Targets) > 0 {
+		for _, target := range step.Targets {
+			if _, ok := playbook.TargetDefinitions[target]; !ok {
+				return errors.New("target " + target +
+					"not found in target_definitions")
+			}
+			err, email := validateTargetAgentEmails(playbook.TargetDefinitions[target])
+			if err != nil {
+				return errors.New("target " + target +
+					"has invalid email address: " + email)
+			}
 		}
 	}
 	return nil
 }
 
-func checkStepTargetsExist(playbook *cacao.Playbook, s cacao.Step) error {
-	if len(s.Targets) > 0 {
-		for _, t := range s.Targets {
-			if _, ok := playbook.TargetDefinitions[t]; !ok {
-				return errors.New("target " + t +
-					"not found in target_definitions")
-			}
+func validateTargetAgentEmails(at cacao.AgentTarget) (error, string) {
+	for _, email := range at.Contact.Email {
+		if _, err := mail.ParseAddress(email); err != nil {
+			return err, email
 		}
 	}
-	return nil
+	return nil, ""
 }
 
 func checkStepAuthInfoExist(playbook *cacao.Playbook, s cacao.Step) error {

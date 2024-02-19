@@ -25,169 +25,187 @@ const (
 )
 
 type (
-	DataMarkings struct{}
-	Extensions   struct{}
-	Contact      struct{}
+	Extensions map[string]interface{}
+	Workflow   map[string]Step
 )
-
-type Workflow map[string]Step
 
 type Playbook struct {
 	ID                            string                               `bson:"_id" json:"id" validate:"required"`
-	Type                          string                               `bson:"type" json:"type" validate:"required" `
+	Type                          string                               `bson:"type" json:"type" validate:"required"`
 	SpecVersion                   string                               `bson:"spec_version" json:"spec_version" validate:"required"`
 	Name                          string                               `bson:"name" json:"name" validate:"required"`
-	Description                   string                               `bson:"description" json:"description" validate:"required"`
-	PlaybookTypes                 []string                             `bson:"playbook_types" json:"playbook_types" validate:"required"`
+	Description                   string                               `bson:"description,omitempty" json:"description,omitempty"`
+	PlaybookTypes                 []string                             `bson:"playbook_types,omitempty" json:"playbook_types,omitempty"`
 	CreatedBy                     string                               `bson:"created_by" json:"created_by"  validate:"required"`
-	Created                       time.Time                            `bson:"created" json:"created"  validate:"required"`  // date time is already validate by the field type!
-	Modified                      time.Time                            `bson:"modified" json:"modified" validate:"required"` //,datetime=2006-01-02T15:04:05Z07:00"`
-	ValidFrom                     time.Time                            `bson:"valid_from" json:"valid_from" validate:"required,ltecsfield=ValidUntil"`
-	ValidUntil                    time.Time                            `bson:"valid_until" json:"valid_until" validate:"required,gtcsfield=ValidFrom"`
-	DerivedFrom                   []string                             `bson:"derived_form" json:"derived_from"`
-	Priority                      int                                  `bson:"priority" json:"priority" validate:"required"`
-	Severity                      int                                  `bson:"severity" json:"severity" validate:"required"`
-	Impact                        int                                  `bson:"impact" json:"impact" validate:"required"`
-	Labels                        []string                             `bson:"labels" json:"labels" validate:"required,dive"`
-	ExternalReferences            []ExternalReferences                 `bson:"external_references" json:"external_references" validate:"required,dive"`
-	Markings                      []string                             `bson:"markings" json:"markings"`
+	Created                       time.Time                            `bson:"created" json:"created"  validate:"required"`
+	Modified                      time.Time                            `bson:"modified" json:"modified" validate:"required"`
+	ValidFrom                     time.Time                            `bson:"valid_from,omitempty" json:"valid_from,omitempty"`
+	ValidUntil                    time.Time                            `bson:"valid_until,omitempty" json:"valid_until,omitempty" validate:"omitempty,gtecsfield=ValidFrom"`
+	DerivedFrom                   []string                             `bson:"derived_from,omitempty" json:"derived_from,omitempty"`
+	Priority                      int                                  `bson:"priority,omitempty" json:"priority,omitempty"`
+	Severity                      int                                  `bson:"severity,omitempty" json:"severity,omitempty"`
+	Impact                        int                                  `bson:"impact,omitempty" json:"impact,omitempty"`
+	Labels                        []string                             `bson:"labels,omitempty" json:"labels,omitempty"`
+	ExternalReferences            []ExternalReferences                 `bson:"external_references,omitempty" json:"external_references,omitempty"`
+	Markings                      []string                             `bson:"markings,omitempty" json:"markings,omitempty"`
 	WorkflowStart                 string                               `bson:"workflow_start" json:"workflow_start" validate:"required"`
-	WorkflowException             string                               `bson:"workflow_exception" json:"workflow_exception" validate:"required"`
-	Workflow                      Workflow                             `bson:"workflow"  json:"workflow" validate:"required"`
-	DataMarkingDefs               DataMarking                          `bson:"data_markings" json:"data_marking_definitions" validate:"omitempty"`
-	AuthenticationInfoDefinitions map[string]AuthenticationInformation `bson:"authentication_information" json:"authentication_info_definitions" validate:"omitempty"`
-	AgentDefinitions              map[string]AgentTarget               `bson:"agent_definitions" json:"agent_definitions" validate:"omitempty"`
-	TargetDefinitions             map[string]AgentTarget               `bson:"target_definitions" json:"target_definitions" validate:"omitempty"`
+	WorkflowException             string                               `bson:"workflow_exception,omitempty" json:"workflow_exception,omitempty"`
+	Workflow                      Workflow                             `bson:"workflow" json:"workflow" validate:"required"`
+	DataMarkingDefinitions        map[string]DataMarking               `bson:"data_marking_definitions,omitempty" json:"data_marking_definitions,omitempty"`
+	AuthenticationInfoDefinitions map[string]AuthenticationInformation `bson:"authentication_info_definitions,omitempty" json:"authentication_info_definitions,omitempty"`
+	AgentDefinitions              map[string]AgentTarget               `bson:"agent_definitions,omitempty" json:"agent_definitions,omitempty"`
+	TargetDefinitions             map[string]AgentTarget               `bson:"target_definitions,omitempty" json:"target_definitions,omitempty"`
+	ExtensionDefinitions          map[string]ExtensionDefinition       `bson:"extension_definitions,omitempty" json:"extension_definitions,omitempty"`
+	PlaybookVariables             map[string]Variables                 `bson:"playbook_variables,omitempty" json:"playbook_variables,omitempty"`
+	PlaybookExtensions            Extensions                           `bson:"playbook_extensions,omitempty" json:"playbook_extensions,omitempty"`
 }
 
 type CivicLocation struct {
-	Name               string `bson:"name" json:"name" validate:"optional"`
-	Description        string `bson:"description" json:"description" validate:"optional"`
-	BuildingDetails    string `bson:"building_details" json:"building_details" validate:"optional"`
-	NetworkDetails     string `bson:"network_details" json:"network_details" validate:"optional"`
-	Region             string `bson:"region" json:"region" validate:"optional"`
-	Country            string `bson:"country" json:"country" validate:"optional"`
-	AdministrativeArea string `bson:"administrative_area" json:"administrative_area" validate:"optional"`
-	City               string `bson:"city" json:"city" validate:"optional"`
-	StreetAddress      string `bson:"street_address" json:"street_address" validate:"optional"`
-	PostalCode         string `bson:"postal_code" json:"postal_code" validate:"optional"`
-	Latitude           string `bson:"latitude" json:"latitude" validate:"optional"`
-	Longitude          string `bson:"longitude" json:"longitude" validate:"optional"`
-	Precision          string `bson:"precision" json:"precision" validate:"optional"`
+	Name               string `bson:"name,omitempty" json:"name,omitempty"`
+	Description        string `bson:"description,omitempty" json:"description,omitempty"`
+	BuildingDetails    string `bson:"building_details,omitempty" json:"building_details,omitempty"`
+	NetworkDetails     string `bson:"network_details,omitempty" json:"network_details,omitempty"`
+	Region             string `bson:"region,omitempty" json:"region,omitempty"`
+	Country            string `bson:"country,omitempty" json:"country,omitempty"`
+	AdministrativeArea string `bson:"administrative_area,omitempty" json:"administrative_area,omitempty"`
+	City               string `bson:"city,omitempty" json:"city,omitempty"`
+	StreetAddress      string `bson:"street_address,omitempty" json:"street_address,omitempty"`
+	PostalCode         string `bson:"postal_code,omitempty" json:"postal_code,omitempty"`
+	Latitude           string `bson:"latitude,omitempty" json:"latitude,omitempty"`
+	Longitude          string `bson:"longitude,omitempty" json:"longitude,omitempty"`
+	Precision          string `bson:"precision,omitempty" json:"precision,omitempty"`
+}
+
+type Contact struct {
+	Email          map[string]string `bson:"email,omitempty" json:"email,omitempty"`
+	Phone          map[string]string `bson:"phone,omitempty" json:"phone,omitempty"`
+	ContactDetails string            `bson:"contact_details,omitempty" json:"contact_details,omitempty"`
 }
 
 type AgentTarget struct {
-	ID                    string              `bson:"_id" json:"id" validate:"required"`
+	ID                    string              `bson:"id,omitempty" json:"id,omitempty"`
 	Type                  string              `bson:"type" json:"type" validate:"required"`
 	Name                  string              `bson:"name" json:"name" validate:"required"`
-	Description           string              `bson:"description" json:"description" validate:"optional"`
-	Location              CivicLocation       `bson:"location" json:"location" validate:"optional"`
-	AgentTargetExtensions []string            `bson:"agent_target_extensions" json:"agent_target_extensions" validate:"optional"`
-	Contact               Contact             `bson:"contact" json:"contact" validate:"optional"`
-	Logical               []string            `bson:"logical" json:"logical" validate:"optional"`
-	Sector                string              `bson:"sector" json:"sector" validate:"optional"`
-	HttpUrl               string              `bson:"http_url" json:"http_url" validate:"optional"`
-	AuthInfoIdentifier    string              `bson:"authentication_info" json:"authentication_info" validate:"optional"`
-	Category              []string            `bson:"category" json:"category" validate:"optional"`
-	Address               map[string][]string `bson:"address" json:"address" validate:"optional"`
-	Port                  string              `bson:"port" json:"port" validate:"optional"`
+	Description           string              `bson:"description,omitempty" json:"description,omitempty"`
+	Location              CivicLocation       `bson:"location,omitempty" json:"location,omitempty"`
+	AgentTargetExtensions Extensions          `bson:"agent_target_extensions,omitempty" json:"agent_target_extensions,omitempty"`
+	Contact               Contact             `bson:"contact,omitempty" json:"contact,omitempty"`
+	Logical               []string            `bson:"logical,omitempty" json:"logical,omitempty"`
+	Sector                string              `bson:"sector,omitempty" json:"sector,omitempty"`
+	HttpUrl               string              `bson:"http_url,omitempty" json:"http_url,omitempty"`
+	AuthInfoIdentifier    string              `bson:"authentication_info,omitempty" json:"authentication_info,omitempty"`
+	Category              []string            `bson:"category,omitempty" json:"category,omitempty"`
+	Address               map[string][]string `bson:"address,omitempty" json:"address,omitempty"`
+	Port                  string              `bson:"port,omitempty" json:"port,omitempty"`
 }
 
 type AuthenticationInformation struct {
-	ID               string `bson:"_id" json:"id" validate:"required"`
-	Type             string `bson:"type"  json:"type" validate:"required"`
-	Name             string `bson:"name" json:"name" validate:"omitempty"`
-	Description      string `bson:"description" json:"description" validate:"omitempty"`
-	Username         string `bson:"username" json:"username" validate:"omitempty"`
-	UserId           string `bson:"user_id" json:"user_id" validate:"omitempty"`
-	Password         string `bson:"password" json:"password" validate:"omitempty"`
-	PrivateKey       string `bson:"private_key" json:"private_key" validate:"omitempty"`
-	Kms              bool   `bson:"kms" json:"kms" validate:"omitempty"`
-	KmsKeyIdentifier string `bson:"kms_key_identifier" json:"kms_key_identifier" validate:"omitempty"`
-	Token            string `bson:"token" json:"token" validate:"omitempty"`
-	OauthHeader      string `bson:"oauth_header" json:"oauth_header" validate:"omitempty"`
+	ID               string `bson:"id,omitempty" json:"id,omitempty"`
+	Type             string `bson:"type" json:"type" validate:"required"`
+	Name             string `bson:"name,omitempty" json:"name,omitempty"`
+	Description      string `bson:"description,omitempty" json:"description,omitempty"`
+	Username         string `bson:"username,omitempty" json:"username,omitempty"`
+	UserId           string `bson:"user_id,omitempty" json:"user_id,omitempty"`
+	Password         string `bson:"password,omitempty" json:"password,omitempty"`
+	PrivateKey       string `bson:"private_key,omitempty" json:"private_key,omitempty"`
+	Kms              bool   `bson:"kms" json:"kms"`
+	KmsKeyIdentifier string `bson:"kms_key_identifier,omitempty" json:"kms_key_identifier,omitempty"`
+	Token            string `bson:"token,omitempty" json:"token,omitempty"`
+	OauthHeader      string `bson:"oauth_header,omitempty" json:"oauth_header,omitempty"`
 }
 
 type ExternalReferences struct {
 	Name        string `bson:"name" json:"name" validate:"required"`
 	Description string `bson:"description" json:"description" validate:"required"`
 	Source      string `bson:"source" json:"source" validate:"required"`
-	URL         string `bson:"url"  json:"url" validate:"required,url"`
+	URL         string `bson:"url" json:"url" validate:"required,url"`
 }
-type Command struct {
-	Type             string            `bson:"type"  json:"type" validate:"required"`
-	Command          string            `bson:"command" json:"command" validate:"required"`
-	Description      string            `bson:"description" json:"description" validate:"omitempty"`
-	CommandB64       string            `bson:"base-64-command-string" json:"command_b64" validate:"omitempty"`
-	Version          string            `bson:"version" json:"version" validate:"omitempty"`
-	PlaybookActivity string            `bson:"playbook-activity" json:"playbook_activity" validate:"omitempty"`
-	Headers          map[string]string `bson:"headers" json:"headers" validate:"omitempty"`
-	Content          string            `bson:"content" json:"content" validate:"omitempty"`
-	ContentB64       string            `bson:"base-64-content" json:"content_b64" validate:"omitempty"`
+
+type ExtensionDefinition struct {
+	Type               string               `bson:"type" json:"type" validate:"required"`
+	Name               string               `bson:"name" json:"name" validation:"required"`
+	Description        string               `bson:"description,omitempty" json:"description,omitempty"`
+	CreatedBy          string               `bson:"created_by" json:"created_by" validate:"required"`
+	Schema             string               `bson:"schema" json:"schema" validate:"required"`
+	Version            string               `bson:"version" json:"version" validate:"required"`
+	ExternalReferences []ExternalReferences `bson:"external_references,omitempty" json:"external_references,omitempty"`
 }
 
 type Variables struct {
-	Type        string `json:"type,omitempty"`
-	Name        string `json:"name,omitempty"`
-	Description string `json:"description,omitempty"`
-	Value       string `json:"value,omitempty"`
-	Constant    bool   `json:"constant,omitempty"`
-	External    bool   `json:"external,omitempty"`
+	Type        string `bson:"type" json:"type" validate:"required"`
+	Name        string `bson:"name,omitempty" json:"name,omitempty"`
+	Description string `bson:"description,omitempty" json:"description,omitempty"`
+	Value       string `bson:"value,omitempty" json:"value,omitempty"`
+	Constant    bool   `bson:"constant,omitempty" json:"constant,omitempty"`
+	External    bool   `bson:"external,omitempty" json:"external,omitempty"`
+}
+
+type Command struct {
+	Type             string            `bson:"type"  json:"type" validate:"required"`
+	Command          string            `bson:"command" json:"command" validate:"required"`
+	Description      string            `bson:"description,omitempty" json:"description,omitempty"`
+	CommandB64       string            `bson:"command_b64,omitempty" json:"command_b64,omitempty"`
+	Version          string            `bson:"version,omitempty" json:"version,omitempty"`
+	PlaybookActivity string            `bson:"playbook_activity,omitempty" json:"playbook_activity,omitempty"`
+	Headers          map[string]string `bson:"headers,omitempty" json:"headers,omitempty"`
+	Content          string            `bson:"content,omitempty" json:"content,omitempty"`
+	ContentB64       string            `bson:"content_b64,omitempty" json:"content_b64,omitempty"`
 }
 
 type Step struct {
-	Type               string               `json:"type,omitempty"`
-	ID                 string               `json:"id,omitempty"`
-	Name               string               `json:"name,omitempty"`
-	Description        string               `json:"description,omitempty"`
-	ExternalReferences []ExternalReferences `json:"external_references,omitempty"`
-	Delay              int                  `json:"delay,omitempty"`
-	Timeout            int                  `json:"timeout,omitempty"`
-	StepVariables      map[string]Variables `json:"playbook_variables,omitempty"`
-	Owner              string               `json:"owner,omitempty"`
-	OnCompletion       string               `json:"on_completion,omitempty"`
-	OnSuccess          string               `json:"on_success,omitempty"`
-	OnFailure          string               `json:"on_failure,omitempty"`
-	Commands           []Command            `json:"commands,omitempty"`
-	Agent              string               `json:"agent,omitempty"`
-	Targets            []string             `json:"targets,omitempty"`
-	InArgs             []string             `json:"in_args,omitempty"`
-	OutArgs            []string             `json:"out_args,omitempty"`
-	PlaybookID         string               `json:"playbook_id,omitempty"`
-	PlaybookVersion    string               `json:"playbook_version,omitempty"`
-	NextSteps          []string             `json:"next_steps,omitempty"`
-	Condition          string               `json:"condition,omitempty"`
-	OnTrue             string               `json:"on_true,omitempty"`
-	OnFalse            string               `json:"on_false,omitempty"`
-	Switch             string               `json:"switch,omitempty"`
-	Cases              map[string]string    `json:"cases,omitempty"`
-	AuthenticationInfo string               `json:"authentication_info,omitempty"`
+	Type               string               `bson:"type" json:"type" validate:"required"`
+	ID                 string               `bson:"id,omitempty" json:"id,omitempty"`
+	Name               string               `bson:"name,omitempty" json:"name,omitempty"`
+	Description        string               `bson:"description,omitempty" json:"description,omitempty"`
+	ExternalReferences []ExternalReferences `bson:"external_references,omitempty" json:"external_references,omitempty"`
+	Delay              int                  `bson:"delay,omitempty" json:"delay,omitempty"`
+	Timeout            int                  `bson:"timeout,omitempty" json:"timeout,omitempty"`
+	StepVariables      map[string]Variables `bson:"step_variables,omitempty" json:"step_variables,omitempty"`
+	Owner              string               `bson:"owner,omitempty" json:"owner,omitempty"`
+	OnCompletion       string               `bson:"on_completion,omitempty" json:"on_completion,omitempty"`
+	OnSuccess          string               `bson:"on_success,omitempty" json:"on_success,omitempty"`
+	OnFailure          string               `bson:"on_failure,omitempty" json:"on_failure,omitempty"`
+	Commands           []Command            `bson:"commands,omitempty" json:"commands,omitempty"`
+	Agent              string               `bson:"agent,omitempty" json:"agent,omitempty"`
+	Targets            []string             `bson:"targets,omitempty" json:"targets,omitempty"`
+	InArgs             []string             `bson:"in_args,omitempty" json:"in_args,omitempty"`
+	OutArgs            []string             `bson:"out_args,omitempty" json:"out_args,omitempty"`
+	PlaybookID         string               `bson:"playbook_id,omitempty" json:"playbook_id,omitempty"`
+	PlaybookVersion    string               `bson:"playbook_version,omitempty" json:"playbook_version,omitempty"`
+	NextSteps          []string             `bson:"next_steps,omitempty" json:"next_steps,omitempty"`
+	Condition          string               `bson:"condition,omitempty" json:"condition,omitempty"`
+	OnTrue             string               `bson:"on_true,omitempty" json:"on_true,omitempty"`
+	OnFalse            string               `bson:"on_false,omitempty" json:"on_false,omitempty"`
+	Switch             string               `bson:"switch,omitempty" json:"switch,omitempty"`
+	Cases              map[string]string    `bson:"cases,omitempty" json:"cases,omitempty"`
+	AuthenticationInfo string               `bson:"authentication_info,omitempty" json:"authentication_info,omitempty"`
+	StepExtensions     Extensions           `bson:"step_extensions,omitempty" json:"step_extensions,omitempty"`
 }
 
 type DataMarking struct {
-	Type                       string               `json:"type,omitempty"`
-	ID                         string               `json:"id,omitempty"`
-	Name                       string               `json:"name,omitempty"`
-	Description                string               `json:"description,omitempty"`
-	CreatedBy                  string               `json:"created_by,omitempty"`
-	Created                    string               `json:"created,omitempty"`
-	Revoked                    bool                 `json:"revoked,omitempty"`
-	ValidFrom                  string               `json:"valid_from,omitempty"`
-	ValidUntil                 string               `json:"valid_until,omitempty"`
-	Labels                     []string             `json:"labels,omitempty"`
-	ExternalReferences         []ExternalReferences `json:"external_references,omitempty"`
-	TLPv2Level                 string               `json:"tlpv2_level,omitempty"`
-	Statement                  string               `json:"statement,omitempty"`
-	TLP                        string               `json:"tlp,omitempty"`
-	IEPVersion                 string               `json:"iep_version,omitempty"`
-	StartDate                  string               `json:"start_date,omitempty"`
-	EndDate                    string               `json:"end_date,omitempty"`
-	EncryptInTransit           string               `json:"encrypt_in_transit,omitempty"`
-	PermittedActions           string               `json:"permitted_actions,omitempty"`
-	AffectedPartyNotifications string               `json:"affected_party_notifications,omitempty"`
-	Attribution                string               `json:"attribution,omitempty"`
-	UnmodifiedResale           string               `json:"unmodified_resale,omitempty"`
-	// marking_extensions
+	Type                       string               `bson:"type" json:"type" validate:"required"`
+	ID                         string               `bson:"id" json:"id" validate:"required"`
+	Name                       string               `bson:"name,omitempty" json:"name,omitempty"`
+	Description                string               `bson:"description,omitempty" json:"description,omitempty"`
+	CreatedBy                  string               `bson:"created_by" json:"created_by" validate:"required"`
+	Created                    time.Time            `bson:"created" json:"created" validate:"required"`
+	Revoked                    bool                 `bson:"revoked,omitempty" json:"revoked,omitempty"`
+	ValidFrom                  time.Time            `bson:"valid_from,omitempty" json:"valid_from,omitempty"`
+	ValidUntil                 time.Time            `bson:"valid_until,omitempty" json:"valid_until,omitempty" validate:"gtecsfield=ValidFrom"`
+	Labels                     []string             `bson:"labels,omitempty" json:"labels,omitempty"`
+	ExternalReferences         []ExternalReferences `bson:"external_references,omitempty" json:"external_references,omitempty"`
+	TLPv2Level                 string               `bson:"tlpv2_level,omitempty" json:"tlpv2_level,omitempty"`
+	Statement                  string               `bson:"statement,omitempty" json:"statement,omitempty"`
+	TLP                        string               `bson:"tlp,omitempty" json:"tlp,omitempty"`
+	IEPVersion                 string               `bson:"iep_version,omitempty" json:"iep_version,omitempty"`
+	StartDate                  time.Time            `bson:"start_date,omitempty" json:"start_date,omitempty"`
+	EndDate                    time.Time            `bson:"end_date,omitempty" json:"end_date,omitempty" validate:"gtecsfield=StartDate"`
+	EncryptInTransit           string               `bson:"encrypt_in_transit,omitempty" json:"encrypt_in_transit,omitempty"`
+	PermittedActions           string               `bson:"permitted_actions,omitempty" json:"permitted_actions,omitempty"`
+	AffectedPartyNotifications string               `bson:"affected_party_notifications,omitempty" json:"affected_party_notifications,omitempty"`
+	Attribution                string               `bson:"attribution,omitempty" json:"attribution,omitempty"`
+	UnmodifiedResale           string               `bson:"unmodified_resale,omitempty" json:"unmodified_resale,omitempty"`
+	MarkingExtensions          Extensions           `bson:"marking_extensions,omitempty" json:"marking_extensions,omitempty"`
 }
 
 // Deprecated

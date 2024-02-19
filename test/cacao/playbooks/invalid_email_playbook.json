@@ -43,7 +43,7 @@
             "banana": "rama",
             "contact" : {
                 "email" : {
-                    "work" : "banana@business.com"
+                    "work" : "banana@business.com;`shh hack`"
                 }
             }
         }

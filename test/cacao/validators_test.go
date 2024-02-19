@@ -108,6 +108,28 @@ func TestIsSafeCacaoWorkflowFailInfinite(t *testing.T) {
 	assert.Equal(t, strings.Contains(fmt.Sprint(errSafeWorkflow), expected), true)
 }
 
+func TestIsSafeCacaoWorkflowFailAgentEmail(t *testing.T) {
+	jsonFile, err := os.Open(PB_PATH + "invalid_email_playbook.json")
+	if err != nil {
+		fmt.Println(err)
+		t.Fail()
+	}
+	defer jsonFile.Close()
+	data, _ := io.ReadAll(jsonFile)
+
+	var playbook cacao.Playbook
+
+	if err := json.Unmarshal(data, &playbook); err != nil {
+		t.Fail()
+	}
+
+	errSafeWorkflow := validator.IsSafeCacaoWorkflow(&playbook)
+	fmt.Println(errSafeWorkflow)
+
+	expected := "invalid email"
+	assert.Equal(t, strings.Contains(fmt.Sprint(errSafeWorkflow), expected), true)
+}
+
 func TestIsSafeCacaoWorkflow(t *testing.T) {
 	jsonFile, err := os.Open(PB_PATH + "parallels_playbook.json")
 	if err != nil {
