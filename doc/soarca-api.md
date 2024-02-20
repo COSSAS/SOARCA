@@ -14,6 +14,7 @@ We will use HTTP status codes https://en.wikipedia.org/wiki/List_of_HTTP_status_
 @startuml
 protocol UiEndpoint {
     GET     /workflow
+    GET     /workflow/meta
     POST    /workflow
     GET     /workflow/workflow-id
     PUT     /workflow/workflow-id
@@ -154,15 +155,43 @@ None
 
 ```plantuml
 @startjson
-{
-    "workflows": [
-        {
-            "workflow-id": "xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx",
-            "workflow-name": "name",
-            "workflow-description": "description"
-        }
-    ]
-}
+
+[
+    {
+        "workflow": "<cacao-playbook> (json)"
+    }
+]
+@endjson
+```
+
+##### Error
+400/BAD REQUEST with payload:
+General error
+
+#### GET `/workflow/meta`
+Get all workflow id's that are currently stored in SOAR-CA.
+
+##### Call payload
+None
+
+##### Response
+200/OK with payload:
+
+```plantuml
+@startjson
+
+[
+    {
+        "id": "<workflow id>",
+        "name": "<workflow name>",
+        "description": "<workflow id>",
+        "created": "<creation data time>",
+        "valid_from": "<valid from date time>",
+        "valid_until": "<valid until date time>",
+        "labels": ["label 1","label 2"]
+    }
+]
+
 @endjson
 ```
 
@@ -193,7 +222,7 @@ Create a new workflow that and store it in SOAR-CA. The format is
 ```plantuml
 @startjson
 {
-    "workflow-id": "xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx"
+    "workflow": "<cacao-playbook> (json)"
 }
 @endjson
 ```
