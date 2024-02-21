@@ -1,4 +1,21 @@
 definitions:
+  api.PlaybookMeta:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      labels:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      valid_from:
+        type: string
+      valid_until:
+        type: string
+    type: object
   cacao.AgentTarget:
     properties:
       address:
@@ -8,9 +25,7 @@ definitions:
           type: array
         type: object
       agent_target_extensions:
-        items:
-          type: string
-        type: array
+        $ref: '#/definitions/cacao.Extensions'
       authentication_info:
         type: string
       category:
@@ -40,7 +55,6 @@ definitions:
       type:
         type: string
     required:
-    - id
     - name
     - type
     type: object
@@ -71,7 +85,6 @@ definitions:
       username:
         type: string
     required:
-    - id
     - type
     type: object
   cacao.CivicLocation:
@@ -130,6 +143,17 @@ definitions:
     - type
     type: object
   cacao.Contact:
+    properties:
+      contact_details:
+        type: string
+      email:
+        additionalProperties:
+          type: string
+        type: object
+      phone:
+        additionalProperties:
+          type: string
+        type: object
     type: object
   cacao.DataMarking:
     properties:
@@ -159,6 +183,8 @@ definitions:
         items:
           type: string
         type: array
+      marking_extensions:
+        $ref: '#/definitions/cacao.Extensions'
       name:
         type: string
       permitted_actions:
@@ -181,6 +207,38 @@ definitions:
         type: string
       valid_until:
         type: string
+    required:
+    - created
+    - created_by
+    - id
+    - type
+    type: object
+  cacao.ExtensionDefinition:
+    properties:
+      created_by:
+        type: string
+      description:
+        type: string
+      external_references:
+        items:
+          $ref: '#/definitions/cacao.ExternalReferences'
+        type: array
+      name:
+        type: string
+      schema:
+        type: string
+      type:
+        type: string
+      version:
+        type: string
+    required:
+    - created_by
+    - schema
+    - type
+    - version
+    type: object
+  cacao.Extensions:
+    additionalProperties: true
     type: object
   cacao.ExternalReferences:
     properties:
@@ -209,18 +267,23 @@ definitions:
           $ref: '#/definitions/cacao.AuthenticationInformation'
         type: object
       created:
-        description: date time is already validate by the field type!
         type: string
       created_by:
         type: string
       data_marking_definitions:
-        $ref: '#/definitions/cacao.DataMarking'
+        additionalProperties:
+          $ref: '#/definitions/cacao.DataMarking'
+        type: object
       derived_from:
         items:
           type: string
         type: array
       description:
         type: string
+      extension_definitions:
+        additionalProperties:
+          $ref: '#/definitions/cacao.ExtensionDefinition'
+        type: object
       external_references:
         items:
           $ref: '#/definitions/cacao.ExternalReferences'
@@ -238,14 +301,19 @@ definitions:
           type: string
         type: array
       modified:
-        description: ',datetime=2006-01-02T15:04:05Z07:00"`'
         type: string
       name:
         type: string
+      playbook_extensions:
+        $ref: '#/definitions/cacao.Extensions'
       playbook_types:
         items:
           type: string
         type: array
+      playbook_variables:
+        additionalProperties:
+          $ref: '#/definitions/cacao.Variable'
+        type: object
       priority:
         type: integer
       severity:
@@ -271,22 +339,12 @@ definitions:
     required:
     - created
     - created_by
-    - description
-    - external_references
     - id
-    - impact
-    - labels
     - modified
     - name
-    - playbook_types
-    - priority
-    - severity
     - spec_version
     - type
-    - valid_from
-    - valid_until
     - workflow
-    - workflow_exception
     - workflow_start
     type: object
   cacao.Step:
@@ -343,12 +401,14 @@ definitions:
         type: string
       playbook_id:
         type: string
-      playbook_variables:
+      playbook_version:
+        type: string
+      step_extensions:
+        $ref: '#/definitions/cacao.Extensions'
+      step_variables:
         additionalProperties:
           $ref: '#/definitions/cacao.Variable'
         type: object
-      playbook_version:
-        type: string
       switch:
         type: string
       targets:
@@ -359,6 +419,8 @@ definitions:
         type: integer
       type:
         type: string
+    required:
+    - type
     type: object
   cacao.Variable:
     properties:
@@ -374,6 +436,8 @@ definitions:
         type: string
       value:
         type: string
+    required:
+    - type
     type: object
   cacao.Workflow:
     additionalProperties:
@@ -404,7 +468,7 @@ paths:
       - trigger
   /workflow/:
     get:
-      description: get UUIDs for workflow
+      description: get playbook meta information for workflow
       produces:
       - application/json
       responses:
@@ -412,7 +476,7 @@ paths:
           description: OK
           schema:
             items:
-              type: string
+              $ref: '#/definitions/cacao.Playbook'
             type: array
       summary: gets all the UUIDs for the stored workflows
       tags:
@@ -501,6 +565,21 @@ paths:
           schema:
             $ref: '#/definitions/cacao.Playbook'
       summary: update workflow
+      tags:
+      - workflow
+  /workflow/meta:
+    get:
+      description: get playbook meta information for workflow
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/api.PlaybookMeta'
+            type: array
+      summary: gets all the c for the stored workflows
       tags:
       - workflow
 swagger: "2.0"

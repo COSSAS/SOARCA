@@ -48,7 +48,7 @@ const docTemplate = `{
         },
         "/workflow/": {
             "get": {
-                "description": "get UUIDs for workflow",
+                "description": "get playbook meta information for workflow",
                 "produces": [
                     "application/json"
                 ],
@@ -62,7 +62,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "string"
+                                "$ref": "#/definitions/cacao.Playbook"
                             }
                         }
                     }
@@ -96,6 +96,29 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/cacao.Playbook"
+                        }
+                    }
+                }
+            }
+        },
+        "/workflow/meta": {
+            "get": {
+                "description": "get playbook meta information for workflow",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "workflow"
+                ],
+                "summary": "gets all the c for the stored workflows",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/api.PlaybookMeta"
+                            }
                         }
                     }
                 }
@@ -201,10 +224,35 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "api.PlaybookMeta": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "labels": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "valid_from": {
+                    "type": "string"
+                },
+                "valid_until": {
+                    "type": "string"
+                }
+            }
+        },
         "cacao.AgentTarget": {
             "type": "object",
             "required": [
-                "id",
                 "name",
                 "type"
             ],
@@ -219,10 +267,7 @@ const docTemplate = `{
                     }
                 },
                 "agent_target_extensions": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "$ref": "#/definitions/cacao.Extensions"
                 },
                 "authentication_info": {
                     "type": "string"
@@ -271,7 +316,6 @@ const docTemplate = `{
         "cacao.AuthenticationInformation": {
             "type": "object",
             "required": [
-                "id",
                 "type"
             ],
             "properties": {
@@ -397,10 +441,33 @@ const docTemplate = `{
             }
         },
         "cacao.Contact": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "contact_details": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "phone": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
         },
         "cacao.DataMarking": {
             "type": "object",
+            "required": [
+                "created",
+                "created_by",
+                "id",
+                "type"
+            ],
             "properties": {
                 "affected_party_notifications": {
                     "type": "string"
@@ -441,6 +508,9 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "marking_extensions": {
+                    "$ref": "#/definitions/cacao.Extensions"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -476,6 +546,45 @@ const docTemplate = `{
                 }
             }
         },
+        "cacao.ExtensionDefinition": {
+            "type": "object",
+            "required": [
+                "created_by",
+                "schema",
+                "type",
+                "version"
+            ],
+            "properties": {
+                "created_by": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "external_references": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/cacao.ExternalReferences"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "schema": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "cacao.Extensions": {
+            "type": "object",
+            "additionalProperties": true
+        },
         "cacao.ExternalReferences": {
             "type": "object",
             "required": [
@@ -504,22 +613,12 @@ const docTemplate = `{
             "required": [
                 "created",
                 "created_by",
-                "description",
-                "external_references",
                 "id",
-                "impact",
-                "labels",
                 "modified",
                 "name",
-                "playbook_types",
-                "priority",
-                "severity",
                 "spec_version",
                 "type",
-                "valid_from",
-                "valid_until",
                 "workflow",
-                "workflow_exception",
                 "workflow_start"
             ],
             "properties": {
@@ -536,14 +635,16 @@ const docTemplate = `{
                     }
                 },
                 "created": {
-                    "description": "date time is already validate by the field type!",
                     "type": "string"
                 },
                 "created_by": {
                     "type": "string"
                 },
                 "data_marking_definitions": {
-                    "$ref": "#/definitions/cacao.DataMarking"
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/cacao.DataMarking"
+                    }
                 },
                 "derived_from": {
                     "type": "array",
@@ -553,6 +654,12 @@ const docTemplate = `{
                 },
                 "description": {
                     "type": "string"
+                },
+                "extension_definitions": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/cacao.ExtensionDefinition"
+                    }
                 },
                 "external_references": {
                     "type": "array",
@@ -579,16 +686,24 @@ const docTemplate = `{
                     }
                 },
                 "modified": {
-                    "description": ",datetime=2006-01-02T15:04:05Z07:00\"` + "`" + `",
                     "type": "string"
                 },
                 "name": {
                     "type": "string"
                 },
+                "playbook_extensions": {
+                    "$ref": "#/definitions/cacao.Extensions"
+                },
                 "playbook_types": {
                     "type": "array",
                     "items": {
                         "type": "string"
+                    }
+                },
+                "playbook_variables": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/cacao.Variable"
                     }
                 },
                 "priority": {
@@ -628,6 +743,9 @@ const docTemplate = `{
         },
         "cacao.Step": {
             "type": "object",
+            "required": [
+                "type"
+            ],
             "properties": {
                 "agent": {
                     "type": "string"
@@ -707,14 +825,17 @@ const docTemplate = `{
                 "playbook_id": {
                     "type": "string"
                 },
-                "playbook_variables": {
+                "playbook_version": {
+                    "type": "string"
+                },
+                "step_extensions": {
+                    "$ref": "#/definitions/cacao.Extensions"
+                },
+                "step_variables": {
                     "type": "object",
                     "additionalProperties": {
                         "$ref": "#/definitions/cacao.Variable"
                     }
-                },
-                "playbook_version": {
-                    "type": "string"
                 },
                 "switch": {
                     "type": "string"
@@ -735,6 +856,9 @@ const docTemplate = `{
         },
         "cacao.Variable": {
             "type": "object",
+            "required": [
+                "type"
+            ],
             "properties": {
                 "constant": {
                     "type": "boolean"

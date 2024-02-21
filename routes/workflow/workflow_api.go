@@ -20,23 +20,45 @@ func NewWorkflowController(workflowRepo workflowRepository.IWorkflowRepository) 
 	return &workflowController{workflowRepo: workflowRepo}
 }
 
-// getAllsWorkflows GET handler for obtaining all the workflowIDs in the database and return this to the gin context in json format
+// getAllsWorkflows GET handler for obtaining all the workflows in the database and return this to the gin context in json format
 // @Summary gets all the UUIDs for the stored workflows
 // @Schemes
-// @Description get UUIDs for workflow
+// @Description get playbook meta information for workflow
 // @Tags workflow
 // @Produce json
-// @success 200 {array} string
+// @success 200 {array} cacao.Playbook
 // @error	400
 // @Router /workflow/ [GET]
-func (workflowctrl *workflowController) getAllWorkFlowIds(g *gin.Context) {
+func (workflowctrl *workflowController) getAllWorkflows(g *gin.Context) {
 	log.Trace("Trying to obtain all workflow IDs")
 
-	returnListIDs, err := workflowctrl.workflowRepo.GetWorkflowIds()
+	returnListIDs, err := workflowctrl.workflowRepo.GetWorkflows()
 	if err != nil {
-		log.Debug("Could not obtain any IDS", err)
+		log.Debug("Could not obtain any PlaybookMetas", err)
+		SendErrorResponse(g, http.StatusBadRequest, "Could not obtain any IDs", "GET /workflow/meta")
+		return
+	}
 
-		SendErrorResponse(g, http.StatusBadRequest, "Could not obtain any IDs", "GET /workflow")
+	g.JSON(http.StatusOK, returnListIDs)
+}
+
+// getAllsWorkflows GET handler for obtaining all the meta data of all the stored workflows
+// in the database and return this to the gin context in json format
+// @Summary gets all the c for the stored workflows
+// @Schemes
+// @Description get playbook meta information for workflow
+// @Tags workflow
+// @Produce json
+// @success 200 {array} api.PlaybookMeta
+// @error	400
+// @Router /workflow/meta [GET]
+func (workflowctrl *workflowController) getAllWorkFlowMetas(g *gin.Context) {
+	log.Trace("Trying to obtain all workflow IDs")
+
+	returnListIDs, err := workflowctrl.workflowRepo.GetWorkflowMetas()
+	if err != nil {
+		log.Debug("Could not obtain any PlaybookMetas", err)
+		SendErrorResponse(g, http.StatusBadRequest, "Could not obtain any IDs", "GET /workflow/meta")
 		return
 	}
 
@@ -61,7 +83,7 @@ func (workflowctrl *workflowController) submitWorkflow(g *gin.Context) {
 		SendErrorResponse(g, http.StatusBadRequest, "Failed to marshall json on server side", "POST /workflow")
 		return
 	}
-	workflow_id, err := workflowctrl.workflowRepo.Create(&jsonData)
+	playbook, err := workflowctrl.workflowRepo.Create(&jsonData)
 	if err != nil {
 		log.Debug("Submit Workflow Endpoint has failed:", err.Error())
 		if err.Error() == "duplicate" {
@@ -71,11 +93,7 @@ func (workflowctrl *workflowController) submitWorkflow(g *gin.Context) {
 		}
 		return
 	}
-	msg := gin.H{
-		"workflow-id":  workflow_id,
-		"workflowType": "",
-	}
-	g.JSON(http.StatusCreated, msg)
+	g.JSON(http.StatusCreated, playbook)
 }
 
 // getWorkflowbyID GET handler that finds workflow by id

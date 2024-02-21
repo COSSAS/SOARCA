@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"time"
 
+	"soarca/database/projections"
 	cacao "soarca/models/cacao"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -43,7 +44,13 @@ func DefaultLimitOpts() mongoFindOptions {
 
 func (mongoOpts mongoFindOptions) GetIds() interface{} {
 	return func(lo *mongoFindOptions) {
-		lo.findOptions.SetProjection(bson.M{"_id": 1})
+		lo.findOptions.SetProjection(projections.Id.GetProjection())
+	}
+}
+
+func (mongoOpts mongoFindOptions) GetProjectionByType(interface{}) interface{} {
+	return func(lo *mongoFindOptions) {
+		lo.findOptions.SetProjection(projections.Meta.GetProjection())
 	}
 }
 

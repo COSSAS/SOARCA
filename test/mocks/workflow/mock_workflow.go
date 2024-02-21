@@ -1,6 +1,7 @@
 package mocks_workflow_test
 
 import (
+	"soarca/models/api"
 	"soarca/models/cacao"
 
 	"github.com/stretchr/testify/mock"
@@ -10,14 +11,19 @@ type MockWorkflow struct {
 	mock.Mock
 }
 
-func (testInterface *MockWorkflow) GetWorkflowIds() ([]string, error) {
+func (testInterface *MockWorkflow) GetWorkflowMetas() ([]api.PlaybookMeta, error) {
 	args := testInterface.Called()
-	return args.Get(0).([]string), args.Error(1)
+	return args.Get(0).([]api.PlaybookMeta), args.Error(1)
 }
 
-func (testInterface *MockWorkflow) Create(jsonData *[]byte) (string, error) {
+func (testInterface *MockWorkflow) GetWorkflows() ([]cacao.Playbook, error) {
+	args := testInterface.Called()
+	return args.Get(0).([]cacao.Playbook), args.Error(1)
+}
+
+func (testInterface *MockWorkflow) Create(jsonData *[]byte) (cacao.Playbook, error) {
 	args := testInterface.Called(jsonData)
-	return args.String(0), args.Error(1)
+	return args.Get(0).(cacao.Playbook), args.Error(1)
 }
 
 func (testInterface *MockWorkflow) Read(id string) (cacao.Playbook, error) {

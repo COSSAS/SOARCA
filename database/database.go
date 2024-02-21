@@ -9,4 +9,5 @@ type Database interface {
 }
 type FindOptions interface {
 	GetIds() interface{}
+	GetProjectionByType(interface{}) interface{}
 }
