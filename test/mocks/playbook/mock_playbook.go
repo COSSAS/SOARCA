@@ -1,4 +1,4 @@
-package mocks_workflow_test
+package mocks_playbook_test
 
 import (
 	"soarca/models/api"
@@ -7,36 +7,36 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type MockWorkflow struct {
+type MockPlaybook struct {
 	mock.Mock
 }
 
-func (testInterface *MockWorkflow) GetWorkflowMetas() ([]api.PlaybookMeta, error) {
+func (testInterface *MockPlaybook) GetPlaybookMetas() ([]api.PlaybookMeta, error) {
 	args := testInterface.Called()
 	return args.Get(0).([]api.PlaybookMeta), args.Error(1)
 }
 
-func (testInterface *MockWorkflow) GetWorkflows() ([]cacao.Playbook, error) {
+func (testInterface *MockPlaybook) GetPlaybooks() ([]cacao.Playbook, error) {
 	args := testInterface.Called()
 	return args.Get(0).([]cacao.Playbook), args.Error(1)
 }
 
-func (testInterface *MockWorkflow) Create(jsonData *[]byte) (cacao.Playbook, error) {
+func (testInterface *MockPlaybook) Create(jsonData *[]byte) (cacao.Playbook, error) {
 	args := testInterface.Called(jsonData)
 	return args.Get(0).(cacao.Playbook), args.Error(1)
 }
 
-func (testInterface *MockWorkflow) Read(id string) (cacao.Playbook, error) {
+func (testInterface *MockPlaybook) Read(id string) (cacao.Playbook, error) {
 	args := testInterface.Called(id)
 	return args.Get(0).(cacao.Playbook), args.Error(1)
 }
 
-func (testInterface *MockWorkflow) Update(id string, jsonData *[]byte) (cacao.Playbook, error) {
+func (testInterface *MockPlaybook) Update(id string, jsonData *[]byte) (cacao.Playbook, error) {
 	args := testInterface.Called(id, jsonData)
 	return args.Get(0).(cacao.Playbook), args.Error(1)
 }
 
-func (testInterface *MockWorkflow) Delete(id string) error {
+func (testInterface *MockPlaybook) Delete(id string) error {
 	args := testInterface.Called(id)
 	return args.Error(0)
 }

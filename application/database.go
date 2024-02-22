@@ -5,7 +5,7 @@ import (
 	"os"
 
 	mongo "soarca/database/mongodb"
-	workflowRepo "soarca/database/workflow"
+	playbookRepo "soarca/database/playbook"
 	routes "soarca/routes"
 
 	"github.com/gin-gonic/gin"
@@ -29,10 +29,10 @@ func InitializeDatabase(app *gin.Engine) error {
 	}
 	// defer database.GetMongoClient().CloseMongoDB()
 
-	workflowRepo := workflowRepo.SetupWorkflowRepository(mongo.GetCacaoRepo(), mongo.DefaultLimitOpts())
+	playbookRepo := playbookRepo.SetupPlaybookRepository(mongo.GetCacaoRepo(), mongo.DefaultLimitOpts())
 
 	// setup database routes
-	err = routes.Database(app, workflowRepo)
+	err = routes.Database(app, playbookRepo)
 
 	return err
 }

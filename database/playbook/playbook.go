@@ -1,4 +1,4 @@
-package workflowrepository
+package playbookrepository
 
 import (
 	"errors"
@@ -10,26 +10,26 @@ import (
 	"soarca/models/cacao"
 )
 
-type IWorkflowRepository interface {
-	GetWorkflows() ([]cacao.Playbook, error)
-	GetWorkflowMetas() ([]api.PlaybookMeta, error)
+type IPlaybookRepository interface {
+	GetPlaybooks() ([]cacao.Playbook, error)
+	GetPlaybookMetas() ([]api.PlaybookMeta, error)
 	Create(jsonData *[]byte) (cacao.Playbook, error)
 	Read(id string) (cacao.Playbook, error)
 	Update(id string, jsonData *[]byte) (cacao.Playbook, error)
 	Delete(id string) error
 }
 
-type WorkflowRepository struct {
+type PlaybookRepository struct {
 	db      database.Database
 	options database.FindOptions
 }
 
-func SetupWorkflowRepository(db database.Database, options database.FindOptions) *WorkflowRepository {
-	return &WorkflowRepository{db: db, options: options}
+func SetupPlaybookRepository(db database.Database, options database.FindOptions) *PlaybookRepository {
+	return &PlaybookRepository{db: db, options: options}
 }
 
-func (workflowrepo *WorkflowRepository) GetWorkflowMetas() ([]api.PlaybookMeta, error) {
-	playbookMetas, err := workflowrepo.db.Find(nil, workflowrepo.options.GetProjectionByType(projections.Meta))
+func (playbookRepo *PlaybookRepository) GetPlaybookMetas() ([]api.PlaybookMeta, error) {
+	playbookMetas, err := playbookRepo.db.Find(nil, playbookRepo.options.GetProjectionByType(projections.Meta))
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func (workflowrepo *WorkflowRepository) GetWorkflowMetas() ([]api.PlaybookMeta, 
 	for _, playbookMeta := range playbookMetas {
 		playbookMeta, ok := playbookMeta.(cacao.Playbook)
 		if !ok {
-			return nil, errors.New("type assertion failed for cacao.Playbook to cacao.WorkflowMeta type")
+			return nil, errors.New("type assertion failed for cacao.Playbook to cacao.PlaybookMeta type")
 		}
 		returnPlaybookMetas = append(returnPlaybookMetas, api.PlaybookMeta{
 			ID:          playbookMeta.ID,
@@ -53,25 +53,25 @@ func (workflowrepo *WorkflowRepository) GetWorkflowMetas() ([]api.PlaybookMeta, 
 	return returnPlaybookMetas, nil
 }
 
-func (workflowrepo *WorkflowRepository) GetWorkflows() ([]cacao.Playbook, error) {
-	return_workflows, err := workflowrepo.db.Find(nil)
+func (playbookRepo *PlaybookRepository) GetPlaybooks() ([]cacao.Playbook, error) {
+	playbooks, err := playbookRepo.db.Find(nil)
 	if err != nil {
 		return nil, err
 	}
 
-	var returnListWorkflows []cacao.Playbook
-	for _, workflow := range return_workflows {
+	var returnListPlaybooks []cacao.Playbook
+	for _, playbook := range playbooks {
 		// get the cacao playbook id and add to the return list
-		workflow, ok := workflow.(cacao.Playbook)
+		playbook, ok := playbook.(cacao.Playbook)
 		if !ok {
-			return nil, errors.New("type assertion failed for workflow to cacao.playbook type")
+			return nil, errors.New("type assertion failed for cacao.playbook type")
 		}
-		returnListWorkflows = append(returnListWorkflows, workflow)
+		returnListPlaybooks = append(returnListPlaybooks, playbook)
 	}
-	return returnListWorkflows, nil
+	return returnListPlaybooks, nil
 }
 
-func (workflowrepo *WorkflowRepository) Create(jsonData *[]byte) (cacao.Playbook, error) {
+func (playbookRepo *PlaybookRepository) Create(jsonData *[]byte) (cacao.Playbook, error) {
 	// validate the input object to required type and unmarshal
 	client_data, err := validator.UnmarshalJson[cacao.Playbook](jsonData)
 	if err != nil {
@@ -83,11 +83,11 @@ func (workflowrepo *WorkflowRepository) Create(jsonData *[]byte) (cacao.Playbook
 		return cacao.Playbook{}, errors.New("failed to cast playbook object")
 	}
 
-	return playbook, workflowrepo.db.Create(client_data)
+	return playbook, playbookRepo.db.Create(client_data)
 }
 
-func (workflowrepo *WorkflowRepository) Read(id string) (cacao.Playbook, error) {
-	returnedObject, err := workflowrepo.db.Read(id)
+func (playbookRepo *PlaybookRepository) Read(id string) (cacao.Playbook, error) {
+	returnedObject, err := playbookRepo.db.Read(id)
 	if err != nil {
 		return cacao.Playbook{}, err
 	}
@@ -101,7 +101,7 @@ func (workflowrepo *WorkflowRepository) Read(id string) (cacao.Playbook, error) 
 	return cacaoPlaybook, nil
 }
 
-func (workflowrepo *WorkflowRepository) Update(id string, jsonData *[]byte) (cacao.Playbook, error) {
+func (playbookRepo *PlaybookRepository) Update(id string, jsonData *[]byte) (cacao.Playbook, error) {
 	// validate the input object to required type and unmarshal
 	client_data, err := validator.UnmarshalJson[cacao.Playbook](jsonData)
 	if err != nil {
@@ -112,10 +112,10 @@ func (workflowrepo *WorkflowRepository) Update(id string, jsonData *[]byte) (cac
 		err = errors.New("Could not cast lookup object to cacao.Playbook type")
 		return cacao.Playbook{}, err
 	}
-	return cacaoPlaybook, workflowrepo.db.Update(id, client_data)
+	return cacaoPlaybook, playbookRepo.db.Update(id, client_data)
 }
 
-func (workflowrepo *WorkflowRepository) Delete(id string) error {
+func (playbookRepo *PlaybookRepository) Delete(id string) error {
 	// validate the input object to required type and unmarshal
-	return workflowrepo.db.Delete(id)
+	return playbookRepo.db.Delete(id)
 }

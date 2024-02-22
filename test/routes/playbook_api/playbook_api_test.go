@@ -13,17 +13,12 @@ import (
 	"soarca/models/api"
 	"soarca/models/cacao"
 	"soarca/models/decoder"
-	workflow_router "soarca/routes/workflow"
-	workflow_mock "soarca/test/mocks/workflow"
+	playbookRouter "soarca/routes/playbook"
+	mock_playbook "soarca/test/mocks/playbook"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
-
-// Only id field is required for testing the functionality
-type Workflow struct {
-	ID string `json:"id"`
-}
 
 const jsonTestPlayBookMeta = `{
 	"id": "playbook--300270f9-0e64-42c8-93cc-0927edbe3ae7",
@@ -38,9 +33,9 @@ const jsonTestPlayBookMeta = `{
 		]
 	}`
 
-func TestGetMetas(t *testing.T) {
+func TestGetPlaybookMetas(t *testing.T) {
 	app := gin.New()
-	testWorkflow := new(workflow_mock.MockWorkflow)
+	mockPlaybook := new(mock_playbook.MockPlaybook)
 
 	var dummyPlaybookMeta api.PlaybookMeta
 
@@ -61,15 +56,15 @@ func TestGetMetas(t *testing.T) {
 		t.Fail()
 		return
 	}
-	testWorkflow.On("GetWorkflowMetas").Return(dummyPlaybookMetas, nil)
+	mockPlaybook.On("GetPlaybookMetas").Return(dummyPlaybookMetas, nil)
 
 	w := httptest.NewRecorder()
-	workflow_router.Routes(app, testWorkflow)
-	req, _ := http.NewRequest("GET", "/workflow/meta/", nil)
+	playbookRouter.Routes(app, mockPlaybook)
+	req, _ := http.NewRequest("GET", "/playbook/meta/", nil)
 	app.ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
-	testWorkflow.AssertExpectations(t)
+	mockPlaybook.AssertExpectations(t)
 	assert.JSONEq(t, string(marshalledDummyPlayBookMetas), w.Body.String())
 }
 
@@ -85,7 +80,7 @@ func TestGetPlaybooks(t *testing.T) {
 	app := gin.New()
 	gin.SetMode(gin.DebugMode)
 
-	testWorkflow := new(workflow_mock.MockWorkflow)
+	mockPlaybook := new(mock_playbook.MockPlaybook)
 	dummyPlaybook := decoder.DecodeValidate(byteValue)
 	if dummyPlaybook == nil {
 		fmt.Println("got an nil playbook pointer")
@@ -104,18 +99,18 @@ func TestGetPlaybooks(t *testing.T) {
 		t.Fail()
 		return
 	}
-	testWorkflow.On("GetWorkflows").Return(playbooks, nil)
+	mockPlaybook.On("GetPlaybooks").Return(playbooks, nil)
 	w := httptest.NewRecorder()
-	workflow_router.Routes(app, testWorkflow)
-	req, _ := http.NewRequest("GET", "/workflow/", nil)
+	playbookRouter.Routes(app, mockPlaybook)
+	req, _ := http.NewRequest("GET", "/playbook/", nil)
 	app.ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
-	testWorkflow.AssertExpectations(t)
+	mockPlaybook.AssertExpectations(t)
 	assert.JSONEq(t, string(marshalledDummyPlaybooks), w.Body.String())
 }
 
-func TestGetByID(t *testing.T) {
+func TestGetPlaybookByID(t *testing.T) {
 	jsonFile, err := os.Open("../playbook.json")
 	if err != nil {
 		fmt.Println(err)
@@ -125,9 +120,9 @@ func TestGetByID(t *testing.T) {
 	byteValue, _ := io.ReadAll(jsonFile)
 
 	app := gin.New()
-	testWorkflow := new(workflow_mock.MockWorkflow)
+	mockPlaybook := new(mock_playbook.MockPlaybook)
 	dummyPlaybook := decoder.DecodeValidate(byteValue)
-	testWorkflow.On("Read", dummyPlaybook.ID).Return(*dummyPlaybook, nil)
+	mockPlaybook.On("Read", dummyPlaybook.ID).Return(*dummyPlaybook, nil)
 	marshalledDummyPlaybook, err := json.Marshal(dummyPlaybook)
 	if err != nil {
 		fmt.Println("Failed to marshall dummy JSON:", err)
@@ -136,16 +131,16 @@ func TestGetByID(t *testing.T) {
 	}
 
 	w := httptest.NewRecorder()
-	workflow_router.Routes(app, testWorkflow)
+	playbookRouter.Routes(app, mockPlaybook)
 
-	req, _ := http.NewRequest("GET", fmt.Sprintf("/workflow/%s", dummyPlaybook.ID), nil)
+	req, _ := http.NewRequest("GET", fmt.Sprintf("/playbook/%s", dummyPlaybook.ID), nil)
 	app.ServeHTTP(w, req)
 	assert.Equal(t, 200, w.Code)
-	testWorkflow.AssertExpectations(t)
+	mockPlaybook.AssertExpectations(t)
 	assert.JSONEq(t, string(marshalledDummyPlaybook), w.Body.String())
 }
 
-func TestPostWorkflow(t *testing.T) {
+func TestPostPlaybook(t *testing.T) {
 	jsonFile, err := os.Open("../playbook.json")
 	if err != nil {
 		fmt.Println(err)
@@ -155,7 +150,7 @@ func TestPostWorkflow(t *testing.T) {
 	byteValue, _ := io.ReadAll(jsonFile)
 
 	app := gin.New()
-	testWorkflow := new(workflow_mock.MockWorkflow)
+	mockPlaybook := new(mock_playbook.MockPlaybook)
 
 	dummyPlaybook := decoder.DecodeValidate(byteValue)
 	if dummyPlaybook == nil {
@@ -170,19 +165,19 @@ func TestPostWorkflow(t *testing.T) {
 		return
 	}
 	pointerDummyObject := []byte(marshalledDummyPlaybook)
-	testWorkflow.On("Create", &pointerDummyObject).Return(*dummyPlaybook, nil)
+	mockPlaybook.On("Create", &pointerDummyObject).Return(*dummyPlaybook, nil)
 
 	w := httptest.NewRecorder()
-	workflow_router.Routes(app, testWorkflow)
-	req, _ := http.NewRequest("POST", "/workflow/", bytes.NewBuffer(marshalledDummyPlaybook))
+	playbookRouter.Routes(app, mockPlaybook)
+	req, _ := http.NewRequest("POST", "/playbook/", bytes.NewBuffer(marshalledDummyPlaybook))
 	app.ServeHTTP(w, req)
 
 	assert.Equal(t, 201, w.Code)
-	testWorkflow.AssertExpectations(t)
+	mockPlaybook.AssertExpectations(t)
 	assert.JSONEq(t, string(marshalledDummyPlaybook), w.Body.String())
 }
 
-func TestDeleteWorkflow(t *testing.T) {
+func TestDeletePlaybook(t *testing.T) {
 	jsonFile, err := os.Open("../playbook.json")
 	if err != nil {
 		fmt.Println(err)
@@ -192,7 +187,7 @@ func TestDeleteWorkflow(t *testing.T) {
 	byteValue, _ := io.ReadAll(jsonFile)
 
 	app := gin.New()
-	testWorkflow := new(workflow_mock.MockWorkflow)
+	mockPlaybook := new(mock_playbook.MockPlaybook)
 
 	dummyPlaybook := decoder.DecodeValidate(byteValue)
 	if dummyPlaybook == nil {
@@ -200,15 +195,15 @@ func TestDeleteWorkflow(t *testing.T) {
 		t.Fail()
 		return
 	}
-	testWorkflow.On("Delete", dummyPlaybook.ID).Return(nil)
+	mockPlaybook.On("Delete", dummyPlaybook.ID).Return(nil)
 	w := httptest.NewRecorder()
-	workflow_router.Routes(app, testWorkflow)
-	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/workflow/%s", dummyPlaybook.ID), nil)
+	playbookRouter.Routes(app, mockPlaybook)
+	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/playbook/%s", dummyPlaybook.ID), nil)
 	app.ServeHTTP(w, req)
 	assert.Equal(t, 200, w.Code)
 }
 
-func TestUpdateWorkflow(t *testing.T) {
+func TestUpdatePlaybook(t *testing.T) {
 	jsonFile, err := os.Open("../playbook.json")
 	if err != nil {
 		fmt.Println(err)
@@ -218,7 +213,7 @@ func TestUpdateWorkflow(t *testing.T) {
 	byteValue, _ := io.ReadAll(jsonFile)
 
 	app := gin.New()
-	testWorkflow := new(workflow_mock.MockWorkflow)
+	mockPlaybook := new(mock_playbook.MockPlaybook)
 
 	dummyPlaybook := decoder.DecodeValidate(byteValue)
 	if dummyPlaybook == nil {
@@ -233,14 +228,14 @@ func TestUpdateWorkflow(t *testing.T) {
 		return
 	}
 	pointerDummyObject := []byte(marshalledDummyPlaybook)
-	testWorkflow.On("Update", dummyPlaybook.ID, &pointerDummyObject).Return(*dummyPlaybook, nil)
+	mockPlaybook.On("Update", dummyPlaybook.ID, &pointerDummyObject).Return(*dummyPlaybook, nil)
 
 	w := httptest.NewRecorder()
-	workflow_router.Routes(app, testWorkflow)
-	req, _ := http.NewRequest("PUT", fmt.Sprintf("/workflow/%s", dummyPlaybook.ID), bytes.NewBuffer(marshalledDummyPlaybook))
+	playbookRouter.Routes(app, mockPlaybook)
+	req, _ := http.NewRequest("PUT", fmt.Sprintf("/playbook/%s", dummyPlaybook.ID), bytes.NewBuffer(marshalledDummyPlaybook))
 	app.ServeHTTP(w, req)
 
-	testWorkflow.AssertExpectations(t)
+	mockPlaybook.AssertExpectations(t)
 	assert.Equal(t, 200, w.Code)
 	assert.JSONEq(t, string(marshalledDummyPlaybook), w.Body.String())
 }

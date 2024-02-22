@@ -1,14 +1,14 @@
 package routes
 
 import (
-	workflowRepository "soarca/database/workflow"
+	playbookRepository "soarca/database/playbook"
 	"soarca/internal/decomposer"
 	coa_routes "soarca/routes/coa"
 	operator "soarca/routes/operator"
+	playbook_routes "soarca/routes/playbook"
 	status "soarca/routes/status"
 	swagger "soarca/routes/swagger"
 	"soarca/routes/trigger"
-	workflow_routes "soarca/routes/workflow"
 
 	gin "github.com/gin-gonic/gin"
 )
@@ -19,17 +19,19 @@ import (
 // Requires database dependency injection.
 
 func Database(app *gin.Engine,
-	workflowRepo workflowRepository.IWorkflowRepository) error {
-	workflow_routes.Routes(app, workflowRepo)
+	playbookRepo playbookRepository.IPlaybookRepository,
+) error {
+	playbook_routes.Routes(app, playbookRepo)
 	return nil
 }
 
 func Logging(app *gin.Engine) {
-	//app.Use(middelware.LoggingMiddleware(log.Logger))
+	// app.Use(middelware.LoggingMiddleware(log.Logger))
 }
 
 func Api(app *gin.Engine,
-	decomposer decomposer.IDecomposer) error {
+	decomposer decomposer.IDecomposer,
+) error {
 	log.Trace("Trying to setup all Routes")
 	// gin.SetMode(gin.ReleaseMode)
 

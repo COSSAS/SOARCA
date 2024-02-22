@@ -23,7 +23,7 @@ services:
       DATABASE_NAME: "soarca"
       DB_USERNAME: "root"
       DB_PASSWORD: "rootpassword"
-      WORKFLOW_API_LOG_LEVEL: trace
+      PLAYBOOK_API_LOG_LEVEL: trace
       DATABASE: "false"
     ports:
       - 127.0.0.1:8080:8080

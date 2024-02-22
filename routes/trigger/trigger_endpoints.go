@@ -5,19 +5,19 @@ import (
 )
 
 // trigger
-// @Summary trigger a workflow with via cacao payload
+// @Summary trigger a playbook by supplying a cacao playbook payload
 // @Schemes
-// @Description trigger workflow
+// @Description trigger playbook
 // @Tags trigger
 // @Accept json
 // @Produce json
 // @Param  playbook body cacao.Playbook true "execute playbook by payload"
 // @Success 200 "{"execution_id":"uuid","payload":"playbook--uuid"}"
 // @error	400
-// @Router /trigger/workflow [POST]
+// @Router /trigger/playbook [POST]
 func Routes(route *gin.Engine, trigger *TriggerApi) {
 	group := route.Group("/trigger")
 	{
-		group.POST("/workflow", trigger.Execute)
+		group.POST("/playbook", trigger.Execute)
 	}
 }

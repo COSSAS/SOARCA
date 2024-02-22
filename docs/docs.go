@@ -15,6 +15,182 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/playbook/": {
+            "get": {
+                "description": "return all stored playbooks default limit:100",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "playbook"
+                ],
+                "summary": "gets all the UUIDs for the stored playbooks",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/cacao.Playbook"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "submit a new playbook api",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "playbook"
+                ],
+                "summary": "submit playbook via the api",
+                "parameters": [
+                    {
+                        "description": "playbook",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cacao.Playbook"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/cacao.Playbook"
+                        }
+                    }
+                }
+            }
+        },
+        "/playbook/meta": {
+            "get": {
+                "description": "get playbook meta information for playbook",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "playbook"
+                ],
+                "summary": "gets all the meta information for the stored playbooks",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/api.PlaybookMeta"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playbook/{id}": {
+            "get": {
+                "description": "get playbook by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "playbook"
+                ],
+                "summary": "get CACAO playbook by its ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "playbook ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/cacao.Playbook"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "update playbook by Id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "playbook"
+                ],
+                "summary": "update playbook",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "playbook Id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "playbook",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cacao.Playbook"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/cacao.Playbook"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "delete playbook by Id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "playbook"
+                ],
+                "summary": "delete playbook by Id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "playbook ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/trigger/workflow": {
             "post": {
                 "description": "trigger workflow",
@@ -42,182 +218,6 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "{\"execution_id\":\"uuid\",\"payload\":\"playbook--uuid\"}"
-                    }
-                }
-            }
-        },
-        "/workflow/": {
-            "get": {
-                "description": "get playbook meta information for workflow",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "workflow"
-                ],
-                "summary": "gets all the UUIDs for the stored workflows",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/cacao.Playbook"
-                            }
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "submit a new workflow api",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "workflow"
-                ],
-                "summary": "submit workflow via the api",
-                "parameters": [
-                    {
-                        "description": "workflow",
-                        "name": "data",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/cacao.Playbook"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/cacao.Playbook"
-                        }
-                    }
-                }
-            }
-        },
-        "/workflow/meta": {
-            "get": {
-                "description": "get playbook meta information for workflow",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "workflow"
-                ],
-                "summary": "gets all the c for the stored workflows",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/api.PlaybookMeta"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/workflow/{id}": {
-            "get": {
-                "description": "get workflow by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "workflow"
-                ],
-                "summary": "get CACAO playbook workflow by its ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "workflow ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/cacao.Playbook"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "update workflow by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "workflow"
-                ],
-                "summary": "update workflow",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "workflow ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "workflow",
-                        "name": "data",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/cacao.Playbook"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/cacao.Playbook"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "delete workflow by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "workflow"
-                ],
-                "summary": "delete worflow",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "workflow ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
                     }
                 }
             }

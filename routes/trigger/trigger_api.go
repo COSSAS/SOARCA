@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+
 	"soarca/internal/decomposer"
 	"soarca/logger"
 	"soarca/models/decoder"
@@ -29,7 +30,7 @@ type TriggerApi struct {
 }
 
 func New(decomposer decomposer.IDecomposer) *TriggerApi {
-	var instance = TriggerApi{}
+	instance := TriggerApi{}
 	instance.decomposer = decomposer
 	return &instance
 }
@@ -40,7 +41,7 @@ func (trigger *TriggerApi) Execute(context *gin.Context) {
 		log.Error("failed")
 		error.SendErrorResponse(context, http.StatusBadRequest,
 			"Failed to marshall json on server side",
-			"POST /trigger/workflow", "")
+			"POST /trigger/playbook", "")
 		return
 	}
 	// playbook := cacao.Decode(jsonData)
@@ -48,14 +49,14 @@ func (trigger *TriggerApi) Execute(context *gin.Context) {
 	if playbook == nil {
 		error.SendErrorResponse(context, http.StatusBadRequest,
 			"Failed to decode playbook",
-			"POST /trigger/workflow", "")
+			"POST /trigger/playbook", "")
 		return
 	}
 	executionDetail, errDecomposer := trigger.decomposer.Execute(*playbook)
 	if errDecomposer != nil {
 		error.SendErrorResponse(context, http.StatusBadRequest,
 			"Failed to decode playbook",
-			"POST /trigger/workflow",
+			"POST /trigger/playbook",
 			executionDetail.ExecutionId.String())
 	} else {
 		msg := gin.H{

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/mail"
+
 	"soarca/logger"
 	"soarca/models/cacao"
 )
@@ -13,8 +14,7 @@ func init() {
 }
 
 func IsSafeCacaoWorkflow(playbook *cacao.Playbook) error {
-
-	// Workflow exception handled?
+	// Playbook exception handled?
 	workflowException := playbook.WorkflowException
 	if workflowException == "" {
 		log.Warn("workflow exception not implemented")
@@ -32,7 +32,7 @@ func IsSafeCacaoWorkflow(playbook *cacao.Playbook) error {
 	for stepId := range playbook.Workflow {
 		err := isSafeWorkflowStep(playbook, stepId)
 		if err != nil {
-			//log.Error("step " + stepId + " validation raised an error")
+			// log.Error("step " + stepId + " validation raised an error")
 			log.Error(err)
 
 			return err
@@ -51,7 +51,6 @@ func IsSafeCacaoWorkflow(playbook *cacao.Playbook) error {
 // with respect to all properties being present in the playbook.
 // All checks are in O(1) as it's all dictionary key lookups
 func isSafeWorkflowStep(playbook *cacao.Playbook, stepId string) error {
-
 	workflow := playbook.Workflow
 	step := workflow[stepId]
 
@@ -112,8 +111,7 @@ func validateTargetAgentEmails(at cacao.AgentTarget) (error, string) {
 
 func checkStepAuthInfoExist(playbook *cacao.Playbook, s cacao.Step) error {
 	if s.AuthenticationInfo != "" {
-		if _, ok :=
-			playbook.AuthenticationInfoDefinitions[s.AuthenticationInfo]; !ok {
+		if _, ok := playbook.AuthenticationInfoDefinitions[s.AuthenticationInfo]; !ok {
 			return errors.New("authenticaiton_info " +
 				s.AuthenticationInfo +
 				"not found in authentication_info_definitions")
@@ -124,7 +122,6 @@ func checkStepAuthInfoExist(playbook *cacao.Playbook, s cacao.Step) error {
 
 // TODO change to explicit vars
 func checkStepSubStepsExist(workflow cacao.Workflow, step cacao.Step) error {
-
 	if _, ok := workflow[step.OnCompletion]; step.OnCompletion != "" && !ok {
 		return errors.New("step " + step.OnCompletion + " does not exist")
 	}
@@ -164,7 +161,6 @@ func checkAllWorkflowBranchesEnd(playbook *cacao.Playbook) error {
 	ss := playbook.WorkflowStart
 
 	err := allBranchesEnd(workflow, ss, make(map[string]struct{}, 1))
-
 	if err != nil {
 		return err
 	}
@@ -179,7 +175,6 @@ func checkAllWorkflowBranchesEnd(playbook *cacao.Playbook) error {
 //	 	in the current branch and copies its values to
 //		the next recursive step in order to check if loops are present.
 func allBranchesEnd(workflow cacao.Workflow, id string, branchSequence map[string]struct{}) error {
-
 	// current branch sequence is copy of passed branch sequence
 	currentBranchSequence := make(map[string]struct{}, len(branchSequence))
 	for i, v := range branchSequence {

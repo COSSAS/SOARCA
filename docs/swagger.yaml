@@ -446,6 +446,122 @@ definitions:
 info:
   contact: {}
 paths:
+  /playbook/:
+    get:
+      description: return all stored playbooks default limit:100
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/cacao.Playbook'
+            type: array
+      summary: gets all the UUIDs for the stored playbooks
+      tags:
+      - playbook
+    post:
+      consumes:
+      - application/json
+      description: submit a new playbook api
+      parameters:
+      - description: playbook
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/cacao.Playbook'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/cacao.Playbook'
+      summary: submit playbook via the api
+      tags:
+      - playbook
+  /playbook/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: delete playbook by Id
+      parameters:
+      - description: playbook ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: delete playbook by Id
+      tags:
+      - playbook
+    get:
+      consumes:
+      - application/json
+      description: get playbook by ID
+      parameters:
+      - description: playbook ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/cacao.Playbook'
+      summary: get CACAO playbook by its ID
+      tags:
+      - playbook
+    put:
+      consumes:
+      - application/json
+      description: update playbook by Id
+      parameters:
+      - description: playbook Id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: playbook
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/cacao.Playbook'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/cacao.Playbook'
+      summary: update playbook
+      tags:
+      - playbook
+  /playbook/meta:
+    get:
+      description: get playbook meta information for playbook
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/api.PlaybookMeta'
+            type: array
+      summary: gets all the meta information for the stored playbooks
+      tags:
+      - playbook
   /trigger/workflow:
     post:
       consumes:
@@ -466,120 +582,4 @@ paths:
       summary: trigger a workflow with via cacao payload
       tags:
       - trigger
-  /workflow/:
-    get:
-      description: get playbook meta information for workflow
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/cacao.Playbook'
-            type: array
-      summary: gets all the UUIDs for the stored workflows
-      tags:
-      - workflow
-    post:
-      consumes:
-      - application/json
-      description: submit a new workflow api
-      parameters:
-      - description: workflow
-        in: body
-        name: data
-        required: true
-        schema:
-          $ref: '#/definitions/cacao.Playbook'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/cacao.Playbook'
-      summary: submit workflow via the api
-      tags:
-      - workflow
-  /workflow/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: delete workflow by ID
-      parameters:
-      - description: workflow ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-      summary: delete worflow
-      tags:
-      - workflow
-    get:
-      consumes:
-      - application/json
-      description: get workflow by ID
-      parameters:
-      - description: workflow ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/cacao.Playbook'
-      summary: get CACAO playbook workflow by its ID
-      tags:
-      - workflow
-    put:
-      consumes:
-      - application/json
-      description: update workflow by ID
-      parameters:
-      - description: workflow ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: workflow
-        in: body
-        name: data
-        required: true
-        schema:
-          $ref: '#/definitions/cacao.Playbook'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/cacao.Playbook'
-      summary: update workflow
-      tags:
-      - workflow
-  /workflow/meta:
-    get:
-      description: get playbook meta information for workflow
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/api.PlaybookMeta'
-            type: array
-      summary: gets all the c for the stored workflows
-      tags:
-      - workflow
 swagger: "2.0"
