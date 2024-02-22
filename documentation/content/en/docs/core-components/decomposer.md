@@ -1,9 +1,21 @@
-# Decomposer
+---
+title: SOARCA Decomposer
+weight: 4
+categories: [architecture]
+tags: []
+description: >
+  The decomposer will parse playbook objects to individual steps. This allows it to schedule new executor tasks. 
+---
 
+
+## Decomposer structure
 The decomposer will parse playbook objects to individual steps. This allows it to schedule new executor tasks. 
 
-Each incoming playbook will be stored and executed individually. Decomposing is done to the step level. 
+Each incoming playbook will executed individually. Decomposing is done up to the step level.
 
+{{% alert title="Warning" color="warning" %}}
+SOARCA 1.0.x will only support steps of type `action`
+{{% /alert %}}
 
 ```plantuml
 
@@ -16,22 +28,22 @@ Interface IDecomposer{
 ExecutionDetails, error Execute(cacao playbook)
 error getStatus(uuid playbookId)    
 }
-Interface IExecuter
+Interface IExecutor
 
 class Controller
 class Decomposer
 
 IDecomposer <- Controller
 IDecomposer <|.. Decomposer
-IExecuter -> Decomposer
+IExecutor <- Decomposer
 
 ```
 
-```plantuml
+### IExecutor
+Interface for interfacing with the Executor this will in turn select and execute the command on the right [module](/docs/core-components/modules) or [fin](/docs/soarca-extentions/).
 
-Decomposer as decomposer
-
-```
+### Execution details
+The struct contains the details of the execution (execution id which is created for every execution) and the playbook id. the combination of these are unique. 
 
 ## Decomposition of playbook
 

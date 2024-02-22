@@ -4,147 +4,68 @@ weight: 7
 description: How to contribute to SOARCA
 ---
 
-SOARCA is an open source project and we love getting patches and contributions to make SOARCA and its docs even better.
+SOARCA is an open source project written in [Golang](https://go.dev/) and we love getting patches and contributions, and feature suggestions to make SOARCA and its docs even better. We welcome participation from anyone, regardless of their affiliation with OASIS. We invite constructive contributions and feedback from all contributors, following the [standard practices](https://docs.github.com/en/get-started/exploring-projects-on-github/contributing-to-a-project) for participation in GitHub public repository projects.
+
+We expect everyone to follow our [Code of Conduct](/docs/contribution-guidelines/code_of_conduct/), the licenses for each repository, and agree to our Contributor License Agreement when you make your first contribution.
+
+Thank you for contributing to our project! Your efforts make a difference.
 
 ## Contributing to SOARCA
 
-The Docsy theme itself lives in <https://github.com/google/docsy>.
+The SOARCA itself lives in https://github.com/google/ddcsy>.
 
-### Contributor License Agreement
 
-Contributions to this project must be accompanied by a Contributor License
-Agreement. You (or your employer) retain the copyright to your contribution;
-this simply gives us permission to use and redistribute your contributions as
-part of the project. Head over to <https://cla.developers.google.com/> to see
-your current agreements on file or to sign a new one.
+## How to contribute
 
-You generally only need to submit a CLA once, so if you've already submitted one
-(even if it was for a different project), you probably don't need to do it
-again.
+Before making contributions to the project repositories, please follow these general steps for [GitHub contribution](https://docs.github.com/en/get-started/exploring-projects-on-github/contributing-to-a-project). 
+
+### I found a bug or Creating issues
+
+If there's something you'd like to see in SOARCA (or if you've found something that isn't working the way you'd expect), but you're not sure how to fix it yourself, please create an [issue](https://github.com/). Make sure to adhere to the structure of an issue submission. Fully comprehend the problem at hand and provide comprehensive details in your issue description.
+
+
+{{% alert title="Security issues" color="warning" %}}
+For security issues, we kindly request that you refrain from reporting them using the issue tracker. Instead, please contact us directly: `to be added`
+{{% /alert %}}
+
+
+### Feature additions or requests
+
+You can submit feature requests either through GitHub issues or the discussion pages.
 
 ### Code reviews
 
-All submissions, including submissions by project members, require review. We
-use GitHub pull requests for this purpose. Consult
-[GitHub Help](https://help.github.com/articles/about-pull-requests/) for more
+Every submission, including those from project members, must undergo review and approval from at least one core maintainer. GitHub pull requests are utilized for this process. Consult [GitHub Help](https://help.github.com/articles/about-pull-requests/) for more
 information on using pull requests.
 
-### Previewing your changes
 
-As Docsy is a theme rather than a site, you can't serve the theme directly to check your changes work. Instead use your updated local theme in a local copy of the Docsy example site (copy or make your changes in the `themes/docsy` directory) and [preview](/docs/deployment/) from there. Alternatively, clone the [Docsy theme repo](https://github.com/google/docsy) and test your changes in a local copy of this site, as described [below](#previewing-your-changes-locally).
+## Communication channels
 
-### Community guidelines
+Feel free to engage with the community for discussions and assistance via one of the following channels:
 
-This project follows
-[Google's Open Source Community Guidelines](https://opensource.google.com/conduct/).
-
-### Creating issues
-
-Alternatively, if there's something you'd like to see in Docsy (or if you've found something that isn't working the way you'd expect), but you're not sure how to fix it yourself, please create an [issue](https://github.com/google/docsy/issues).
+- [Slack](https://google.com)
+- [Github discussions](https://github.com)
 
 ## Contributing to these docs
+ 
+Would you like to enhance our documentation? Our documentation is built using the [Hugo framework](https://gohugo.io/) along with the [Docsy theme](https://github.com/google/docsy) template.
 
-This user guide is, like our example site, a Docsy site that uses the Hugo static site generator. We welcome updates to the docs!
+### Quick start with Hugo and Docsy
 
-We use [Netlify](https://www.netlify.com/) to manage the deployment of the site and provide previews of doc updates. The instructions here assume you're familiar with basic GitHub workflows.
+1. Install Hugo; the installation guide can be found [here](https://gohugo.io/getting-started/quick-start/).
+2. Clone our repository, and if you make changes, fork our repository. Use the following command to clone: `git clone <repository_url>`.
+3. All the documentation for the GitHub Pages lives under `/documentation`. Use the `cd documentation && hugo serve` command to preview the documentation locally. Open `http://localhost:1313` in your web browser to view the documentation. In most cases, docsy will automatically reload the site to reflect any changes to the documentation or the code. Changes to some parts of the docsy code may require manually reloading the page or restarting the container.
+4. Continue with the usual GitHub workflow to edit files, commit them, push the changes up to your fork, and create a pull request.
 
-### Quick start with Netlify
 
-1. Fork the [Docsy repo](https://github.com/google/docsy) on GitHub: this site's files live in the `userguide` subdirectory.
-1. Make your changes and send a pull request (PR).
-1. If you're not yet ready for a review, add "WIP" to the PR name to indicate
-  it's a work in progress. (**Don't** add the Hugo property
-  "draft = true" to the page front matter, because that prevents the
-  auto-deployment of the content preview described in the next point.)
-1. Wait for the automated PR workflow to do some checks. When it's ready,
-  you should see a comment like this: **deploy/netlify — Deploy preview ready!**
-1. Click **Details** to the right of "Deploy preview ready" to see a preview
-  of your updates.
-1. Continue updating your doc and pushing your changes until you're happy with
-  the content.
-1. When you're ready for a review, add a comment to the PR, and remove any
-  "WIP" markers.
-
-### Updating a single page
+#### Updating a single page
 
 If you've just spotted something you'd like to change while using the docs, Docsy has a shortcut for you:
 
 1. Click **Edit this page** in the top right hand corner of the page.
 1. If you don't already have an up to date fork of the project repo, you are prompted to get one - click **Fork this repository and propose changes** or **Update your Fork** to get an up to date version of the project to edit. The appropriate page in your fork is displayed in edit mode.
-1. Follow the rest of the [Quick start with Netlify](#quick-start-with-netlify) process above to make and preview your changes.
 
 
-### Previewing your changes locally
+## License 
 
-If you want to run your own local Hugo server to preview your changes as you work:
-
-1. Follow the instructions in [Getting started](/docs/getting-started) to install Hugo and any other tools you need.
-1. Fork the [Docsy](https://github.com/google/docsy) repo into your own project, then create a local copy using `git clone`:
-
-    ```sh
-    git clone https://github.com/google/docsy.git
-    ```
-
-1. Change to the `userguide` directory and run the following Hugo command to build the site and start the Hugo server.
-   Note that you need the `themesDir` flag because the site files are inside the theme repo.
-
-    ```sh
-    cd userguide
-    hugo server --themesDir ../..
-    ```
-
-    By default your site will be available at http://localhost:1313/. Now that you're serving your site locally, Hugo will watch for changes to the content and automatically refresh your site.
-
-1. Continue with the usual GitHub workflow to edit files, commit them, push the
-  changes up to your fork, and create a pull request.
-
-#### Preview your changes using a Docker container
-
-Docsy comes with `Dockerfile` and `docker-compose` files to run the server
-locally with Docker, without installing any additional dependencies.
-
-- Using [Docker]:
-
-  1.  Build the Docker container:
-
-      ```bash
-      docker build -t docsy/user-guide .
-      ```
-
-  1.  Run the container, mounting the repository as a shared volume:
-
-      ```bash
-      docker run -it --user=$(id -u):$(id -g) -p 1313:1313 \
-        -v $(pwd):/app/docsy -v /app/docsy/userguide/node_modules \
-        docsy/user-guide
-      ```
-
-- Using [Docker Compose][docker-compose]:
-
-  1.  Build the container:
-
-      ```bash
-      docker-compose build
-      ```
-
-  1.  Run the container:
-
-      ```bash
-      DOCSY_USER=$(id -u):$(id -g) docker-compose up
-      ```
-
-Open `http://localhost:1313` in your web browser to load the docsy user guide.
-In most cases, docsy will automatically reload the site to reflect any changes
-to the documentation or the code. Changes to some parts of the docsy code may
-require manually reloading the page or re-starting the container.
-
-Press **Ctrl + C** to stop the container.
-
-[docker]: https://docs.docker.com/get-docker/
-[docker-compose]: https://docs.docker.com/compose/install/
-
-### Creating an issue
-
-If there's something you'd like to see in the docs, but you're not sure how to fix it yourself, please create an issue in [this repository](https://github.com/google/docsy). You can also create an issue about a specific page by clicking the **Create Issue** button in the top right hand corner of the page.
-
-
+The project is licensed under the Apache License 2.0. See full license [here](https://github.com).

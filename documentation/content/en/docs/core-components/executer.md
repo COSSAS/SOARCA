@@ -1,6 +1,11 @@
-# SOARCA Executer design
-
-The document contains the design considerations of the executer of SOARCA
+---
+title: SOARCA Executer
+weight: 5
+categories: [architecture]
+tags: []
+description: >
+    The document contains the design considerations of the executer of SOARCA
+---
 
 ## Components
 
@@ -17,8 +22,8 @@ The capability selector will select the implementation which is capable of execu
 * Currently implemented:
     * ssh
     * http-api
-* Later:
     * open-C2
+* Coming soon:
     * manual
 * Future:
     * bash
@@ -102,74 +107,7 @@ ICapability <|.. api
 
 
 
-## Protocol (WIP)
-https://github.com/phf/go-queue
 
-### Sending a step
-
-Variables can be input and output the CACAO spec should declare the following fields for variables:
-direction : input|output
-
-
-And every step that will output any variables should declare a list of output variables:
-output: var_1
-
-```plantuml
-@startjson
-{
-        "execute-id" : "uuid",
-        "output-variables" : ["some-var", "another-var"],
-        "step": {
-            "step_uuid": "step--a76dbc32-b739-427b-ae13-4ec703d5797e",
-            "type": "action",
-            "name": "IMC assets by CVE",
-            "description": "Check the IMC for affected assets by CVE",
-            "on_completion": "step--9fcc5c3b-0b70-4d73-b922-cf5491dcd1a4",
-            "commands": [
-                {
-                    "type": "http-api",
-                    "command": "GET http://__imc_address__/by/__cve__"
-                }
-            ]
-        }
-}
-```
-
-### Result
-
-```plantuml
-@startjson
-{
-       
-        "execute-id" : "uuid",
-        "executer-module-id" : "<your module id>",
-        "status" : "ok|error|failed",
-        "completion-time" : "2023-05-26T15:56:00.123456Z",
-        "results" : [{ 
-            "return-variable" : "<$$some-var$$>",
-            "result-typ" : "bool|int|ip-address|uri|MACADDRESS|domain-name|custom",
-            "result" : "<your result here>"
-        },
-        { 
-            "return-variable" : "another-var",
-            "result-typ" : "bool|int|ip-address|uri|mac-address|domain-name|custom",
-            "result" : "<your result here>"
-        }
-        ]
-}
-```
-
-#### Default schemas
-
-* bool
-* int
-* ip-address
-* uri
-* mac-address
-* domain-name
-
-
-#### Example schema
 
 
 ## Sequences 

@@ -1,6 +1,11 @@
-# SOARCA Executer Module
-
-SOARCA is extendable by modules. Modules allow for new steps in playbook and added capability. 
+---
+title: SOARCA Executer Modules
+weight: 6
+categories: [architecture]
+tags: [components]
+description: >
+    SOARCA is extendable by modules. Modules allow for new steps in playbook and added capability. 
+---
 
 ## Requirements
 Modules should be build in GO or Python and contain the following components.
@@ -95,3 +100,5 @@ This module is defined in a playbook with the following TargetAgent definition:
 
 ---
 
+## MQTT fin module
+This module is used by SOARCA to communicate with fins (capabilities) see [fin documentation](/docs/soarca-extentions/) for more information

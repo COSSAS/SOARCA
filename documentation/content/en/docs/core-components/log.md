@@ -1,7 +1,13 @@
-# Logging
+---
+title: SOARCA Logging
+weight: 10
+description: >
+    SOARCA support extensive logging. Logging is based on the [logrus](https://github.com/sirupsen/logrus) framework. 
+categories: [architecture]
+tags: [logging]
+---
 
 SOARCA support extensive logging. Logging is based on the [logrus](https://github.com/sirupsen/logrus) framework. 
-
 ## Format
 Logging can be done in different formats suitable for your application. The following formats are available:
 
