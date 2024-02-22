@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"soarca/application"
+
+	"soarca/internal/controller"
 	"soarca/logger"
 
 	"github.com/joho/godotenv"
@@ -14,8 +15,10 @@ func init() {
 	log = logger.Logger("MAIN", logger.Info, "", logger.Json)
 }
 
-var Version string
-var Buildtime string
+var (
+	Version   string
+	Buildtime string
+)
 
 const banner = `
    _____  ____          _____   _____          
@@ -39,7 +42,7 @@ func main() {
 		log.Warning("Failed to read env variable, but will continue")
 	}
 
-	errinit := application.InitializeAppComponents()
+	errinit := controller.InitializeAppComponents()
 	if errinit != nil {
 		log.Fatal("Something Went wrong with setting-up the app, msg: ", errinit)
 		panic(errinit)
