@@ -19,9 +19,9 @@ const (
 
 	AuthInfoOAuth2Type    = "oauth2"
 	AuthInfoHTTPBasicType = "http-basic"
-
-	CACAO_VERSION_1 = "cacao-1.0"
-	CACAO_VERSION_2 = "cacao-2.0"
+	AuthInfoNotSet        = ""
+	CACAO_VERSION_1       = "cacao-1.0"
+	CACAO_VERSION_2       = "cacao-2.0"
 )
 
 type (
