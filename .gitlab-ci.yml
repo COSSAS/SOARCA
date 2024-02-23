@@ -44,7 +44,9 @@ cross-compile:
     expire_in: 2 hrs
   script:
     - go install github.com/swaggo/swag/cmd/swag@latest
+    - go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@latest
     - make compile
+    - make sbom
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_NAME == "master" || $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_TAG'
 
@@ -129,7 +131,9 @@ release-bin:
       - bin/
   script:
     - go install github.com/swaggo/swag/cmd/swag@latest
+    - go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@latest
     - make compile
+    - make sbom
 
 
 # deploy-job:      # This job runs in the deploy stage.

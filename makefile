@@ -26,7 +26,6 @@ test:
 	go test test/capability/ssh/*_test.go -v
 	go test test/capability/http/*_test.go -v
 
-
 clean:
 	rm -rf build/soarca* build/main
 	rm -rf bin/*
@@ -39,6 +38,12 @@ compile:
 	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o bin/${BINARY_NAME}-${VERSION}-darwin-arm64 $(GOFLAGS) main.go
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o bin/${BINARY_NAME}-${VERSION}-windows-amd64 $(GOFLAGS) main.go
 
+sbom:
+	echo "Generating SBOMs"
+
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 cyclonedx-gomod app -json -licenses -output bin/${BINARY_NAME}-${VERSION}-linux-amd64.bom.json
+	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 cyclonedx-gomod app -json -licenses -output bin/${BINARY_NAME}-${VERSION}-darwin-amd64.bom.json
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 cyclonedx-gomod app -json -licenses -output bin/${BINARY_NAME}-${VERSION}-windows-amd64.bom.json
 
 pre-docker-build:
 	swag init
@@ -50,6 +55,4 @@ docker: pre-docker-build
 run: docker
 	GIT_VERSION=${VERSION} docker compose up -d
 
-
 all: build
-
