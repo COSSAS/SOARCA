@@ -5,6 +5,7 @@ import (
 	"soarca/internal/capability"
 	"soarca/internal/executer"
 	"soarca/models/cacao"
+	"soarca/models/execution"
 	"soarca/test/mocks/mock_capability"
 	"testing"
 
@@ -20,7 +21,11 @@ func TestExecuteStep(t *testing.T) {
 	capabilities := map[string]capability.ICapability{"ssh": mock_ssh, "http-api": mock_http}
 
 	executerObject := executer.New(capabilities)
-	var id, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	var executionId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	var playbookId, _ = uuid.Parse("playbook--d09351a2-a075-40c8-8054-0b7c423db83f")
+	var stepId, _ = uuid.Parse("step--81eff59f-d084-4324-9e0a-59e353dbd28f")
+
+	var metadata = execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId.String(), StepId: stepId.String()}
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -47,7 +52,7 @@ func TestExecuteStep(t *testing.T) {
 	}
 
 	mock_ssh.On("Execute",
-		id,
+		metadata,
 		expectedCommand,
 		expectedAuth,
 		expectedTarget,
@@ -55,7 +60,7 @@ func TestExecuteStep(t *testing.T) {
 		Return(map[string]cacao.Variable{expectedVariables.Name: expectedVariables},
 			nil)
 
-	_, _, err := executerObject.Execute(id,
+	_, _, err := executerObject.Execute(metadata,
 		expectedCommand,
 		expectedAuth,
 		expectedTarget,
@@ -74,7 +79,11 @@ func TestNonExistingCapabilityStep(t *testing.T) {
 	capabilities := map[string]capability.ICapability{"ssh": mock_ssh, "http-api": mock_http}
 
 	executerObject := executer.New(capabilities)
-	var id, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	var executionId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	var playbookId, _ = uuid.Parse("playbook--d09351a2-a075-40c8-8054-0b7c423db83f")
+	var stepId, _ = uuid.Parse("step--81eff59f-d084-4324-9e0a-59e353dbd28f")
+
+	var metadata = execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId.String(), StepId: stepId.String()}
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -100,7 +109,7 @@ func TestNonExistingCapabilityStep(t *testing.T) {
 		Name: "non-existing",
 	}
 
-	_, _, err := executerObject.Execute(id,
+	_, _, err := executerObject.Execute(metadata,
 		expectedCommand,
 		expectedAuth,
 		expectedTarget,

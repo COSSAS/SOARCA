@@ -9,9 +9,8 @@ import (
 	"reflect"
 	"soarca/logger"
 	"soarca/models/cacao"
+	"soarca/models/execution"
 	"strings"
-
-	"github.com/google/uuid"
 )
 
 // Receive HTTP API command data from decomposer/executer
@@ -35,7 +34,7 @@ func init() {
 // And maybe no auth info either?
 
 func (httpCapability *HttpCapability) Execute(
-	executionId uuid.UUID,
+	metadata execution.Metadata,
 	command cacao.Command,
 	authentication cacao.AuthenticationInformation,
 	target cacao.AgentTarget,

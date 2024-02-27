@@ -2,6 +2,7 @@ package mock_executor
 
 import (
 	"soarca/models/cacao"
+	"soarca/models/execution"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
@@ -13,7 +14,7 @@ type Mock_Executor struct {
 }
 
 func (executer *Mock_Executor) Execute(
-	executionId uuid.UUID,
+	metadata execution.Metadata,
 	command cacao.Command,
 	authentication cacao.AuthenticationInformation,
 	target cacao.AgentTarget,
@@ -21,6 +22,6 @@ func (executer *Mock_Executor) Execute(
 	agent cacao.AgentTarget) (uuid.UUID,
 	map[string]cacao.Variable,
 	error) {
-	args := executer.Called(executionId, command, authentication, target, variable, agent)
+	args := executer.Called(metadata, command, authentication, target, variable, agent)
 	return args.Get(0).(uuid.UUID), args.Get(1).(map[string]cacao.Variable), args.Error(2)
 }

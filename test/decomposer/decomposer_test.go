@@ -7,6 +7,7 @@ import (
 
 	"soarca/internal/decomposer"
 	"soarca/models/cacao"
+	"soarca/models/execution"
 	"soarca/test/mocks/mock_executor"
 	"soarca/test/mocks/mock_guid"
 
@@ -76,20 +77,22 @@ func TestExecutePlaybook(t *testing.T) {
 		Workflow: map[string]cacao.Step{step1.ID: step1, end.ID: end},
 	}
 
-	var id, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
-	uuid_mock.On("New").Return(id)
+	var executionId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	metaStep1 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step1.ID}
 
-	mock_executer.On("Execute", id, expectedCommand,
+	uuid_mock.On("New").Return(executionId)
+
+	mock_executer.On("Execute", metaStep1, expectedCommand,
 		expectedAuth,
 		expectedTarget,
 		map[string]cacao.Variable{"var1": expectedVariables},
-		expectedAgent).Return(id, map[string]cacao.Variable{}, nil)
+		expectedAgent).Return(executionId, map[string]cacao.Variable{}, nil)
 
 	returnedId, err := decomposer.Execute(playbook)
 	uuid_mock.AssertExpectations(t)
 	fmt.Println(err)
 	assert.Equal(t, err, nil)
-	assert.Equal(t, returnedId.ExecutionId, id)
+	assert.Equal(t, returnedId.ExecutionId, executionId)
 	mock_executer.AssertExpectations(t)
 }
 
@@ -187,26 +190,31 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 		Workflow: map[string]cacao.Step{step1.ID: step1, step2.ID: step2, step3.ID: step3, end.ID: end},
 	}
 
-	var id, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
-	uuid_mock.On("New").Return(id)
+	var executionId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	metaStep1 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step1.ID}
+	metaStep2 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step2.ID}
 
-	mock_executer.On("Execute", id, expectedCommand,
+	uuid_mock.On("New").Return(executionId)
+
+	mock_executer.On("Execute", metaStep1,
+		expectedCommand,
 		expectedAuth,
 		expectedTarget,
 		map[string]cacao.Variable{"var1": expectedVariables},
-		expectedAgent).Return(id, map[string]cacao.Variable{}, nil)
+		expectedAgent).Return(executionId, map[string]cacao.Variable{}, nil)
 
-	mock_executer.On("Execute", id, expectedCommand2,
+	mock_executer.On("Execute", metaStep2,
+		expectedCommand2,
 		expectedAuth,
 		expectedTarget,
 		map[string]cacao.Variable{"var2": expectedVariables2},
-		expectedAgent).Return(id, map[string]cacao.Variable{}, nil)
+		expectedAgent).Return(executionId, map[string]cacao.Variable{}, nil)
 
 	returnedId, err := decomposer.Execute(playbook)
 	uuid_mock.AssertExpectations(t)
 	fmt.Println(err)
 	assert.Equal(t, err, nil)
-	assert.Equal(t, returnedId.ExecutionId, id)
+	assert.Equal(t, returnedId.ExecutionId, executionId)
 	mock_executer.AssertExpectations(t)
 
 }

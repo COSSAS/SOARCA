@@ -6,6 +6,7 @@ import (
 	"soarca/internal/capability"
 	"soarca/logger"
 	"soarca/models/cacao"
+	"soarca/models/execution"
 
 	"github.com/google/uuid"
 )
@@ -16,7 +17,7 @@ var component = reflect.TypeOf(Empty{}).PkgPath()
 var log *logger.Log
 
 type IExecuter interface {
-	Execute(executionId uuid.UUID,
+	Execute(metadata execution.Metadata,
 		command cacao.Command,
 		authentication cacao.AuthenticationInformation,
 		target cacao.AgentTarget,
@@ -38,7 +39,7 @@ type Executer struct {
 	capabilities map[string]capability.ICapability
 }
 
-func (executer *Executer) Execute(executionId uuid.UUID,
+func (executer *Executer) Execute(metadata execution.Metadata,
 	command cacao.Command,
 	authentication cacao.AuthenticationInformation,
 	target cacao.AgentTarget,
@@ -46,14 +47,14 @@ func (executer *Executer) Execute(executionId uuid.UUID,
 	agent cacao.AgentTarget) (uuid.UUID, map[string]cacao.Variable, error) {
 
 	if capability, ok := executer.capabilities[agent.Name]; ok {
-		returnVariables, err := capability.Execute(executionId, command, authentication, target, variable)
-		return executionId, returnVariables, err
+		returnVariables, err := capability.Execute(metadata, command, authentication, target, variable)
+		return metadata.ExecutionId, returnVariables, err
 	} else {
 		empty := map[string]cacao.Variable{}
 		message := "executor is not available in soarca"
 		err := errors.New(message)
 		log.Error(message)
-		return executionId, empty, err
+		return metadata.ExecutionId, empty, err
 	}
 
 }

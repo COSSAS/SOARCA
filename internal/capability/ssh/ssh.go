@@ -4,12 +4,12 @@ import (
 	"errors"
 	"reflect"
 	"soarca/models/cacao"
+	"soarca/models/execution"
 	"strings"
 	"time"
 
 	"soarca/logger"
 
-	"github.com/google/uuid"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -27,12 +27,12 @@ func (sshCapability *SshCapability) GetType() string {
 	return "soarca-ssh-capability"
 }
 
-func (sshCapability *SshCapability) Execute(executionId uuid.UUID,
+func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
 	command cacao.Command,
 	authentication cacao.AuthenticationInformation,
 	target cacao.AgentTarget,
 	variables map[string]cacao.Variable) (map[string]cacao.Variable, error) {
-	log.Trace(executionId)
+	log.Trace(metadata.ExecutionId)
 
 	host := CombinePortAndAddress(target.Address, target.Port)
 

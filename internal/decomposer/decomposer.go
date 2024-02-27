@@ -7,6 +7,7 @@ import (
 	"soarca/internal/guid"
 	"soarca/logger"
 	"soarca/models/cacao"
+	"soarca/models/execution"
 
 	"github.com/google/uuid"
 )
@@ -79,8 +80,8 @@ func (decomposer *Decomposer) Execute(playbook cacao.Playbook) (*ExecutionDetail
 				for _, element := range playbook.Workflow[stepId].Targets {
 					target := playbook.TargetDefinitions[element]
 					auth := playbook.AuthenticationInfoDefinitions[target.AuthInfoIdentifier]
-
-					var id, vars, _ = decomposer.executor.Execute(executionId,
+					meta := execution.Metadata{PlaybookId: playbook.ID, ExecutionId: executionId, StepId: stepId}
+					var id, vars, _ = decomposer.executor.Execute(meta,
 						command,
 						auth,
 						target,

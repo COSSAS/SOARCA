@@ -2,12 +2,11 @@ package capability
 
 import (
 	"soarca/models/cacao"
-
-	"github.com/google/uuid"
+	"soarca/models/execution"
 )
 
 type ICapability interface {
-	Execute(executionId uuid.UUID,
+	Execute(metadata execution.Metadata,
 		command cacao.Command,
 		authentication cacao.AuthenticationInformation,
 		target cacao.AgentTarget,
