@@ -12,7 +12,7 @@ SOARCA is currently in its **alpha release**, with ongoing active development ai
 We warmly welcome contributions to our repository. You can find the guidelines for contributing [here](/docs/contribution-guidelines).
 {{% /alert %}}
 
-
+war
 SOARCA, an open-source SOAR (Security Orchestration, Automation and Response) tool developed by TNO, is designed to be vendor-agnostic, allowing integrate with various systems and technologies. SOARCA is the first SOAR to be fully compliant to the the latest [CACAO v2.0](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/security-playbooks-v2.0.html) standard. 
 
 The SOARCA SOAR enables cyber defenders to coordinate and automate cyber operations. SOARCA aims to achieve the following goals:

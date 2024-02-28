@@ -1,12 +1,24 @@
 ---
-title: SOARCA Extensions
+title: SOARCA Extensions & Capabilities
 description: >
     Extending SOARCA is done by developing a SOARCA-Fin.  
-categories: [extensions, architecture]
+categories: [extensions, architecture, capabilities]
 tags: [fin]
 weight: 5
 date: 2023-01-05
 ---
+
+
+{{% alert title="Warning" color="warning" %}}
+SOARCA V.1.0.X implements currently the following native capalities: **HTTP capability**, **OpenC2 capability**, and **SSH capability**. Other core capabilities are part of our milestones which can be found [here]().
+{{% /alert %}}
+
+SOARCA features a set of native capabilities among these capabilites are the HTTP API capability, the OpenC2 HTTP and the SSH capability, which are support by the first release of SOARCA. These capabilities are natively part of the Cacao specification and as such are support by the core. The native capabilities can be extented with custom implementations which is furhter discussed in the section.
+
+`section on what native capabilities are currently supported by the cacao playbook specification`
+
+## Extending the native capabilities
+
 
 The native capabilities support by the SOARCA core can be extended through a mechanism known as FINS. Whether you’re working directly with our system or utilizing a third-party library, the key lies in implementing the Fin protocol. This protocol provides for communication between the SOARCA core and the extension capabilities via an MQTT-bus.
 
