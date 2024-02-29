@@ -1,7 +1,6 @@
 package ssh_test
 
 import (
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"soarca/internal/capability/http"
@@ -182,7 +181,7 @@ func TestObtainHttpRequestContentDataFromCommandBothTypes(t *testing.T) {
 	assert.Equal(t, err, nil)
 }
 func TestObtainHttpRequestContentDataFromCommandB64Only(t *testing.T) {
-	test_b64_content := "923948a09a"
+	test_b64_content := "R08gU09BUkNBIQ=="
 	expectedCommand := cacao.Command{
 		Type:       "http-api",
 		Command:    "GET 0.0.0.0:80/",
@@ -191,8 +190,7 @@ func TestObtainHttpRequestContentDataFromCommandB64Only(t *testing.T) {
 
 	ret_content, err := http.ObtainHttpRequestContentDataFromCommand(expectedCommand)
 
-	expected, _ := hex.DecodeString(test_b64_content)
-	assert.Equal(t, ret_content, expected)
+	assert.Equal(t, ret_content, []byte("GO SOARCA!"))
 	assert.Equal(t, err, nil)
 }
 func TestObtainHttpRequestContentDataFromCommandPlainTextOnly(t *testing.T) {

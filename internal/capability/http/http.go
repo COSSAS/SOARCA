@@ -2,7 +2,7 @@ package http
 
 import (
 	"bytes"
-	"encoding/hex"
+	"encoding/base64"
 	"errors"
 	"io"
 	"net/http"
@@ -143,15 +143,15 @@ func ObtainHttpRequestContentDataFromCommand(
 	// Reads if either command or command_b64 are populated, and
 	// Returns a byte slice from either
 	content := command.Content
-	content_b64 := command.ContentB64
+	contentB64 := command.ContentB64
 
 	var nil_content []byte
 
-	if content == "" && content_b64 == "" {
+	if content == "" && contentB64 == "" {
 		return nil_content, nil
 	}
 
-	if content != "" && content_b64 != "" {
+	if content != "" && contentB64 != "" {
 		log.Warn("both content and content_b64 are populated. using content.")
 		return []byte(content), nil
 	}
@@ -160,5 +160,5 @@ func ObtainHttpRequestContentDataFromCommand(
 		return []byte(content), nil
 	}
 
-	return hex.DecodeString(content_b64)
+	return base64.StdEncoding.DecodeString(contentB64)
 }
