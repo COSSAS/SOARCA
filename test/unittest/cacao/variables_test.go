@@ -90,3 +90,14 @@ func TestVariableMapStringReplaceMultiple(t *testing.T) {
 	replaced := vars.Replace(original)
 	assert.Equal(t, replaced, "GO is COOL")
 }
+
+func TestVariableMapSelect(t *testing.T) {
+	vars := cacao.VariableMap{
+		"__var1__": {Value: "val1"},
+		"__var2__": {Value: "val2"},
+	}
+
+	filteredVars := vars.Select([]string{"__var1__", "__unknown__"})
+
+	assert.Equal(t, filteredVars, cacao.VariableMap{"__var1__": {Value: "val1"}})
+}
