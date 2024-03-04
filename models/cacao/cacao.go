@@ -29,6 +29,17 @@ type (
 	Workflow   map[string]Step
 )
 
+type Variable struct {
+	Type        string `bson:"type" json:"type" validate:"required"`
+	Name        string `bson:"name,omitempty" json:"name,omitempty"`
+	Description string `bson:"description,omitempty" json:"description,omitempty"`
+	Value       string `bson:"value,omitempty" json:"value,omitempty"`
+	Constant    bool   `bson:"constant,omitempty" json:"constant,omitempty"`
+	External    bool   `bson:"external,omitempty" json:"external,omitempty"`
+}
+
+type VariableMap map[string]Variable
+
 type Playbook struct {
 	ID                            string                               `bson:"_id" json:"id" validate:"required"`
 	Type                          string                               `bson:"type" json:"type" validate:"required"`

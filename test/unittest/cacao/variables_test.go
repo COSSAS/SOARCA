@@ -32,6 +32,7 @@ func TestVariableMapMergingWithUpdate(t *testing.T) {
 		},
 	}
 
+	// Parent variables are not replaced
 	new := cacao.VariableMap{
 		"__var__": {
 			Value: "NEW",
@@ -49,6 +50,7 @@ func TestVariableMapMergingWithConstant(t *testing.T) {
 		},
 	}
 
+	// Parent variables are replaced if the replacement is constant
 	new := cacao.VariableMap{
 		"__var__": {
 			Value:    "NEW",
