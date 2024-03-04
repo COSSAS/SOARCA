@@ -21,8 +21,8 @@ type IExecuter interface {
 		command cacao.Command,
 		authentication cacao.AuthenticationInformation,
 		target cacao.AgentTarget,
-		variable map[string]cacao.Variable,
-		module cacao.AgentTarget) (uuid.UUID, map[string]cacao.Variable, error)
+		variable cacao.VariableMap,
+		module cacao.AgentTarget) (uuid.UUID, cacao.VariableMap, error)
 }
 
 func init() {
@@ -43,14 +43,14 @@ func (executer *Executer) Execute(metadata execution.Metadata,
 	command cacao.Command,
 	authentication cacao.AuthenticationInformation,
 	target cacao.AgentTarget,
-	variable map[string]cacao.Variable,
-	agent cacao.AgentTarget) (uuid.UUID, map[string]cacao.Variable, error) {
+	variable cacao.VariableMap,
+	agent cacao.AgentTarget) (uuid.UUID, cacao.VariableMap, error) {
 
 	if capability, ok := executer.capabilities[agent.Name]; ok {
 		returnVariables, err := capability.Execute(metadata, command, authentication, target, variable)
 		return metadata.ExecutionId, returnVariables, err
 	} else {
-		empty := map[string]cacao.Variable{}
+		empty := cacao.VariableMap{}
 		message := "executor is not available in soarca"
 		err := errors.New(message)
 		log.Error(message)

@@ -37,7 +37,7 @@ func TestHttpConnection(t *testing.T) {
 		metadata, expectedCommand,
 		cacao.AuthenticationInformation{},
 		cacao.AgentTarget{},
-		map[string]cacao.Variable{"test": variable1})
+		cacao.VariableMap{"test": variable1})
 	if err != nil {
 		fmt.Println(err)
 		t.Fail()
@@ -83,7 +83,7 @@ func TestHttpOAuth2(t *testing.T) {
 		expectedCommand,
 		oauth2_info,
 		target,
-		map[string]cacao.Variable{"test": variable1})
+		cacao.VariableMap{"test": variable1})
 	if err != nil {
 		fmt.Println(err)
 		t.Fail()
@@ -127,7 +127,7 @@ func TestHttpBasicAuth(t *testing.T) {
 		metadata,
 		expectedCommand,
 		basicauth_info,
-		target, map[string]cacao.Variable{"test": variable1})
+		target, cacao.VariableMap{"test": variable1})
 	if err != nil {
 		fmt.Println(err)
 		t.Fail()

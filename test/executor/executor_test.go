@@ -56,15 +56,15 @@ func TestExecuteStep(t *testing.T) {
 		expectedCommand,
 		expectedAuth,
 		expectedTarget,
-		map[string]cacao.Variable{expectedVariables.Name: expectedVariables}).
-		Return(map[string]cacao.Variable{expectedVariables.Name: expectedVariables},
+		cacao.VariableMap{expectedVariables.Name: expectedVariables}).
+		Return(cacao.VariableMap{expectedVariables.Name: expectedVariables},
 			nil)
 
 	_, _, err := executerObject.Execute(metadata,
 		expectedCommand,
 		expectedAuth,
 		expectedTarget,
-		map[string]cacao.Variable{expectedVariables.Name: expectedVariables},
+		cacao.VariableMap{expectedVariables.Name: expectedVariables},
 		agent)
 
 	assert.Equal(t, err, nil)
@@ -113,7 +113,7 @@ func TestNonExistingCapabilityStep(t *testing.T) {
 		expectedCommand,
 		expectedAuth,
 		expectedTarget,
-		map[string]cacao.Variable{expectedVariables.Name: expectedVariables},
+		cacao.VariableMap{expectedVariables.Name: expectedVariables},
 		agent)
 
 	assert.Equal(t, err, errors.New("executor is not available in soarca"))

@@ -38,13 +38,13 @@ func (httpCapability *HttpCapability) Execute(
 	command cacao.Command,
 	authentication cacao.AuthenticationInformation,
 	target cacao.AgentTarget,
-	variables map[string]cacao.Variable) (map[string]cacao.Variable, error) {
+	variables cacao.VariableMap) (cacao.VariableMap, error) {
 
 	// Get request data and handle errors
 	method, url, errmethod := ObtainHttpMethodAndUrlFromCommand(command)
 	if errmethod != nil {
 		log.Error(errmethod)
-		return map[string]cacao.Variable{}, errmethod
+		return cacao.VariableMap{}, errmethod
 	}
 	content_data, errcontent := ObtainHttpRequestContentDataFromCommand(command)
 	if errcontent != nil {
@@ -56,7 +56,7 @@ func (httpCapability *HttpCapability) Execute(
 	request, err := http.NewRequest(method, url, bytes.NewBuffer(content_data))
 	if err != nil {
 		log.Error(err)
-		return map[string]cacao.Variable{}, err
+		return cacao.VariableMap{}, err
 	}
 
 	for key, httpCapability := range command.Headers {
@@ -65,12 +65,12 @@ func (httpCapability *HttpCapability) Execute(
 	if target.ID != "" {
 		if err := verifyAuthInfoMatchesAgentTarget(&target, &authentication); err != nil {
 			log.Error(err)
-			return map[string]cacao.Variable{}, err
+			return cacao.VariableMap{}, err
 		}
 
 		if err := setupAuthHeaders(request, &authentication); err != nil {
 			log.Error(err)
-			return map[string]cacao.Variable{}, err
+			return cacao.VariableMap{}, err
 		}
 	}
 
@@ -79,22 +79,22 @@ func (httpCapability *HttpCapability) Execute(
 	response, err := client.Do(request)
 	if err != nil {
 		log.Error(err)
-		return map[string]cacao.Variable{}, err
+		return cacao.VariableMap{}, err
 	}
 	defer response.Body.Close()
 
 	responseBytes, err := io.ReadAll(response.Body)
 	if err != nil {
 		log.Error(err)
-		return map[string]cacao.Variable{}, err
+		return cacao.VariableMap{}, err
 	}
 	respString := string(responseBytes)
 	sc := response.StatusCode
 	if sc < 200 || sc > 299 {
-		return map[string]cacao.Variable{}, errors.New(respString)
+		return cacao.VariableMap{}, errors.New(respString)
 	}
 
-	return map[string]cacao.Variable{
+	return cacao.VariableMap{
 		"__soarca_http_result__": {Name: "result", Value: respString}}, nil
 
 }

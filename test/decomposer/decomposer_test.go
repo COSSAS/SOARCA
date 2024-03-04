@@ -36,7 +36,7 @@ func TestExecutePlaybook(t *testing.T) {
 		Type:          "ssh",
 		ID:            "action--test",
 		Name:          "ssh-tests",
-		StepVariables: map[string]cacao.Variable{expectedVariables.Name: expectedVariables},
+		StepVariables: cacao.VariableMap{expectedVariables.Name: expectedVariables},
 		Commands:      []cacao.Command{expectedCommand},
 		Cases:         map[string]string{},
 		OnCompletion:  "end--test",
@@ -85,8 +85,8 @@ func TestExecutePlaybook(t *testing.T) {
 	mock_executer.On("Execute", metaStep1, expectedCommand,
 		expectedAuth,
 		expectedTarget,
-		map[string]cacao.Variable{"var1": expectedVariables},
-		expectedAgent).Return(executionId, map[string]cacao.Variable{}, nil)
+		cacao.VariableMap{"var1": expectedVariables},
+		expectedAgent).Return(executionId, cacao.VariableMap{}, nil)
 
 	returnedId, err := decomposer.Execute(playbook)
 	uuid_mock.AssertExpectations(t)
@@ -129,7 +129,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 		Type:          "ssh",
 		ID:            "action--test",
 		Name:          "ssh-tests",
-		StepVariables: map[string]cacao.Variable{expectedVariables.Name: expectedVariables},
+		StepVariables: cacao.VariableMap{expectedVariables.Name: expectedVariables},
 		Commands:      []cacao.Command{expectedCommand},
 		Cases:         map[string]string{},
 		OnCompletion:  "action--test2",
@@ -142,7 +142,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 		Type:          "ssh",
 		ID:            "action--test2",
 		Name:          "ssh-tests",
-		StepVariables: map[string]cacao.Variable{expectedVariables2.Name: expectedVariables2},
+		StepVariables: cacao.VariableMap{expectedVariables2.Name: expectedVariables2},
 		Commands:      []cacao.Command{expectedCommand2},
 		Cases:         map[string]string{},
 		Agent:         "agent1",
@@ -153,7 +153,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 		Type:          "ssh",
 		ID:            "action--test3",
 		Name:          "ssh-tests",
-		StepVariables: map[string]cacao.Variable{expectedVariables.Name: expectedVariables},
+		StepVariables: cacao.VariableMap{expectedVariables.Name: expectedVariables},
 		Commands:      []cacao.Command{expectedCommand},
 		Agent:         "agent1",
 		// Targets:       []string{"target1"},
@@ -200,15 +200,15 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 		expectedCommand,
 		expectedAuth,
 		expectedTarget,
-		map[string]cacao.Variable{"var1": expectedVariables},
-		expectedAgent).Return(executionId, map[string]cacao.Variable{}, nil)
+		cacao.VariableMap{"var1": expectedVariables},
+		expectedAgent).Return(executionId, cacao.VariableMap{}, nil)
 
 	mock_executer.On("Execute", metaStep2,
 		expectedCommand2,
 		expectedAuth,
 		expectedTarget,
-		map[string]cacao.Variable{"var2": expectedVariables2},
-		expectedAgent).Return(executionId, map[string]cacao.Variable{}, nil)
+		cacao.VariableMap{"var2": expectedVariables2},
+		expectedAgent).Return(executionId, cacao.VariableMap{}, nil)
 
 	returnedId, err := decomposer.Execute(playbook)
 	uuid_mock.AssertExpectations(t)
@@ -255,7 +255,7 @@ func TestExecuteEmptyMultiStep(t *testing.T) {
 		ID:            "action--test",
 		Name:          "ssh-tests",
 		Agent:         "agent1",
-		StepVariables: map[string]cacao.Variable{expectedVariables.Name: expectedVariables},
+		StepVariables: cacao.VariableMap{expectedVariables.Name: expectedVariables},
 		Commands:      []cacao.Command{expectedCommand},
 		Cases:         map[string]string{},
 		OnCompletion:  "",
@@ -307,7 +307,7 @@ func TestExecuteIllegalMultiStep(t *testing.T) {
 		Type:          "ssh",
 		ID:            "action--test",
 		Name:          "ssh-tests",
-		StepVariables: map[string]cacao.Variable{expectedVariables.Name: expectedVariables},
+		StepVariables: cacao.VariableMap{expectedVariables.Name: expectedVariables},
 		Commands:      []cacao.Command{expectedCommand},
 		Cases:         map[string]string{},
 		OnCompletion:  "action-some-non-existing",
