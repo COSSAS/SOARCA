@@ -25,7 +25,7 @@ The capability will be selected on the type of the agent in the CACAO playbook s
 This module is defined in a playbook with the following TargetAgent definition:
 
 ```json
-"agent_definitons": {
+"agent_definitions": {
         "soarca--00010001-1000-1000-a000-000100010001": {
             "type": "soarca-ssh"
         }
@@ -52,7 +52,7 @@ If the connection to the target fail the structure will be set but be empty and 
 This module is defined in a playbook with the following TargetAgent definition:
 
 ```json
-"agent_definitons": {
+"agent_definitions": {
         "soarca--00020001-1000-1000-a000-000100010001": {
             "type": "soarca-http-api"
         },
@@ -78,7 +78,7 @@ The result of the step is stored in the following output variables:
 This module is defined in a playbook with the following TargetAgent definition:
 
 ```json
-"agent_definitons": {
+"agent_definitions": {
         "soarca--00030001-1000-1000-a000-000100010001": {
             "type": "soarca-openc2-http"
         },
