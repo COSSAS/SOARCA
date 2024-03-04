@@ -38,3 +38,17 @@ func (variableMap VariableMap) Replace(s string) string {
 	return replacer.Replace(s)
 }
 
+// Select a subset of variables from the map
+//
+// Unknown keys are ignored.
+func (variableMap VariableMap) Select(argList []string) VariableMap {
+	newMap := make(VariableMap)
+
+	for _, key := range argList {
+		if value, ok := variableMap[key]; ok {
+			newMap[key] = value
+		}
+	}
+
+	return newMap
+}
