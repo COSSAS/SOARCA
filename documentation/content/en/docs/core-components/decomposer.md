@@ -1,10 +1,10 @@
 ---
-title: SOARCA Decomposer
+title: Decomposer
 weight: 4
 categories: [architecture]
 tags: []
 description: >
-  The decomposer will parse playbook objects to individual steps. This allows it to schedule new executor tasks. 
+  Playbook deconstructor architecture
 ---
 
 

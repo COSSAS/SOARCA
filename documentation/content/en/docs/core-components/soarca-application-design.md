@@ -1,10 +1,10 @@
 ---
-title: SOARCA Application design
+title: Application design
 weight: 1
 categories: [architecture]
 tags: [components]
 description: >
-    The application consist of the endpoint which control the playbooks/ Coarse of Actions and steps that are available.
+    Details of the application architecture for SOARCA
 ---
 
 ##  Design decisions and core dependencies

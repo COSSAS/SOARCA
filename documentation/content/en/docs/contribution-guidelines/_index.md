@@ -4,7 +4,7 @@ weight: 7
 description: How to contribute to SOARCA
 ---
 
-SOARCA is an open source project written in [Golang](https://go.dev/) and we love getting patches and contributions, and feature suggestions to make SOARCA and its docs even better. We welcome participation from anyone, regardless of their affiliation with OASIS. We invite constructive contributions and feedback from all contributors, following the [standard practices](https://docs.github.com/en/get-started/exploring-projects-on-github/contributing-to-a-project) for participation in GitHub public repository projects.
+SOARCA is an open-source project written in [Golang](https://go.dev/) and we love getting patches and contributions, and feature suggestions to make SOARCA and its docs even better. We welcome participation from anyone, regardless of their affiliation with OASIS. We invite constructive contributions and feedback from all contributors, following the [standard practices](https://docs.github.com/en/get-started/exploring-projects-on-github/contributing-to-a-project) for participation in GitHub public repository projects.
 
 We expect everyone to follow our [Code of Conduct](/docs/contribution-guidelines/code_of_conduct/), the licenses for each repository, and agree to our Contributor License Agreement when you make your first contribution.
 

@@ -1,51 +1,38 @@
 ---
-title: SOARCA Executer Modules
+title: Executer Modules
 weight: 6
 categories: [architecture]
 tags: [components]
 description: >
-    SOARCA is extendable by modules. Modules allow for new steps in playbook and added capability. 
+    Native executer modules 
 ---
 
 ## Requirements
-Modules should be build in GO or Python and contain the following components.
-
-. CACAO template to allow their capability to extend coarse of actions playbooks.
-. MQTT protocol implementation to communicate with the SOARCA executor.
-. Module specifies which `variables` it exposes for return types. These `variables` should be defined when submitting a module. 
+Executer modules are part of the SOARCA core. Executer modules perform the actual commands in CACAO playbook steps.
 
 
 ## Native modules in SOARCA
 The following capability modules are defined in SOARCA:
  
-- SSH
-- HTTP-API
-- OPEN-C2
+- ssh
+- http-api
+- openc2-http
 
-All modules have an well known GUID for there target definition. SOARCA will also extent the `agent-target-type-ov` with the following vocab for `ssh`, `http-api` and `openc2` respectively.
-
-- soarca--00010001-1000-1000-a000-000100010001
-- soarca--00020001-1000-1000-a000-000100010001
-- soarca--00030001-1000-1000-a000-000100010001
-
-The capability will be selected on the capability name and it must be unique.
-
+The capability will be selected on the type of the agent in the CACAO playbook step. This type must be equal to `soarca-<capability identifier>`.
 
 ### SSH capability
-Well know guid: `soarca--00010001-1000-1000-a000-000100010001`
 
 This module is defined in a playbook with the following TargetAgent definition:
 
 ```json
 "agent_definitons": {
         "soarca--00010001-1000-1000-a000-000100010001": {
-            "type": "soarca",
-            "name": "soarca-ssh-capability"
+            "type": "soarca-ssh"
         }
     },
 ```
 
-This modules does not define variables as input. I will have the following output variables:
+This modules does not define specific variables as input, but of course variable interpolation is supported in the command and target definitions. It has the following output variables:
 
 ```json
 {
@@ -61,22 +48,24 @@ If the connection to the target fail the structure will be set but be empty and 
 
 
 ## HTTP-API capability
-Well know guid: `soarca--00020001-1000-1000-a000-000100010001`
 
 This module is defined in a playbook with the following TargetAgent definition:
 
 ```json
 "agent_definitons": {
         "soarca--00020001-1000-1000-a000-000100010001": {
-            "type": "soarca",
-            "name": "soarca-http-api-capability"
+            "type": "soarca-http-api"
         },
     },
 ```
 
+It supports variable interpolation in the command, port, authentication info, and target definitions.
+
+The result of the step is stored in the following output variables:
+
 ```json
 {
-    "__soarca_http_result__": {
+    "__soarca_http_api_result__": {
         Type: "string",
         Name: "result",
         Value: "<response from http-api here>"
@@ -85,17 +74,29 @@ This module is defined in a playbook with the following TargetAgent definition:
 ```
 
 ## OPEN-C2 capabilty
-Well know guid: `soarca--00030001-1000-1000-a000-000100010001`
 
 This module is defined in a playbook with the following TargetAgent definition:
 
 ```json
 "agent_definitons": {
         "soarca--00030001-1000-1000-a000-000100010001": {
-            "type": "soarca",
-            "name": "soarca-open-c2-capability"
+            "type": "soarca-openc2-http"
         },
     },
+```
+
+It supports variable interpolation in the command, headers, and target definitions.
+
+The result of the step is stored in the following output variables:
+
+```json
+{
+    "__soarca_openc2_http_result__": {
+        Type: "string",
+        Name: "result",
+        Value: "<response from openc2-http here>"
+    }
+}
 ```
 
 ---

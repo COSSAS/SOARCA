@@ -1,7 +1,7 @@
 ---
-title:  Fin protocol documentation
+title:  Fin protocol
 description: >
-    The SOARCA Fin protocol
+    Specification of the SOARCA Fin protocol
 categories: [extensions, architecture]
 tags: [fin]
 weight: 2

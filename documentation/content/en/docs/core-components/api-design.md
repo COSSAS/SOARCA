@@ -1,7 +1,7 @@
 ---
-title: SOARCA API Description
+title: API Description
 description: >
-    This document describes the SOARCA Rest API of the various endpoint that can be called. 
+    Descriptions for the SOARCA REST API endpoints 
 categories: [API]
 tags: [protocol, http, rest, api]
 weight: 2

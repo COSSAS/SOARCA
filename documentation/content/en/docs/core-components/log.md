@@ -1,5 +1,5 @@
 ---
-title: SOARCA Logging
+title: Logging
 weight: 10
 description: >
     SOARCA support extensive logging. Logging is based on the [logrus](https://github.com/sirupsen/logrus) framework. 

@@ -1,8 +1,9 @@
 ---
-title: Core Components
+title: Design
 weight: 5
 description: >
-  SOARCA under the water consists of the following core components:
+  The design of SOARCA
+  
 ---
 
 SOARCA consists of several key components:

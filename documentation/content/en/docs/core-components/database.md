@@ -1,5 +1,5 @@
 ---
-title: SOARCA Database
+title: Database
 weight: 7
 categories: [architecture]
 tags: [database]
