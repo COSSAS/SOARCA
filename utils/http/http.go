@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"soarca/logger"
 	"soarca/models/cacao"
@@ -20,11 +21,8 @@ var (
 )
 
 type HttpOptions struct {
-	Method   string
-	Target   cacao.AgentTarget
-	Path     string
-	Body     []byte
-	Headers  map[string]string
+	Target   *cacao.AgentTarget
+	Command  *cacao.Command
 	Username string
 	Password string
 	Token    string
@@ -38,7 +36,7 @@ type HttpRequest struct{}
 
 func (httpRequest *HttpRequest) Request(httpOptions HttpOptions) ([]byte, error) {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
-	request, err := httpOptions.setup()
+	request, err := httpOptions.setupRequest()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -54,18 +52,24 @@ func (httpRequest *HttpRequest) Request(httpOptions HttpOptions) ([]byte, error)
 	return httpOptions.handleResponse(response)
 }
 
-func (httpRequest *HttpOptions) setup() (*http.Request, error) {
-	parsedUrl, err := ExtractUrl(httpRequest.Target, httpRequest.Path)
+func (httpOptions *HttpOptions) setupRequest() (*http.Request, error) {
+	parsedUrl, err := httpOptions.ExtractUrl()
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
-	request, err := http.NewRequest(httpRequest.Method, parsedUrl, bytes.NewBuffer(httpRequest.Body))
+	method, err := GetMethodFrom(httpOptions.Command)
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
-	err = httpRequest.populateRequestFields(request)
+	requestBuffer := bytes.NewBufferString(httpOptions.Command.ContentB64)
+	request, err := http.NewRequest(method, parsedUrl, requestBuffer)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+	err = httpOptions.populateRequestFields(request)
 	if err != nil {
 		log.Error(err)
 		return nil, err
@@ -87,7 +91,7 @@ func (httpRequest *HttpOptions) handleResponse(response *http.Response) ([]byte,
 }
 
 func (httpOptions *HttpOptions) populateRequestFields(request *http.Request) error {
-	for header_key, header_value := range httpOptions.Headers {
+	for header_key, header_value := range httpOptions.Command.Headers {
 		request.Header.Add(header_key, header_value)
 	}
 	if (httpOptions.Username != "" && httpOptions.Token != "") || (httpOptions.Password != "" && httpOptions.Token != "") {
@@ -103,7 +107,17 @@ func (httpOptions *HttpOptions) populateRequestFields(request *http.Request) err
 	return nil
 }
 
-func ExtractUrl(target cacao.AgentTarget, path string) (string, error) {
+func (httpOptions *HttpOptions) ExtractUrl() (string, error) {
+	if httpOptions.Command == nil || httpOptions.Target == nil {
+		return "", errors.New("not enough http options supplied, nil found")
+	}
+	path, err := GetPathFrom(httpOptions.Command)
+	if err != nil {
+		log.Error(err)
+		return "", err
+	}
+	target := httpOptions.Target
+
 	if len(target.Address) == 0 && target.HttpUrl == "" {
 		return "", errors.New("cacao.AgentTarget does not contain enough information to build a proper query path")
 	}
@@ -166,4 +180,33 @@ func validatePort(port string) error {
 		return errors.New("port must be in the range 1-65535")
 	}
 	return nil
+}
+
+func GetMethodFrom(command *cacao.Command) (string, error) {
+	return extractCommandFieldByIndex(command, 0)
+}
+
+func GetPathFrom(command *cacao.Command) (string, error) {
+	return extractCommandFieldByIndex(command, 1)
+}
+
+func GetVersionFrom(command *cacao.Command) (string, error) {
+	return extractCommandFieldByIndex(command, 2)
+}
+
+func extractCommandFieldByIndex(command *cacao.Command, index int) (string, error) {
+	if command == nil {
+		return "", errors.New("command pointer is empty")
+	}
+	if index < 0 || index > 2 {
+		return "", errors.New("invalid index")
+	}
+	parts := strings.Fields(command.Command)
+	if len(parts) != 3 {
+		return "", errors.New("invalid request format")
+	}
+	if parts[0] == "" || parts[1] == "" || parts[2] == "" {
+		return "", errors.New("method, path, or HTTP version is empty")
+	}
+	return parts[index], nil
 }
