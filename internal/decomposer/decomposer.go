@@ -49,7 +49,7 @@ type Decomposer struct {
 	guid      guid.IGuid
 }
 
-func Callback(executionId uuid.UUID, outputVariables cacao.VariableMap) {
+func Callback(executionId uuid.UUID, outputVariables cacao.Variables) {
 
 }
 

@@ -8,13 +8,13 @@ import (
 )
 
 func TestVariableMapMerging(t *testing.T) {
-	base := cacao.VariableMap{
+	base := cacao.Variables{
 		"__var0__": {
 			Value: "OLD",
 		},
 	}
 
-	new := cacao.VariableMap{
+	new := cacao.Variables{
 		"__var1__": {
 			Value: "NEW",
 		},
@@ -26,14 +26,14 @@ func TestVariableMapMerging(t *testing.T) {
 }
 
 func TestVariableMapMergingWithUpdate(t *testing.T) {
-	base := cacao.VariableMap{
+	base := cacao.Variables{
 		"__var__": {
 			Value: "OLD",
 		},
 	}
 
 	// Parent variables are not replaced
-	new := cacao.VariableMap{
+	new := cacao.Variables{
 		"__var__": {
 			Value: "NEW",
 		},
@@ -44,14 +44,14 @@ func TestVariableMapMergingWithUpdate(t *testing.T) {
 }
 
 func TestVariableMapMergingWithConstant(t *testing.T) {
-	base := cacao.VariableMap{
+	base := cacao.Variables{
 		"__var__": {
 			Value: "OLD",
 		},
 	}
 
 	// Parent variables are replaced if the replacement is constant
-	new := cacao.VariableMap{
+	new := cacao.Variables{
 		"__var__": {
 			Value:    "NEW",
 			Constant: true,
@@ -65,7 +65,7 @@ func TestVariableMapMergingWithConstant(t *testing.T) {
 func TestVariableMapStringReplace(t *testing.T) {
 	original := "__var0__:value is __var0__:value"
 
-	vars := cacao.VariableMap{
+	vars := cacao.Variables{
 		"__var0__": {
 			Value: "GO",
 		},
@@ -78,7 +78,7 @@ func TestVariableMapStringReplace(t *testing.T) {
 func TestVariableMapStringReplaceMultiple(t *testing.T) {
 	original := "__var0__:value is __var1__:value"
 
-	vars := cacao.VariableMap{
+	vars := cacao.Variables{
 		"__var0__": {
 			Value: "GO",
 		},
@@ -92,12 +92,12 @@ func TestVariableMapStringReplaceMultiple(t *testing.T) {
 }
 
 func TestVariableMapSelect(t *testing.T) {
-	vars := cacao.VariableMap{
+	vars := cacao.Variables{
 		"__var1__": {Value: "val1"},
 		"__var2__": {Value: "val2"},
 	}
 
 	filteredVars := vars.Select([]string{"__var1__", "__unknown__"})
 
-	assert.Equal(t, filteredVars, cacao.VariableMap{"__var1__": {Value: "val1"}})
+	assert.Equal(t, filteredVars, cacao.Variables{"__var1__": {Value: "val1"}})
 }
