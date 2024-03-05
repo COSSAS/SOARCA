@@ -5,23 +5,48 @@ import (
 	"strings"
 )
 
-// Merge two maps of Cacao variables
+// Initialize new Variables
 //
-// Existing values are not overwritten unless the replacement has been
-// marked as constant.
-func (variables Variables) Merge(otherVariables Variables) Variables {
-	newVariables := make(Variables)
-	for key, value := range variables {
-		newVariables[key] = value
-	}
+// Allows passing in multiple variables at once
+func NewVariables(new ...Variable) Variables {
+	variables := make(Variables)
+	variables.InsertRange(new...)
+	return variables
+}
 
-	for key, newValue := range otherVariables {
-		if _, ok := variables[key]; !ok || newValue.Constant {
-			newVariables[key] = newValue
-		}
+// Insert a variable
+//
+// Returns true if the variable was inserted
+func (variables Variables) Insert(new Variable) bool {
+	if _, found := variables[new.Name]; found {
+		return false
 	}
+	variables[new.Name] = new
+	return true
+}
 
-	return newVariables
+// Insert or replace a variable
+//
+// Returns true if the variable was replaced
+func (variables Variables) InsertOrReplace(new Variable) bool {
+	_, found := variables[new.Name]
+	variables[new.Name] = new
+	return found
+}
+
+// Insert multiple variables at once
+func (variables Variables) InsertRange(new ...Variable) {
+	for _, newVar := range new {
+		variables.Insert(newVar)
+	}
+}
+
+// Find a variable by name
+//
+// Returns a Variable struct and a boolean indicating if it was found
+func (variables Variables) Find(key string) (Variable, bool) {
+	val, ok := variables[key]
+	return val, ok
 }
 
 // Construct a Replacer for string interpolation
@@ -37,8 +62,8 @@ func (variables Variables) Replacer() *strings.Replacer {
 	return strings.NewReplacer(replacements...)
 }
 
-// Replace variable references in a string
-func (variables Variables) Replace(s string) string {
+// Interpolate variable references in a string
+func (variables Variables) Interpolate(s string) string {
 	replacer := variables.Replacer()
 	return replacer.Replace(s)
 }
@@ -46,14 +71,28 @@ func (variables Variables) Replace(s string) string {
 // Select a subset of variables from the map
 //
 // Unknown keys are ignored.
-func (variables Variables) Select(argList []string) Variables {
-	newVariables := make(Variables)
+func (variables Variables) Select(keys []string) Variables {
+	newVariables := NewVariables()
 
-	for _, key := range argList {
-		if value, ok := variables[key]; ok {
-			newVariables[key] = value
+	for _, key := range keys {
+		if value, ok := variables.Find(key); ok {
+			newVariables.InsertOrReplace(value)
 		}
 	}
 
 	return newVariables
+}
+
+// Merge two maps of Cacao variables
+func (variables Variables) Merge(new Variables) Variables {
+	combined := NewVariables()
+	for _, value := range variables {
+		combined.Insert(value)
+	}
+
+	for _, newValue := range new {
+		combined.InsertOrReplace(newValue)
+	}
+
+	return combined
 }
