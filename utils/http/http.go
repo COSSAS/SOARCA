@@ -27,8 +27,11 @@ type HttpOptions struct {
 	Auth    *cacao.AuthenticationInformation
 }
 
+type IHttpOptions interface {
+	ExtractUrl() (string, error)
+}
 type IHttpRequest interface {
-	Request() ([]byte, error)
+	Request(httpOptions HttpOptions) ([]byte, error)
 }
 
 type HttpRequest struct{}
