@@ -261,11 +261,11 @@ None
 An existing playbook can be updated with PUT. 
 
 ##### Call payload
-A playbook like <<cacao playbook JSON>>
+A playbook like [cacao playbook JSON](#cacao-playbook-json)
 
 
 ##### Response
-200/OK with the edited playbook <<cacao playbook JSON>>
+200/OK with the edited playbook [cacao playbook JSON](#cacao-playbook-json)
 
 ##### Error
 400/BAD REQUEST for malformed request
@@ -316,7 +316,7 @@ Will return 200/OK when finished with playbook playbook.
 Execute an adhoc playbook
 
 ##### Call payload
-A playbook like <<cacao playbook JSON>>
+A playbook like [cacao playbook JSON](#cacao-playbook-json)
 
 ##### Response
 Will return 200/OK when finished with playbook.
@@ -481,7 +481,7 @@ None
 ##### Response
 200/OK
 
-See <<cacao playbook JSON>>
+See [cacao playbook JSON](#cacao-playbook-json)
 Empty payload if no playbooks are running
 
 ##### Error
