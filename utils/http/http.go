@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -21,11 +22,9 @@ var (
 )
 
 type HttpOptions struct {
-	Target   *cacao.AgentTarget
-	Command  *cacao.Command
-	Username string
-	Password string
-	Token    string
+	Target  *cacao.AgentTarget
+	Command *cacao.Command
+	Auth    *cacao.AuthenticationInformation
 }
 
 type IHttpRequest interface {
@@ -33,6 +32,13 @@ type IHttpRequest interface {
 }
 
 type HttpRequest struct{}
+
+// https://gist.githubusercontent.com/ahmetozer/ffa4cd0b319aff32ea9ed0068c8b81cf/raw/fc8742e6e087451e954bf0da214794a620356a4d/IPv4-IPv6-domain-regex.go
+const (
+	ipv6Regex   = `^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$`
+	ipv4Regex   = `^(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4})`
+	domainRegex = `^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$`
+)
 
 func (httpRequest *HttpRequest) Request(httpOptions HttpOptions) ([]byte, error) {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
@@ -47,7 +53,6 @@ func (httpRequest *HttpRequest) Request(httpOptions HttpOptions) ([]byte, error)
 		log.Error(err)
 		return []byte{}, err
 	}
-
 	defer response.Body.Close()
 	return httpOptions.handleResponse(response)
 }
@@ -69,11 +74,14 @@ func (httpOptions *HttpOptions) setupRequest() (*http.Request, error) {
 		log.Error(err)
 		return nil, err
 	}
-	err = httpOptions.populateRequestFields(request)
+
+	httpOptions.addHeaderTo(request)
+	err = httpOptions.addAuthTo(request)
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
+
 	return request, nil
 }
 
@@ -90,19 +98,46 @@ func (httpRequest *HttpOptions) handleResponse(response *http.Response) ([]byte,
 	return responseBytes, nil
 }
 
-func (httpOptions *HttpOptions) populateRequestFields(request *http.Request) error {
+func verifyAuthInfoMatchesAgentTarget(
+	target *cacao.AgentTarget, authInfo *cacao.AuthenticationInformation,
+) error {
+	if target.AuthInfoIdentifier == "" || authInfo.ID == "" {
+		return errors.New("target target.AuthInfoIndentifier or authInfo.ID is empty")
+	}
+
+	if !(target.AuthInfoIdentifier == authInfo.ID) {
+		return errors.New("target auth info Id does not match auth info object's")
+	}
+	return nil
+}
+
+func (httpOptions *HttpOptions) addHeaderTo(request *http.Request) {
 	for header_key, header_value := range httpOptions.Command.Headers {
 		request.Header.Add(header_key, header_value)
 	}
-	if (httpOptions.Username != "" && httpOptions.Token != "") || (httpOptions.Password != "" && httpOptions.Token != "") {
-		return errors.New("both credentials and token are used in HTTP Request. Credentials are used, token is ignored")
+}
+
+func (httpOptions *HttpOptions) addAuthTo(request *http.Request) error {
+	if httpOptions.Auth == nil {
+		return nil
 	}
-	if httpOptions.Username != "" || httpOptions.Password != "" {
-		request.SetBasicAuth(httpOptions.Username, httpOptions.Password)
+	if err := verifyAuthInfoMatchesAgentTarget(httpOptions.Target, httpOptions.Auth); err != nil {
+		return errors.New("auth info does not match target Id")
 	}
-	if httpOptions.Token != "" {
-		bearer := "Bearer " + httpOptions.Token
+
+	authInfoType := httpOptions.Auth.Type
+
+	switch authInfoType {
+	case cacao.AuthInfoHTTPBasicType:
+		request.SetBasicAuth(httpOptions.Auth.Username, httpOptions.Auth.Password)
+	case cacao.AuthInfoOAuth2Type:
+		bearer := fmt.Sprintf("Bearer %s", httpOptions.Auth.Token)
 		request.Header.Add("Authorization", bearer)
+	case "":
+		// It means that AuthN information is not set
+		return nil
+	default:
+		return errors.New("unsupported authentication type: " + authInfoType)
 	}
 	return nil
 }
@@ -129,18 +164,30 @@ func (httpOptions *HttpOptions) ExtractUrl() (string, error) {
 	}
 
 	if target.HttpUrl != "" {
-		parsedUrl, err := url.ParseRequestURI(target.HttpUrl)
-		if err != nil {
-			return "", err
-		}
-		if parsedUrl.Host == "" {
-			return "", errors.New("no domain name")
-		}
-		return parsedUrl.String(), nil
+		return parsePathBasedUrl(target.HttpUrl)
 	}
+	return buildSchemeAndHostname(path, target)
+}
+
+func buildSchemeAndHostname(path string, target *cacao.AgentTarget) (string, error) {
 	var hostname string
 
-	// according to the cacao spec!
+	scheme := setDefaultScheme(target)
+	hostname, err := extractHostname(scheme, target)
+	if err != nil {
+		return "", err
+	}
+
+	parsedUrl := &url.URL{
+		Scheme: scheme,
+		Host:   fmt.Sprintf("%s:%s", hostname, target.Port),
+		Path:   path,
+	}
+
+	return parsedUrl.String(), nil
+}
+
+func setDefaultScheme(target *cacao.AgentTarget) string {
 	if target.Port == "" {
 		target.Port = "80"
 	}
@@ -150,24 +197,41 @@ func (httpOptions *HttpOptions) ExtractUrl() (string, error) {
 	if target.Port == "80" || target.Port == "8080" {
 		scheme = "http"
 	}
+	return scheme
+}
+
+func extractHostname(scheme string, target *cacao.AgentTarget) (string, error) {
+	var address string
 
 	if len(target.Address["dname"]) > 0 {
-		hostname = target.Address["dname"][0]
+		match, _ := regexp.MatchString(domainRegex, target.Address["dname"][0])
+		if !match {
+			return "", errors.New("failed regex rule for domain name")
+		}
+		address = target.Address["dname"][0]
+
 	} else if len(target.Address["ipv4"]) > 0 {
-		hostname = target.Address["ipv4"][0]
+		match, _ := regexp.MatchString(ipv4Regex, target.Address["ipv4"][0])
+		if !match {
+			return "", errors.New("failed regex rule for domain name")
+		}
+		address = target.Address["ipv4"][0]
+
 	} else {
 		return "", errors.New("unsupported target address type")
 	}
-	if hostname == "" {
-		return "", errors.New("hostname or path remains empty")
+	return address, nil
+}
+
+func parsePathBasedUrl(httpUrl string) (string, error) {
+	parsedUrl, err := url.ParseRequestURI(httpUrl)
+	if err != nil {
+		return "", err
 	}
 
-	parsedUrl := &url.URL{
-		Scheme: scheme,
-		Host:   fmt.Sprintf("%s:%s", hostname, target.Port),
-		Path:   path,
+	if parsedUrl.Hostname() == "" {
+		return "", errors.New("no domain name")
 	}
-
 	return parsedUrl.String(), nil
 }
 

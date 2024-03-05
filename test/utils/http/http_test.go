@@ -49,10 +49,10 @@ func TestHttpGetConnection(t *testing.T) {
 	response, err := httpRequest.Request(httpOptions)
 	t.Log(string(response))
 	if err != nil {
-		t.Fatalf(fmt.Sprint("http get request test has failed: ", err))
+		t.Error("http get request test has failed: ", err)
 	}
 	if len(response) == 0 {
-		t.Fatalf("empty response")
+		t.Error("empty response")
 	}
 	t.Log(string(response))
 }
@@ -73,10 +73,10 @@ func TestHttpPostConnection(t *testing.T) {
 	response, err := httpRequest.Request(httpOptions)
 	t.Log(string(response))
 	if err != nil {
-		t.Fatalf(fmt.Sprint("http post request test has failed: ", err))
+		t.Error("http post request test has failed: ", err)
 	}
 	if len(response) == 0 {
-		t.Fatalf("empty response")
+		t.Error("empty response")
 	}
 	t.Log(string(response))
 }
@@ -95,10 +95,10 @@ func TestHttpPutConnection(t *testing.T) {
 	}
 	response, err := httpRequest.Request(httpOptions)
 	if err != nil {
-		t.Fatalf(fmt.Sprint("http put request test has failed: ", err))
+		t.Error("http put request test has failed: ", err)
 	}
 	if len(response) == 0 {
-		t.Fatalf("empty response")
+		t.Error("empty response")
 	}
 	t.Log(string(response))
 }
@@ -117,10 +117,10 @@ func TestHttpDeleteConnection(t *testing.T) {
 	}
 	response, err := httpRequest.Request(httpOptions)
 	if err != nil {
-		t.Fatalf(fmt.Sprint("http delete request test has failed: ", err))
+		t.Error("http delete request test has failed: ", err)
 	}
 	if len(response) == 0 {
-		t.Fatalf("empty response")
+		t.Error("empty response")
 	}
 	t.Log(string(response))
 }
@@ -143,15 +143,24 @@ func TestHttpStatus200(t *testing.T) {
 	_, err := httpRequest.Request(httpOptions)
 	t.Log(err)
 	if err != nil {
-		t.Fatalf(fmt.Sprint("http get request test has failed: ", err))
+		t.Error("http get request test has failed: ", err)
 		return
 	}
 }
 
 func TestHttpBearerToken(t *testing.T) {
-	bearerToken := "test"
+	bearerToken := "test_token"
 	httpRequest := http.HttpRequest{}
-	target := cacao.AgentTarget{HttpUrl: "https://httpbin.org/bearer"}
+
+	target := cacao.AgentTarget{
+		HttpUrl:            "https://httpbin.org/bearer",
+		AuthInfoIdentifier: "d0c7e6a0-f7fe-464e-9935-e6b3443f5b91",
+	}
+	auth := cacao.AuthenticationInformation{
+		Type:  cacao.AuthInfoOAuth2Type,
+		Token: bearerToken,
+		ID:    "d0c7e6a0-f7fe-464e-9935-e6b3443f5b91",
+	}
 	command := cacao.Command{
 		Type:    "http-api",
 		Command: "GET / HTTP/1.1",
@@ -160,22 +169,21 @@ func TestHttpBearerToken(t *testing.T) {
 	httpOptions := http.HttpOptions{
 		Command: &command,
 		Target:  &target,
-		Token:   bearerToken,
+		Auth:    &auth,
 	}
 	response, err := httpRequest.Request(httpOptions)
 	if err != nil {
-		t.Fatalf(fmt.Sprint("http request has failed: ", err))
+		t.Error("http request has failed: ", err, response)
 	}
 	if len(response) == 0 {
-		t.Fatalf("empty response")
+		t.Error("empty response")
 	}
 	t.Log(string(response))
 
 	var responseToken bearerResponse
 	err = json.Unmarshal(response, &responseToken)
 	if err != nil {
-		fmt.Println("error decoding JSON: ", err)
-		t.Fatalf(fmt.Sprint("could not unmashall reponsetoken for bearer test: ", err))
+		t.Error("could not unmashall reponsetoken for bearer test: ", err)
 	}
 	assert.Equal(t, responseToken.Authenticated, true)
 	assert.Equal(t, responseToken.Token, bearerToken)
@@ -187,31 +195,39 @@ func TestHttpBasicAuth(t *testing.T) {
 	url := fmt.Sprintf("https://httpbin.org/basic-auth/%s/%s", username, password)
 	httpRequest := http.HttpRequest{}
 
-	target := cacao.AgentTarget{HttpUrl: url}
+	target := cacao.AgentTarget{
+		HttpUrl:            url,
+		AuthInfoIdentifier: "d0c7e6a0-f7fe-464e-9935-e6b3443f5b91",
+	}
+	auth := cacao.AuthenticationInformation{
+		Type:     cacao.AuthInfoHTTPBasicType,
+		Username: username,
+		Password: password,
+		ID:       "d0c7e6a0-f7fe-464e-9935-e6b3443f5b91",
+	}
+
 	command := cacao.Command{
 		Type:    "http-api",
 		Command: "GET / HTTP/1.1",
 		Headers: map[string]string{"accept": "application/json"},
 	}
 	httpOptions := http.HttpOptions{
-		Command:  &command,
-		Target:   &target,
-		Username: username,
-		Password: password,
+		Command: &command,
+		Target:  &target,
+		Auth:    &auth,
 	}
 	response, err := httpRequest.Request(httpOptions)
 	if err != nil {
-		t.Fatalf(fmt.Sprint("http auth Request has failed: ", err))
+		t.Error("http auth Request has failed: ", err)
 	}
 	if len(response) == 0 {
-		t.Fatalf("empty response")
+		t.Error("empty response")
 	}
 	t.Log(string(response))
 	var authResponse basicAuthReponse
 	err = json.Unmarshal(response, &authResponse)
 	if err != nil {
-		fmt.Println("Error decoding JSON:", err)
-		t.Fatalf(fmt.Sprint("could not unmashall reponse token for bearer test,", err))
+		t.Error("could not unmashall reponse token for bearer test,", err)
 	}
 
 	assert.Equal(t, authResponse.Authenticated, true)
@@ -225,10 +241,10 @@ func TestHttpPostWithContentConnection(t *testing.T) {
 	requestBody, err := json.Marshal(testJsonObj)
 	base64EncodedBody := b64.StdEncoding.EncodeToString(requestBody)
 	if err != nil {
-		fmt.Println("error Marshall JSON:", err)
+		t.Error("error Marshall JSON: ", err)
 	}
 	if len(requestBody) == 0 {
-		t.Fatalf("empty response")
+		t.Error("empty response")
 	}
 	target := cacao.AgentTarget{HttpUrl: "https://httpbin.org/anything"}
 	command := cacao.Command{
@@ -245,7 +261,7 @@ func TestHttpPostWithContentConnection(t *testing.T) {
 
 	t.Log(string(response))
 	if err != nil {
-		t.Fatalf(fmt.Sprint("http post request with body content has failed: ", err))
+		t.Error("http post request with body content has failed: ", err)
 	}
 
 	// specific format used by httpbin.org
@@ -253,7 +269,7 @@ func TestHttpPostWithContentConnection(t *testing.T) {
 	err = json.Unmarshal(response, &httpBinReponse)
 	fmt.Println(httpBinReponse)
 	if err != nil {
-		t.Fatalf(fmt.Sprint("Could not unmashall reponse token for bearer test,", err))
+		t.Error("Could not unmashall reponse token for bearer test,", err)
 	}
 	assert.Equal(t, httpBinReponse.Data, base64EncodedBody)
 }
@@ -275,7 +291,7 @@ func TestHttpPathDnameParser(t *testing.T) {
 
 	parsedUrl, err := httpOptions.ExtractUrl()
 	if err != nil {
-		t.Fatalf(fmt.Sprint("failed test because: ", err))
+		t.Error("failed test because: ", err)
 	}
 	assert.Equal(t, parsedUrl, "http://soarca.tno.nl:80/url")
 }
@@ -297,14 +313,14 @@ func TestHttpPathDnamePortParser(t *testing.T) {
 
 	parsedUrl, err := httpOptions.ExtractUrl()
 	if err != nil {
-		t.Fatalf(fmt.Sprint("failed test because: ", err))
+		t.Error("failed test because: ", err)
 	}
 	assert.Equal(t, parsedUrl, "http://soarca.tno.nl:8080/url")
 }
 
 func TestHttpPathDnameRandomPortParser(t *testing.T) {
 	addresses := make(map[string][]string, 1)
-	addresses["dname"] = []string{"http://soarca.tno.nl"}
+	addresses["dname"] = []string{"soarca.tno.nl"}
 
 	target := cacao.AgentTarget{Address: addresses, Port: strconv.Itoa(6464)}
 	command := cacao.Command{
@@ -319,7 +335,7 @@ func TestHttpPathDnameRandomPortParser(t *testing.T) {
 
 	parsedUrl, err := httpOptions.ExtractUrl()
 	if err != nil {
-		t.Fatalf(fmt.Sprint("failed test because: ", err))
+		t.Error("failed test because: ", err)
 	}
 	assert.Equal(t, parsedUrl, "https://soarca.tno.nl:6464/url")
 }
@@ -341,7 +357,7 @@ func TestHttpPathIpv4Parser(t *testing.T) {
 
 	parsedUrl, err := httpOptions.ExtractUrl()
 	if err != nil {
-		t.Fatalf(fmt.Sprint("failed test because: ", err))
+		t.Error("failed test because: ", err)
 	}
 	assert.Equal(t, parsedUrl, "https://127.0.0.1:443/")
 }
@@ -360,7 +376,7 @@ func TestHttpPathParser(t *testing.T) {
 
 	parsedUrl, err := httpOptions.ExtractUrl()
 	if err != nil {
-		t.Fatalf(fmt.Sprint("failed test because: ", err))
+		t.Error("failed test because: ", err)
 	}
 	assert.Equal(t, parsedUrl, "https://godcapability.tno.nl")
 }
@@ -381,7 +397,7 @@ func TestHttpPathBreakingParser(t *testing.T) {
 	if err == nil {
 		t.Error("want error for invalid empty domainname")
 	}
-	t.Logf(fmt.Sprint(parsedUrl))
+	t.Log(parsedUrl)
 }
 
 func TestMethodExtract(t *testing.T) {
@@ -392,7 +408,7 @@ func TestMethodExtract(t *testing.T) {
 	}
 	method, err := http.GetMethodFrom(&command)
 	if err != nil {
-		t.Fatalf(fmt.Sprint("failed test because: ", err))
+		t.Error("failed test because: ", err)
 	}
 	assert.Equal(t, method, "POST")
 }
@@ -405,7 +421,7 @@ func TestPathExtract(t *testing.T) {
 	}
 	path, err := http.GetPathFrom(&command)
 	if err != nil {
-		t.Fatalf(fmt.Sprint("failed test because: ", err))
+		t.Error("failed test because: ", err)
 	}
 	assert.Equal(t, path, "/api1/newObject")
 }
@@ -418,7 +434,7 @@ func TestVersionExtract(t *testing.T) {
 	}
 	version, err := http.GetVersionFrom(&command)
 	if err != nil {
-		t.Fatalf(fmt.Sprint("failed test because: ", err))
+		t.Error("failed test because: ", err)
 	}
 	assert.Equal(t, version, "HTTP/1.1")
 }
@@ -434,4 +450,94 @@ func TestCommandFailedExtract(t *testing.T) {
 		t.Error("should give error as only 2 values are provided")
 	}
 	assert.Equal(t, version, "")
+}
+
+func TestDnameWithInvalidPathParser(t *testing.T) {
+	addresses := make(map[string][]string, 1)
+	addresses["dname"] = []string{"soarca.tno.nl/this/path/shouldnt/be/used"}
+
+	target := cacao.AgentTarget{Address: addresses, Port: strconv.Itoa(6464)}
+	command := cacao.Command{
+		Type:    "http-api",
+		Command: "POST /url HTTP/1.1",
+		Headers: map[string]string{"accept": "application/json"},
+	}
+	httpOptions := http.HttpOptions{
+		Target:  &target,
+		Command: &command,
+	}
+
+	parsedUrl, err := httpOptions.ExtractUrl()
+	if err == nil {
+		t.Error("should fail as invalid dname")
+	}
+	assert.Equal(t, parsedUrl, "")
+}
+
+func TestHttpPathIpv4WithRandomPort(t *testing.T) {
+	addresses := make(map[string][]string, 1)
+	addresses["ipv4"] = []string{"127.0.0.1"}
+
+	target := cacao.AgentTarget{Address: addresses, Port: strconv.Itoa(6464)}
+	command := cacao.Command{
+		Type:    "http-api",
+		Command: "POST /url HTTP/1.1",
+		Headers: map[string]string{"accept": "application/json"},
+	}
+	httpOptions := http.HttpOptions{
+		Target:  &target,
+		Command: &command,
+	}
+
+	parsedUrl, err := httpOptions.ExtractUrl()
+	if err != nil {
+		t.Error("failed test because: ", err)
+	}
+	assert.Equal(t, parsedUrl, "https://127.0.0.1:6464/url")
+}
+
+func TestInvalidDname(t *testing.T) {
+	addresses := make(map[string][]string, 1)
+	addresses["dname"] = []string{"https://soarca.tno.nl"}
+
+	target := cacao.AgentTarget{Address: addresses, Port: strconv.Itoa(6464)}
+	command := cacao.Command{
+		Type:    "http-api",
+		Command: "POST /url HTTP/1.1",
+		Headers: map[string]string{"accept": "application/json"},
+	}
+	httpOptions := http.HttpOptions{
+		Target:  &target,
+		Command: &command,
+	}
+
+	parsedUrl, err := httpOptions.ExtractUrl()
+
+	if err == nil {
+		t.Error("should fail as invalid dname")
+	}
+	assert.Equal(t, parsedUrl, "")
+}
+
+func TestInvalidIpv4(t *testing.T) {
+	addresses := make(map[string][]string, 1)
+	addresses["ipv4"] = []string{"https://127.0.0.1"}
+
+	target := cacao.AgentTarget{Address: addresses, Port: strconv.Itoa(6464)}
+	command := cacao.Command{
+		Type:    "http-api",
+		Command: "POST /url HTTP/1.1",
+		Headers: map[string]string{"accept": "application/json"},
+	}
+	httpOptions := http.HttpOptions{
+		Target:  &target,
+		Command: &command,
+	}
+
+	parsedUrl, err := httpOptions.ExtractUrl()
+
+	if err == nil {
+		t.Error("should fail as invalid ipv4")
+	}
+	assert.Equal(t, parsedUrl, "")
 }
