@@ -23,8 +23,11 @@ test:
 	go test test/executor/*_test.go -v
 	go test test/routes/playbook_api/*_test.go -v
 	go test test/routes/trigger_api/*_test.go -v
+	go test test/capability/fin/*_test.go -v
 	go test test/capability/ssh/*_test.go -v
 	go test test/capability/http/*_test.go -v
+	go test test/finmodel/*_test.go -v
+	go test test/finprotocol/*_test.go -v
 
 clean:
 	rm -rf build/soarca* build/main
