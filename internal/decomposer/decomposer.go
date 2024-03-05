@@ -171,6 +171,7 @@ func (decomposer *Decomposer) ExecuteActionStep(step cacao.Step, scopeVariables 
 				outputVariables = outputVariables.Select(step.OutArgs)
 			}
 
+			log.Tracef("Step output: %v", outputVariables)
 			returnVariables.Merge(outputVariables)
 			scopeVariables.Merge(outputVariables)
 
