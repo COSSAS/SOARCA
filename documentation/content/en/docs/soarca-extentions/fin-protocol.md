@@ -19,14 +19,14 @@ The Fin will use the protocol to register itself to SOARCA via the register mess
 ## Messages
 Messages defined in the protocol
 
-- `ack`
-- `nack`
-- `register`
-- `unregister`
-- `command`
-- `pause`
-- `resume`
-- `stop`
+- ack
+- nack
+- register
+- unregister
+- command
+- pause
+- resume
+- stop
 
 ### legend
 
@@ -86,9 +86,9 @@ The message is used to register a fin to SOARCA. It has the following payload.
 |message_id         |UUID                   |string             |Message UUID 
 |fin_id             |UUID                   |string             |Fin uuid of the separate form the capability 
 |protocol_version   |version                |string             |Version information of the protocol in [semantic version](https://semver.org) schema e.g. 1.2.4-beta
-|security           |security information   |<<Security>>           |ecurity information for protocol see security structure
-|capabilities       |list of capability structure    |list of <<capability structure>>    |Capability structure information for protocol see security structure
-|meta   |meta dict |<<Meta>> |Meta information for the fin protocol structure
+|security           |security information   |[Security](#security)           |Security information for protocol see security structure
+|capabilities       |list of capability structure    |list of [capability structure](#capability-structure)    |Capability structure information for protocol see security structure
+|meta   |meta dict |[Meta](#meta) |Meta information for the fin protocol structure
 
 
 
@@ -99,10 +99,10 @@ The message is used to register a fin to SOARCA. It has the following payload.
 | ----------------- | ------------- | ------ | ----------- |
 |capability_id      |UUID           |string  |Capability id to identify the unique capability a fin can have multiple
 |type               |action         | [workflow-step-type-enum](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256479) | Most common is action
-|name               |name           |string  |message id 
+|name               |name           |string  |capability name 
 |version            |version        |string  |Version information of the Fin implementation used in [semantic version](https://semver.org) schema e.g. 1.2.4-beta
-|step               |step structure |<<step structure>>    |Step to specify an example for the step so it can be queried in the SOARCA API
-|agent              |agent structure|<<agent structure>>   |Agent to specify the agent definition to match in playbooks for SOARCA 
+|step               |step structure |[step structure](#step-structure)    |Step to specify an example for the step so it can be queried in the SOARCA API
+|agent              |agent structure|[agent structure](#agent-structure)   |Agent to specify the agent definition to match in playbooks for SOARCA 
 
 
 #### step structure
@@ -121,7 +121,7 @@ The message is used to register a fin to SOARCA. It has the following payload.
 |field              |content        |   type            | description |
 | ----------------- | ------------- | ----------------- | ----------- |
 |type               |soarca-fin     |string     |SOARCA Fin type, a custom type used to specify Fins
-|name               |name           |string     |SOARCA Fin name in the following form: soarca-fin-<name>-<uuid>, this grantees the fin is unique
+|name               |name           |string     |SOARCA Fin name in the following form: `soarca-fin-<name>-<uuid>`, this grantees the fin is unique
 
 ```plantuml
 @startjson
@@ -199,20 +199,19 @@ The message is used to send a command from SOARCA. It has the following payload.
 
 |field              |content        |type    | description |
 | ----------------- | ------------- | ------ | ----------- |
-|type               |unregister     |string     |Unregister message type
+|type               |command        |string     |Command message type
 |message_id         |UUID           |string     |Message UUID 
-[Authentication information] |Additional authentication information the field is optional 
-|command            |command        |<<command substructure>> |command structure
-|meta   |meta dict |<<Meta>> |Meta information for the fin protocol structure
-|===
+|command            |command        |[command substructure](#command-substructure) |command structure
+|meta               |meta dict      |[Meta](#meta)          |Meta information for the fin protocol structure
+
 
 #### command substructure
 |field              |content        |type    | description |
 | ----------------- | ------------- | ------ | ----------- |
 |command            |command        |string     |The command to be executed
 |authentication `(optional)`    |authentication information | [authentication information](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256503) | CACAO authentication information
-|context            |cacao context  |<<Context>> | Context form the playbook
-|variables          |dict of variables      |dict of <<Variables>> | From the playbook
+|context            |cacao context  |[Context](#context) | Context form the playbook
+|variables          |dict of variables      |dict of [Variables](#variables) | From the playbook
 
 
 ```plantuml
@@ -262,19 +261,17 @@ The message is used to send response from the Fin to SOARCA. It has the followin
 | ----------------- | ------------- | ------ | ----------- |
 |type               |result     |string     |Unregister message type
 |message_id         |UUID       |string     |Message UUID 
-|result             |result structure |<<result structure>> | The result of the execution 
-|return             |dict of variables        |<<command substructure>> |command structure 
+|result             |result structure |[result structure](#result-structure)| The result of the execution 
+|meta               |meta dict      |[Meta](#meta)          |Meta information for the fin protocol structure
 
 
 #### result structure
-|context            |cacao context  |<<Context>> | Context form the playbook
 
 |field              |content        |type    | description |
 | ----------------- | ------------- | ------ | ----------- |
-|type               |result     |string     |Unregister message type
-|result            |result structure |<<result structure>> | The result of the execution 
-
-|return             |dict of variables        |<<command substructure>> |command structure 
+|state            |succes or failure  |string | The execution state of the playbook
+|context            |cacao context  |[Context](#context) | Context form the playbook
+|variables             |dict of variables        |dict of [variables](#variables) |Dictionary of CACAO compatible variables
 
 
 ```plantuml
@@ -291,7 +288,7 @@ The message is used to send response from the Fin to SOARCA. It has the followin
             "playbook_id": "uuid",
             "execution_id": "uuid"
         },
-        "return": {
+        "variables": {
             "__<var1>__": {
                 "type": "<cacao.variable-type-ov>",
                 "description": "<string>",
@@ -503,9 +500,9 @@ participant Capability as fin
 
 soarca -> soarca : create [soarca] topic
 
-fin -> fin : create [UUID] topic
+fin -> fin : create [fin UUID] topic
 soarca <- fin : [soarca] register
-soarca --> fin : [UUID] ack 
+soarca --> fin : [fin UUID] ack 
 
 @enduml
 ```
@@ -518,12 +515,12 @@ soarca --> fin : [UUID] ack
 participant "SOARCA" as soarca
 participant Capability as fin
 
-soarca -> fin : [UUID] command
-soarca <-- fin : [UUID] ack 
+soarca -> fin : [capability UUID] command
+soarca <-- fin : [capability UUID] ack 
 
 .... processing .... 
 
-soarca <- fin : [UUID] result
+soarca <- fin : [capability UUID] result
 soarca --> fin: ack
 
 @enduml
@@ -575,8 +572,8 @@ participant "SOARCA" as soarca
 participant Capability as fin
 
 
-soarca -> fin : [UUID] control message
-soarca <-- fin : [UUID] status 
+soarca -> fin : [fin UUID] control message
+soarca <-- fin : [fin UUID] status 
 
 @enduml
 ```
