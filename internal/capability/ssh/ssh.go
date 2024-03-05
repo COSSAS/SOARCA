@@ -31,7 +31,7 @@ func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
 	command cacao.Command,
 	authentication cacao.AuthenticationInformation,
 	target cacao.AgentTarget,
-	variables cacao.VariableMap) (cacao.VariableMap, error) {
+	variables cacao.Variables) (cacao.Variables, error) {
 	log.Trace(metadata.ExecutionId)
 
 	host := CombinePortAndAddress(target.Address, target.Port)
@@ -40,7 +40,7 @@ func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
 
 	if errAuth != nil {
 		log.Error(errAuth)
-		return cacao.VariableMap{}, errAuth
+		return cacao.Variables{}, errAuth
 	} else {
 		log.Trace(host)
 	}
@@ -60,7 +60,7 @@ func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
 		signer, errKey := ssh.ParsePrivateKey([]byte(authentication.PrivateKey))
 		if errKey != nil || authentication.Password == "" {
 			log.Error("no valid authentication information: ", errKey)
-			return cacao.VariableMap{}, errKey
+			return cacao.Variables{}, errKey
 		}
 		config = ssh.ClientConfig{
 			User: authentication.Username,
@@ -78,13 +78,13 @@ func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
 	conn, err := ssh.Dial("tcp", host, &config)
 	if err != nil {
 		log.Error(err)
-		return cacao.VariableMap{}, err
+		return cacao.Variables{}, err
 	}
 	var session *ssh.Session
 	session, err = conn.NewSession()
 	if err != nil {
 		log.Error(err)
-		return cacao.VariableMap{}, err
+		return cacao.Variables{}, err
 	}
 
 	response, err := session.Output(StripSshPrepend(command.Command))
@@ -92,9 +92,9 @@ func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
 
 	if err != nil {
 		log.Error(err)
-		return cacao.VariableMap{"__soarca_ssh_result__": {Name: "result", Value: string(response)}}, err
+		return cacao.Variables{"__soarca_ssh_result__": {Name: "result", Value: string(response)}}, err
 	}
-	results := cacao.VariableMap{"__soarca_ssh_result__": {Name: "result", Value: string(response)}}
+	results := cacao.Variables{"__soarca_ssh_result__": {Name: "result", Value: string(response)}}
 	log.Trace("Finished ssh execution will return the variables: ", results)
 	return results, err
 }
