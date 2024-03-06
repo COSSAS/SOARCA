@@ -34,7 +34,8 @@ jobs:
           fetch-depth: 0
       - name: Make repo safe
         run: git config --global --add safe.directory /__w/SOARCA/SOARCA
-
+      - name: Install swaggo
+        run:  go install github.com/swaggo/swag/cmd/swag@latest 
       - name: lint
         run: |
           ls -la
