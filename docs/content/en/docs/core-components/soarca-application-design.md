@@ -16,9 +16,9 @@ The overview on this page is aimed to guid you through the SOARCA architecture a
 ## Components
 
 Components of SOARCA are displayed in the component diagram. 
-- Green is implemented, 
-- orange has limited functionality, 
-- red is not started but will be added in future releases.
+- Green is implemented 
+- Orange has limited functionality
+- Red is not started, but will be added in future releases
 
 ```plantuml
 @startuml
@@ -67,7 +67,7 @@ core::executor --> core::modules::ssh
 
 ## Classes
 
-This diagram consists of the class structure used by SOAR-CA
+This diagram consists of the class structure used by SOARCA
 
 ```plantuml
 @startuml

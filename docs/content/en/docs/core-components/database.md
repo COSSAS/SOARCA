@@ -54,7 +54,7 @@ database Database as db
 controller -> playbook : get(id)
 playbook -> db : read(playbookId)
 note right
-    When the create fails a error will be thrown
+    When the create fails an error will be thrown
 end note
 playbook <-- db : "playbook JSON"
 controller <-- playbook: "CacaoPlaybook Object"
@@ -69,7 +69,7 @@ database Database as db
 controller -> playbook : set(CacaoPlaybook Object)
 playbook -> db : create(playbook JSON)
 note right
-    When the create fails a error will be thrown
+    When the create fails an error will be thrown
 end note
 ```
 
@@ -82,7 +82,7 @@ database Database as db
 controller -> playbook : update(CacaoPlaybook Object)
 playbook -> db : update(playbook id,playbook JSON)
 note right
-    When the create fails a error will be thrown
+    When the create fails an error will be thrown
 end note
 playbook <-- db : true
 controller <-- playbook: true
@@ -98,7 +98,7 @@ database Database as db
 controller -> playbook : remove(playbook id)
 playbook -> db : remove(playbook id)
 note right
-    When the create fails a error will be thrown
+    When the create fails an error will be thrown
 end note
 ```
 

@@ -145,10 +145,10 @@ When the caller does not have valid authentication 401/unauthorized will be retu
 ---- 
 
 ### /playbook
-The playbook endpoinst are used to create playbooks in SOAR-CA, new playbook can be added, current ones edited and deleted. 
+The playbook endpoinst are used to create playbooks in SOARCA, new playbook can be added, current ones edited and deleted. 
 
 #### GET `/playbook`
-Get all playbook id's that are currently stored in SOAR-CA.
+Get all playbook id's that are currently stored in SOARCA.
 
 ##### Call payload
 None
@@ -172,7 +172,7 @@ None
 General error
 
 #### GET `/playbook/meta`
-Get all playbook id's that are currently stored in SOAR-CA.
+Get all playbook id's that are currently stored in SOARCA.
 
 ##### Call payload
 None
@@ -204,7 +204,7 @@ General error
 
 
 #### POST `/playbook`
-Create a new playbook that and store it in SOAR-CA. The format is 
+Create a new playbook that and store it in SOARCA. The format is 
 
 
 ##### Payload
@@ -405,7 +405,7 @@ enum workflowType {
 The status endpoints are used to get various statuses. 
 
 #### GET `/status`
-Call this endpoint to see if SOAR-CA is up and ready. This call has no payload body.
+Call this endpoint to see if SOARCA is up and ready. This call has no payload body.
 
 ##### Call payload
 None
@@ -551,7 +551,7 @@ None
 ```plantuml
 @startuml
 participant "SWAGGER" as gui
-control "SOAR-CA API" as api
+control "SOARCA API" as api
 control "controller" as controller
 control "Executor" as exe
 control "SSH-module" as ssh
@@ -573,7 +573,7 @@ api <-- controller: results
 ```plantuml
 @startuml
 participant "SWAGGER" as gui
-control "SOAR-CA API" as api
+control "SOARCA API" as api
 control "controller" as controller
 database "Mongo" as db
 control "Executor" as exe

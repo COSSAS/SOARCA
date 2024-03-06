@@ -65,7 +65,7 @@ unit-test-job:   # This job runs in the test stage.
     - when: always
 
 
-docker-build:   # This job will build the soar-ca docker image on merge request
+docker-build:   # This job will build the soarca docker image on merge request
   image: docker
   services:
     - docker:dind

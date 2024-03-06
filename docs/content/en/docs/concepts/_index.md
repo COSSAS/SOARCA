@@ -41,7 +41,7 @@ Both inside and outside of TNO there is a strong need for interoperable workflow
 
 SOAR functionality is relevant not only for automation in incident response handling, but also attack & defense simulations, cyber ranges, digital twinning and other (TNO research) topics that have a strong dependence on the orchestration of complex workflows. 
 
-### Current state of Soarca
+### Current state of SOARCA
 
 At present, SOARCA is in an Alpha release phase and is intended for Proof of Concepts (PoCs) and research purposes, serving as a platform for demonstrations. The objective of the SOARCA team is to evolve SOARCA into a more mature SOAR orchestration tool suitable for operational environments. For potential applications of SOARCA, please refer to the ‘Use-Cases’ section of our documentation.
 
@@ -49,8 +49,8 @@ At present, SOARCA is in an Alpha release phase and is intended for Proof of Con
 
 - SOARCA has been publicly funded and should therefore ideally be made publicly available.
 - The target audience of SOC, CERT/CSIRT and CTI teams has a very strong affinity with open-source solutions and embraces them to a great extent. (see also the success of MISP, OpenCTI, The-Hive, ...)
-- Open-source software provides a low barrier for partner organisations to collaborate with TNO and contribute to further development.
-- Open Source software and tooling can easily be brought in as background into projects and partnerships such as HEU, EDF, TKI projects and others. The use of open-source tooling is explicitly encouraged by the European Commission.
+- Open-source software provides a low barrier for partner organisations to collaborate and contribute. 
+- Open Source software and tooling can easily be brought in as background into projects and partnerships such as HEU, EDF, or National funded projects and others. The use of open-source tooling is explicitly encouraged by the European Commission.
 
 
 ## Core Concepts
