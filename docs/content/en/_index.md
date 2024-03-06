@@ -6,7 +6,7 @@ title: Soarca
 <a class="btn btn-lg btn-primary me-3 mb-4" href="{{< relref "/docs" >}}">
   Learn More <i class="fas fa-arrow-alt-circle-right ms-2"></i>
 </a>
-<a class="btn btn-lg btn-secondary me-3 mb-4" href="https://github.com/google/docsy-example">
+<a class="btn btn-lg btn-secondary me-3 mb-4" href="https://github.com/COSSAS/SOARCA">
   Download <i class="fab fa-github ms-2 "></i>
 </a>
 <p class="lead mt-5"></p>
