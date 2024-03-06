@@ -17,7 +17,9 @@ jobs:
           fetch-depth: 0
 
       - name: lint
-        run: golangci-lint run --timeout 5m -v
+        run: |
+          ls -la 
+          golangci-lint run --timeout 5m -v
         shell: bash
 
 
