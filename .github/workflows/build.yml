@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    name: Build binaries
+    name: Build binary
     runs-on: ubuntu-latest
     container:
       image: golangci/golangci-lint:latest
