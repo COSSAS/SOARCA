@@ -75,8 +75,6 @@ jobs:
         run: npm install -g postcss
       - name: Install autoprefixer via NPM
         run: npm install -g autoprefixer    
-      - name: NPM audit fix
-        run: npm audit fix
       - name: Checkout
         uses: actions/checkout@v4
         with:
