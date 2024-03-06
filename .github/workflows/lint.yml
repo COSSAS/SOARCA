@@ -16,7 +16,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Build with make
+      - name: lint
         run: golangci-lint run --timeout 5m -v
+        shell: bash
 
 
