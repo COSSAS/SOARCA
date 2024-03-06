@@ -19,5 +19,4 @@ jobs:
       - name: Build with make
         run: golangci-lint run --timeout 5m -v
 
-        name: CI
 
