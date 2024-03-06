@@ -7,8 +7,9 @@ on:
 jobs:
   build:
     name: Build binaries
-    runs-on: golang:latest
-
+    runs-on: ubuntu-latest
+    container:
+      image: golangci/golangci-lint:latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
