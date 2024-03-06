@@ -16,7 +16,6 @@ jobs:
           fetch-depth: 0
 
       - name: Install swaggo
-        uses: github/super-linter/slim@v4
         run:  go install github.com/swaggo/swag/cmd/swag@latest 
 
       - name: Build with make
