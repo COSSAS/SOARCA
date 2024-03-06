@@ -1,0 +1,23 @@
+name: Build
+
+on:
+  pull_request:
+    branches: [ master, develop ]
+
+jobs:
+  build:
+    name: Build binaries
+    runs-on: golang:latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install swaggo
+        uses: github/super-linter/slim@v4
+        run:  go install github.com/swaggo/swag/cmd/swag@latest 
+
+      - name: Build with make
+        run: make build
