@@ -1,0 +1,27 @@
+name: Cross compile
+
+on:
+  pull_request:
+    branches: [ master, development ]
+
+jobs:
+  compile:
+    name: Cross compile binaries
+    runs-on: ubuntu-latest
+    container:
+      image: golangci/golangci-lint:latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install swaggo
+        run:  go install github.com/swaggo/swag/cmd/swag@latest 
+
+      - name: Build with make
+        run: |
+          go install github.com/swaggo/swag/cmd/swag@latest
+          go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@latest
+          make compile
+          make sbom
