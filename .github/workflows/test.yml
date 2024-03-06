@@ -1,0 +1,27 @@
+name: Test
+
+on:
+  pull_request:
+    branches: [ master, development ]
+
+jobs:
+  build:
+    name: Run unittests
+    runs-on: ubuntu-latest
+    container:
+      image: golang:latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Run tests
+        run: |
+          apt update
+          apt install openssh-server -y
+          useradd sshtest
+          echo "sshtest:pdKY77qNxpI5MAizirtjCVOcm0KFKIs" | chpasswd
+          service ssh start
+          make test
+
