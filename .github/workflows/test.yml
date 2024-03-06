@@ -23,5 +23,5 @@ jobs:
           useradd sshtest
           echo "sshtest:pdKY77qNxpI5MAizirtjCVOcm0KFKIs" | chpasswd
           service ssh start
-          make test
+          make ci-test
 
