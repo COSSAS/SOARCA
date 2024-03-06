@@ -1,4 +1,4 @@
-baseURL = "/"
+baseURL = "/SOARCA"
 title = "SOARCA"
 
 # Language settings
@@ -109,7 +109,7 @@ version = "0.0"
 
 # A link to latest version of the docs. Used in the "version-banner" partial to
 # point people to the main doc site.
-url_latest_version = "https://cossas.github.io/SOARCA/"
+url_latest_version = "https://cossas.github.io/SOARCA/docs/"
 
 # Repository configuration (URLs for in-page links to opening issues and suggesting changes)
 github_repo = "https://github.com/COSSAS/SOARCA/issues"
