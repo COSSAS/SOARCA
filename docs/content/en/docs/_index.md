@@ -53,6 +53,6 @@ SOARCA currently supports the following transport mechanisms:
 
 ## Where do I start?
 
-{{% alert title="primary" color="primary" %}}
+{{% alert title="Follow our getting started!" color="primary" %}}
 Following our [Getting started](/docs/getting-started/) guide will help you setup SOARCA and configure the SOAR for your internal security tooling. For more custom requirement 
 {{% /alert %}}
