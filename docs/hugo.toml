@@ -62,7 +62,7 @@ languageName ="English"
 weight = 1
 [languages.en.params]
 title = "SOARCA"
-description = "An open-source Security Orchestrator"
+description = "An open-source Security Orchestrator based on the Cacao playbook specification"
 
 [params.plantuml]
 enable = true
@@ -109,19 +109,19 @@ version = "0.0"
 
 # A link to latest version of the docs. Used in the "version-banner" partial to
 # point people to the main doc site.
-url_latest_version = "https://example.com"
+url_latest_version = "https://cossas.github.io/SOARCA/"
 
 # Repository configuration (URLs for in-page links to opening issues and suggesting changes)
-github_repo = "https://github.com/google/docsy-example"
+github_repo = "https://github.com/COSSAS/SOARCA/issues"
 # An optional link to a related project repo. For example, the sibling repository where your product code lives.
-github_project_repo = "https://github.com/google/docsy"
+github_project_repo = "https://github.com/COSSAS/SOARCA/"
 
 # Specify a value here if your content directory is not in your repo's root directory
 # github_subdir = ""
 
 # Uncomment this if your GitHub repo does not have "main" as the default branch,
 # or specify a new value if you want to reference another branch in your GitHub links
-github_branch= "main"
+github_branch= "master"
 
 # Google Custom Search Engine ID. Remove or comment out to disable search.
 #gcs_engine_id = "d72aa9b2712488cc3"
@@ -154,8 +154,8 @@ sidebar_menu_foldable = true
 [params.ui.feedback]
 enable = true
 # The responses that the user sees after clicking "yes" (the page was helpful) or "no" (the page was not helpful).
-yes = 'Glad to hear it! Please <a href="https://github.com/USERNAME/REPOSITORY/issues/new">tell us how we can improve</a>.'
-no = 'Sorry to hear that. Please <a href="https://github.com/USERNAME/REPOSITORY/issues/new">tell us how we can improve</a>.'
+yes = 'Glad to hear it! Please <a href="https://github.com/COSSAS/SOARCA/issues/new">tell us how we can improve</a>.'
+no = 'Sorry to hear that. Please <a href="https://github.com/COSSAS/SOARCA/issues/new">tell us how we can improve</a>.'
 
 # Adds a reading time to the top of each doc.
 # If you want this feature, but occasionally need to remove the Reading time from a single page,
@@ -183,7 +183,7 @@ enable = false
 # Developer relevant links. These will show up on right side of footer and in the community page if you have one.
 [[params.links.developer]]
   name = "GitHub"
-  url = "https://github.com/google/docsy"
+  url = "https://github.com/COSSAS/SOARCA"
   icon = "fab fa-github"
   desc = "Development takes place here!"
 # [[params.links.developer]]
