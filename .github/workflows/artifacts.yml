@@ -56,4 +56,4 @@ jobs:
         run: |
           export VERSION=$(git describe --tags --dirty)
           echo $VERSION
-          docker build --build-arg VERSION -t $VERSION
+          docker build --build-arg VERSION -t $VERSION .
