@@ -27,7 +27,7 @@ defaults:
 
 jobs:
   # Build job
-  build:
+  build-documentation:
     runs-on: ubuntu-latest
     env:
       HUGO_VERSION: 0.123.7
@@ -75,12 +75,12 @@ jobs:
           path: ./docs/public
 
   # Deployment job
-  deploy:
+  deploy-to-pages:
     environment:
       name: development-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    needs: build
+    needs: build-documentation
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
