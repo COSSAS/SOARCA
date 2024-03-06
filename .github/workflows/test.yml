@@ -6,7 +6,7 @@ on:
 
 jobs:
   test:
-    name: Run unittests
+    name: Run ci-tests
     runs-on: ubuntu-latest
     container:
       image: golang:latest
