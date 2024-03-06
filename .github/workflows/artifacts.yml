@@ -58,7 +58,9 @@ jobs:
           pattern: ${{ github.sha }}
 
       - name: Move files to bin folder
-        run: mv ${{ github.sha }}/* ./bin/
+        run: |
+          mkdir -p bin 
+          mv ${{ github.sha }}/* ./bin/
 
       - name: Build image
         run: |
