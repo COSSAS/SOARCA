@@ -12,7 +12,7 @@ import (
 	"soarca/internal/decomposer"
 	"soarca/models/cacao"
 	"soarca/routes/trigger"
-	"soarca/test/mocks/mock_decomposer"
+	"soarca/test/unittest/mocks/mock_decomposer"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/assert/v2"

@@ -8,8 +8,8 @@ import (
 	"soarca/internal/decomposer"
 	"soarca/models/cacao"
 	"soarca/models/execution"
-	"soarca/test/mocks/mock_executor"
-	"soarca/test/mocks/mock_guid"
+	"soarca/test/unittest/mocks/mock_executor"
+	"soarca/test/unittest/mocks/mock_guid"
 
 	"github.com/go-playground/assert/v2"
 	"github.com/google/uuid"

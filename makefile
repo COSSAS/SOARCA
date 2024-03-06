@@ -1,4 +1,4 @@
-.PHONY: all test clean build docker run pre-docker-build
+.PHONY: all test integration-test ci-test clean build docker run pre-docker-build
 
 BINARY_NAME=soarca
 DIRECTORY = $(sort $(dir $(wildcard ./test/*/)))
@@ -17,17 +17,12 @@ build:
 	CGO_ENABLED=0 go build -o ./build/soarca $(GOFLAGS) main.go
 
 test:
-	go test test/cacao/*_test.go -v
-	go test test/logger/*_test.go -v
-	go test test/decomposer/*_test.go -v
-	go test test/executor/*_test.go -v
-	go test test/routes/playbook_api/*_test.go -v
-	go test test/routes/trigger_api/*_test.go -v
-	go test test/capability/fin/*_test.go -v
-	go test test/capability/ssh/*_test.go -v
-	go test test/capability/http/*_test.go -v
-	go test test/finmodel/*_test.go -v
-	go test test/finprotocol/*_test.go -v
+	go test ./test/unittest/... -v
+
+integration-test:
+	go test ./test/integration/... -v
+
+ci-test: test integration-test
 
 clean:
 	rm -rf build/soarca* build/main
