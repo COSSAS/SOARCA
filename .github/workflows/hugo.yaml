@@ -51,7 +51,7 @@ defaults:
 
 jobs:
   # Build job
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     env:
       HUGO_VERSION: 0.123.7
@@ -65,6 +65,7 @@ jobs:
       - name: Install SCSS and autoprefixer via NPM
         run: |
           npm install -g postcss-cli
+          npm install -D postcss
           npm install -g autoprefixer
       - name: Checkout
         uses: actions/checkout@v4
