@@ -1,4 +1,4 @@
-name: Compile
+name: Artifacts
 
 on:
   pull_request:
@@ -34,3 +34,21 @@ jobs:
           name: ${{ github.sha }}
           path: bin/*
           retention-days: 1
+  
+  docker-build:
+    needs: compile
+    name: Build docker image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Make repo safe
+        run: git config --global --add safe.directory /__w/SOARCA/SOARCA
+
+      - name: Build image
+        run: |
+          export VERSION=$(git describe --tags --dirty)
+          echo $VERSION
+          docker build --build-arg VERSION -t $CI_REGISTRY_IMAGE:$VERSION
