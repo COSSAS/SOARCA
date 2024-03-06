@@ -74,7 +74,10 @@ jobs:
       - name: Install postcss and autoprefixer via NPM
         run: npm install -D postcss
       - name: Install autoprefixer via NPM
-        run: npm install --save-dev autoprefixer
+        run: npm install --save-dev autoprefixer      
+      - name: Install autoprefixer via NPM
+        run: npm install
+        working-directory: docs
       - name: Checkout
         uses: actions/checkout@v4
         with:
