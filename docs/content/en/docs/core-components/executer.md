@@ -57,8 +57,8 @@ package "Executor" {
 }
 
 package "Fins" {
-    component "Virus Total" as virustotal
-    component "E-Sender" as email
+    component "VirusTotal" as virustotal
+    component "E-mail Sender" as email
 }
 
 parser -- Executor

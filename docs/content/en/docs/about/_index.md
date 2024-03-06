@@ -6,7 +6,7 @@ description:
 
 ## About COSSAS
 
-SOARCA finds its home within the Community for Open Source Security Automation Software (COSSAS). [COSSAS](https://cossas-project.org/') offers a continuously expanding base of novel software components for cyber security automation that SOC, CERT and CTI professionals can deploy and trial in their own operational environments. COSSAS is part of the TNO. 
+SOARCA finds its home within the Community for Open Source Security Automation Software (COSSAS). [COSSAS](https://cossas-project.org/') offers a continuously expanding base of novel software components for cyber security automation that SOC, CERT and CTI professionals can deploy and trial in their own operational environments. COSSAS is an initiative of the TNO. 
 
 ## About TNO
 
@@ -14,7 +14,4 @@ SOARCA is an project initiated and support by [TNO](https://tno.nl), the Netherl
 
 
 ## Developers 
-
-
-
 
