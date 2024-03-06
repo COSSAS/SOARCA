@@ -1,4 +1,4 @@
-name: Cross compile
+name: Compile
 
 on:
   pull_request:
@@ -27,3 +27,10 @@ jobs:
           go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@latest
           make compile
           make sbom
+
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries and sbom
+          path: bin/*
+          retention-days: 1
