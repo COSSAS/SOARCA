@@ -10,7 +10,9 @@ GOLDFLAGS += -X main.Buildtime=$(BUILDTIME)
 GOFLAGS = -ldflags "$(GOLDFLAGS)"
 
 lint:
-	golangci-lint run -v
+	mkdir -p swaggerdocs
+	swag init -o swaggerdocs
+	golangci-lint run  --timeout 5m -v
 
 build:
 	mkdir -p swaggerdocs

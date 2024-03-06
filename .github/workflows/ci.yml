@@ -37,8 +37,8 @@ jobs:
 
       - name: lint
         run: |
-          ls -la 
-          golangci-lint run --timeout 5m -v
+          ls -la
+          make lint
         shell: bash
 
   test:
