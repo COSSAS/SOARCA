@@ -62,8 +62,10 @@ jobs:
           && sudo dpkg -i ${{ runner.temp }}/hugo.deb          
       - name: Install Dart Sass
         run: sudo snap install dart-sass
-      - name: Install SCSS via NPM
-        run: npm install -g postcss-cli
+      - name: Install SCSS and autoprefixer via NPM
+        run: |
+        npm install -g postcss-cli
+        npm install -g autoprefixer
       - name: Checkout
         uses: actions/checkout@v4
         with:
