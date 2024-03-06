@@ -49,14 +49,8 @@ jobs:
           submodules: recursive
           fetch-depth: 0
       - name: Update npm
-        run: npm install -g npm@10.5.0
-      - name: Install postcss via NPM
-        run: npm install --save-dev postcss-cli
-      - name: Install postcss and autoprefixer via NPM
-        run: npm install -D postcss
-      - name: Install autoprefixer via NPM
-        run: npm install --save-dev autoprefixer      
-      - name: Install autoprefixer via NPM
+        run: npm install -g npm@10.5.0  
+      - name: Install dependencies
         run: npm install
         working-directory: docs
       - name: Setup Pages
