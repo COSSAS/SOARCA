@@ -13,7 +13,8 @@ lint:
 	golangci-lint run -v
 
 build:
-	swag init
+	mkdir -p swaggerdocs
+	swag init -o swaggerdocs
 	CGO_ENABLED=0 go build -o ./build/soarca $(GOFLAGS) main.go
 
 test:
@@ -31,7 +32,8 @@ clean:
 compile:
 	echo "Compiling for every OS and Platform"
 	
-	swag init
+	mkdir -p swaggerdocs
+	swag init -o swaggerdocs
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/${BINARY_NAME}-${VERSION}-linux-amd64 $(GOFLAGS) main.go
 	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o bin/${BINARY_NAME}-${VERSION}-darwin-arm64 $(GOFLAGS) main.go
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o bin/${BINARY_NAME}-${VERSION}-windows-amd64 $(GOFLAGS) main.go
@@ -44,7 +46,8 @@ sbom:
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 cyclonedx-gomod app -json -licenses -output bin/${BINARY_NAME}-${VERSION}-windows-amd64.bom.json
 
 pre-docker-build:
-	swag init
+	mkdir -p swaggerdocs
+	swag init -o swaggerdocs
 	GOOS=linux GOARCH=amd64 go build -o bin/${BINARY_NAME}-${VERSION}-linux-amd64 $(GOFLAGS) main.go
 
 docker: pre-docker-build
