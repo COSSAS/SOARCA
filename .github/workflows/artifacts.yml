@@ -47,8 +47,13 @@ jobs:
       - name: Make repo safe
         run: git config --global --add safe.directory /__w/SOARCA/SOARCA
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build image
         run: |
           export VERSION=$(git describe --tags --dirty)
           echo $VERSION
-          docker build --build-arg VERSION -t $CI_REGISTRY_IMAGE:$VERSION
+          docker build --build-arg VERSION -t $VERSION
