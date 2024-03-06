@@ -70,11 +70,11 @@ jobs:
       - name: Update npm
         run: npm install -g npm@10.5.0
       - name: Install postcss via NPM
-        run:  npm install -g postcss-cli
+        run: npm install --save-dev postcss-cli
       - name: Install postcss and autoprefixer via NPM
-        run: npm install -g postcss
+        run: npm install -D postcss
       - name: Install autoprefixer via NPM
-        run: npm install -g autoprefixer    
+        run: npm install --save-dev autoprefixer
       - name: Checkout
         uses: actions/checkout@v4
         with:
