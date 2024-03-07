@@ -109,9 +109,8 @@ jobs:
           go install github.com/swaggo/swag/cmd/swag@latest
           go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@latest
           swag init -o swaggerdocs
-          mkdir -p sbom
           make sbom
-          zip -r sbom.zip swaggerdocs
+          zip -r bin/sbom.zip swaggerdocs
 
       - name: Release soarca binary
         uses: goreleaser/goreleaser-action@v5
@@ -140,6 +139,6 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id: release.data.id,
-              name: "sbom.zip",
+              name: "bin/sbom.zip",
               data: await fs.readFileSync("sbom.zip")
             });
