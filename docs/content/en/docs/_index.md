@@ -33,7 +33,7 @@ SOARCA currently supports the following transport mechanisms:
 <div class="works-well-with">
 {{< cardpane >}}
 {{% card header="OpenC2 - Native" %}}
-[![OpenC2](/SOARCA//images/logos-external/openc2.svg)](/docs/soarca-extentions/native-capabilities/#openc2-capability)
+[![OpenC2](/SOARCA/images/logos-external/openc2.svg)](/docs/soarca-extentions/native-capabilities/#openc2-capability)
 {{% /card %}}
 
 {{% card header="HTTP - Native" %}}
@@ -41,7 +41,7 @@ SOARCA currently supports the following transport mechanisms:
 {{% /card %}}
 
 {{% card header="SSH - Native" %}}
-[![Ssh](/SOARCA//images/logos-external/ssh.svg)](/docs/soarca-extentions/native-capabilities/#ssh-capability)
+[![Ssh](/SOARCA/images/logos-external/ssh.svg)](/docs/soarca-extentions/native-capabilities/#ssh-capability)
 {{% /card %}}
 {{< /cardpane >}}
 </div>
