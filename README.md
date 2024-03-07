@@ -25,7 +25,7 @@ For documentation we use Markdown + [plantUML](https://plantuml.com/).
 
 Documentation will be stored in the [doc](doc/) folder.
 
-To get started with plantUML in Asciidoc please install the following components in VS-Code:
+To get started with plantUML in Markdown please install the following components in VS-Code:
 
 
 Markdown Kroki  
