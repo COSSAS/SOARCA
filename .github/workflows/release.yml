@@ -72,15 +72,15 @@ jobs:
       - name: Get version
         run: |
           export VERSION=$(git describe --tags --dirty)
-          echo "describe_version=$VERSION" >> "$GITHUB_ENV"
+          echo "describe_version=$(git describe --tags --dirty)" >> "$GITHUB_ENV"
 
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           build-args: |
-            VERSION=$describe_version
+            VERSION=${{ env.describe_version }}
           push: true
-          tags: cossas/soarca:$describe_version
+          tags: cossas/soarca:${{ env.describe_version }}
 
   release-binary:
     needs: compile
