@@ -79,6 +79,7 @@ jobs:
   release-binary:
     needs: compile
     runs-on: ubuntu-latest
+    steps:
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v6
         with:
