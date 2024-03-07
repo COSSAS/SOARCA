@@ -2,8 +2,8 @@ name: release
 
 on:
   push:
-    tag:
-      - [0-9]+(\.[0-9]+)*([-\.]\S+)?
+    tags:
+      - [0-9]+.[0-9]+.[0-9]+\-?*
 
 jobs:
   compile:
