@@ -9,7 +9,7 @@ import (
 	"soarca/models/cacao"
 	"soarca/models/fin"
 	model "soarca/models/fin"
-	"soarca/test/mocks/mock_mqtt"
+	"soarca/test/unittest/mocks/mock_mqtt"
 	"testing"
 	"time"
 

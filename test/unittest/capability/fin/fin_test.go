@@ -5,7 +5,7 @@ import (
 	"soarca/models/cacao"
 	"soarca/models/execution"
 	model "soarca/models/fin"
-	"soarca/test/mocks/mock_finprotocol"
+	"soarca/test/unittest/mocks/mock_finprotocol"
 	"testing"
 
 	"github.com/go-playground/assert/v2"

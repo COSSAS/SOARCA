@@ -1,0 +1,64 @@
+name: Ci
+
+on:
+  pull_request:
+    branches: [ master, development ]
+
+jobs:
+  build:
+    name: Build binary
+    runs-on: ubuntu-latest
+    container:
+      image: golangci/golangci-lint:latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install swaggo
+        run:  go install github.com/swaggo/swag/cmd/swag@latest 
+
+      - name: Build with make
+        run: make build
+
+  lint:
+    name: Lint go code with golangci
+    runs-on: ubuntu-latest
+    container:
+      image: golangci/golangci-lint:latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Make repo safe
+        run: git config --global --add safe.directory /__w/SOARCA/SOARCA
+      - name: Install swaggo
+        run:  go install github.com/swaggo/swag/cmd/swag@latest 
+      - name: lint
+        run: |
+          ls -la
+          make lint
+        shell: bash
+
+  test:
+    name: Run ci-tests
+    runs-on: ubuntu-latest
+    container:
+      image: golang:latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run tests
+        run: |
+          apt update
+          apt install openssh-server -y
+          useradd sshtest
+          echo "sshtest:pdKY77qNxpI5MAizirtjCVOcm0KFKIs" | chpasswd
+          service ssh start
+          make ci-test
+

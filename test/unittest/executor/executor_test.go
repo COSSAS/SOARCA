@@ -6,7 +6,7 @@ import (
 	"soarca/internal/executer"
 	"soarca/models/cacao"
 	"soarca/models/execution"
-	"soarca/test/mocks/mock_capability"
+	"soarca/test/unittest/mocks/mock_capability"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
