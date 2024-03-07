@@ -52,6 +52,6 @@ func (OpenC2Capability *OpenC2Capability) Execute(
 	}
 
 	results := cacao.VariableMap{openc2ResultVariableName: {Name: "result", Value: string(response)}}
-	log.Trace("Finished openc2 execution will return the variables: ", results)
+	log.Trace("Finished openc2 execution, will return the variables: ", results)
 	return results, nil
 }
