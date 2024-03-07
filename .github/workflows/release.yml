@@ -38,7 +38,7 @@ jobs:
   
   docker-build:
     needs: compile
-    name: Build docker image
+    name: Build docker image and release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -74,7 +74,7 @@ jobs:
           export VERSION=$(git describe --tags --dirty)
           echo $VERSION
           docker build --build-arg VERSION -t $VERSION .
-          docker push cossas/soarca:$VERSION
+          docker push $VERSION cossas/soarca:$VERSION
 
   release-binary:
     needs: compile
