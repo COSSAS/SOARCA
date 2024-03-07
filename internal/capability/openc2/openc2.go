@@ -13,7 +13,10 @@ type OpenC2Capability struct{}
 
 type Empty struct{}
 
-const capabilityName = "soarca-openc2-capability"
+const (
+	openc2ResultVariableName = "__soarca_openc2_result__"
+	openc2capabilityName     = "soarca-openc2-capability"
+)
 
 var (
 	component = reflect.TypeOf(Empty{}).PkgPath()
@@ -25,7 +28,7 @@ func init() {
 }
 
 func (OpenC2Capability *OpenC2Capability) GetType() string {
-	return capabilityName
+	return openc2capabilityName
 }
 
 func (OpenC2Capability *OpenC2Capability) Execute(
@@ -35,6 +38,7 @@ func (OpenC2Capability *OpenC2Capability) Execute(
 	target cacao.AgentTarget,
 	variables cacao.VariableMap,
 ) (cacao.VariableMap, error) {
+	log.Trace(metadata.ExecutionId)
 	httpRequest := http.HttpRequest{}
 	httpOptions := http.HttpOptions{
 		Command: &command,
@@ -46,7 +50,8 @@ func (OpenC2Capability *OpenC2Capability) Execute(
 		log.Error(err)
 		return cacao.VariableMap{}, err
 	}
-	return cacao.VariableMap{
-		capabilityName: {Name: "result", Value: string(response)},
-	}, nil
+
+	results := cacao.VariableMap{openc2ResultVariableName: {Name: "result", Value: string(response)}}
+	log.Trace("Finished openc2 execution will return the variables: ", results)
+	return results, nil
 }
