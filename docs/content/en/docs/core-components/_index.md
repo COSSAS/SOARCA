@@ -13,4 +13,4 @@ SOARCA consists of several key components:
 3. **Fins**: These are the extension capabilities, also known as Fins. They enhance the functionality and integration of SOARCA and are depicted in orange. These are not part of this repository.
 
 
-![core](/images/core_color.png)
+![core](/SOARCA/images/core_color.png)
