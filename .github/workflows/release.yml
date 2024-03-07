@@ -75,3 +75,27 @@ jobs:
           echo $VERSION
           docker build --build-arg VERSION -t $VERSION .
           docker push cossas/soarca:$VERSION
+
+  release-binary:
+    needs: compile
+    runs-on: ubuntu-latest
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Make repo safe
+          run: git config --global --add safe.directory /__w/SOARCA/SOARCA
+      - name: Release soarca binary
+        uses: goreleaser/goreleaser-action@v5
+            with:
+              distribution: goreleaser
+              version: latest
+              args: release --clean
+            env:
+              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
