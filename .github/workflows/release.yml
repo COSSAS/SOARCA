@@ -110,7 +110,7 @@ jobs:
           go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@latest
           swag init -o swaggerdocs
           make sbom
-          zip -r bin/sbom.zip swaggerdocs
+          zip -r bin/sbom-$(git describe --tags --dirty).zip bin
 
       - name: Release soarca binary
         uses: goreleaser/goreleaser-action@v5
