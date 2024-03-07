@@ -111,7 +111,7 @@ jobs:
           swag init -o swaggerdocs
           mkdir -p sbom
           make sbom
-          zip -r sbom.zip -x "bin/*"
+          zip -r sbom.zip bin
 
       - name: Release soarca binary
         uses: goreleaser/goreleaser-action@v5
