@@ -90,13 +90,13 @@ jobs:
         with:
           fetch-depth: 0
       - name: Make repo safe
-          run: git config --global --add safe.directory /__w/SOARCA/SOARCA
+        run: git config --global --add safe.directory /__w/SOARCA/SOARCA
       - name: Release soarca binary
         uses: goreleaser/goreleaser-action@v5
-            with:
-              distribution: goreleaser
-              version: latest
-              args: release --clean
-            env:
-              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
