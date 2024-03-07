@@ -69,12 +69,18 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USER }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-      - name: Build image and push to dockerhub
+      - name: Get version
         run: |
           export VERSION=$(git describe --tags --dirty)
-          echo $VERSION
-          docker build --build-arg VERSION -t $VERSION .
-          docker push $VERSION cossas/soarca:$VERSION
+          echo "describe_version=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          build-args: |
+            VERSION=$describe_version
+          push: true
+          tags: cossas/soarca:$describe_version
 
   release-binary:
     needs: compile
