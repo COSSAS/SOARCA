@@ -39,6 +39,7 @@ func (OpenC2Capability *OpenC2Capability) Execute(
 	httpOptions := http.HttpOptions{
 		Command: &command,
 		Target:  &target,
+		Auth:    &authentication,
 	}
 	response, err := httpRequest.Request(httpOptions)
 	if err != nil {
