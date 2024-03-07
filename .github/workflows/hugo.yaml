@@ -28,7 +28,7 @@ defaults:
 jobs:
   # Build job
   build-documentation:
-    if: ${{ startsWith(github.head_ref, 'refs/heads/feature/docs/') || (github.ref == 'refs/heads/master' && github.github.event_name == 'push') }}
+    if: ${{ contains(github.head_ref, 'feature/docs/') || (github.ref == 'refs/heads/master' && github.github.event_name == 'push') }}
     runs-on: ubuntu-latest
     env:
       HUGO_VERSION: 0.123.7
@@ -77,7 +77,7 @@ jobs:
 
   # Deployment job
   deploy-to-pages:
-    if: ${{ startsWith(github.head_ref, 'refs/heads/feature/docs/') || (github.ref == 'refs/heads/master' && github.github.event_name == 'push')}}
+    if: ${{ contains(github.head_ref, 'feature/docs/') || (github.ref == 'refs/heads/master' && github.github.event_name == 'push')}}
     environment:
       name: development-pages
       url: ${{ steps.deployment.outputs.page_url }}
