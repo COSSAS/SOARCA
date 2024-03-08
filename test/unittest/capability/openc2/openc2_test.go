@@ -13,18 +13,22 @@ import (
 	"github.com/google/uuid"
 )
 
-func TestHTTPOptionsCorrectlyGenerated(t *testing.T) {
+func TestOpenC2Request(t *testing.T) {
 	mockHttp := &mockRequest.MockHttpRequest{}
 	openc2 := openc2.New(mockHttp)
 
-	authId := "6ba7b810-9dad-11d1-80b4-00c04fd430c9"
+	authId, _ := uuid.Parse("6aa7b810-9dad-11d1-81b4-00c04fd430c8")
+	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	playbookId, _ := uuid.Parse("d09351a2-a075-40c8-8054-0b7c423db83f")
+	stepId, _ := uuid.Parse("81eff59f-d084-4324-9e0a-59e353dbd28f")
+
 	target := cacao.AgentTarget{
 		HttpUrl:            "https://soarca.tno.nl",
-		AuthInfoIdentifier: authId,
+		AuthInfoIdentifier: authId.String(),
 	}
 
 	auth := cacao.AuthenticationInformation{
-		ID:    authId,
+		ID:    authId.String(),
 		Type:  "oauth2",
 		Token: "this-is-a-test",
 	}
@@ -40,10 +44,6 @@ func TestHTTPOptionsCorrectlyGenerated(t *testing.T) {
 		Name:  "test request building",
 		Value: "",
 	}
-
-	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
-	playbookId, _ := uuid.Parse("d09351a2-a075-40c8-8054-0b7c423db83f")
-	stepId, _ := uuid.Parse("81eff59f-d084-4324-9e0a-59e353dbd28f")
 
 	metadata := execution.Metadata{
 		ExecutionId: executionId,
@@ -75,6 +75,4 @@ func TestHTTPOptionsCorrectlyGenerated(t *testing.T) {
 	}
 	t.Log(results)
 	assert.Equal(t, results["__soarca_openc2_result__"].Value, payload)
-
-	// mockHttp.AssertExpectations(t)
 }
