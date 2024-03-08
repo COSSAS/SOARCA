@@ -15,7 +15,7 @@ resources:
 
 SOARCA is [TNO’s](https://www.tno.nl/nl/) new open-source SOAR (Security Orchestration, Automation and Response) tool, which is developed for research and demonstration purposes. With SOARCA, TNO’s goal is to realise and stimulate advanced cyber security innovations and empower end users and organizations by providing a vendor-agnostic, extensible, and standards-compliant solution for security orchestration. SOARCA is made available on [COSSAS](https://cossas-project.org/) (Community for Open Source Security Automation Software) under the [Apache 2.0 licence](https://www.apache.org/licenses/LICENSE-2.0).​
 
-While there are already several mature SOAR tools available on the market, many of them are commercial closed-source products, and none complies with the new emerging OASIS Open standards. SOARCA is designed to fully comply with the newest standards [CACAO v2.0](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/security-playbooks-v2.0.html) and [OpenC2](https://openc2.org/).
+While there are already several mature SOAR tools available on the market, many of them are commercial closed-source products, and do not comply with the new emerging OASIS Open standards. SOARCA is designed to fully comply with the newest standards [CACAO v2.0](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/security-playbooks-v2.0.html) and [OpenC2](https://openc2.org/).
 
 TNO’s SOARCA bridges this gap to let end users and organisations get hands-on experience with SOAR tooling and enable innovations: it is vendor-agnostic, extensible and has open and well-defined interfaces. SOARCA will be freely available and geared toward research and demonstrations. The goal is to foster a healthy community around SOARCA. ​
 
@@ -28,7 +28,7 @@ Note that open and accessible SOAR functionality is relevant not only for automa
 
 ## Vision of SOARCA
 
-### Why Soarca?
+### Why SOARCA?
 
 Both inside and outside of TNO there is a strong need for interoperable workflow orchestration tooling that aids (cybersecurity) innovation. High-quality SOAR (Security Orchestration, Automation and Response) tools are widely available in the market, however, these are commercial products with significant license costs and that employ proprietary technologies rather than emerging innovative standards.
 
