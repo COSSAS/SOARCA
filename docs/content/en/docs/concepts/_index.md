@@ -75,6 +75,8 @@ Example of repetive tasks that might be automated using a CACAO Playbook might b
 
 By following CACAO playbooks specification, organizations can enhance their automated response capabilities, foster collaboration, and ensure consistentcy of playbooks across diverse technological solutions.
 
+More information can be found in our [primer on playbooks](/docs/concepts/executable-playbooks).
+
 ### SOARCA Fin(s): Extending the core capabilities
 
 SOARCA can be extended with custom extensions or rather so-called FIN (inspired by the majestic orca). A fin can integrate with the SOARCA core. (Technical descriptions of the components can be found [here]()). Fins communicate with our SOARCA core using pre-defined MQTT protocol. 
@@ -83,7 +85,7 @@ SOARCA can be extended with custom extensions or rather so-called FIN (inspired 
 
 ## Join the SOARCA Community
 
-The SOARCA team invites cybersecurity professionals, researchers, and enthusiasts to join our community. Explore, adapt, and contribute to SOARCA’s growth. Let’s fortify cyber defenses together! See our [contribution guidelines](/contribution-guidelines/) on how to make contributions.	🛡️🌐
+The SOARCA team invites cybersecurity professionals, researchers, and enthusiasts to join our community. Explore, adapt, and contribute to SOARCA’s growth. Let’s fortify cyber defenses together! See our [contribution guidelines](/docs/contribution-guidelines/) on how to make contributions.	🛡️🌐
 
 ## Key Details
 - Project Name: SOARCA (Security Orchestrator for Advanced Response to Cyber Attacks)
