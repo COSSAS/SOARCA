@@ -42,7 +42,7 @@ compile:
 
 sbom:
 	echo "Generating SBOMs"
-
+	mkdir -p bin
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 cyclonedx-gomod app -json -licenses -output bin/${BINARY_NAME}-${VERSION}-linux-amd64.bom.json
 	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 cyclonedx-gomod app -json -licenses -output bin/${BINARY_NAME}-${VERSION}-darwin-amd64.bom.json
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 cyclonedx-gomod app -json -licenses -output bin/${BINARY_NAME}-${VERSION}-windows-amd64.bom.json
