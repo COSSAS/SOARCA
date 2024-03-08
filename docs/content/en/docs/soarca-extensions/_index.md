@@ -23,5 +23,5 @@ MQTT is a light-weight messaging protocol with libraries written in various prog
 
 ## Fin protocol
 
-The underlying protocol for the SOARCA fins can be [here](/docs/soarca-extentions/fin-protocol).
+The underlying protocol for the SOARCA fins can be [here](/docs/soarca-extensions/fin-protocol).
 

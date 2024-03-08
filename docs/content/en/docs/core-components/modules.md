@@ -195,4 +195,4 @@ The result of the step is stored in the following output variables:
 ---
 
 ## MQTT fin module
-This module is used by SOARCA to communicate with fins (capabilities) see [fin documentation](/docs/soarca-extentions/) for more information
+This module is used by SOARCA to communicate with fins (capabilities) see [fin documentation](/docs/soarca-extensions/) for more information
