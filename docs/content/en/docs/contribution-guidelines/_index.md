@@ -42,8 +42,8 @@ information on using pull requests.
 
 Feel free to engage with the community for discussions and assistance via one of the following channels:
 
-- [Slack](https://google.com)
-- [GitHub discussions](https://github.com)
+- [slack](https://cossas.slack.com/archives/C06L65375TN)
+- [GitHub discussions](https://github.com/COSSAS/SOARCA/issues)
 
 ## Contributing to these docs
  
