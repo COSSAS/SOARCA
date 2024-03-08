@@ -85,7 +85,7 @@ At this time, redirects are not supported.
 
 #### Success and failure
 
-The command is considered to have succesfully completed if a successful HTTP response is returned from each target. An HTTP response is successful if it's response code is in the range 200-299.
+The command is considered to have successfully completed if a successful HTTP response is returned from each target. An HTTP response is successful if it's response code is in the range 200-299.
 
 #### Variables
 
