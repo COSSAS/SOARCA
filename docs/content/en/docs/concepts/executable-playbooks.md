@@ -17,12 +17,7 @@ SOARCA's development is ongoing, and at this time, it only partly supports the e
 
 Here, we have an example of a relatively simple CACAO playbook that demonstrates [SOARCA's capabilities](/docs/soarca-extensions). The flow of steps is depicted in the following image:
 
-
-{{% imgproc example-playbook-action Fill "1280x720" %}}
-
-{{% /imgproc %}}
-
-
+![Example playbook flow](/SOARCA/images/example-playbook.svg)
 
 The JSON of this CACAO playbook can be found [at the bottom of this page](#example-playbook).
 
