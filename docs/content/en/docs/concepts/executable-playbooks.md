@@ -25,7 +25,7 @@ As you can see, this playbook contains a mix of logical steps (`if-condition` an
 
 ### Agents and targets
 
-In CACAO playbooks, entities that execute commands are called agents, and the entities against which the commands are executed are called targets.
+In CACAO playbooks, entities that execute commands are called agents, and the entities against which the commands are executed are called targets (see [Agents and Targets](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256509) in the spec).
 
 Every action step in a CACAO playbook must have a single agent, and one or more targets. Both agents and targets are defined on the playbook level, in the `agent_definitions` and `target_definitions` fields. SOARCA will execute action steps that have an agent of the type `soarca`. The capability that will be selected to execute the step is determined by the `name` field of the agent. For more information, [read the documentation on components](/docs/core-components/modules).
 
@@ -65,12 +65,11 @@ According to the CACAO specification, every branch of steps should end in a (uni
 }
 ```
 
-
 ### If-condition, while-condition, and parallel steps
 
 An `if-condition` step allows executing different branches depending on a specified condition. The step must specify an `on_true` field, which references the start of a branch of steps that should be executed if the condition evaluates to true. Optionally, the `if-condition` step can define an `on_false` field that defines an alternative branch that is executed if the condition evaluates to false. In each case, the specified branch keeps executing until it encounters an `end` step.
 
-The `condition` field contains a string that specifies a [STIX Pattern](https://docs.oasis-open.org/cti/stix/v2.0/stix-v2.0-part5-stix-patterning.html). Currently, SOARCA only supports a very small subsection of the STIX Patterning specification. We support string based equality (`'a' = 'a'`) and inequality (`'a' != 'b'`) comparisson. Example:
+The `condition` field contains a string that specifies a [STIX Pattern](https://docs.oasis-open.org/cti/stix/v2.0/stix-v2.0-part5-stix-patterning.html). Currently, SOARCA only supports a very small subsection of the STIX Patterning specification. We support string based equality (`'a' = 'a'`) and inequality (`'a' != 'b'`) comparison. Example:
 
 ```json
 "if-condition--4b95eaa4-944a-4a9d-88d4-1374a70dbacd": {
@@ -87,14 +86,13 @@ SOARCA supports variable interpolation, which means that variables can be used i
 
 Similarly, CACAO specifies `while-condition` steps, whose `on_true` branch will be repeatedly executed until the condition evaluates to false. The execution limit is currently set to 10. If the condition is still true after 10 iterations, the step ends in a failure.
 
-The `parallel` step allows executing multiple branches (in parallel) specified in the `next_steps` field.
-
+The `parallel` step allows executing multiple branches (in parallel) specified in the `next_steps` field. At this time, the steps in `next_steps` are executed sequentially. Parallel execution is scheduled for a later release in SOARCA.
 
 Next, we explain variables in CACAO and SOARCA.
 
 ### Variables
 
-The CACAO specification allows defining variables on the playbook level, as well as on the step level. Playbook variables are available througout the playbook. Variables defined on the step level are available in that step, and in any step that executes in a sub-branch of an `if-condition`, `while-condition`, or `parallel` step.
+The CACAO specification allows defining variables on the playbook level, as well as on the step level. Playbook variables are available throughout the playbook. Variables defined on the step level are available in that step, and in any step that executes in a sub-branch of an `if-condition`, `while-condition`, or `parallel` step.
 
 According to the CACAO spec, variable names should start and end with double underscores (`__`), but this is not enforced by SOARCA. Furthermore, the CACAO spec allows defining multiple types of variables (strings, ip-addresses, numbers), but at this time SOARCA will interpret every value as a string. The `constant` and `external` fields are also ignored.
 
@@ -113,9 +111,47 @@ SOARCA supports the interpolation of variables in different strings. The specifi
 
 Variable interpolation happens at the last possible moment, which means that step-dependant variables can be used in agent and target definitions.
 
-Substitution is performed by replacing any occurence of `[variable_name]:value` with the string `value` of that variable. Undefined variables are not replaced.
+Substitution is performed by replacing any occurrence of `[variable_name]:value` with the string `value` of that variable. Undefined variables are not replaced.
 
 ### Action steps
+
+Within CACAO playbooks, `action` steps can define commands that are executed by an _agent_ against one or more _targets_. The agent and targets are referenced by ID. SOARCA selects the internal capability for handling the step by looking at the `type` and `name` of the agent. After selecting the proper capability, SOARCA will sequentially perform every command in the `commands` field for every target specified in `targets`. If any command fails to execute successfully, further execution is halted and the step is considered to have failed.
+
+Action steps may return variables. On the successful execution of an action step, any variables returned are added to the globally available playbook variables. If the `out_args` field is specified and non-empty, only the variables listed in `out_args` will be added to the global playbook variables. The `in_args` field from the CACAO spec is ignored. Any variable defined on the playbook level, in parent-steps and within the step itself are available for interpolation.
+
+In the case an action step ends in a failure, any variables returned from the step are ignored.
+
+The example below shows how to run an `ssh` command on a single target system:
+
+```json
+"action--4b08af84-3741-48ca-8c92-df1557a87379": {
+    "name": "Get current time current system",
+    "step_variables": {
+        "__soarca_ssh_result__": {
+            "type": "string",
+            "description": "Output of the ssh command",
+            "constant": false,
+            "external": false
+        }
+    },
+    "on_completion": "if-condition--4b95eaa4-944a-4a9d-88d4-1374a70dbacd",
+    "type": "action",
+    "commands": [
+        {
+            "type": "ssh",
+            "description": "Retrieve date",
+            "command": "date -I | tr -d \"\\n\""
+        }
+    ],
+    "agent": "soarca--664bbe4a-7ad3-462c-baca-53cee8d67594",
+    "targets": [
+        "linux--b49069c2-0b69-4a46-8509-80196c4a9bf8"
+    ],
+    "out_args": [
+        "__soarca_ssh_result__"
+    ]
+},
+```
 
 ## Example playbook
 
@@ -176,8 +212,8 @@ This is de JSON data of the playbook used throughout this page.
       "commands": [
         {
           "type": "ssh",
-          "description": "Retrieve ISO timestamp",
-          "command": " date -I | tr -d \"\\n\""
+          "description": "Retrieve date",
+          "command": "date -I | tr -d \"\\n\""
         }
       ],
       "agent": "soarca--664bbe4a-7ad3-462c-baca-53cee8d67594",
@@ -286,9 +322,11 @@ This is de JSON data of the playbook used throughout this page.
       "commands": [
         {
           "type": "openc2-http",
-          "description": "OpenC2 command",
-          "command": "POST /command",
-          "content_b64": "ewogICJoZWFkZXJzIjogewogICAgInJlcXVlc3RfaWQiOiAiZDFhYzA0ODktZWQ1MS00MzQ1LTkxNzUtZjMwNzhmMzBhZmU1IiwKICAgICJjcmVhdGVkIjogMTU0NTI1NzcwMDAwMCwKICAgICJmcm9tIjogIm9jMnByb2R1Y2VyLmNvbXBhbnkubmV0IiwKICAgICJ0byI6IFsKICAgICAgIm9jMmNvbnN1bWVyLmNvbXBhbnkubmV0IgogICAgXQogIH0sCiAgImJvZHkiOiB7CiAgICAib3BlbmMyIjogewogICAgICAicmVxdWVzdCI6IHsKICAgICAgICAiYWN0aW9uIjogImRlbnkiLAogICAgICAgICJ0YXJnZXQiOiB7CiAgICAgICAgICAiaXB2NF9jb25uZWN0aW9uIjogewogICAgICAgICAgICAicHJvdG9jb2wiOiAidGNwIiwKICAgICAgICAgICAgInNyY19hZGRyIjogIjEuMi4zLjQiLAogICAgICAgICAgICAic3JjX3BvcnQiOiAxMDk5NiwKICAgICAgICAgICAgImRzdF9hZGRyIjogIjE5OC4yLjMuNCIsCiAgICAgICAgICAgICJkc3RfcG9ydCI6IDgwCiAgICAgICAgICB9CiAgICAgICAgfSwKICAgICAgICAiYXJncyI6IHsKICAgICAgICAgICJzdGFydF90aW1lIjogMTUzNDc3NTQ2MDAwMCwKICAgICAgICAgICJkdXJhdGlvbiI6IDUwMCwKICAgICAgICAgICJyZXNwb25zZV9yZXF1ZXN0ZWQiOiAiYWNrIiwKICAgICAgICAgICJzbHBmIjogewogICAgICAgICAgICAiZHJvcF9wcm9jZXNzIjogIm5vbmUiCiAgICAgICAgICB9CiAgICAgICAgfSwKICAgICAgICAicHJvZmlsZSI6ICJzbHBmIgogICAgICB9CiAgICB9CiAgfQp9"
+          "command": "POST /openc2-api/ HTTP/1.1",
+          "content_b64": "ewogICJoZWFkZXJzIjogewogICAgInJlcXVlc3RfaWQiOiAiZDFhYzA0ODktZWQ1MS00MzQ1LTkxNzUtZjMwNzhmMzBhZmU1IiwKICAgICJjcmVhdGVkIjogMTU0NTI1NzcwMDAwMCwKICAgICJmcm9tIjogInNvYXJjYS5ydW5uZXIubmV0IiwKICAgICJ0byI6IFsKICAgICAgImZpcmV3YWxsLmFwaS5jb20iCiAgICBdCiAgfSwKICAiYm9keSI6IHsKICAgICJvcGVuYzIiOiB7CiAgICAgICJyZXF1ZXN0IjogewogICAgICAgICJhY3Rpb24iOiAiZGVueSIsCiAgICAgICAgInRhcmdldCI6IHsKICAgICAgICAgICJmaWxlIjogewogICAgICAgICAgICAiaGFzaGVzIjogewogICAgICAgICAgICAgICJzaGEyNTYiOiAiMjJmZTcyYTM0ZjAwNmVhNjdkMjZiYjcwMDRlMmI2OTQxYjVjMzk1M2Q0M2FlN2VjMjRkNDFiMWE5MjhhNjk3MyIKICAgICAgICAgICAgfQogICAgICAgICAgfQogICAgICAgIH0KICAgICAgfQogICAgfQogIH0KfQ==",
+          "headers": {
+            "Content-Type": ["application/openc2+json;version=1.0"]
+          }
         }
       ],
       "targets": [
