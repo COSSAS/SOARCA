@@ -43,7 +43,7 @@ IExecutor <- Decomposer
 Interface for interfacing with the Executor this will in turn select and execute the command on the right [module](/docs/core-components/modules) or [fin](/docs/soarca-extensions/).
 
 ### Execution details
-The struct contains the details of the execution (execution id which is created for every execution) and the playbook id. the combination of these are unique. 
+The struct contains the details of the execution (execution id which is created for every execution) and the playbook id. The combination of these is unique. 
 
 ## Decomposition of playbook
 

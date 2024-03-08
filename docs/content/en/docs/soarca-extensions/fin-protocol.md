@@ -12,9 +12,9 @@ date: 2023-01-05
 The goal of the protocol is to provide a simple and robust way to communicate between the SOARCA orchestrator and the capabilities (Fins) that can provide extra functions. 
 
 ## MQTT
-To allow for dynamic communication MQTT is used to provide the backbone for the fin communication. SOARCA can be configured using the environment to use MQTT or just run stand alone. 
+To allow for dynamic communication MQTT is used to provide the backbone for the fin communication. SOARCA can be configured using the environment to use MQTT or just run stand-alone. 
 
-The Fin will use the protocol to register itself to SOARCA via the register message. Once register it will communicate over the channel new channel designated by the capability UUID. 
+The Fin will use the protocol to register itself to SOARCA via the register message. Once registered, it will communicate over the channel new channel designated by the capability UUID. 
 
 ## Messages
 Messages defined in the protocol
@@ -255,7 +255,7 @@ The message is used to send a command from SOARCA. It has the following payload.
 ```
 
 ### result
-The message is used to send response from the Fin to SOARCA. It has the following payload.
+The message is used to send a response from the Fin to SOARCA. It has the following payload.
 
 |field              |content        |type    | description |
 | ----------------- | ------------- | ------ | ----------- |
@@ -323,7 +323,7 @@ The message is used to send response from the Fin to SOARCA. It has the followin
 |capability_id            |UUID        |string     |Capability uuid to control
 
 #### pause
-The message is used to halt the further execution of the Fin. Following command will be responded to with nack, unless it is resume or stop.
+The message is used to halt the further execution of the Fin. The following command will be responded to with a nack, unless it is resumed or stopped.
 
 ```plantuml
 @startjson
@@ -337,7 +337,7 @@ The message is used to halt the further execution of the Fin. Following command 
 
 
 #### resume
-The message is used to resume a paused Fin, the response will be ack if ok or nack when the Fin could not be resumed.
+The message is used to resume a paused Fin, the response will be an ack if ok or a nack when the Fin could not be resumed.
 
 ```plantuml
 @startjson
@@ -350,7 +350,7 @@ The message is used to resume a paused Fin, the response will be ack if ok or na
 ```
 
 #### stop
-The message is used to shutdown the Fin. this will be responded to by ack, after that there will follow an unregister. 
+The message is used to shut down the Fin. this will be responded to by ack, after that there will follow an unregister. 
 
 ```plantuml
 @startjson

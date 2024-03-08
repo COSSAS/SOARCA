@@ -16,7 +16,7 @@ The following capability modules are currently defined in SOARCA:
 - http-api
 - openc2-http
 
-The capability will be selected on of the agent in the CACAO playbook step. The agent should be of type `soarca` and have a name corresponding to `soarca-[capability name]`. 
+The capability will be selected based on the agent in the CACAO playbook step. The agent should be of type `soarca` and have a name corresponding to `soarca-[capability name]`. 
 
 ### SSH capability
 
@@ -32,7 +32,7 @@ In every other circumstance the step is considered to have failed.
 
 #### Variables
 
-This modules does not define specific variables as input, but variable interpolation is supported in the command and target definitions. It has the following output variables:
+This module does not define specific variables as input, but variable interpolation is supported in the command and target definitions. It has the following output variables:
 
 ```json
 {
@@ -134,7 +134,7 @@ The result of the step is stored in the following output variables:
 }
 ```
 
-### OpenC2 capabilty
+### OpenC2 capability
 
 This capability implements the [OpenC2 HTTP Command](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256498), by sending [OpenC2 messages](https://docs.oasis-open.org/openc2/oc2ls/v1.0/cs01/oc2ls-v1.0-cs01.html)  using the [HTTPS transport method](https://docs.oasis-open.org/openc2/open-impl-https/v1.0/open-impl-https-v1.0.html).
 
