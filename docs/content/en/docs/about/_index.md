@@ -24,8 +24,8 @@ A special thanks to:
 
 ## About SOARCA 
 
-This work has been Funded by the European Union. Views and opinions expressed are however those of the author(s) only and do not necessarily reflect those of the European Union. The European Union cannot be held responsible for them. Neither the European Union nor the granting authority can be held responsible for them.
 
-This project has received funding from the European Union’s Horizon Europe Energy Research and Innovation programme under (Grant Agreement No. 101075665) project [eFORT](https://efort-project.eu/), and has received funding as part of the European Defence Fund (EDF) project [AInception](https://www.ainception.eu/) (Grant Agreement No. 101103385). 
 
- ![eu-funded](/SOARCA/images/eu-funded-logo.png)
+This work has received funding from the European Union’s Horizon Europe Energy Research and Innovation programme under Grant Agreement No. 101075665 ([eFORT](https://efort-project.eu/) project) and the European Defence Fund (EDF) under Grant Agreement No. 101103385 ([AInception](https://www.ainception.eu/) project). Views and opinions expressed in this documentation are those of the authors only and do not necessarily reflect those of the European Union. Neither the European Union nor the granting authority can be held responsible for them.
+
+![eu-funded](/SOARCA/images/eu-funded-logo.png)
