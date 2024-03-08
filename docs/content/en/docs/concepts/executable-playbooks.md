@@ -3,6 +3,10 @@ title: Executable playbooks
 weight: 3
 description: >
   A playbook primer
+resources:
+- src: "*Slide.png"
+  params:
+    byline: "*Slide*: © 2024 TNO"
 ---
 
 SOARCA is build on top of the [CACAO Security Playbook Version 2.0](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html) standard.
