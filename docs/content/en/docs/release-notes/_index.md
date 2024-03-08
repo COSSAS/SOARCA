@@ -16,4 +16,4 @@ Finally, the first release of the alpha release of SOARCA is here! In the first 
     - OpenC2
 - Logging capabilities
 - Efficient storage for playbooks
-- Design fin-protocol: the protocol description between SOARCA and 
+- Design fin-protocol: the protocol description  between SOARCA and the `TO BE ADDED`

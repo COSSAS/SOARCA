@@ -12,16 +12,15 @@ Thank you for contributing to our project! Your efforts make a difference.
 
 ## Contributing to SOARCA
 
-The SOARCA itself lives in https://github.com/google/ddcsy>.
-
+The SOARCA itself lives on [github](https://github.com/COSSAS/SOARCA).
 
 ## How to contribute
 
 Before making contributions to the project repositories, please follow these general steps for [GitHub contribution](https://docs.github.com/en/get-started/exploring-projects-on-github/contributing-to-a-project). 
 
-### I found a bug or Creating issues
+### I found a bug / Creating issues
 
-If there's something you'd like to see in SOARCA (or if you've found something that isn't working the way you'd expect), but you're not sure how to fix it yourself, please create an [issue](https://github.com/). Make sure to adhere to the structure of an issue submission. Fully comprehend the problem at hand and provide comprehensive details in your issue description.
+If there's something you'd like to see in SOARCA (or if you've found something that isn't working the way you'd expect), but you're not sure how to fix it yourself, please create an [issue](https://github.com/COSSAS/SOARCA/issues/new/choose). Make sure to adhere to the structure of an issue submission. Fully comprehend the problem at hand and provide comprehensive details in your issue description.
 
 
 {{% alert title="Security issues" color="warning" %}}

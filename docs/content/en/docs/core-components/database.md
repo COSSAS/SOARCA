@@ -7,11 +7,11 @@ description: >
   Database details of SOARCA
 ---
 
-SOARCA Database architecture, SOARCA makes use of [MongoDB](https://www.mongodb.com). It is used to store and retrieve playbooks. Later it will also store individual steps.
+OARCA Database architecture, SOARCA makes use of [MongoDB](https://www.mongodb.com/) It is used to store and retrieve playbooks. Later it will also store individual steps.
 
 ## Mongo
 
-Mongo has different collections for SOARCA we use a database object per collection. So that would be:
+SOARCA employs separate collections in Mongo, utilizing a dedicated database object for each of them:
 
 * Playbook
 * Step

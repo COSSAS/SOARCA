@@ -9,5 +9,5 @@ weight: 21
 
 ### Does SOARCA have a GUI?
 
-SOARCA currently does not feature a GUI for tracking the progress of playbook execution. Too edit [CACAO v2.0](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/security-playbooks-v2.0.html) playbooks, consider using the [CACAO Roaster](https://github.com/opencybersecurityalliance/cacao-roaster) project. 
+SOARCA currently does not feature a GUI for tracking the progress of playbook execution. To edit [CACAO v2.0](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/security-playbooks-v2.0.html) playbooks, consider using the [CACAO Roaster](https://github.com/opencybersecurityalliance/cacao-roaster) project. 
 
