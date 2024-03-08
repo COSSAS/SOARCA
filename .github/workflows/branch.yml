@@ -8,9 +8,9 @@ on:
 jobs:
   check-branch-name:
     if: |
-      ${{! (contains(github.ref_name, 'feature/') || contains(github.ref_name, 'development') 
-      || contains(github.ref_name, 'master') || contains(github.ref_name, 'bugfix/')
-      || contains(github.ref_name, 'hotfix/') || contains(github.ref_name, 'release/') ) }}
+      ${{ ! contains(github.ref_name, 'feature/') || ! contains(github.ref_name, 'development') 
+      || ! contains(github.ref_name, 'master') || ! contains(github.ref_name, 'bugfix/')
+      ||! contains(github.ref_name, 'hotfix/') || ! contains(github.ref_name, 'release/')  }}
     runs-on: ubuntu-latest
     steps:
       - name: Fail
