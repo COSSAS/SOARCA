@@ -24,7 +24,7 @@ If there's something you'd like to see in SOARCA (or if you've found something t
 
 
 {{% alert title="Security issues" color="warning" %}}
-For security issues, we kindly request that you refrain from reporting them using the issue tracker. Instead, please contact us directly: `to be added`
+For security issues, we kindly request that you refrain from reporting them using the issue tracker. Instead, please contact us directly: `soarca@cossas-project.nl`
 {{% /alert %}}
 
 
