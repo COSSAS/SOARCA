@@ -1,4 +1,4 @@
-package http
+package openc2
 
 import (
 	"reflect"
@@ -9,7 +9,9 @@ import (
 	"soarca/utils/http"
 )
 
-type OpenC2Capability struct{}
+type OpenC2Capability struct {
+	httpRequest http.IHttpRequest
+}
 
 type Empty struct{}
 
@@ -27,6 +29,10 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
+func New(httpRequest http.IHttpRequest) *OpenC2Capability {
+	return &OpenC2Capability{httpRequest: httpRequest}
+}
+
 func (OpenC2Capability *OpenC2Capability) GetType() string {
 	return openc2capabilityName
 }
@@ -39,13 +45,13 @@ func (OpenC2Capability *OpenC2Capability) Execute(
 	variables cacao.VariableMap,
 ) (cacao.VariableMap, error) {
 	log.Trace(metadata.ExecutionId)
-	httpRequest := http.HttpRequest{}
+
 	httpOptions := http.HttpOptions{
 		Command: &command,
 		Target:  &target,
 		Auth:    &authentication,
 	}
-	response, err := httpRequest.Request(httpOptions)
+	response, err := OpenC2Capability.httpRequest.Request(httpOptions)
 	if err != nil {
 		log.Error(err)
 		return cacao.VariableMap{}, err
