@@ -7,7 +7,7 @@ weight: 20
 
 
 {{% alert title="Warning" color="warning" %}}
-SOARCA is currently in its **alpha release**, with ongoing evelopment aimed at expanding its capabilities, improving integration, and enhancing its functionalities. You can track our progress and upcoming milestones at [LINK TO ROADMAP].
+SOARCA is currently in its **alpha release**, with ongoing development aimed at expanding its capabilities, improving integration, and enhancing its functionalities. You can track our progress and upcoming milestones at [LINK TO ROADMAP].
 
 We warmly welcome contributions to our repository. You can find the guidelines for contributing [here](/docs/contribution-guidelines).
 {{% /alert %}}
@@ -18,7 +18,7 @@ SOARCA enables cyber defenders to coordinate and automate their cyber operations
 
 SOARCA aims to achieve the following goals:
 
-- **Standard Compliance**: Adhering to the latest standards, including [CACAO v2.0](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/security-playbooks-v2.0.html) and [OpenC2](https://openc2.org/), allows for interopability with a wide range of technologies.
+- **Standard Compliance**: Adhering to the latest standards, including [CACAO v2.0](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/security-playbooks-v2.0.html) and [OpenC2](https://openc2.org/), allows for interoperability with a wide range of technologies.
 - **Extensibility with Open Interfaces**: Enjoy the flexibility of an extensible tool featuring open and well-defined interfaces, promoting adaptability, customization, and experimentation.
 - **Open-Source**: Embrace an open-source model that not only offers cost-effective solutions but also supports unrestricted use and adaptation for research purposes.
 
@@ -54,5 +54,5 @@ SOARCA currently supports the following transport mechanisms:
 ## Where do I start?
 
 {{% alert title="Follow our getting started!" color="primary" %}}
-Following our [Getting started](/docs/getting-started/) guide will help you setup SOARCA and configure the SOAR for your internal security tooling. For more custom requirement 
+Following our [Getting started](/docs/getting-started/) guide will help you set up SOARCA and configure the SOAR for your internal security tooling. For more custom requirement 
 {{% /alert %}}

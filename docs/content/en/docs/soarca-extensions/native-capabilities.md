@@ -8,7 +8,7 @@ weight: 2
 date: 2023-01-05
 ---
 
-This page contains a list of capabilities that are natively implemented in SOARCA. For MQTT-message based capabilities, check [here](/docs/soarca-extensions/).
+This page contains a list of capabilities that are natively implemented in SOARCA. For MQTT-message-based capabilities, check [here](/docs/soarca-extensions/).
 
 ## OpenC2 capability
 

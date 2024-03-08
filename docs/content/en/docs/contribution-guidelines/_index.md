@@ -44,7 +44,7 @@ information on using pull requests.
 Feel free to engage with the community for discussions and assistance via one of the following channels:
 
 - [Slack](https://google.com)
-- [Github discussions](https://github.com)
+- [GitHub discussions](https://github.com)
 
 ## Contributing to these docs
  
@@ -62,8 +62,8 @@ Would you like to enhance our documentation? Our documentation is built using th
 
 If you've just spotted something you'd like to change while using the docs, Docsy has a shortcut for you:
 
-1. Click **Edit this page** in the top right hand corner of the page.
-1. If you don't already have an up to date fork of the project repo, you are prompted to get one - click **Fork this repository and propose changes** or **Update your Fork** to get an up to date version of the project to edit. The appropriate page in your fork is displayed in edit mode.
+1. Click **Edit this page** in the top right-hand corner of the page.
+1. If you don't already have an up-to-date fork of the project repo, you are prompted to get one - click **Fork this repository and propose changes** or **Update your Fork** to get an up-to-date version of the project to edit. The appropriate page in your fork is displayed in edit mode.
 
 
 ## License 

@@ -65,7 +65,7 @@ func init() {
 
 ## Changing log level
 
-To change logging for your SOARCA instance you can use use the following environment variables 
+To change logging for your SOARCA instance you can use the following environment variables 
 
 
 |variable |content |description
