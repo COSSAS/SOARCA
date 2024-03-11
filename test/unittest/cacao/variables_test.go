@@ -7,17 +7,27 @@ import (
 	"github.com/go-playground/assert/v2"
 )
 
+func TestVariablesFind(t *testing.T) {
+	variables := make(cacao.Variables)
+	inserted := cacao.Variable{
+		Name:  "__var0__",
+		Value: "value",
+	}
+	variables["__var0__"] = inserted
+	variable, found := variables.Find("__var0__")
+	assert.Equal(t, found, true)
+	assert.Equal(t, variable, inserted)
+}
+
 func TestVariablesInsertNew(t *testing.T) {
 	vars := cacao.NewVariables()
 	inserted := vars.Insert(cacao.Variable{
 		Name:  "__var0__",
 		Value: "value",
 	})
-	variable, found := vars.Find("__var0__")
 
 	assert.Equal(t, inserted, true)
-	assert.Equal(t, variable.Value, "value")
-	assert.Equal(t, found, true)
+	assert.Equal(t, vars["__var0__"].Value, "value")
 }
 
 func TestVariablesInsertExisting(t *testing.T) {
@@ -29,11 +39,9 @@ func TestVariablesInsertExisting(t *testing.T) {
 		Name:  "__var0__",
 		Value: "new",
 	})
-	variable, found := vars.Find("__var0__")
 
 	assert.Equal(t, inserted, false)
-	assert.Equal(t, variable.Value, "old")
-	assert.Equal(t, found, true)
+	assert.Equal(t, vars["__var0__"].Value, "old")
 }
 
 func TestVariablesInsertOrReplace(t *testing.T) {
@@ -45,11 +53,9 @@ func TestVariablesInsertOrReplace(t *testing.T) {
 		Name:  "__var0__",
 		Value: "new",
 	})
-	variable, found := vars.Find("__var0__")
 
 	assert.Equal(t, replaced, true)
-	assert.Equal(t, variable.Value, "new")
-	assert.Equal(t, found, true)
+	assert.Equal(t, vars["__var0__"].Value, "new")
 }
 
 func TestVariablesInsertRange(t *testing.T) {
@@ -57,20 +63,17 @@ func TestVariablesInsertRange(t *testing.T) {
 		Name:  "__var0__",
 		Value: "old",
 	})
-	vars.InsertRange(cacao.Variable{
+	otherRange := cacao.NewVariables(cacao.Variable{
 		Name:  "__var0__",
 		Value: "new",
 	}, cacao.Variable{
 		Name:  "__var1__",
-		Value: "new",
+		Value: "new2",
 	})
-	var0, found0 := vars.Find("__var0__")
-	var1, found1 := vars.Find("__var1__")
+	vars.InsertRange(otherRange)
 
-	assert.Equal(t, var0.Value, "old")
-	assert.Equal(t, found0, true)
-	assert.Equal(t, var1.Value, "new")
-	assert.Equal(t, found1, true)
+	assert.Equal(t, vars["__var0__"].Value, "old")
+	assert.Equal(t, vars["__var1__"].Value, "new2")
 }
 
 func TestVariablesMerge(t *testing.T) {
@@ -84,14 +87,12 @@ func TestVariablesMerge(t *testing.T) {
 		Value: "NEW",
 	})
 
-	merged := base.Merge(new)
-	var0, ok0 := merged.Find("__var0__")
-	var1, ok1 := merged.Find("__var1__")
+	base.Merge(new)
 
-	assert.Equal(t, var0.Value, "OLD")
-	assert.Equal(t, ok0, true)
-	assert.Equal(t, var1.Value, "NEW")
-	assert.Equal(t, ok1, true)
+	assert.Equal(t, base["__var0__"].Value, "OLD")
+	assert.Equal(t, new["__var0__"].Value, "")
+	assert.Equal(t, base["__var1__"].Value, "NEW")
+	assert.Equal(t, new["__var1__"].Value, "NEW")
 }
 
 func TestVariablesMergeWithUpdate(t *testing.T) {
@@ -105,11 +106,9 @@ func TestVariablesMergeWithUpdate(t *testing.T) {
 		Value: "NEW",
 	})
 
-	merged := base.Merge(new)
-	var0, ok0 := merged.Find("__var0__")
+	base.Merge(new)
 
-	assert.Equal(t, var0.Value, "NEW")
-	assert.Equal(t, ok0, true)
+	assert.Equal(t, base["__var0__"].Value, "NEW")
 }
 
 func TestVariablesStringInterpolation(t *testing.T) {
@@ -122,6 +121,18 @@ func TestVariablesStringInterpolation(t *testing.T) {
 
 	replaced := vars.Interpolate(original)
 	assert.Equal(t, replaced, "GO is GO")
+}
+
+func TestVariablesStringInterpolationEmptyString(t *testing.T) {
+	original := ""
+
+	vars := cacao.NewVariables(cacao.Variable{
+		Name:  "__var0__",
+		Value: "GO",
+	})
+
+	replaced := vars.Interpolate(original)
+	assert.Equal(t, replaced, "")
 }
 
 func TestVariablesStringInterpolateMultiple(t *testing.T) {
@@ -137,6 +148,21 @@ func TestVariablesStringInterpolateMultiple(t *testing.T) {
 
 	replaced := vars.Interpolate(original)
 	assert.Equal(t, replaced, "GO is COOL")
+}
+
+func TestVariablesStringInterpolateMultipleAndUnkown(t *testing.T) {
+	original := "__var0__:value is __var1_unknown__:value"
+
+	vars := cacao.NewVariables(cacao.Variable{
+		Name:  "__var0__",
+		Value: "GO",
+	}, cacao.Variable{
+		Name:  "__var1__",
+		Value: "COOL",
+	})
+
+	replaced := vars.Interpolate(original)
+	assert.Equal(t, replaced, "GO is __var1_unknown__:value")
 }
 
 func TestVariablesSelect(t *testing.T) {
