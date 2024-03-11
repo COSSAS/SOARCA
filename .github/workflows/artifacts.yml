@@ -61,6 +61,7 @@ jobs:
         run: |
           mkdir -p bin 
           mv ${{ github.sha }}/* ./bin/
+          chmod +x bin/soarca-*
 
       - name: Build image
         run: |
