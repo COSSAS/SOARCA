@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"soarca/models/cacao"
+	"soarca/models/decoder"
 	"testing"
 	"time"
 
@@ -41,7 +41,7 @@ func TestCacaoDecode(t *testing.T) {
 		return
 	}
 
-	var workflow = cacao.Decode(byteValue)
+	var workflow = decoder.DecodeValidate(byteValue)
 
 	// fmt.Println(workflow)
 
@@ -135,5 +135,21 @@ func TestCacaoDecode(t *testing.T) {
 	assert.Equal(t, workflow.AuthenticationInfoDefinitions["http-basic--76c26f7f-9a15-40ff-a90a-7b19e23372ae"].Type, "http-basic")
 	assert.Equal(t, workflow.AuthenticationInfoDefinitions["http-basic--76c26f7f-9a15-40ff-a90a-7b19e23372ae"].UserId, "admin")
 	assert.Equal(t, workflow.AuthenticationInfoDefinitions["http-basic--76c26f7f-9a15-40ff-a90a-7b19e23372ae"].Password, "super-secure-password")
+
+	// Assert the variables are mapped correctly on the playbook level
+	assert.Equal(t, workflow.PlaybookVariables["__var1__"].Name, "__var1__")
+	assert.Equal(t, workflow.PlaybookVariables["__var1__"].Type, "string")
+	assert.Equal(t, workflow.PlaybookVariables["__var1__"].Description, "Some nice description")
+	assert.Equal(t, workflow.PlaybookVariables["__var1__"].Value, "A random string")
+	assert.Equal(t, workflow.PlaybookVariables["__var1__"].Constant, false)
+	assert.Equal(t, workflow.PlaybookVariables["__var1__"].External, false)
+
+	// Assert the variables are mapped correctly on the step level
+	assert.Equal(t, workflow.Workflow["action--9fcc5c3b-0b70-4d73-b922-cf5491dcd1a4"].StepVariables["__bia_address__"].Name, "__bia_address__")
+	assert.Equal(t, workflow.Workflow["action--9fcc5c3b-0b70-4d73-b922-cf5491dcd1a4"].StepVariables["__bia_address__"].Type, "ipv4-addr")
+	assert.Equal(t, workflow.Workflow["action--9fcc5c3b-0b70-4d73-b922-cf5491dcd1a4"].StepVariables["__bia_address__"].Description, "Bia address")
+	assert.Equal(t, workflow.Workflow["action--9fcc5c3b-0b70-4d73-b922-cf5491dcd1a4"].StepVariables["__bia_address__"].Value, "192.168.0.1")
+	assert.Equal(t, workflow.Workflow["action--9fcc5c3b-0b70-4d73-b922-cf5491dcd1a4"].StepVariables["__bia_address__"].Constant, true)
+	assert.Equal(t, workflow.Workflow["action--9fcc5c3b-0b70-4d73-b922-cf5491dcd1a4"].StepVariables["__bia_address__"].External, false)
 
 }

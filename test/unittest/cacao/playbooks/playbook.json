@@ -41,9 +41,9 @@
         "individual--6b23a237-ade8-4d00-9aa1-75999732d557": {
             "name": "banana rama",
             "banana": "rama",
-            "contact" : {
-                "email" : {
-                    "work" : "banana@business.com"
+            "contact": {
+                "email": {
+                    "work": "banana@business.com"
                 }
             }
         }
@@ -56,6 +56,15 @@
             "url": "http://tno.nl/cst"
         }
     ],
+    "playbook_variables": {
+        "__var1__": {
+            "type": "string",
+            "description": "Some nice description",
+            "value": "A random string",
+            "constant": false,
+            "external": false
+        }
+    },
     "workflow_start": "action--a76dbc32-b739-427b-ae13-4ec703d5797e",
     "workflow_exception": "end--40131926-89e9-44df-a018-5f92f2df7914",
     "workflow": {
@@ -83,7 +92,16 @@
                     "command": "GET http://__bia_address__/analysisreport/__cve__"
                 }
             ],
-            "agent": "individual--6b23a237-ade8-4d00-9aa1-75999732d557"
+            "agent": "individual--6b23a237-ade8-4d00-9aa1-75999732d557",
+            "step_variables": {
+                "__bia_address__": {
+                    "type": "ipv4-addr",
+                    "description": "Bia address",
+                    "value": "192.168.0.1",
+                    "constant": true,
+                    "external": false
+                }
+            }
         },
         "action--09b97fab-56a1-45dc-a88f-be3cde3eac33": {
             "type": "action",
