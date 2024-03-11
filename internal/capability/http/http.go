@@ -38,13 +38,13 @@ func (httpCapability *HttpCapability) Execute(
 	command cacao.Command,
 	authentication cacao.AuthenticationInformation,
 	target cacao.AgentTarget,
-	variables cacao.VariableMap) (cacao.VariableMap, error) {
+	variables cacao.Variables) (cacao.Variables, error) {
 
 	// Get request data and handle errors
 	method, url, errmethod := ObtainHttpMethodAndUrlFromCommand(command)
 	if errmethod != nil {
 		log.Error(errmethod)
-		return cacao.VariableMap{}, errmethod
+		return cacao.Variables{}, errmethod
 	}
 	content_data, errcontent := ObtainHttpRequestContentDataFromCommand(command)
 	if errcontent != nil {
@@ -56,7 +56,7 @@ func (httpCapability *HttpCapability) Execute(
 	request, err := http.NewRequest(method, url, bytes.NewBuffer(content_data))
 	if err != nil {
 		log.Error(err)
-		return cacao.VariableMap{}, err
+		return cacao.Variables{}, err
 	}
 
 	for key, httpCapability := range command.Headers {
@@ -65,12 +65,12 @@ func (httpCapability *HttpCapability) Execute(
 	if target.ID != "" {
 		if err := verifyAuthInfoMatchesAgentTarget(&target, &authentication); err != nil {
 			log.Error(err)
-			return cacao.VariableMap{}, err
+			return cacao.Variables{}, err
 		}
 
 		if err := setupAuthHeaders(request, &authentication); err != nil {
 			log.Error(err)
-			return cacao.VariableMap{}, err
+			return cacao.Variables{}, err
 		}
 	}
 
@@ -79,22 +79,22 @@ func (httpCapability *HttpCapability) Execute(
 	response, err := client.Do(request)
 	if err != nil {
 		log.Error(err)
-		return cacao.VariableMap{}, err
+		return cacao.Variables{}, err
 	}
 	defer response.Body.Close()
 
 	responseBytes, err := io.ReadAll(response.Body)
 	if err != nil {
 		log.Error(err)
-		return cacao.VariableMap{}, err
+		return cacao.Variables{}, err
 	}
 	respString := string(responseBytes)
 	sc := response.StatusCode
 	if sc < 200 || sc > 299 {
-		return cacao.VariableMap{}, errors.New(respString)
+		return cacao.Variables{}, errors.New(respString)
 	}
 
-	return cacao.VariableMap{
+	return cacao.Variables{
 		"__soarca_http_result__": {Name: "result", Value: respString}}, nil
 
 }

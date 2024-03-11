@@ -7,84 +7,176 @@ import (
 	"github.com/go-playground/assert/v2"
 )
 
-func TestVariableMapMerging(t *testing.T) {
-	base := cacao.VariableMap{
-		"__var0__": {
-			Value: "OLD",
-		},
+func TestVariablesFind(t *testing.T) {
+	variables := make(cacao.Variables)
+	inserted := cacao.Variable{
+		Name:  "__var0__",
+		Value: "value",
 	}
-
-	new := cacao.VariableMap{
-		"__var1__": {
-			Value: "NEW",
-		},
-	}
-
-	merged := base.Merge(new)
-	assert.Equal(t, merged["__var0__"].Value, "OLD")
-	assert.Equal(t, merged["__var1__"].Value, "NEW")
+	variables["__var0__"] = inserted
+	variable, found := variables.Find("__var0__")
+	assert.Equal(t, found, true)
+	assert.Equal(t, variable, inserted)
 }
 
-func TestVariableMapMergingWithUpdate(t *testing.T) {
-	base := cacao.VariableMap{
-		"__var__": {
-			Value: "OLD",
-		},
-	}
+func TestVariablesInsertNew(t *testing.T) {
+	vars := cacao.NewVariables()
+	inserted := vars.Insert(cacao.Variable{
+		Name:  "__var0__",
+		Value: "value",
+	})
 
-	new := cacao.VariableMap{
-		"__var__": {
-			Value: "NEW",
-		},
-	}
-
-	merged := base.Merge(new)
-	assert.Equal(t, merged["__var__"].Value, "OLD")
+	assert.Equal(t, inserted, true)
+	assert.Equal(t, vars["__var0__"].Value, "value")
 }
 
-func TestVariableMapMergingWithConstant(t *testing.T) {
-	base := cacao.VariableMap{
-		"__var__": {
-			Value: "OLD",
-		},
-	}
+func TestVariablesInsertExisting(t *testing.T) {
+	vars := cacao.NewVariables(cacao.Variable{
+		Name:  "__var0__",
+		Value: "old",
+	})
+	inserted := vars.Insert(cacao.Variable{
+		Name:  "__var0__",
+		Value: "new",
+	})
 
-	new := cacao.VariableMap{
-		"__var__": {
-			Value:    "NEW",
-			Constant: true,
-		},
-	}
-
-	merged := base.Merge(new)
-	assert.Equal(t, merged["__var__"].Value, "NEW")
+	assert.Equal(t, inserted, false)
+	assert.Equal(t, vars["__var0__"].Value, "old")
 }
 
-func TestVariableMapStringReplace(t *testing.T) {
+func TestVariablesInsertOrReplace(t *testing.T) {
+	vars := cacao.NewVariables(cacao.Variable{
+		Name:  "__var0__",
+		Value: "old",
+	})
+	replaced := vars.InsertOrReplace(cacao.Variable{
+		Name:  "__var0__",
+		Value: "new",
+	})
+
+	assert.Equal(t, replaced, true)
+	assert.Equal(t, vars["__var0__"].Value, "new")
+}
+
+func TestVariablesInsertRange(t *testing.T) {
+	vars := cacao.NewVariables(cacao.Variable{
+		Name:  "__var0__",
+		Value: "old",
+	})
+	otherRange := cacao.NewVariables(cacao.Variable{
+		Name:  "__var0__",
+		Value: "new",
+	}, cacao.Variable{
+		Name:  "__var1__",
+		Value: "new2",
+	})
+	vars.InsertRange(otherRange)
+
+	assert.Equal(t, vars["__var0__"].Value, "old")
+	assert.Equal(t, vars["__var1__"].Value, "new2")
+}
+
+func TestVariablesMerge(t *testing.T) {
+	base := cacao.NewVariables(cacao.Variable{
+		Name:  "__var0__",
+		Value: "OLD",
+	})
+
+	new := cacao.NewVariables(cacao.Variable{
+		Name:  "__var1__",
+		Value: "NEW",
+	})
+
+	base.Merge(new)
+
+	assert.Equal(t, base["__var0__"].Value, "OLD")
+	assert.Equal(t, new["__var0__"].Value, "")
+	assert.Equal(t, base["__var1__"].Value, "NEW")
+	assert.Equal(t, new["__var1__"].Value, "NEW")
+}
+
+func TestVariablesMergeWithUpdate(t *testing.T) {
+	base := cacao.NewVariables(cacao.Variable{
+		Name:  "__var0__",
+		Value: "OLD",
+	})
+
+	new := cacao.NewVariables(cacao.Variable{
+		Name:  "__var0__",
+		Value: "NEW",
+	})
+
+	base.Merge(new)
+
+	assert.Equal(t, base["__var0__"].Value, "NEW")
+}
+
+func TestVariablesStringInterpolation(t *testing.T) {
 	original := "__var0__:value is __var0__:value"
 
-	vars := cacao.VariableMap{
-		"__var0__": {
-			Value: "GO",
-		},
-	}
+	vars := cacao.NewVariables(cacao.Variable{
+		Name:  "__var0__",
+		Value: "GO",
+	})
 
-	replaced := vars.Replace(original)
+	replaced := vars.Interpolate(original)
 	assert.Equal(t, replaced, "GO is GO")
 }
 
-func TestVariableMapStringReplaceMultiple(t *testing.T) {
+func TestVariablesStringInterpolationEmptyString(t *testing.T) {
+	original := ""
+
+	vars := cacao.NewVariables(cacao.Variable{
+		Name:  "__var0__",
+		Value: "GO",
+	})
+
+	replaced := vars.Interpolate(original)
+	assert.Equal(t, replaced, "")
+}
+
+func TestVariablesStringInterpolateMultiple(t *testing.T) {
 	original := "__var0__:value is __var1__:value"
 
-	vars := cacao.VariableMap{
-		"__var0__": {
-			Value: "GO",
-		},
-		"__var1__": {
-			Value: "COOL",
-		},
-	}
+	vars := cacao.NewVariables(cacao.Variable{
+		Name:  "__var0__",
+		Value: "GO",
+	}, cacao.Variable{
+		Name:  "__var1__",
+		Value: "COOL",
+	})
 
-	replaced := vars.Replace(original)
+	replaced := vars.Interpolate(original)
 	assert.Equal(t, replaced, "GO is COOL")
+}
+
+func TestVariablesStringInterpolateMultipleAndUnkown(t *testing.T) {
+	original := "__var0__:value is __var1_unknown__:value"
+
+	vars := cacao.NewVariables(cacao.Variable{
+		Name:  "__var0__",
+		Value: "GO",
+	}, cacao.Variable{
+		Name:  "__var1__",
+		Value: "COOL",
+	})
+
+	replaced := vars.Interpolate(original)
+	assert.Equal(t, replaced, "GO is __var1_unknown__:value")
+}
+
+func TestVariablesSelect(t *testing.T) {
+	vars := cacao.NewVariables(cacao.Variable{
+		Name:  "__var0__",
+		Value: "GO",
+	}, cacao.Variable{
+		Name:  "__var1__",
+		Value: "COOL",
+	})
+	filteredVars := vars.Select([]string{"__var0__", "__unknown__"})
+
+	assert.Equal(t, filteredVars, cacao.NewVariables(cacao.Variable{
+		Name:  "__var0__",
+		Value: "GO",
+	}))
 }
