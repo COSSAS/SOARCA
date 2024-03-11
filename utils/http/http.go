@@ -121,6 +121,9 @@ func (httpOptions *HttpOptions) addHeaderTo(request *http.Request) {
 }
 
 func (httpOptions *HttpOptions) addAuthTo(request *http.Request) error {
+	if httpOptions.Auth == nil {
+		return nil
+	}
 	if (cacao.AuthenticationInformation{}) == *httpOptions.Auth {
 		return nil
 	}
