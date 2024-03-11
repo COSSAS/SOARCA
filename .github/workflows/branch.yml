@@ -1,0 +1,20 @@
+name: Branch
+
+on:
+  push:
+    branches:    
+      - '**'
+  pull_request:
+    branches:    
+      - '**'
+
+env:
+ BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+
+jobs:
+  check-branch-name:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for branch name
+        run: 
+          if [[ $BRANCH_NAME =~ (feature|bugfix|hotfix|development|release|master)\/* ]]; then exit 0; else exit 1; fi
