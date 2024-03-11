@@ -68,5 +68,17 @@ func decode(data []byte) *cacao.Playbook {
 		playbook.AuthenticationInfoDefinitions[key] = auth
 	}
 
+	for key, variable := range playbook.PlaybookVariables {
+		variable.Name = key
+		playbook.PlaybookVariables.InsertOrReplace(variable)
+	}
+
+	for _, step := range playbook.Workflow {
+		for key, variable := range step.StepVariables {
+			variable.Name = key
+			step.StepVariables.InsertOrReplace(variable)
+		}
+	}
+
 	return &playbook
 }
