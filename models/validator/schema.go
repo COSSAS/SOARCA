@@ -20,7 +20,7 @@ var log *logger.Log
 var cacao_v1_csd01_http string = "https://raw.githubusercontent.com/cyentific-rni/cacao-json-schemas/cacao-v1.0-csd02/schemas/playbook.json"
 var cacao_v2_csd01_http string = "https://raw.githubusercontent.com/cyentific-rni/cacao-json-schemas/cacao-v2.0-csd01/schemas/playbook.json"
 
-//var cacao_v2_csd03_http string = "https://raw.githubusercontent.com/cyentific-rni/cacao-json-schemas/cacao-v2.0-csd03/schemas/playbook.json"
+var cacao_v2_csd03_http string = "https://raw.githubusercontent.com/cyentific-rni/cacao-json-schemas/cacao-v2.0-csd03/schemas/playbook.json"
 
 func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
@@ -73,7 +73,7 @@ func IsValidCacaoJson(data []byte) error {
 		// NOTE: CURRENTLY THERE IS AN INCONSISTENCY BETWEEN CDS01 AND CDS03
 		// The cds03 schema is bugged at the time being (13/11/2023)
 		// So we cannot validate checking authentication information
-		sch, err = compiler.Compile(cacao_v2_csd01_http)
+		sch, err = compiler.Compile(cacao_v2_csd03_http)
 		if err != nil {
 			return err
 		}

@@ -25,10 +25,11 @@
             "password": "super-secure-password"
         }
     },
-    "agents": {
+    "agent_definitions": {
         "http-api--7e9174ec-a293-43df-a72d-471c79e276bf": {
             
             "name": "Firewall 1",
+            "type": "banana",
             "http_url": "hxxp://example.com/v1/",
             "authentication_info": "http-basic--76c26f7f-9a15-40ff-a90a-7b19e23372ae",
             "category": [

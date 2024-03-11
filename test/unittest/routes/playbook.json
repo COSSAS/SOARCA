@@ -40,6 +40,7 @@
         },
         "individual--6b23a237-ade8-4d00-9aa1-75999732d557": {
             "name": "banana rama",
+            "type": "individual",
             "banana": "rama"
         }
     },

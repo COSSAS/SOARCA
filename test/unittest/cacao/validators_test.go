@@ -27,6 +27,10 @@ func TestNotValidCacaoJson(t *testing.T) {
 		fmt.Println(errValid)
 		t.Fail()
 	}
+	fmt.Println(errValid)
+	expected := "value must be \"http-api\""
+
+	assert.Equal(t, strings.Contains(fmt.Sprint(errValid), expected), true)
 }
 
 func TestValidCacaoJson(t *testing.T) {
