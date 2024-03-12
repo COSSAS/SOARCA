@@ -14,7 +14,9 @@ The goal of the protocol is to provide a simple and robust way to communicate be
 ## MQTT
 To allow for dynamic communication MQTT is used to provide the backbone for the fin communication. SOARCA can be configured using the environment to use MQTT or just run stand alone. 
 
-The Fin will use the protocol to register itself to SOARCA via the register message. Once register it will communicate over the channel new channel designated by the capability UUID. 
+The Fin will use the protocol to register itself to SOARCA via the register message. Once register it will communicate over the channel new channel designated by the fin UUID. 
+
+Commands to a specific capability will be communicated of the capability UUID channel.
 
 ## Messages
 Messages defined in the protocol
@@ -84,7 +86,8 @@ The message is used to register a fin to SOARCA. It has the following payload.
 | ----------------- | --------------------- | ----------------- | ----------- |
 |type               |register               |string             |The register message type
 |message_id         |UUID                   |string             |Message UUID 
-|fin_id             |UUID                   |string             |Fin uuid of the separate form the capability 
+|fin_id             |UUID                   |string             |Fin uuid separate form the capability id
+|Name               |Name                   |string             |Fin name 
 |protocol_version   |version                |string             |Version information of the protocol in [semantic version](https://semver.org) schema e.g. 1.2.4-beta
 |security           |security information   |[Security](#security)           |Security information for protocol see security structure
 |capabilities       |list of capability structure    |list of [capability structure](#capability-structure)    |Capability structure information for protocol see security structure
@@ -129,6 +132,7 @@ The message is used to register a fin to SOARCA. It has the following payload.
     "type": "register",
     "message_id": "uuid",
     "fin_id" : "uuid",
+    "name": "Fin name",
     "protocol_version": "<semantic-version>",
     "security": {
         "version": "0.0.0",
@@ -153,7 +157,7 @@ The message is used to register a fin to SOARCA. It has the following payload.
             "agent" : {
                 "soarca-fin--<uuid>": {
                     "type": "soarca-fin",
-                    "name": "soarca-fin--<name>-<uuid>"
+                    "name": "soarca-fin--<name>-<capability_uuid>"
                 }
             }
 
