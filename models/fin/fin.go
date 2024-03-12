@@ -154,6 +154,16 @@ func NewCommand() Command {
 	return instance
 }
 
+func NewAck(messageId string) Ack {
+	ack := Ack{Type: MessageTypeAck, MessageId: messageId}
+	return ack
+}
+
+func NewNack(messageId string) Nack {
+	nack := Nack{Type: MessageTypeNack, MessageId: messageId}
+	return nack
+}
+
 func Decode(data []byte, object any) error {
 	return json.Unmarshal(data, object)
 }
