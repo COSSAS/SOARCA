@@ -44,7 +44,7 @@ func (httpCapability *HttpCapability) Execute(
 	method, url, errmethod := ObtainHttpMethodAndUrlFromCommand(command)
 	if errmethod != nil {
 		log.Error(errmethod)
-		return cacao.Variables{}, errmethod
+		return cacao.NewVariables(), errmethod
 	}
 	content_data, errcontent := ObtainHttpRequestContentDataFromCommand(command)
 	if errcontent != nil {
@@ -56,7 +56,7 @@ func (httpCapability *HttpCapability) Execute(
 	request, err := http.NewRequest(method, url, bytes.NewBuffer(content_data))
 	if err != nil {
 		log.Error(err)
-		return cacao.Variables{}, err
+		return cacao.NewVariables(), err
 	}
 
 	for key, httpCapability := range command.Headers {
@@ -65,12 +65,12 @@ func (httpCapability *HttpCapability) Execute(
 	if target.ID != "" {
 		if err := verifyAuthInfoMatchesAgentTarget(&target, &authentication); err != nil {
 			log.Error(err)
-			return cacao.Variables{}, err
+			return cacao.NewVariables(), err
 		}
 
 		if err := setupAuthHeaders(request, &authentication); err != nil {
 			log.Error(err)
-			return cacao.Variables{}, err
+			return cacao.NewVariables(), err
 		}
 	}
 
@@ -79,23 +79,22 @@ func (httpCapability *HttpCapability) Execute(
 	response, err := client.Do(request)
 	if err != nil {
 		log.Error(err)
-		return cacao.Variables{}, err
+		return cacao.NewVariables(), err
 	}
 	defer response.Body.Close()
 
 	responseBytes, err := io.ReadAll(response.Body)
 	if err != nil {
 		log.Error(err)
-		return cacao.Variables{}, err
+		return cacao.NewVariables(), err
 	}
 	respString := string(responseBytes)
 	sc := response.StatusCode
 	if sc < 200 || sc > 299 {
-		return cacao.Variables{}, errors.New(respString)
+		return cacao.NewVariables(), errors.New(respString)
 	}
 
-	return cacao.Variables{
-		"__soarca_http_result__": {Name: "result", Value: respString}}, nil
+	return cacao.NewVariables(cacao.Variable{Name: "__soarca_http_result__", Value: respString}), nil
 
 }
 

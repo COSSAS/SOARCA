@@ -50,7 +50,7 @@ func (executer *Executer) Execute(metadata execution.Metadata,
 		returnVariables, err := capability.Execute(metadata, command, authentication, target, variable)
 		return metadata.ExecutionId, returnVariables, err
 	} else {
-		empty := cacao.Variables{}
+		empty := cacao.NewVariables()
 		message := "executor is not available in soarca"
 		err := errors.New(message)
 		log.Error(message)

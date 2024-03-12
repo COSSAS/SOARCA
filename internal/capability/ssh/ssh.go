@@ -40,7 +40,7 @@ func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
 
 	if errAuth != nil {
 		log.Error(errAuth)
-		return cacao.Variables{}, errAuth
+		return cacao.NewVariables(), errAuth
 	} else {
 		log.Trace(host)
 	}
@@ -60,7 +60,7 @@ func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
 		signer, errKey := ssh.ParsePrivateKey([]byte(authentication.PrivateKey))
 		if errKey != nil || authentication.Password == "" {
 			log.Error("no valid authentication information: ", errKey)
-			return cacao.Variables{}, errKey
+			return cacao.NewVariables(), errKey
 		}
 		config = ssh.ClientConfig{
 			User: authentication.Username,
@@ -78,13 +78,13 @@ func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
 	conn, err := ssh.Dial("tcp", host, &config)
 	if err != nil {
 		log.Error(err)
-		return cacao.Variables{}, err
+		return cacao.NewVariables(), err
 	}
 	var session *ssh.Session
 	session, err = conn.NewSession()
 	if err != nil {
 		log.Error(err)
-		return cacao.Variables{}, err
+		return cacao.NewVariables(), err
 	}
 
 	response, err := session.Output(StripSshPrepend(command.Command))
@@ -92,9 +92,9 @@ func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
 
 	if err != nil {
 		log.Error(err)
-		return cacao.Variables{"__soarca_ssh_result__": {Name: "result", Value: string(response)}}, err
+		return cacao.NewVariables(), err
 	}
-	results := cacao.Variables{"__soarca_ssh_result__": {Name: "result", Value: string(response)}}
+	results := cacao.NewVariables(cacao.Variable{Name: "__soarca_ssh_result__", Value: string(response)})
 	log.Trace("Finished ssh execution will return the variables: ", results)
 	return results, err
 }

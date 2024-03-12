@@ -45,7 +45,7 @@ func TestSshConnection(t *testing.T) {
 		expectedCommand,
 		expectedAuthenticationInformation,
 		expectedTarget,
-		cacao.Variables{expectedVariables.Name: expectedVariables})
+		cacao.NewVariables(expectedVariables))
 	if err != nil {
 		fmt.Println(err)
 		t.Fail()
