@@ -73,14 +73,10 @@ func (finController *FinController) Start(broker string, port int) error {
 	token.Wait()
 
 	for {
-		select {
-		case result := <-finController.channel:
-			finController.Handle(result)
-		}
+		result := <-finController.channel
+		finController.Handle(result)
 
 	}
-
-	return nil
 }
 
 // Handle goroutine call from mqtt stack
@@ -108,7 +104,10 @@ func (finController *FinController) SendAck(topic string, messageId string) erro
 
 func (finController *FinController) Handle(payload []byte) {
 	message := fin.Message{}
-	fin.Decode(payload, &message)
+	if err := fin.Decode(payload, &message); err != nil {
+		log.Error(err)
+		return
+	}
 	switch message.Type {
 	case fin.MessageTypeAck:
 		finController.HandleAck(payload)
@@ -133,7 +132,9 @@ func (finController *FinController) SendNack(topic string, messageId string) err
 
 func (finController *FinController) HandleAck(payload []byte) {
 	ack := fin.Ack{}
-	fin.Decode(payload, ack)
+	if err := fin.Decode(payload, ack); err != nil {
+		log.Error(err)
+	}
 
 	// ignore for now
 
@@ -141,7 +142,9 @@ func (finController *FinController) HandleAck(payload []byte) {
 
 func (finController *FinController) HandleNack(payload []byte) {
 	ack := fin.Ack{}
-	fin.Decode(payload, ack)
+	if err := fin.Decode(payload, ack); err != nil {
+		log.Error(err)
+	}
 
 	// ignore for now
 
@@ -152,13 +155,17 @@ func (finController *FinController) HandleRegister(payload []byte) {
 	err := fin.Decode(payload, &register)
 	if err != nil {
 		log.Error("Message", err)
-		finController.SendNack("soarca", register.MessageId)
+		if err := finController.SendNack("soarca", register.MessageId); err != nil {
+			log.Error(err)
+		}
 		return
 	}
 
 	for _, capability := range register.Capabilities {
 		if _, ok := finController.registeredCapabilities[capability.Id]; ok {
-			finController.SendNack(register.FinID, register.MessageId)
+			if err := finController.SendNack(register.FinID, register.MessageId); err != nil {
+				log.Error(err)
+			}
 			log.Error("this capability UUID is already registered")
 			return
 		}
@@ -170,6 +177,8 @@ func (finController *FinController) HandleRegister(payload []byte) {
 
 	}
 
-	finController.SendAck(register.FinID, register.MessageId)
+	if err := finController.SendAck(register.FinID, register.MessageId); err != nil {
+		log.Error(err)
+	}
 
 }
