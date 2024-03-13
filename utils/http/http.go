@@ -159,7 +159,7 @@ func (httpOptions *HttpOptions) ExtractUrl() (string, error) {
 	}
 	target := httpOptions.Target
 
-	if len(target.Address) == 0 && target.HttpUrl == "" {
+	if len(target.Address) == 0 {
 		return "", errors.New("cacao.AgentTarget does not contain enough information to build a proper query path")
 	}
 
@@ -169,8 +169,10 @@ func (httpOptions *HttpOptions) ExtractUrl() (string, error) {
 		}
 	}
 
-	if target.HttpUrl != "" {
-		return parsePathBasedUrl(target.HttpUrl)
+	if len(target.Address["url"]) > 0 {
+		if target.Address["url"][0] != "" {
+			return parsePathBasedUrl(target.Address["url"][0])
+		}
 	}
 	return buildSchemeAndHostname(path, target)
 }
@@ -222,7 +224,12 @@ func extractHostname(scheme string, target *cacao.AgentTarget) (string, error) {
 			return "", errors.New("failed regex rule for domain name")
 		}
 		address = target.Address["ipv4"][0]
-
+	} else if len(target.Address["url"]) > 0 {
+		match, _ := regexp.MatchString(ipv4Regex, target.Address["url"][0])
+		if !match {
+			return "", errors.New("failed regex rule for domain name")
+		}
+		address = target.Address["url"][0]
 	} else {
 		return "", errors.New("unsupported target address type")
 	}

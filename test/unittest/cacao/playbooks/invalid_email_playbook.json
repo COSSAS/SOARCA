@@ -29,7 +29,6 @@
         "http-api--7e9174ec-a293-43df-a72d-471c79e276bf": {
             "type": "http-api",
             "name": "Firewall 1",
-            "http_url": "hxxp://example.com/v1/",
             "address": {
                 "dname": ["hxxp://example.com/v1/"]
             },

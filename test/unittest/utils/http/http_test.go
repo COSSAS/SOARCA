@@ -36,7 +36,11 @@ type httpBinResponseBody struct {
 func TestHttpGetConnection(t *testing.T) {
 	httpRequest := http.HttpRequest{}
 
-	target := cacao.AgentTarget{HttpUrl: "https://httpbin.org/get"}
+	target := cacao.AgentTarget{
+		Address: map[string][]string{
+			"url": {"https://httpbin.org/get"},
+		},
+	}
 	command := cacao.Command{
 		Type:    "http-api",
 		Command: "GET / HTTP/1.1",
@@ -60,7 +64,11 @@ func TestHttpGetConnection(t *testing.T) {
 func TestHttpPostConnection(t *testing.T) {
 	httpRequest := http.HttpRequest{}
 
-	target := cacao.AgentTarget{HttpUrl: "https://httpbin.org/post"}
+	target := cacao.AgentTarget{
+		Address: map[string][]string{
+			"url": {"https://httpbin.org/post"},
+		},
+	}
 	command := cacao.Command{
 		Type:    "http-api",
 		Command: "POST / HTTP/1.1",
@@ -83,7 +91,11 @@ func TestHttpPostConnection(t *testing.T) {
 
 func TestHttpPutConnection(t *testing.T) {
 	httpRequest := http.HttpRequest{}
-	target := cacao.AgentTarget{HttpUrl: "https://httpbin.org/put"}
+	target := cacao.AgentTarget{
+		Address: map[string][]string{
+			"url": {"https://httpbin.org/put"},
+		},
+	}
 	command := cacao.Command{
 		Type:    "http-api",
 		Command: "PUT / HTTP/1.1",
@@ -105,7 +117,11 @@ func TestHttpPutConnection(t *testing.T) {
 
 func TestHttpDeleteConnection(t *testing.T) {
 	httpRequest := http.HttpRequest{}
-	target := cacao.AgentTarget{HttpUrl: "https://httpbin.org/delete"}
+	target := cacao.AgentTarget{
+		Address: map[string][]string{
+			"url": {"https://httpbin.org/delete"},
+		},
+	}
 	command := cacao.Command{
 		Type:    "http-api",
 		Command: "DELETE / HTTP/1.1",
@@ -129,7 +145,11 @@ func TestHttpDeleteConnection(t *testing.T) {
 
 func TestHttpStatus200(t *testing.T) {
 	httpRequest := http.HttpRequest{}
-	target := cacao.AgentTarget{HttpUrl: "https://httpbin.org/status/200"}
+	target := cacao.AgentTarget{
+		Address: map[string][]string{
+			"url": {"https://httpbin.org/status/200"},
+		},
+	}
 	command := cacao.Command{
 		Type:    "http-api",
 		Command: "GET / HTTP/1.1",
@@ -153,7 +173,9 @@ func TestHttpBearerToken(t *testing.T) {
 	httpRequest := http.HttpRequest{}
 
 	target := cacao.AgentTarget{
-		HttpUrl:            "https://httpbin.org/bearer",
+		Address: map[string][]string{
+			"url": {"https://httpbin.org/bearer"},
+		},
 		AuthInfoIdentifier: "d0c7e6a0-f7fe-464e-9935-e6b3443f5b91",
 	}
 	auth := cacao.AuthenticationInformation{
@@ -196,9 +218,12 @@ func TestHttpBasicAuth(t *testing.T) {
 	httpRequest := http.HttpRequest{}
 
 	target := cacao.AgentTarget{
-		HttpUrl:            url,
+		Address: map[string][]string{
+			"url": []string{url},
+		},
 		AuthInfoIdentifier: "d0c7e6a0-f7fe-464e-9935-e6b3443f5b91",
 	}
+
 	auth := cacao.AuthenticationInformation{
 		Type:     cacao.AuthInfoHTTPBasicType,
 		Username: username,
@@ -246,7 +271,13 @@ func TestHttpPostWithContentConnection(t *testing.T) {
 	if len(requestBody) == 0 {
 		t.Error("empty response")
 	}
-	target := cacao.AgentTarget{HttpUrl: "https://httpbin.org/anything"}
+
+	target := cacao.AgentTarget{
+		Address: map[string][]string{
+			"url": {"https://httpbin.org/anything"},
+		},
+	}
+
 	command := cacao.Command{
 		Type:       "http-api",
 		Command:    "POST / HTTP/1.1",
@@ -363,7 +394,12 @@ func TestHttpPathIpv4Parser(t *testing.T) {
 }
 
 func TestHttpPathParser(t *testing.T) {
-	target := cacao.AgentTarget{HttpUrl: "https://godcapability.tno.nl"}
+	target := cacao.AgentTarget{
+		Address: map[string][]string{
+			"url": {"https://godcapability.tno.nl"},
+		},
+	}
+
 	command := cacao.Command{
 		Type:    "http-api",
 		Command: "POST / HTTP/1.1",
@@ -382,7 +418,12 @@ func TestHttpPathParser(t *testing.T) {
 }
 
 func TestHttpPathBreakingParser(t *testing.T) {
-	target := cacao.AgentTarget{HttpUrl: "https://"}
+	target := cacao.AgentTarget{
+		Address: map[string][]string{
+			"url": {"https://"},
+		},
+	}
+
 	command := cacao.Command{
 		Type:    "http-api",
 		Command: "POST / HTTP/1.1",

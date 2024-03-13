@@ -128,7 +128,7 @@ func TestCacaoDecode(t *testing.T) {
 	assert.Equal(t, workflow.AgentDefinitions["http-api--7e9174ec-a293-43df-a72d-471c79e276bf"].Name, "Firewall 1")
 	assert.Equal(t, workflow.AgentDefinitions["http-api--7e9174ec-a293-43df-a72d-471c79e276bf"].ID, "http-api--7e9174ec-a293-43df-a72d-471c79e276bf")
 	assert.Equal(t, workflow.AgentDefinitions["http-api--7e9174ec-a293-43df-a72d-471c79e276bf"].Type, "http-api")
-	assert.Equal(t, workflow.AgentDefinitions["http-api--7e9174ec-a293-43df-a72d-471c79e276bf"].HttpUrl, "hxxp://example.com/v1/")
+	assert.Equal(t, workflow.AgentDefinitions["http-api--7e9174ec-a293-43df-a72d-471c79e276bf"].Address["dname"][0], "hxxp://example.com/v1/")
 	assert.Equal(t, workflow.AgentDefinitions["http-api--7e9174ec-a293-43df-a72d-471c79e276bf"].Location.Name, "Eindhoven")
 
 	assert.Equal(t, workflow.AuthenticationInfoDefinitions["http-basic--76c26f7f-9a15-40ff-a90a-7b19e23372ae"].ID, "http-basic--76c26f7f-9a15-40ff-a90a-7b19e23372ae")
