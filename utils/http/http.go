@@ -124,6 +124,9 @@ func (httpOptions *HttpOptions) addAuthTo(request *http.Request) error {
 	if httpOptions.Auth == nil {
 		return nil
 	}
+	if (cacao.AuthenticationInformation{}) == *httpOptions.Auth {
+		return nil
+	}
 	if err := verifyAuthInfoMatchesAgentTarget(httpOptions.Target, httpOptions.Auth); err != nil {
 		return errors.New("auth info does not match target Id")
 	}
