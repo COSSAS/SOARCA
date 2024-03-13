@@ -49,7 +49,7 @@ func TestFinExecution(t *testing.T) {
 
 	//expectedCommand.CommandSubstructure.Context.GeneratedOn = ""
 
-	expectedVariableMap := map[string]cacao.Variable{"expected_variable": variable1}
+	expectedVariableMap := cacao.NewVariables(variable1)
 
 	//mockGuid.On("New").Return(id)
 	mockFinProtocol.On("SendCommand", expectedCommand).Return(expectedVariableMap, nil)

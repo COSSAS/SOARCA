@@ -38,7 +38,7 @@ func init() {
 }
 
 type IFinProtocol interface {
-	SendCommand(fin.Command) (map[string]cacao.Variable, error)
+	SendCommand(fin.Command) (cacao.Variables, error)
 }
 
 type FinProtocol struct {
@@ -55,7 +55,7 @@ func New(guid guid.IGuid, topic Topic, broker Broker, port int) FinProtocol {
 	return prot
 }
 
-func (protocol *FinProtocol) SendCommand(command fin.Command) (map[string]cacao.Variable, error) {
+func (protocol *FinProtocol) SendCommand(command fin.Command) (cacao.Variables, error) {
 
 	client, err := protocol.Connect(command.CommandSubstructure.Authentication)
 	if err != nil {

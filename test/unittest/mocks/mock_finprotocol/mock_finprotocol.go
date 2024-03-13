@@ -11,7 +11,7 @@ type MockFinProtocol struct {
 	mock.Mock
 }
 
-func (finProtocol *MockFinProtocol) SendCommand(command fin.Command) (map[string]cacao.Variable, error) {
+func (finProtocol *MockFinProtocol) SendCommand(command fin.Command) (cacao.Variables, error) {
 	args := finProtocol.Called(command)
-	return args.Get(0).(map[string]cacao.Variable), args.Error(1)
+	return args.Get(0).(cacao.Variables), args.Error(1)
 }

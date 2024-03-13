@@ -30,9 +30,12 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
+func (httpCapability *HttpCapability) GetType() string {
+	return "soarca-http-api"
+}
+
 // What to do if there is no agent or target?
 // And maybe no auth info either?
-
 func (httpCapability *HttpCapability) Execute(
 	metadata execution.Metadata,
 	command cacao.Command,

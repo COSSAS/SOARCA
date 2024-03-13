@@ -24,12 +24,16 @@ func New(finProtocol protocol.IFinProtocol) *FinCapability {
 	return &FinCapability{finProtocol: finProtocol}
 }
 
+func (FinCapability *FinCapability) GetType() string {
+	return "soarca-fin"
+}
+
 func (finCapability *FinCapability) Execute(
 	metadata execution.Metadata,
 	command cacao.Command,
 	authentication cacao.AuthenticationInformation,
 	target cacao.AgentTarget,
-	variables map[string]cacao.Variable) (map[string]cacao.Variable, error) {
+	variables cacao.Variables) (cacao.Variables, error) {
 
 	finCommand := finModel.NewCommand()
 	finCommand.CommandSubstructure.Command = command.Command
