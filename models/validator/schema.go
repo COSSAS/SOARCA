@@ -18,8 +18,9 @@ var component = reflect.TypeOf(Empty{}).PkgPath()
 var log *logger.Log
 
 var oca_cacao_schemas string = "https://raw.githubusercontent.com/opencybersecurityalliance/cacao-roaster/main/lib/cacao-json-schemas/schemas/playbook.json"
-var oasis_cacao_schemas string = "https://raw.githubusercontent.com/oasis-open/cacao-json-schemas/main/schemas/playbook.json"
-var cyentific_cacao_schemas string = "https://raw.githubusercontent.com/cyentific-rni/cacao-json-schemas/cacao-v2.0-csd03/schemas/playbook.json"
+
+//var oasis_cacao_schemas string = "https://raw.githubusercontent.com/oasis-open/cacao-json-schemas/main/schemas/playbook.json"
+//var cyentific_cacao_schemas string = "https://raw.githubusercontent.com/cyentific-rni/cacao-json-schemas/cacao-v2.0-csd03/schemas/playbook.json"
 
 func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
