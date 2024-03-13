@@ -18,7 +18,7 @@ func TestConnect(t *testing.T) {
 	// prot := protocol.FinProtocol{Guid: guid, Topic: protocol.Topic("testing"), Broker: "localhost", Port: 1883}
 
 	options := mqtt.NewClientOptions()
-	options.AddBroker(fmt.Sprintf("mqtt://localhost:1883"))
+	options.AddBroker("mqtt://localhost:1883")
 	options.SetClientID("soarca")
 	options.SetUsername("public")
 	options.SetPassword("password")
