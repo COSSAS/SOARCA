@@ -37,7 +37,7 @@ func TestHttpGetConnection(t *testing.T) {
 	httpRequest := http.HttpRequest{}
 
 	target := cacao.AgentTarget{
-		Address: map[string][]string{
+		Address: map[cacao.NetAddressType][]string{
 			"url": {"https://httpbin.org/get"},
 		},
 	}
@@ -65,7 +65,7 @@ func TestHttpPostConnection(t *testing.T) {
 	httpRequest := http.HttpRequest{}
 
 	target := cacao.AgentTarget{
-		Address: map[string][]string{
+		Address: map[cacao.NetAddressType][]string{
 			"url": {"https://httpbin.org/post"},
 		},
 	}
@@ -92,7 +92,7 @@ func TestHttpPostConnection(t *testing.T) {
 func TestHttpPutConnection(t *testing.T) {
 	httpRequest := http.HttpRequest{}
 	target := cacao.AgentTarget{
-		Address: map[string][]string{
+		Address: map[cacao.NetAddressType][]string{
 			"url": {"https://httpbin.org/put"},
 		},
 	}
@@ -118,7 +118,7 @@ func TestHttpPutConnection(t *testing.T) {
 func TestHttpDeleteConnection(t *testing.T) {
 	httpRequest := http.HttpRequest{}
 	target := cacao.AgentTarget{
-		Address: map[string][]string{
+		Address: map[cacao.NetAddressType][]string{
 			"url": {"https://httpbin.org/delete"},
 		},
 	}
@@ -146,7 +146,7 @@ func TestHttpDeleteConnection(t *testing.T) {
 func TestHttpStatus200(t *testing.T) {
 	httpRequest := http.HttpRequest{}
 	target := cacao.AgentTarget{
-		Address: map[string][]string{
+		Address: map[cacao.NetAddressType][]string{
 			"url": {"https://httpbin.org/status/200"},
 		},
 	}
@@ -173,7 +173,7 @@ func TestHttpBearerToken(t *testing.T) {
 	httpRequest := http.HttpRequest{}
 
 	target := cacao.AgentTarget{
-		Address: map[string][]string{
+		Address: map[cacao.NetAddressType][]string{
 			"url": {"https://httpbin.org/bearer"},
 		},
 		AuthInfoIdentifier: "d0c7e6a0-f7fe-464e-9935-e6b3443f5b91",
@@ -218,7 +218,7 @@ func TestHttpBasicAuth(t *testing.T) {
 	httpRequest := http.HttpRequest{}
 
 	target := cacao.AgentTarget{
-		Address: map[string][]string{
+		Address: map[cacao.NetAddressType][]string{
 			"url": []string{url},
 		},
 		AuthInfoIdentifier: "d0c7e6a0-f7fe-464e-9935-e6b3443f5b91",
@@ -273,7 +273,7 @@ func TestHttpPostWithContentConnection(t *testing.T) {
 	}
 
 	target := cacao.AgentTarget{
-		Address: map[string][]string{
+		Address: map[cacao.NetAddressType][]string{
 			"url": {"https://httpbin.org/anything"},
 		},
 	}
@@ -306,7 +306,7 @@ func TestHttpPostWithContentConnection(t *testing.T) {
 }
 
 func TestHttpPathDnameParser(t *testing.T) {
-	addresses := make(map[string][]string, 1)
+	addresses := make(map[cacao.NetAddressType][]string, 1)
 	addresses["dname"] = []string{"soarca.tno.nl"}
 
 	target := cacao.AgentTarget{Address: addresses, Port: strconv.Itoa(80)}
@@ -328,7 +328,7 @@ func TestHttpPathDnameParser(t *testing.T) {
 }
 
 func TestHttpPathDnamePortParser(t *testing.T) {
-	addresses := make(map[string][]string, 1)
+	addresses := make(map[cacao.NetAddressType][]string, 1)
 	addresses["dname"] = []string{"soarca.tno.nl"}
 
 	target := cacao.AgentTarget{Address: addresses, Port: strconv.Itoa(8080)}
@@ -350,7 +350,7 @@ func TestHttpPathDnamePortParser(t *testing.T) {
 }
 
 func TestHttpPathDnameRandomPortParser(t *testing.T) {
-	addresses := make(map[string][]string, 1)
+	addresses := make(map[cacao.NetAddressType][]string, 1)
 	addresses["dname"] = []string{"soarca.tno.nl"}
 
 	target := cacao.AgentTarget{Address: addresses, Port: strconv.Itoa(6464)}
@@ -372,7 +372,7 @@ func TestHttpPathDnameRandomPortParser(t *testing.T) {
 }
 
 func TestHttpPathIpv4Parser(t *testing.T) {
-	addresses := make(map[string][]string, 1)
+	addresses := make(map[cacao.NetAddressType][]string, 1)
 	addresses["ipv4"] = []string{"127.0.0.1"}
 
 	target := cacao.AgentTarget{Address: addresses, Port: strconv.Itoa(443)}
@@ -395,7 +395,7 @@ func TestHttpPathIpv4Parser(t *testing.T) {
 
 func TestHttpPathParser(t *testing.T) {
 	target := cacao.AgentTarget{
-		Address: map[string][]string{
+		Address: map[cacao.NetAddressType][]string{
 			"url": {"https://godcapability.tno.nl"},
 		},
 	}
@@ -419,7 +419,7 @@ func TestHttpPathParser(t *testing.T) {
 
 func TestHttpPathBreakingParser(t *testing.T) {
 	target := cacao.AgentTarget{
-		Address: map[string][]string{
+		Address: map[cacao.NetAddressType][]string{
 			"url": {"https://"},
 		},
 	}
@@ -494,7 +494,7 @@ func TestCommandFailedExtract(t *testing.T) {
 }
 
 func TestDnameWithInvalidPathParser(t *testing.T) {
-	addresses := make(map[string][]string, 1)
+	addresses := make(map[cacao.NetAddressType][]string, 1)
 	addresses["dname"] = []string{"soarca.tno.nl/this/path/shouldnt/be/used"}
 
 	target := cacao.AgentTarget{Address: addresses, Port: strconv.Itoa(6464)}
@@ -516,7 +516,7 @@ func TestDnameWithInvalidPathParser(t *testing.T) {
 }
 
 func TestHttpPathIpv4WithRandomPort(t *testing.T) {
-	addresses := make(map[string][]string, 1)
+	addresses := make(map[cacao.NetAddressType][]string, 1)
 	addresses["ipv4"] = []string{"127.0.0.1"}
 
 	target := cacao.AgentTarget{Address: addresses, Port: strconv.Itoa(6464)}
@@ -538,7 +538,7 @@ func TestHttpPathIpv4WithRandomPort(t *testing.T) {
 }
 
 func TestInvalidDname(t *testing.T) {
-	addresses := make(map[string][]string, 1)
+	addresses := make(map[cacao.NetAddressType][]string, 1)
 	addresses["dname"] = []string{"https://soarca.tno.nl"}
 
 	target := cacao.AgentTarget{Address: addresses, Port: strconv.Itoa(6464)}
@@ -561,7 +561,7 @@ func TestInvalidDname(t *testing.T) {
 }
 
 func TestInvalidIpv4(t *testing.T) {
-	addresses := make(map[string][]string, 1)
+	addresses := make(map[cacao.NetAddressType][]string, 1)
 	addresses["ipv4"] = []string{"https://127.0.0.1"}
 
 	target := cacao.AgentTarget{Address: addresses, Port: strconv.Itoa(6464)}
