@@ -7,6 +7,17 @@ import (
 	"github.com/go-playground/assert/v2"
 )
 
+func TestNewVariables(t *testing.T) {
+	variable := cacao.Variable{
+		Type:  "string",
+		Name:  "variable 1",
+		Value: "value 1",
+	}
+	variables := cacao.NewVariables(variable)
+	expected := cacao.Variables{"variable 1": variable}
+	assert.Equal(t, variables, expected)
+}
+
 func TestVariablesFind(t *testing.T) {
 	variables := make(cacao.Variables)
 	inserted := cacao.Variable{
