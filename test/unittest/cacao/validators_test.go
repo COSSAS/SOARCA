@@ -14,7 +14,7 @@ import (
 	"github.com/go-playground/assert/v2"
 )
 
-func TestNotValidCacaoJson(t *testing.T) {
+func TestNotValidCacaoJsonInvalidAgentTargetType(t *testing.T) {
 	jsonFile, err := os.Open(PB_PATH + "invalid_playbook.json")
 	if err != nil {
 		fmt.Println(err)
@@ -24,9 +24,13 @@ func TestNotValidCacaoJson(t *testing.T) {
 	byteValue, _ := io.ReadAll(jsonFile)
 	errValid := validator.IsValidCacaoJson(byteValue)
 	if errValid == nil {
-		fmt.Println(errValid)
 		t.Fail()
 	}
+
+	t.Log(errValid)
+	expected := "value must be \"http-api\""
+	assert.Equal(t, strings.Contains(fmt.Sprint(errValid), expected), true)
+
 }
 
 func TestValidCacaoJson(t *testing.T) {
