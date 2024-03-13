@@ -17,10 +17,7 @@ type Empty struct{}
 var component = reflect.TypeOf(Empty{}).PkgPath()
 var log *logger.Log
 
-var cacao_v1_csd01_http string = "https://raw.githubusercontent.com/cyentific-rni/cacao-json-schemas/cacao-v1.0-csd02/schemas/playbook.json"
-var cacao_v2_csd01_http string = "https://raw.githubusercontent.com/cyentific-rni/cacao-json-schemas/cacao-v2.0-csd01/schemas/playbook.json"
-
-//var cacao_v2_csd03_http string = "https://raw.githubusercontent.com/cyentific-rni/cacao-json-schemas/cacao-v2.0-csd03/schemas/playbook.json"
+var oca_cacao_schemas string = "https://raw.githubusercontent.com/opencybersecurityalliance/cacao-roaster/main/lib/cacao-json-schemas/schemas/playbook.json"
 
 func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
@@ -45,11 +42,7 @@ func UnmarshalJson[BodyType any](b *[]byte) (any, error) {
 	return body, nil
 }
 
-// TODO: change return to just error as boolean does not provide additional info
-
 func IsValidCacaoJson(data []byte) error {
-	// NOTE: Using cacao-v2.0-csd01 instead of cacao-v2.0-csd03
-	// Because latest version seem to have a bug. Opened issue in repo
 
 	var rawJson map[string]interface{}
 	if err := json.Unmarshal([]byte(data), &rawJson); err != nil {
@@ -65,15 +58,9 @@ func IsValidCacaoJson(data []byte) error {
 	var err error
 	switch version {
 	case cacao.CACAO_VERSION_1:
-		sch, err = compiler.Compile(cacao_v1_csd01_http)
-		if err != nil {
-			return err
-		}
+		return errors.New("you submitted a cacap v1 playbook. at the moment, soarca only supports cacao v2 playbooks")
 	case cacao.CACAO_VERSION_2:
-		// NOTE: CURRENTLY THERE IS AN INCONSISTENCY BETWEEN CDS01 AND CDS03
-		// The cds03 schema is bugged at the time being (13/11/2023)
-		// So we cannot validate checking authentication information
-		sch, err = compiler.Compile(cacao_v2_csd01_http)
+		sch, err = compiler.Compile(oca_cacao_schemas)
 		if err != nil {
 			return err
 		}
