@@ -40,7 +40,7 @@ type Register struct {
 	ProtocolVersion string       `json:"protocol_version"`
 	Security        Security     `json:"security"`
 	Capabilities    []Capability `json:"capabilities"`
-	Meta            Meta         `json:"meta, omitempty"`
+	Meta            Meta         `json:"meta,omitempty"`
 }
 
 // Capability register message substructure
@@ -48,8 +48,8 @@ type Capability struct {
 	Id      string                       `json:"capability_id"`
 	Name    string                       `json:"name"`
 	Version string                       `json:"version"`
-	Step    map[string]Step              `json:"step, omitempty"`
-	Agent   map[string]cacao.AgentTarget `json:"agent, omitempty"`
+	Step    map[string]Step              `json:"step,omitempty"`
+	Agent   map[string]cacao.AgentTarget `json:"agent,omitempty"`
 }
 
 // Step structure as example to the executor
