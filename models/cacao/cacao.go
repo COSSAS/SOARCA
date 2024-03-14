@@ -24,6 +24,19 @@ const (
 	CACAO_VERSION_2       = "cacao-2.0"
 )
 
+// Custom type intended for AgentTarget.Address dict keys
+// not used at the moment as it would break a few things
+type NetAddressType string
+
+const (
+	DName NetAddressType = "dname"
+	IPv4  NetAddressType = "ipv4"
+	IPv6  NetAddressType = "ipv6"
+	L2Mac NetAddressType = "l2mac"
+	VLan  NetAddressType = "vlan"
+	Url   NetAddressType = "url"
+)
+
 type (
 	Extensions map[string]interface{}
 	Workflow   map[string]Step
@@ -94,20 +107,19 @@ type Contact struct {
 }
 
 type AgentTarget struct {
-	ID                    string              `bson:"id,omitempty" json:"id,omitempty"`
-	Type                  string              `bson:"type" json:"type" validate:"required"`
-	Name                  string              `bson:"name" json:"name" validate:"required"`
-	Description           string              `bson:"description,omitempty" json:"description,omitempty"`
-	Location              CivicLocation       `bson:"location,omitempty" json:"location,omitempty"`
-	AgentTargetExtensions Extensions          `bson:"agent_target_extensions,omitempty" json:"agent_target_extensions,omitempty"`
-	Contact               Contact             `bson:"contact,omitempty" json:"contact,omitempty"`
-	Logical               []string            `bson:"logical,omitempty" json:"logical,omitempty"`
-	Sector                string              `bson:"sector,omitempty" json:"sector,omitempty"`
-	HttpUrl               string              `bson:"http_url,omitempty" json:"http_url,omitempty"`
-	AuthInfoIdentifier    string              `bson:"authentication_info,omitempty" json:"authentication_info,omitempty"`
-	Category              []string            `bson:"category,omitempty" json:"category,omitempty"`
-	Address               map[string][]string `bson:"address,omitempty" json:"address,omitempty"`
-	Port                  string              `bson:"port,omitempty" json:"port,omitempty"`
+	ID                    string                      `bson:"id,omitempty" json:"id,omitempty"`
+	Type                  string                      `bson:"type" json:"type" validate:"required"`
+	Name                  string                      `bson:"name" json:"name" validate:"required"`
+	Description           string                      `bson:"description,omitempty" json:"description,omitempty"`
+	Location              CivicLocation               `bson:"location,omitempty" json:"location,omitempty"`
+	AgentTargetExtensions Extensions                  `bson:"agent_target_extensions,omitempty" json:"agent_target_extensions,omitempty"`
+	Contact               Contact                     `bson:"contact,omitempty" json:"contact,omitempty"`
+	Logical               []string                    `bson:"logical,omitempty" json:"logical,omitempty"`
+	Sector                string                      `bson:"sector,omitempty" json:"sector,omitempty"`
+	AuthInfoIdentifier    string                      `bson:"authentication_info,omitempty" json:"authentication_info,omitempty"`
+	Category              []string                    `bson:"category,omitempty" json:"category,omitempty"`
+	Address               map[NetAddressType][]string `bson:"address,omitempty" json:"address,omitempty"`
+	Port                  string                      `bson:"port,omitempty" json:"port,omitempty"`
 }
 
 type AuthenticationInformation struct {

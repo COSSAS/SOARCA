@@ -99,7 +99,7 @@ func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
 	return results, err
 }
 
-func CombinePortAndAddress(addresses map[string][]string, port string) string {
+func CombinePortAndAddress(addresses map[cacao.NetAddressType][]string, port string) string {
 	if port == "" {
 		port = "22"
 	}

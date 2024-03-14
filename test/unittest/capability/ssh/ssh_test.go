@@ -76,14 +76,14 @@ func TestAuthenticationValidationPrivateKeyAuthSpacesAsUser(t *testing.T) {
 }
 
 func TestAddressAndPortCombination(t *testing.T) {
-	ipv4 := map[string][]string{"ipv4": {"134.221.49.62"}}
+	ipv4 := map[cacao.NetAddressType][]string{"ipv4": {"134.221.49.62"}}
 	port := "22"
 	expectedFqdn := "134.221.49.62:22"
 	result := ssh.CombinePortAndAddress(ipv4, port)
 	assert.Equal(t, result, expectedFqdn)
 }
 func TestAddressAndPortCombinationNoPort(t *testing.T) {
-	ipv4 := map[string][]string{"ipv4": {"134.221.49.62"}}
+	ipv4 := map[cacao.NetAddressType][]string{"ipv4": {"134.221.49.62"}}
 	port := ""
 	expectedFqdn := "134.221.49.62:22"
 	result := ssh.CombinePortAndAddress(ipv4, port)
@@ -91,14 +91,14 @@ func TestAddressAndPortCombinationNoPort(t *testing.T) {
 }
 
 func TestAddressAndPortCombinationNoAddress(t *testing.T) {
-	ipv4 := map[string][]string{}
+	ipv4 := map[cacao.NetAddressType][]string{}
 	port := "22"
 	expectedFqdn := ""
 	result := ssh.CombinePortAndAddress(ipv4, port)
 	assert.Equal(t, result, expectedFqdn)
 }
 func TestAddressAndPortCombinationNoIpv4Address(t *testing.T) {
-	ipv4 := map[string][]string{"invallid": {"feed::0001"}}
+	ipv4 := map[cacao.NetAddressType][]string{"invallid": {"feed::0001"}}
 	port := "22"
 	expectedFqdn := ""
 	result := ssh.CombinePortAndAddress(ipv4, port)

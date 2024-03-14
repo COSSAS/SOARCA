@@ -25,11 +25,15 @@
             "password": "super-secure-password"
         }
     },
-    "agents": {
+    "agent_definitions": {
         "http-api--7e9174ec-a293-43df-a72d-471c79e276bf": {
             
+            "type": "invalid",
             "name": "Firewall 1",
-            "http_url": "hxxp://example.com/v1/",
+            "address": {
+                "dname": ["hxxp://example.com/v1/"]
+            },
+            
             "authentication_info": "http-basic--76c26f7f-9a15-40ff-a90a-7b19e23372ae",
             "category": [
                 "firewall"
@@ -61,7 +65,7 @@
                     "command": "GET http://__imc_address__/by/__cve__"
                 }
             ],
-            "agent": "individual--6b23a237-ade8-4d00-9aa1-75999732d557"
+            "agent": "http-api--7e9174ec-a293-43df-a72d-471c79e276bf"
         },
         "action--9fcc5c3b-0b70-4d73-b922-cf5491dcd1a4": {
             "type": "action",
@@ -74,7 +78,7 @@
                     "command": "GET http://__bia_address__/analysisreport/__cve__"
                 }
             ],
-            "agent": "individual--6b23a237-ade8-4d00-9aa1-75999732d557"
+            "agent": "http-api--7e9174ec-a293-43df-a72d-471c79e276bf"
         },
         "action--09b97fab-56a1-45dc-a88f-be3cde3eac33": {
             "type": "action",
@@ -87,7 +91,7 @@
                     "command": "GET http://__coagenerator_address__/coa/__assetuuid__"
                 }
             ],
-            "agent": "individual--6b23a237-ade8-4d00-9aa1-75999732d557"
+            "agent": "http-api--7e9174ec-a293-43df-a72d-471c79e276bf"
         },
         "action--2190f685-1857-44ac-ad0e-0ded6c6ef3ce": {
             "type": "action",
@@ -100,7 +104,7 @@
                     "command": "GET http://__bia_address__/analysisreport/__coa_list__"
                 }
             ],
-            "agent": "individual--6b23a237-ade8-4d00-9aa1-75999732d557"
+            "agent": "http-api--7e9174ec-a293-43df-a72d-471c79e276bf"
         },
         "end--6b23c237-ade8-4d00-9aa1-75999738d557": {
             "type": "end",
