@@ -6,10 +6,13 @@ import (
 	"reflect"
 
 	"soarca/internal/capability"
+	capabilityController "soarca/internal/capability/controller"
+	finExecutor "soarca/internal/capability/fin"
 	"soarca/internal/capability/http"
 	"soarca/internal/capability/ssh"
 	"soarca/internal/decomposer"
 	"soarca/internal/executer"
+	"soarca/internal/fin/protocol"
 	"soarca/internal/guid"
 	"soarca/logger"
 	"soarca/utils"
@@ -30,7 +33,8 @@ func init() {
 }
 
 type Controller struct {
-	playbookRepo playbookrepository.IPlaybookRepository
+	finController capabilityController.IFinController
+	playbookRepo  playbookrepository.IPlaybookRepository
 }
 
 var mainController = Controller{}
@@ -41,6 +45,13 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 
 	http := new(http.HttpCapability)
 	capabilities[http.GetType()] = http
+
+	finCapabilities := controller.finController.GetRegisteredCapabilities()
+	for key := range finCapabilities {
+		prot := protocol.New(&guid.Guid{}, protocol.Topic(key), "localhost", 1883)
+		fin := finExecutor.New(&prot)
+		capabilities[key] = fin
+	}
 
 	executer := executer.New(capabilities)
 	guid := new(guid.Guid)
@@ -78,6 +89,10 @@ func Initialize() error {
 	log.Info("Testing if info log works")
 	log.Debug("Testing if debug log works")
 	log.Trace("Testing if Trace log works")
+
+	if err := mainController.setupAndRunMqtt(); err != nil {
+		log.Error(err)
+	}
 
 	errCore := initializeCore(app)
 
@@ -120,4 +135,17 @@ func initializeCore(app *gin.Engine) error {
 	routes.Logging(app)
 	routes.Swagger(app)
 	return err
+}
+
+func (controller *Controller) setupAndRunMqtt() error {
+	mqttClient := capabilityController.NewClient("localhost", 1883)
+	capabilityController := capabilityController.New(*mqttClient)
+	controller.finController = capabilityController
+	err := capabilityController.ConnectAndSubscribe()
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+	go capabilityController.Run()
+	return nil
 }
