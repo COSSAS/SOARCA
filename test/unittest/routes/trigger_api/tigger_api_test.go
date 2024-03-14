@@ -12,6 +12,7 @@ import (
 	"soarca/internal/decomposer"
 	"soarca/models/cacao"
 	"soarca/routes/trigger"
+	mock_decomposer_controller "soarca/test/unittest/mocks/mock_controller/decomposer"
 	"soarca/test/unittest/mocks/mock_decomposer"
 
 	"github.com/gin-gonic/gin"
@@ -30,11 +31,13 @@ func TestExecutionOfPlaybook(t *testing.T) {
 	app := gin.New()
 	gin.SetMode(gin.DebugMode)
 	mock_decomposer := new(mock_decomposer.Mock_Decomposer)
+	mock_controller := new(mock_decomposer_controller.Mock_Controller)
+	mock_controller.On("NewDecomposer").Return(mock_decomposer)
 	playbook := cacao.Decode(byteValue)
 	mock_decomposer.On("Execute", *playbook).Return(&decomposer.ExecutionDetails{}, nil)
 
 	recorder := httptest.NewRecorder()
-	trigger_api := trigger.New(mock_decomposer)
+	trigger_api := trigger.New(mock_controller)
 	trigger.Routes(app, trigger_api)
 
 	request, err := http.NewRequest("POST", "/trigger/playbook", bytes.NewBuffer(byteValue))

@@ -42,7 +42,7 @@ func main() {
 		log.Warning("Failed to read env variable, but will continue")
 	}
 
-	errinit := controller.InitializeAppComponents()
+	errinit := controller.Initialize()
 	if errinit != nil {
 		log.Fatal("Something Went wrong with setting-up the app, msg: ", errinit)
 		panic(errinit)

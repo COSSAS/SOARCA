@@ -1,8 +1,8 @@
 package routes
 
 import (
-	playbookRepository "soarca/database/playbook"
-	"soarca/internal/decomposer"
+	"soarca/internal/controller/database"
+	"soarca/internal/controller/decomposer"
 	coa_routes "soarca/routes/coa"
 	operator "soarca/routes/operator"
 	playbook_routes "soarca/routes/playbook"
@@ -19,9 +19,9 @@ import (
 // Requires database dependency injection.
 
 func Database(app *gin.Engine,
-	playbookRepo playbookRepository.IPlaybookRepository,
+	controller database.IController,
 ) error {
-	playbook_routes.Routes(app, playbookRepo)
+	playbook_routes.Routes(app, controller)
 	return nil
 }
 
@@ -30,12 +30,12 @@ func Logging(app *gin.Engine) {
 }
 
 func Api(app *gin.Engine,
-	decomposer decomposer.IDecomposer,
+	controller decomposer.IController,
 ) error {
 	log.Trace("Trying to setup all Routes")
 	// gin.SetMode(gin.ReleaseMode)
 
-	trigger_api := trigger.New(decomposer)
+	trigger_api := trigger.New(controller)
 
 	coa_routes.Routes(app)
 

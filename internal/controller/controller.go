@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	"soarca/internal/capability"
+	"soarca/internal/capability/http"
 	"soarca/internal/capability/ssh"
 	"soarca/internal/decomposer"
 	"soarca/internal/executer"
@@ -16,7 +17,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	mongo "soarca/database/mongodb"
-	playbookRepo "soarca/database/playbook"
+	playbookrepository "soarca/database/playbook"
 	routes "soarca/routes"
 )
 
@@ -28,34 +29,26 @@ func init() {
 	log = logger.Logger(reflect.TypeOf(Empty{}).PkgPath(), logger.Info, "", logger.Json)
 }
 
-func InitializeAppComponents() error {
-	app := gin.New()
-	log.Info("Testing if this works")
-
-	initDatabase := utils.GetEnv("DATABASE", "false")
-	if initDatabase == "true" {
-		errDatabase := InitializeDatabase(app)
-		if errDatabase != nil {
-			log.Error("Failed to init core")
-			return errDatabase
-		}
-	}
-	errCore := InitializeCore(app)
-
-	if errCore != nil {
-		log.Error("Failed to init core")
-		return errCore
-	}
-
-	port := utils.GetEnv("PORT", "8080")
-	err := app.Run(":" + port)
-	if err != nil {
-		log.Error("failed to run gin")
-	}
-	return err
+type Controller struct {
+	playbookRepo playbookrepository.IPlaybookRepository
 }
 
-func InitializeDatabase(app *gin.Engine) error {
+var mainController = Controller{}
+
+func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
+	ssh := new(ssh.SshCapability)
+	capabilities := map[string]capability.ICapability{ssh.GetType(): ssh}
+
+	http := new(http.HttpCapability)
+	capabilities[http.GetType()] = http
+
+	executer := executer.New(capabilities)
+	guid := new(guid.Guid)
+	decompose := decomposer.New(executer, guid)
+	return decompose
+}
+
+func (controller *Controller) setupDatabase() error {
 	mongo.LoadComponent()
 
 	log.Info("SOARCA API Trying to start")
@@ -71,27 +64,54 @@ func InitializeDatabase(app *gin.Engine) error {
 	if err != nil {
 		return err
 	}
-	// defer database.GetMongoClient().CloseMongoDB()
+	controller.playbookRepo = playbookrepository.SetupPlaybookRepository(mongo.GetCacaoRepo(), mongo.DefaultLimitOpts())
 
-	playbookRepo := playbookRepo.SetupPlaybookRepository(mongo.GetCacaoRepo(), mongo.DefaultLimitOpts())
+	return nil
+}
 
-	// setup database routes
-	err = routes.Database(app, playbookRepo)
+func (controller *Controller) GetDatabaseInstance() playbookrepository.IPlaybookRepository {
+	return controller.playbookRepo
+}
+
+func Initialize() error {
+	app := gin.New()
+	log.Info("Testing if info log works")
+	log.Debug("Testing if debug log works")
+	log.Trace("Testing if Trace log works")
+
+	errCore := initializeCore(app)
+
+	if errCore != nil {
+		log.Error("Failed to init core")
+		return errCore
+	}
+
+	port := utils.GetEnv("PORT", "8080")
+	err := app.Run(":" + port)
+	if err != nil {
+		log.Error("failed to run gin")
+	}
+	log.Info("exit")
 
 	return err
 }
 
-func InitializeCore(app *gin.Engine) error {
-	ssh := new(ssh.SshCapability)
-	capabilities := map[string]capability.ICapability{ssh.GetType(): ssh}
-	executer := executer.New(capabilities)
-	guid := new(guid.Guid)
-	decompose := decomposer.New(executer, guid)
+func initializeCore(app *gin.Engine) error {
 
-	err := routes.Api(app, decompose)
+	err := routes.Api(app, &mainController)
 	if err != nil {
 		log.Error(err)
 		return err
+	}
+
+	initDatabase := utils.GetEnv("DATABASE", "false")
+	if initDatabase == "true" {
+		mainController.setupDatabase()
+		err = routes.Database(app, &mainController)
+		if err != nil {
+			log.Error(err)
+			return err
+		}
 	}
 	routes.Logging(app)
 	routes.Swagger(app)
