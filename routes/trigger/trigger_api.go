@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"reflect"
 
-	"soarca/internal/decomposer"
+	"soarca/internal/controller/decomposer"
 	"soarca/logger"
 	"soarca/models/decoder"
 	"soarca/routes/error"
@@ -26,16 +26,18 @@ func init() {
 }
 
 type TriggerApi struct {
-	decomposer decomposer.IDecomposer
+	controller decomposer.IController
 }
 
-func New(decomposer decomposer.IDecomposer) *TriggerApi {
+func New(controller decomposer.IController) *TriggerApi {
 	instance := TriggerApi{}
-	instance.decomposer = decomposer
+	instance.controller = controller
 	return &instance
 }
 
 func (trigger *TriggerApi) Execute(context *gin.Context) {
+	// create new decomposer when execute is called
+	decomposer := trigger.controller.NewDecomposer()
 	jsonData, errIo := io.ReadAll(context.Request.Body)
 	if errIo != nil {
 		log.Error("failed")
@@ -52,7 +54,7 @@ func (trigger *TriggerApi) Execute(context *gin.Context) {
 			"POST /trigger/playbook", "")
 		return
 	}
-	executionDetail, errDecomposer := trigger.decomposer.Execute(*playbook)
+	executionDetail, errDecomposer := decomposer.Execute(*playbook)
 	if errDecomposer != nil {
 		error.SendErrorResponse(context, http.StatusBadRequest,
 			"Failed to decode playbook",

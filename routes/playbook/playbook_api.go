@@ -5,19 +5,20 @@ import (
 	"net/http"
 	"strconv"
 
-	playbookRepository "soarca/database/playbook"
+	playbookrepository "soarca/database/playbook"
+	"soarca/internal/controller/database"
 
 	"github.com/gin-gonic/gin"
 )
 
 // A PlaybookController implements the playbook API endpoints is dependent on a database.
 type playbookController struct {
-	playbookRepo playbookRepository.IPlaybookRepository
+	playbookRepo playbookrepository.IPlaybookRepository
 }
 
 // NewPlaybookController makes a new instance of playbookControler
-func NewPlaybookController(playbookRepo playbookRepository.IPlaybookRepository) *playbookController {
-	return &playbookController{playbookRepo: playbookRepo}
+func NewPlaybookController(controller database.IController) *playbookController {
+	return &playbookController{playbookRepo: controller.GetDatabaseInstance()}
 }
 
 // getAllPlaybooks GET handler for obtaining all the playbooks in the database and return this to the gin context in json format

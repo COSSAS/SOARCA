@@ -1,7 +1,7 @@
 package playbook
 
 import (
-	playbookRepository "soarca/database/playbook"
+	"soarca/internal/controller/database"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,8 +12,8 @@ import (
 // GET     /playbook/playbook-id
 // PUT     /playbook/playbook-id
 // DELETE  /playbook/playbook-id
-func Routes(route *gin.Engine, playbookRepo playbookRepository.IPlaybookRepository) {
-	playbookController := NewPlaybookController(playbookRepo)
+func Routes(route *gin.Engine, controller database.IController) {
+	playbookController := NewPlaybookController(controller)
 	playbook := route.Group("/playbook")
 	{
 		playbook.GET("/", playbookController.getAllPlaybooks)
