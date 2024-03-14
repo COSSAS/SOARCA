@@ -24,7 +24,7 @@ If there's something you'd like to see in SOARCA (or if you've found something t
 
 
 {{% alert title="Security issues" color="warning" %}}
-For security issues, we kindly request that you refrain from reporting them using the issue tracker. Instead, please contact us directly: `soarca@cossas-project.nl` or [slack](https://cossas.slack.com/archives/C06L65375TN)
+For security issues, we kindly request that you refrain from reporting them using the issue tracker. Instead, please contact us directly: [slack](https://cossas.slack.com/archives/C06L65375TN)
 {{% /alert %}}
 
 
@@ -37,13 +37,29 @@ You can submit feature requests either through GitHub issues or the discussion p
 Every submission, including those from project members, must undergo review and approval from at least one core maintainer. GitHub pull requests are utilized for this process. Consult [GitHub Help](https://help.github.com/articles/about-pull-requests/) for more
 information on using pull requests.
 
+### Branch naming
+
+The CI is configured to only allow for certain branch naming namely:
+- master
+- development
+- feature/<your feature name here>
+- feature/docs/<your feature to update docs>
+- bugfix/<your bugfix here> #it should be small!
+- release/x.x
+- hotfix/<your hotfix on a release branch>
+
+### Coding style
+
+The project has opted to select the [go style guide](https://google.github.io/styleguide/go/) with some exceptions:
+- Receiver name are not one letter https://google.github.io/styleguide/go/decisions#receiver-names so use `info` instead of `i` 
+- Initialisms are CamelCase https://google.github.io/styleguide/go/decisions#receiver-names so use `Xml` instead of `XML`
 
 ## Communication channels
 
 Feel free to engage with the community for discussions and assistance via one of the following channels:
 
 - [slack](https://cossas.slack.com/archives/C06L65375TN)
-- [GitHub discussions](https://github.com/COSSAS/SOARCA/issues)
+- [GitHub discussions](https://github.com/COSSAS/SOARCA/discussions)
 
 ## Contributing to these docs
  
