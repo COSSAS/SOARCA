@@ -23,7 +23,9 @@ func TestOpenC2Request(t *testing.T) {
 	stepId, _ := uuid.Parse("81eff59f-d084-4324-9e0a-59e353dbd28f")
 
 	target := cacao.AgentTarget{
-		HttpUrl:            "https://soarca.tno.nl",
+		Address: map[cacao.NetAddressType][]string{
+			"url": {"https://soarca.tno.nl"},
+		},
 		AuthInfoIdentifier: authId.String(),
 	}
 
