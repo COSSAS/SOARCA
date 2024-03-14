@@ -26,7 +26,11 @@ func TestConnect(t *testing.T) {
 	client := mqtt.NewClient(options)
 
 	finController := controller.New(client)
-	err := finController.Start("localhost", 1883)
-	fmt.Print(err)
+
+	if err := finController.ConnectAndSubscribe(); err != nil {
+		fmt.Print(err)
+		t.Fail()
+	}
+	finController.Run()
 
 }

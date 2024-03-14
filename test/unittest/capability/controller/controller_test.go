@@ -64,3 +64,19 @@ func TestGetRegisteredc(t *testing.T) {
 	token2.AssertExpectations(t)
 
 }
+
+func TestConnectAndSubsribe(t *testing.T) {
+	mqtt := new(mock_mqtt.Mock_MqttClient)
+	token := mock_mqtt.Mock_MqttToken{}
+	capabiltyController := controller.New(mqtt)
+
+	token.On("Wait").Return(true)
+	token.On("Error").Return(nil)
+	mqtt.On("Connect").Return(&token)
+	token.On("Wait").Return(true)
+	token.On("Error").Return(nil)
+	mqtt.On("Subscribe", "soarca", uint8(1), mock.Anything).Return(&token)
+	capabiltyController.ConnectAndSubscribe()
+	mqtt.AssertExpectations(t)
+	token.AssertExpectations(t)
+}
