@@ -1,0 +1,44 @@
+version: '3.7'
+services:
+  mosquitto:
+    image: eclipse-mosquitto
+    container_name: mosquitto
+    volumes:
+      - type: volume
+        source: mosquitto_config
+        target: /mosquitto/config
+      - type: volume
+        source: mosquitto_data
+        target: /mosquitto/data
+      - type: volume
+        source: mosquitto_log
+        target: /mosquitto/log
+    ports:
+      - target: 1883
+        published: 1883
+        protocol: tcp
+        mode: host
+      - target: 9001
+        published: 9001
+        protocol: tcp
+        mode: host
+
+volumes:
+  mosquitto_config:
+    driver: local # Define the driver and options under the volume name
+    driver_opts:
+      type: none
+      device: ./config
+      o: bind
+  mosquitto_data:
+    driver: local # Define the driver and options under the volume name
+    driver_opts:
+      type: none
+      device: ./data
+      o: bind
+  mosquitto_log:
+    driver: local # Define the driver and options under the volume name
+    driver_opts:
+      type: none
+      device: ./log
+      o: bind

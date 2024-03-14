@@ -36,19 +36,20 @@ type Register struct {
 	Type            string       `json:"type"`
 	MessageId       string       `json:"message_id"`
 	FinID           string       `json:"fin_id"`
+	Name            string       `json:"fin_name"`
 	ProtocolVersion string       `json:"protocol_version"`
 	Security        Security     `json:"security"`
 	Capabilities    []Capability `json:"capabilities"`
-	Meta            Meta         `json:"meta"`
+	Meta            Meta         `json:"meta,omitempty"`
 }
 
 // Capability register message substructure
 type Capability struct {
-	CapabilityId string                       `json:"capability_id"`
-	Name         string                       `json:"name"`
-	Version      string                       `json:"version"`
-	Step         map[string]Step              `json:"step"`
-	Agent        map[string]cacao.AgentTarget `json:"agent"`
+	Id      string                       `json:"capability_id"`
+	Name    string                       `json:"name"`
+	Version string                       `json:"version"`
+	Step    map[string]Step              `json:"step,omitempty"`
+	Agent   map[string]cacao.AgentTarget `json:"agent,omitempty"`
 }
 
 // Step structure as example to the executor
@@ -63,11 +64,11 @@ type Step struct {
 
 // Unregister command structure
 type Unregister struct {
-	Type         string `json:"type"`
-	MessageId    string `json:"message_id"`
-	CapabilityId string `json:"capability_id"`
-	FinID        string `json:"fin_id"`
-	All          string `json:"all"`
+	Type      string `json:"type"`
+	MessageId string `json:"message_id"`
+	Id        string `json:"capability_id"`
+	FinID     string `json:"fin_id"`
+	All       string `json:"all"`
 }
 
 // Command
@@ -140,7 +141,8 @@ type Meta struct {
 }
 
 type Message struct {
-	Type string `json:"type"`
+	Type      string `json:"type"`
+	MessageId string `json:"message_id"`
 }
 
 func NewCommand() Command {
@@ -150,6 +152,16 @@ func NewCommand() Command {
 	//instance.CommandSubstructure.Context.GeneratedOn = time.Now()
 
 	return instance
+}
+
+func NewAck(messageId string) Ack {
+	ack := Ack{Type: MessageTypeAck, MessageId: messageId}
+	return ack
+}
+
+func NewNack(messageId string) Nack {
+	nack := Nack{Type: MessageTypeNack, MessageId: messageId}
+	return nack
 }
 
 func Decode(data []byte, object any) error {
