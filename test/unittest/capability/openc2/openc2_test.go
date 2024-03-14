@@ -68,11 +68,11 @@ func TestOpenC2Request(t *testing.T) {
 		command,
 		auth,
 		target,
-		cacao.VariableMap{"test": cacaoVariable})
+		cacao.NewVariables(cacaoVariable))
 	if err != nil {
 		t.Log(err)
 		t.Fail()
 	}
 	t.Log(results)
-	assert.Equal(t, results["__soarca_openc2_result__"].Value, payload)
+	assert.Equal(t, results["__soarca_openc2_http_result__"].Value, payload)
 }

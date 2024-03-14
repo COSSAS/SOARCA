@@ -16,8 +16,8 @@ type OpenC2Capability struct {
 type Empty struct{}
 
 const (
-	openc2ResultVariableName = "__soarca_openc2_result__"
-	openc2capabilityName     = "soarca-openc2-capability"
+	openc2ResultVariableName = "__soarca_openc2_http_result__"
+	openc2capabilityName     = "soarca-openc2-http"
 )
 
 var (
@@ -42,8 +42,8 @@ func (OpenC2Capability *OpenC2Capability) Execute(
 	command cacao.Command,
 	authentication cacao.AuthenticationInformation,
 	target cacao.AgentTarget,
-	variables cacao.VariableMap,
-) (cacao.VariableMap, error) {
+	variables cacao.Variables,
+) (cacao.Variables, error) {
 	log.Trace(metadata.ExecutionId)
 
 	httpOptions := http.HttpOptions{
@@ -54,10 +54,10 @@ func (OpenC2Capability *OpenC2Capability) Execute(
 	response, err := OpenC2Capability.httpRequest.Request(httpOptions)
 	if err != nil {
 		log.Error(err)
-		return cacao.VariableMap{}, err
+		return cacao.NewVariables(), err
 	}
 
-	results := cacao.VariableMap{openc2ResultVariableName: {Name: "result", Value: string(response)}}
+	results := cacao.NewVariables(cacao.Variable{Name: openc2ResultVariableName, Value: string(response)})
 	log.Trace("Finished openc2 execution, will return the variables: ", results)
 	return results, nil
 }
