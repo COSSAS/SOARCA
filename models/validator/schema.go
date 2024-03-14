@@ -61,7 +61,7 @@ func IsValidCacaoJson(data []byte) error {
 	var err error
 	switch version {
 	case cacao.CACAO_VERSION_1:
-		return errors.New("you submitted a cacap v1 playbook. at the moment, soarca only supports cacao v2 playbooks")
+		return errors.New("you submitted a cacao v1 playbook. at the moment, soarca only supports cacao v2 playbooks")
 	case cacao.CACAO_VERSION_2:
 		sch, err = compiler.Compile(oca_cacao_schemas)
 		if err != nil {
