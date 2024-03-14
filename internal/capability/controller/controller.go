@@ -58,7 +58,7 @@ func NewClient(url protocol.Broker, port int) *mqtt.Client {
 }
 
 // This function will only return on a fatal error
-func (finController *FinController) Start(broker string, port int) error {
+func (finController *FinController) Start() error {
 	if finController.mqttClient == nil {
 		return errors.New("fincontroller mqtt cilent is nil")
 	}
@@ -71,7 +71,14 @@ func (finController *FinController) Start(broker string, port int) error {
 
 	token := finController.mqttClient.Subscribe(string("soarca"), 1, finController.Handler)
 	token.Wait()
+	if err := token.Error(); err != nil {
+		return err
+	}
+	go finController.loop()
+	return nil
+}
 
+func (finController *FinController) loop() {
 	for {
 		result := <-finController.channel
 		finController.Handle(result)
