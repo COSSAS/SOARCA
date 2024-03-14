@@ -76,7 +76,8 @@ func TestConnectAndSubsribe(t *testing.T) {
 	token.On("Wait").Return(true)
 	token.On("Error").Return(nil)
 	mqtt.On("Subscribe", "soarca", uint8(1), mock.Anything).Return(&token)
-	capabiltyController.ConnectAndSubscribe()
+	err := capabiltyController.ConnectAndSubscribe()
+	assert.Equal(t, err, nil)
 	mqtt.AssertExpectations(t)
 	token.AssertExpectations(t)
 }
