@@ -106,7 +106,11 @@ func initializeCore(app *gin.Engine) error {
 
 	initDatabase := utils.GetEnv("DATABASE", "false")
 	if initDatabase == "true" {
-		mainController.setupDatabase()
+		err = mainController.setupDatabase()
+		if err != nil {
+			log.Error(err)
+			return err
+		}
 		err = routes.Database(app, &mainController)
 		if err != nil {
 			log.Error(err)
