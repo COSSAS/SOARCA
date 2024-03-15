@@ -17,7 +17,7 @@ type Empty struct{}
 
 const (
 	openc2ResultVariableName = "__soarca_openc2_http_result__"
-	openc2capabilityName     = "soarca-openc2-http"
+	openc2CapabilityName     = "soarca-openc2-http"
 )
 
 var (
@@ -34,7 +34,7 @@ func New(httpRequest http.IHttpRequest) *OpenC2Capability {
 }
 
 func (OpenC2Capability *OpenC2Capability) GetType() string {
-	return openc2capabilityName
+	return openc2CapabilityName
 }
 
 func (OpenC2Capability *OpenC2Capability) Execute(

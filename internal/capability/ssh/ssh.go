@@ -13,6 +13,11 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+const (
+	sshResultVariableName = "__soarca_ssh_result__"
+	sshCapabilityName     = "soarca-ssh"
+)
+
 type SshCapability struct {
 }
 
@@ -24,7 +29,7 @@ func init() {
 }
 
 func (sshCapability *SshCapability) GetType() string {
-	return "soarca-ssh-capability"
+	return sshCapabilityName
 }
 
 func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
@@ -94,7 +99,7 @@ func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
 		log.Error(err)
 		return cacao.NewVariables(), err
 	}
-	results := cacao.NewVariables(cacao.Variable{Name: "__soarca_ssh_result__", Value: string(response)})
+	results := cacao.NewVariables(cacao.Variable{Name: sshResultVariableName, Value: string(response)})
 	log.Trace("Finished ssh execution will return the variables: ", results)
 	return results, err
 }

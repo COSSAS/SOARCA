@@ -62,7 +62,7 @@ func TestExecutePlaybook(t *testing.T) {
 
 	expectedAgent := cacao.AgentTarget{
 		Type: "soarca",
-		Name: "soarca-ssh-capability",
+		Name: "soarca-ssh",
 	}
 
 	playbook := cacao.Playbook{
@@ -175,7 +175,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 
 	expectedAgent := cacao.AgentTarget{
 		Type: "soarca",
-		Name: "soarca-ssh-capability",
+		Name: "soarca-ssh",
 	}
 
 	playbook := cacao.Playbook{
@@ -245,7 +245,7 @@ func TestExecuteEmptyMultiStep(t *testing.T) {
 
 	expectedAgent := cacao.AgentTarget{
 		Type: "soarca",
-		Name: "soarca-ssh-capability",
+		Name: "soarca-ssh",
 	}
 
 	decomposer2 := decomposer.New(mock_executer2, uuid_mock2)

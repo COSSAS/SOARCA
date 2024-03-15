@@ -18,6 +18,11 @@ import (
 // Run HTTP API call
 // Return response
 
+const (
+	httpApiResultVariableName = "__soarca_http_api_result__"
+	httpApiCapabilityName     = "soarca-http-api"
+)
+
 type HttpCapability struct {
 }
 
@@ -31,7 +36,7 @@ func init() {
 }
 
 func (httpCapability *HttpCapability) GetType() string {
-	return "soarca-http-api"
+	return httpApiCapabilityName
 }
 
 // What to do if there is no agent or target?
@@ -97,7 +102,7 @@ func (httpCapability *HttpCapability) Execute(
 		return cacao.NewVariables(), errors.New(respString)
 	}
 
-	return cacao.NewVariables(cacao.Variable{Name: "__soarca_http_result__", Value: respString}), nil
+	return cacao.NewVariables(cacao.Variable{Name: httpApiResultVariableName, Value: respString}), nil
 
 }
 
