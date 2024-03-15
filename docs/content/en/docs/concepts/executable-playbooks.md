@@ -282,7 +282,7 @@ This is de JSON data of the playbook used throughout this page.
       },
       "on_completion": "action--76fe4c02-6a5d-43ae-8736-433c07ab80b8",
       "type": "while-condition",
-      "condition": "__soarca_ssh_result__ != '5'",
+      "condition": "__soarca_ssh_result__:value != '5'",
       "on_true": "action--a32cdbb6-403a-47c7-a35b-07430a8de3fd"
     },
     "action--a32cdbb6-403a-47c7-a35b-07430a8de3fd": {
