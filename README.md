@@ -1,9 +1,8 @@
 # SOARCA
-Automate threat and incident response workflows with CACAO security playbooks	
 
 ![soarca](/img/soarca-logo.svg)
 
-
+Automate threat and incident response workflows with CACAO security playbooks	
 
 ## Context and backgound 
 
