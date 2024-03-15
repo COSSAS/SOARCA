@@ -1,6 +1,6 @@
 # SOARCA
 
-![soarca](/img/soarca-logo.png)
+![soarca](/img/soarca-logo.svg)
 
 Automate threat and incident response workflows with CACAO security playbooks	
 
