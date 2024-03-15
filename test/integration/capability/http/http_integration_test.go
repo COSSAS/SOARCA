@@ -5,17 +5,24 @@ import (
 	"soarca/internal/capability/http"
 	"soarca/models/cacao"
 	"soarca/models/execution"
+	httpUtil "soarca/utils/http"
 	"testing"
 
 	"github.com/google/uuid"
 )
 
 func TestHttpConnection(t *testing.T) {
-	httpCapability := new(http.HttpCapability)
+	request := httpUtil.HttpRequest{}
+	httpCapability := http.New(&request)
 
+	target := cacao.AgentTarget{
+		Address: map[cacao.NetAddressType][]string{
+			"url": {"https://httpbin.org/get"},
+		},
+	}
 	expectedCommand := cacao.Command{
 		Type:    "http-api",
-		Command: "GET https://httpbin.org/",
+		Command: "GET / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
 
@@ -34,7 +41,7 @@ func TestHttpConnection(t *testing.T) {
 	results, err := httpCapability.Execute(
 		metadata, expectedCommand,
 		cacao.AuthenticationInformation{},
-		cacao.AgentTarget{},
+		target,
 		cacao.NewVariables(variable1))
 	if err != nil {
 		fmt.Println(err)
@@ -45,31 +52,26 @@ func TestHttpConnection(t *testing.T) {
 }
 
 func TestHttpOAuth2(t *testing.T) {
-	httpCapability := new(http.HttpCapability)
+	request := httpUtil.HttpRequest{}
+	httpCapability := http.New(&request)
 
-	var oauth2_info = cacao.AuthenticationInformation{
-		ID:    "6ba7b810-9dad-11d1-80b4-00c04fd430c9",
-		Type:  "oauth2",
-		Token: "this-is-a-test",
+	bearerToken := "test_token"
+
+	target := cacao.AgentTarget{
+		Address: map[cacao.NetAddressType][]string{
+			"url": {"https://httpbin.org/bearer"},
+		},
+		AuthInfoIdentifier: "d0c7e6a0-f7fe-464e-9935-e6b3443f5b91",
 	}
-
-	expectedCommand := cacao.Command{
+	auth := cacao.AuthenticationInformation{
+		Type:  cacao.AuthInfoOAuth2Type,
+		Token: bearerToken,
+		ID:    "d0c7e6a0-f7fe-464e-9935-e6b3443f5b91",
+	}
+	command := cacao.Command{
 		Type:    "http-api",
-		Command: "GET https://httpbin.org/bearer",
+		Command: "GET / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
-	}
-
-	var variable1 = cacao.Variable{
-		Type:  "string",
-		Name:  "test_auth",
-		Value: "",
-	}
-
-	var target = cacao.AgentTarget{
-		ID:                 "6ba7b810-9dad-11d1-80b4-00c04fd430c0",
-		Type:               "http-api",
-		Name:               "Cybersec APIs",
-		AuthInfoIdentifier: "6ba7b810-9dad-11d1-80b4-00c04fd430c9",
 	}
 
 	var executionId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
@@ -78,10 +80,10 @@ func TestHttpOAuth2(t *testing.T) {
 	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId.String(), StepId: stepId.String()}
 	results, err := httpCapability.Execute(
 		metadata,
-		expectedCommand,
-		oauth2_info,
+		command,
+		auth,
 		target,
-		cacao.NewVariables(variable1))
+		cacao.NewVariables())
 	if err != nil {
 		fmt.Println(err)
 		t.Fail()
@@ -90,32 +92,30 @@ func TestHttpOAuth2(t *testing.T) {
 }
 
 func TestHttpBasicAuth(t *testing.T) {
-	httpCapability := new(http.HttpCapability)
+	request := httpUtil.HttpRequest{}
+	httpCapability := http.New(&request)
+	username := "test"
+	password := "password"
+	url := fmt.Sprintf("https://httpbin.org/basic-auth/%s/%s", username, password)
 
-	var basicauth_info = cacao.AuthenticationInformation{
-		ID:       "6ba7b810-9dad-11d1-80b4-00c04fd430c9",
-		Type:     "http-basic",
-		Username: "username_test",
-		Password: "password_test",
+	target := cacao.AgentTarget{
+		Address: map[cacao.NetAddressType][]string{
+			"url": []string{url},
+		},
+		AuthInfoIdentifier: "d0c7e6a0-f7fe-464e-9935-e6b3443f5b91",
 	}
 
-	expectedCommand := cacao.Command{
+	auth := cacao.AuthenticationInformation{
+		Type:     cacao.AuthInfoHTTPBasicType,
+		Username: username,
+		Password: password,
+		ID:       "d0c7e6a0-f7fe-464e-9935-e6b3443f5b91",
+	}
+
+	command := cacao.Command{
 		Type:    "http-api",
-		Command: "GET https://httpbin.org/hidden-basic-auth/username_test/password_test",
+		Command: "GET / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
-	}
-
-	var variable1 = cacao.Variable{
-		Type:  "string",
-		Name:  "test_auth",
-		Value: "",
-	}
-
-	var target = cacao.AgentTarget{
-		ID:                 "6ba7b810-9dad-11d1-80b4-00c04fd430c0",
-		Type:               "http-api",
-		Name:               "Cybersec APIs",
-		AuthInfoIdentifier: "6ba7b810-9dad-11d1-80b4-00c04fd430c9",
 	}
 	var executionId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	var playbookId, _ = uuid.Parse("d09351a2-a075-40c8-8054-0b7c423db83f")
@@ -123,10 +123,10 @@ func TestHttpBasicAuth(t *testing.T) {
 	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId.String(), StepId: stepId.String()}
 	results, err := httpCapability.Execute(
 		metadata,
-		expectedCommand,
-		basicauth_info,
+		command,
+		auth,
 		target,
-		cacao.NewVariables(variable1))
+		cacao.NewVariables())
 	if err != nil {
 		fmt.Println(err)
 		t.Fail()
