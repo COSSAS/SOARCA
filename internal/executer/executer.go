@@ -57,6 +57,13 @@ func (executer *Executer) Execute(metadata execution.Metadata,
 			target.Address[key] = slice
 		}
 
+		authentication.Password = variables.Interpolate(authentication.Password)
+		authentication.Username = variables.Interpolate(authentication.Username)
+		authentication.UserId = variables.Interpolate(authentication.UserId)
+		authentication.Token = variables.Interpolate(authentication.Token)
+		authentication.OauthHeader = variables.Interpolate(authentication.OauthHeader)
+		authentication.PrivateKey = variables.Interpolate(authentication.PrivateKey)
+
 		returnVariables, err := capability.Execute(metadata, command, authentication, target, variables)
 		return metadata.ExecutionId, returnVariables, err
 	} else {

@@ -161,8 +161,56 @@ func TestVariableInterpolation(t *testing.T) {
 		Value: "1.3.3.7",
 	}
 
+	varUser := cacao.Variable{
+		Type:  "string",
+		Name:  "__user__",
+		Value: "soarca-user",
+	}
+	varPassword := cacao.Variable{
+		Type:  "string",
+		Name:  "__password__",
+		Value: "soarca-password",
+	}
+	varToken := cacao.Variable{
+		Type:  "string",
+		Name:  "__token__",
+		Value: "soarca-token",
+	}
+	varUserId := cacao.Variable{
+		Type:  "string",
+		Name:  "__userid__",
+		Value: "soarca-userid",
+	}
+
+	varOauth := cacao.Variable{
+		Type:  "string",
+		Name:  "__oauth__",
+		Value: "soarca-oauth",
+	}
+	varPrivateKey := cacao.Variable{
+		Type:  "string",
+		Name:  "__privatekey__",
+		Value: "soarca-privatekey",
+	}
+
+	inputAuth := cacao.AuthenticationInformation{
+		Name:        "soarca",
+		Username:    "__user__:value",
+		UserId:      "__userid__:value",
+		Password:    "__password__:value",
+		PrivateKey:  "__privatekey__:value",
+		Token:       "__token__:value",
+		OauthHeader: "__oauth__:value",
+	}
+
 	expectedAuth := cacao.AuthenticationInformation{
-		Name: "user",
+		Name:        "soarca",
+		Username:    "soarca-user",
+		UserId:      "soarca-userid",
+		Password:    "soarca-password",
+		PrivateKey:  "soarca-privatekey",
+		Token:       "soarca-token",
+		OauthHeader: "soarca-oauth",
 	}
 
 	inputTarget := cacao.AgentTarget{
@@ -191,15 +239,15 @@ func TestVariableInterpolation(t *testing.T) {
 		expectedCommand,
 		expectedAuth,
 		expectedTarget,
-		cacao.NewVariables(var1, var2, var3)).
+		cacao.NewVariables(var1, var2, var3, varUser, varPassword, varOauth, varPrivateKey, varToken, varUserId)).
 		Return(cacao.NewVariables(var1),
 			nil)
 
 	_, _, err := executerObject.Execute(metadata,
 		inputCommand,
-		expectedAuth,
+		inputAuth,
 		inputTarget,
-		cacao.NewVariables(var1, var2, var3),
+		cacao.NewVariables(var1, var2, var3, varUser, varPassword, varOauth, varPrivateKey, varToken, varUserId),
 		agent)
 
 	assert.Equal(t, err, nil)
