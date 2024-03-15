@@ -48,10 +48,10 @@ This module does not define specific variables as input, but variable interpolat
 ```json
 {
     "workflow": {
-        "action--00010001-1000-1000-a000-000100010001": {
+        "action--7777c6b6-e275-434e-9e0b-d68f72e691c1": {
             "type": "action",
             "agent": "soarca--00010001-1000-1000-a000-000100010001",
-            "targets": ["linux--00010001-1000-1000-a000-000100010001"],
+            "targets": ["linux--c7e6af1b-9e5a-4055-adeb-26b97e1c4db7"],
             "commands": [
                 {
                     "type": "ssh",
@@ -67,7 +67,7 @@ This module does not define specific variables as input, but variable interpolat
         }
     },
     "target_definitions": {
-        "linux--00010001-1000-1000-a000-000100010001": {
+        "linux--c7e6af1b-9e5a-4055-adeb-26b97e1c4db7": {
             "type": "linux",
             "name": "target",
             "address": { "ipv4": ["10.0.0.1"] }
@@ -109,10 +109,10 @@ The result of the step is stored in the following output variables:
 ```json
 {
     "workflow": {
-        "action--00010001-1000-1000-a000-000100010001": {
+        "action--8baa7c78-751b-4de9-81d4-775806cee0fb": {
             "type": "action",
             "agent": "soarca--00020001-1000-1000-a000-000100010001",
-            "targets": ["http-api--00010001-1000-1000-a000-000100010001"],
+            "targets": ["http-api--4ebae9c3-9454-4e28-b25b-0f43cd97f9e0"],
             "commands": [
                 {
                     "type": "http-api",
@@ -129,7 +129,7 @@ The result of the step is stored in the following output variables:
         }
     },
     "target_definitions": {
-        "http-api--00010001-1000-1000-a000-000100010001": {
+        "http-api--4ebae9c3-9454-4e28-b25b-0f43cd97f9e0": {
             "type": "http-api",
             "name": "target",
             "address": { "dname": ["my.server.com"] }
@@ -168,10 +168,10 @@ The result of the step is stored in the following output variables:
 ```json
 {
     "workflow": {
-        "action--00010001-1000-1000-a000-000100010001": {
+        "action--aa1470d8-57cc-4164-ae07-05745bef24f4": {
             "type": "action",
             "agent": "soarca--00030001-1000-1000-a000-000100010001",
-            "targets": ["http-api--00010001-1000-1000-a000-000100010001"],
+            "targets": ["http-api--5a274b6d-dc65-41f7-987e-9717a7941876"],
             "commands": [{
                 "type": "openc2-http",
                 "command": "POST /openc2-api/ HTTP/1.1",
@@ -189,7 +189,7 @@ The result of the step is stored in the following output variables:
         }
     },
     "target_definitions": {
-        "http-api--00010001-1000-1000-a000-000100010001": {
+        "http-api--5a274b6d-dc65-41f7-987e-9717a7941876": {
             "type": "http-api",
             "name": "openc2-compliant actuator",
             "address": { "ipv4": ["187.0.2.12"] }
