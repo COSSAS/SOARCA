@@ -30,7 +30,7 @@ For security issues, we kindly request that you refrain from reporting them usin
 
 ### Feature additions or requests
 
-You can submit feature requests either through GitHub issues or the discussion pages.
+You can submit feature requests either through [GitHub issues](https://github.com/COSSAS/SOARCA/issues) or the [discussion pages](https://github.com/COSSAS/SOARCA/discussions).
 
 ### Code reviews
 
