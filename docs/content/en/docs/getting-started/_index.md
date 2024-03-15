@@ -17,7 +17,7 @@ Before you begin, you might need to install the following tools:
 
 ## Quick Run
 
-Below, we outline various options to kickstart SOARCA. The latests pre-compiled releases can be found [here]().
+Below, we outline various options to kickstart SOARCA. The latest pre-compiled releases can be found [here]().
 
 {{< tabpane langEqualsHeader=false  >}}
 {{< tab header="make" lang="sh" >}}
@@ -53,12 +53,12 @@ swag init
 {{< /tabpane >}}
 {{% /alert %}}
 
-Compiles binary files can be found under `/bin`. 
+Compiled binary files can be found under `/bin`. 
 
 
 ## Configuration
 
-SOARCA reads it's configuration from the environment variables or an `.env` file. An example of an `.env` is given below:
+SOARCA reads its configuration from the environment variables or a `.env` file. An example of a `.env` is given below:
 
 {{< tabpane langEqualsHeader=false  >}}
 {{< tab header="`.env`" lang="txt" >}}

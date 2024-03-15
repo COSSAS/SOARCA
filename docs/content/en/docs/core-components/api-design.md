@@ -145,10 +145,10 @@ When the caller does not have valid authentication 401/unauthorized will be retu
 ---- 
 
 ### /playbook
-The playbook endpoinst are used to create playbooks in SOARCA, new playbook can be added, current ones edited and deleted. 
+The playbook endpoints are used to create playbooks in SOARCA, new playbooks can be added, and current ones edited and deleted. 
 
 #### GET `/playbook`
-Get all playbook id's that are currently stored in SOARCA.
+Get all playbook ids that are currently stored in SOARCA.
 
 ##### Call payload
 None
@@ -172,7 +172,7 @@ None
 General error
 
 #### GET `/playbook/meta`
-Get all playbook id's that are currently stored in SOARCA.
+Get all playbook ids that are currently stored in SOARCA.
 
 ##### Call payload
 None
@@ -204,7 +204,7 @@ General error
 
 
 #### POST `/playbook`
-Create a new playbook that and store it in SOARCA. The format is 
+Create a new playbook and store it in SOARCA. The format is 
 
 
 ##### Payload
@@ -285,12 +285,12 @@ None
 200/OK if deleted
 
 ##### Error
-400/BAD REQUEST if resource does not exist
+400/BAD REQUEST if the resource does not exist
 
 ---
 
 #### POST `/trigger/playbook/xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx` 
-Execute playbook with specific id
+Execute playbook with a specific id
 
 ##### Call payload
 None
@@ -313,13 +313,13 @@ Will return 200/OK when finished with playbook playbook.
 ---
 
 #### POST `/trigger/playbook`
-Execute an adhoc playbook
+Execute an ad-hoc playbook
 
 ##### Call payload
 A playbook like [cacao playbook JSON](#cacao-playbook-json)
 
 ##### Response
-Will return 200/OK when finished with playbook.
+Will return 200/OK when finished with the playbook.
 
 ```plantuml
 @startjson
@@ -473,7 +473,7 @@ Get all running playbooks
 ---- 
 
 #### GET `/status/playbook/xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx (playbook-id)`
-Get playbook details which is running which will return cacao playbook JSON
+Get playbook details of running a playbook. It will return CACAO playbook JSON
 
 ##### Call payload
 None
@@ -490,7 +490,7 @@ Empty payload if no playbooks are running
 ----
 
 #### GET `/status/playbook/{playbook-id}`
-Get coarse of action list for coa awaiting action.
+Get course of action list for coa awaiting action.
 
 ##### Call payload
 None
@@ -518,7 +518,7 @@ None
 ---
 
 #### GET /status/history
-Get all playbook id's and statuses that have been run excluded those that are running or paused.
+Get all playbook ids and statuses that have been run excluded those that are running or paused.
 
 ##### Call payload
 None

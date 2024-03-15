@@ -27,7 +27,7 @@ category = "categories"
 taxonomyCloud = ["tags", "categories"]
 
 # If used, must have same length as taxonomyCloud
-taxonomyCloudTitle = ["Tag Cloud", "Categories"]
+taxonomyCloudTitle = ["Tags", "Categories"]
 
 # set taxonomyPageHeader = [] to hide taxonomies on the page headers
 taxonomyPageHeader = ["tags", "categories"]
@@ -87,7 +87,7 @@ section = ["HTML", "print", "RSS"]
 
 [params]
 copyright = "The SOARCA Authors"
-privacy_policy = "https://policies.google.com/privacy"
+privacy_policy = "https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement"
 
 # First one is picked as the Twitter card image if not set on page.
 # images = ["images/project-illustration.png"]
@@ -185,11 +185,11 @@ enable = false
   url = "https://github.com/COSSAS/SOARCA"
   icon = "fab fa-github"
   desc = "Development takes place here!"
-# [[params.links.developer]]
-#   name = "Slack"
-#   url = "https://example.org/slack"
-#   icon = "fab fa-slack"
-#   desc = "Chat with other project developers"
+[[params.links.developer]]
+  name = "Slack"
+  url = "https://cossas.slack.com/archives/C06L65375TN"
+  icon = "fab fa-slack"
+  desc = "Chat with other project developers"
 # [[params.links.developer]]
 #   name = "Developer mailing list"
 #   url = "https://example.org/mail"

@@ -7,7 +7,7 @@ categories: [architecture]
 tags: [logging]
 ---
 
-SOARCA support extensive logging. Logging is based on the [logrus](https://github.com/sirupsen/logrus) framework. 
+SOARCA supports extensive logging. Logging is based on the [logrus](https://github.com/sirupsen/logrus) framework. 
 ## Format
 Logging can be done in different formats suitable for your application. The following formats are available:
 
@@ -22,18 +22,18 @@ Logging can be done in different formats suitable for your application. The foll
 
 Later:
 
-* syslog (NOT IMPLEMENTED)
+* syslog (*NOT YET IMPLEMENTED*)
 
 ## Log levels
 SOARCA supports the following log levels. Also is indicated how they are used.
 
-* PANIC (non fixable error system crash)
-* FATAL (non fixable error, restart would fix)
-* ERROR (operation went wrong but can be caught by other higher component)
-* WARNING (let the user know some operation might not have the expected result but execution can continue on normal path)
-* INFO `default` (let the user know that a major event has occurred)
-* DEBUG (add some extra detail to normal execution paths)
-* TRACE (get some fine grained detail from the logging)
+* `PANIC` (non fixable error system crash)
+* `FATAL` (non fixable error, restart would fix)
+* `ERROR` (operation went wrong but can be caught by other higher component)
+* `WARNING` (let the user know some operation might not have the expected result but execution can continue on normal path)
+* `INFO` `default` (let the user know that a major event has occurred)
+* `DEBUG` (add some extra detail to normal execution paths)
+* `TRACE` (get some fine grained detail from the logging)
 
 ## Types of logging
 SOARCA will log different information, these will be combined in the same output. 
@@ -50,7 +50,6 @@ Will log the status of the execution of an playbook, database updates of playboo
 To use SOARCA logging you can add the following to your module.
 
 ```golang
-
 type YourModule struct {
 }
 
@@ -60,12 +59,11 @@ var log *logger.Log
 func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
-
 ```
 
 ## Changing log level
 
-To change logging for your SOARCA instance you can use use the following environment variables 
+To change logging for your SOARCA instance you can use the following environment variables 
 
 
 |variable |content |description
@@ -79,7 +77,6 @@ To change logging for your SOARCA instance you can use use the following environ
 This can be set as environment variables or loaded through the `.env`
 
 ```bash
-
 LOG_GLOBAL_LEVEL: "info"
 LOG_MODE: "production"
 LOG_FILE_PATH: ""

@@ -12,39 +12,54 @@ Thank you for contributing to our project! Your efforts make a difference.
 
 ## Contributing to SOARCA
 
-The SOARCA itself lives in https://github.com/google/ddcsy>.
-
+The SOARCA itself lives on [github](https://github.com/COSSAS/SOARCA).
 
 ## How to contribute
 
 Before making contributions to the project repositories, please follow these general steps for [GitHub contribution](https://docs.github.com/en/get-started/exploring-projects-on-github/contributing-to-a-project). 
 
-### I found a bug or Creating issues
+### I found a bug / Creating issues
 
-If there's something you'd like to see in SOARCA (or if you've found something that isn't working the way you'd expect), but you're not sure how to fix it yourself, please create an [issue](https://github.com/). Make sure to adhere to the structure of an issue submission. Fully comprehend the problem at hand and provide comprehensive details in your issue description.
+If there's something you'd like to see in SOARCA (or if you've found something that isn't working the way you'd expect), but you're not sure how to fix it yourself, please create an [issue](https://github.com/COSSAS/SOARCA/issues/new/choose). Make sure to adhere to the structure of an issue submission. Fully comprehend the problem at hand and provide comprehensive details in your issue description.
 
 
 {{% alert title="Security issues" color="warning" %}}
-For security issues, we kindly request that you refrain from reporting them using the issue tracker. Instead, please contact us directly: `to be added`
+For security issues, we kindly request that you refrain from reporting them using the issue tracker. Instead, please contact us directly: [slack](https://cossas.slack.com/archives/C06L65375TN)
 {{% /alert %}}
 
 
 ### Feature additions or requests
 
-You can submit feature requests either through GitHub issues or the discussion pages.
+You can submit feature requests either through [GitHub issues](https://github.com/COSSAS/SOARCA/issues) or the [discussion pages](https://github.com/COSSAS/SOARCA/discussions).
 
 ### Code reviews
 
 Every submission, including those from project members, must undergo review and approval from at least one core maintainer. GitHub pull requests are utilized for this process. Consult [GitHub Help](https://help.github.com/articles/about-pull-requests/) for more
 information on using pull requests.
 
+### Branch naming
+
+The CI is configured to only allow for certain branch naming namely:
+- master
+- development
+- feature/<your feature name here>
+- feature/docs/<your feature to update docs>
+- bugfix/<your bugfix here> #it should be small!
+- release/x.x
+- hotfix/<your hotfix on a release branch>
+
+### Coding style
+
+The project has opted to select the [go style guide](https://google.github.io/styleguide/go/) with some exceptions:
+- Receiver name are not one letter https://google.github.io/styleguide/go/decisions#receiver-names so use `info` instead of `i` 
+- Initialisms are CamelCase https://google.github.io/styleguide/go/decisions#receiver-names so use `Xml` instead of `XML`
 
 ## Communication channels
 
 Feel free to engage with the community for discussions and assistance via one of the following channels:
 
-- [Slack](https://google.com)
-- [Github discussions](https://github.com)
+- [slack](https://cossas.slack.com/archives/C06L65375TN)
+- [GitHub discussions](https://github.com/COSSAS/SOARCA/discussions)
 
 ## Contributing to these docs
  
@@ -62,8 +77,8 @@ Would you like to enhance our documentation? Our documentation is built using th
 
 If you've just spotted something you'd like to change while using the docs, Docsy has a shortcut for you:
 
-1. Click **Edit this page** in the top right hand corner of the page.
-1. If you don't already have an up to date fork of the project repo, you are prompted to get one - click **Fork this repository and propose changes** or **Update your Fork** to get an up to date version of the project to edit. The appropriate page in your fork is displayed in edit mode.
+1. Click **Edit this page** in the top right-hand corner of the page.
+1. If you don't already have an up-to-date fork of the project repo, you are prompted to get one - click **Fork this repository and propose changes** or **Update your Fork** to get an up-to-date version of the project to edit. The appropriate page in your fork is displayed in edit mode.
 
 
 ## License 

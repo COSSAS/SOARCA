@@ -3,23 +3,30 @@
 {{ $promo_image := (.Page.Resources.ByType "image").GetMatch "**background*" -}}
 {{ $logo_image := (.Page.Resources.ByType "image").GetMatch "**logo*" -}}
 {{ $col_id := .Get "color" | default "dark" -}}
-{{ $image_anchor := .Get "image_anchor" | default "smart" -}}
+{{ $image_anchor := .Get "image_anchor" | default "center" -}}
 {{ $logo_anchor := .Get "logo_anchor" | default "smart" -}}
 {{/* Height can be one of: auto, min, med, max, full. */ -}}
 {{ $height := .Get "height" | default "max" -}}
 
 {{ with $promo_image -}}
 {{ $promo_image_big := (.Fill (printf "1920x1080 %s" $image_anchor)) -}}
+{{ $promo_image_large := (.Fill (printf "4096x2160 %s" $image_anchor)) -}}
 {{ $promo_image_small := (.Fill (printf "960x540 %s" $image_anchor)) -}}
 <link rel="preload" as="image" href="{{ $promo_image_small.RelPermalink }}" media="(max-width: 1200px)">
-<link rel="preload" as="image" href="{{ $promo_image_big.RelPermalink }}" media="(min-width: 1200px)">
+<link rel="preload" as="image" href="{{ $promo_image_big.RelPermalink }}" media="(min-width: 1200px) and (max-width: 1920px)">
+<link rel="preload" as="image" href="{{ $promo_image_large.RelPermalink }}" media="(min-width: 1920px)">
 <style>
 #{{ $blockID }} {
   background-image: url({{ $promo_image_small.RelPermalink }});
 }
-@media only screen and (min-width: 1200px) {
+@media only screen and (min-width: 1200px) and (max-width: 1920px)  {
   #{{ $blockID }} {
     background-image: url({{ $promo_image_big.RelPermalink }});
+  }
+}
+@media only screen and (min-width: 1920px) {
+  #{{ $blockID }} {
+    background-image: url({{ $promo_image_large.RelPermalink }});
   }
 }
 </style>

@@ -8,7 +8,7 @@ description:
 ## V1.0
 ---- 
 
-Finally, the first release of alpha release of SOARCA is here! In the first release we put an emphasis on laying the inital foundation and design of SOARCA to enable proof-of-concept demonstrations. With release 
+Finally, the first release of the alpha release of SOARCA is here! In the first release, we emphasize laying the initial foundation and design of SOARCA to enable proof-of-concept demonstrations. Included in this release:
 
 - Execution of CACAO action steps via:
     - SSH
@@ -16,4 +16,4 @@ Finally, the first release of alpha release of SOARCA is here! In the first rele
     - OpenC2
 - Logging capabilities
 - Efficient storage for playbooks
-- Design fin-protocol: the protocol desription between SOARCA and 
+- Design fin-protocol: the protocol description  between SOARCA and the `TO BE ADDED`

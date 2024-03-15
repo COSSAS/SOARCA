@@ -8,16 +8,15 @@ description: >
 ---
 
 ## Components
-
-The executer consists of the following components. 
+The executor consists of the following components. 
 
 - The capability selector
 - Native capabilities (command executors)
-- MQTT capability to interact with: Fin capabilities (third party executors)
+- MQTT capability to interact with: Fin capabilities (third-party executors)
 
 ### Capability selector (Executor)
 
-The capability selector will select the implementation which is capable of executing the incoming command. There are native capabilities which are based on the CACAO `command-type-ov`:
+The capability selector will select the implementation which is capable of executing the incoming command. There are native capabilities based on the CACAO `command-type-ov`:
 
 * **Currently implemented**
     * ssh
@@ -35,9 +34,9 @@ The capability selector will select the implementation which is capable of execu
     * yara
 
 ### Native capabilities
-The Executor will select a module which is capable of execution the command and pass the detail to it. The capability selection is performed on the basis of the agent-type (see [Agent and Target Common Properties](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256509) in the CACAO 2.0 spec). The convention is that the agent type must equal `soarca-<capability identifier>`, e.g. `soarca-ssh` or `soarca-openc2-http`.
+The executor will select a module that is capable of executing the command and pass the details to it. The capability selection is performed based on the agent type (see [Agent and Target Common Properties](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256509) in the CACAO 2.0 spec). The convention is that the agent type must equal `soarca-<capability identifier>`, e.g. `soarca-ssh` or `soarca-openc2-http`.
 
-The result of the step execution will be returned to the decomposer. Result can be output variables or error status.
+The result of the step execution will be returned to the decomposer. A result can be either output variables or error status.
 
 ### MQTT executor -> Fin capabilities
 The Executor will put the command on the MQTT topic that is offered by the module. How a module handles this is described in the link:modules.adoc[module documentation]

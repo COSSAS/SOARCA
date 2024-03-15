@@ -8,17 +8,17 @@ description: >
 ---
 
 ##  Design decisions and core dependencies
-To allow for fast execution and type safe development SOARCA is developed in `go`. The application application can be deployed in `Docker`. Further dependencies are `MQTT` for the module system and `go-gin` for the REST API.
+To allow for fast execution and type-safe development SOARCA is developed in `go`. The application application can be deployed in `Docker`. Further dependencies are `MQTT` for the module system and `go-gin` for the REST API.
 
 
-The overview on this page is aimed to guid you through the SOARCA architecture and components as well as the main flow. 
+The overview on this page is aimed to guide you through the SOARCA architecture and components as well as the main flow. 
 
 ## Components
 
 Components of SOARCA are displayed in the component diagram. 
 - Green is implemented 
 - Orange has limited functionality
-- Red is not started, but will be added in future releases
+- Red is not started but will be added in future releases
 
 ```plantuml
 @startuml
@@ -156,9 +156,9 @@ IExecuter -> Decomposer
 
 
 ## Main application flow
-These sequences will show the simplified overview how the SOARCA components interact.
+These sequences will show a simplified overview of how the SOARCA components interact.
 
-The main flow of the application is the following. Execution will start by processing the JSON formatted CACAO playbook if successful the playbook is handed over to the Decomposer. This is where the playbook is decomposed into it's parts and passed step by step to the executor. These operations will block the api until execution is finished. For now no variables are exposed via the API to the caller.
+The main flow of the application is the following. Execution will start by processing the JSON formatted CACAO playbook if successful the playbook is handed over to the Decomposer. This is where the playbook is decomposed into its parts and passed step by step to the executor. These operations will block the API until execution is finished. For now, no variables are exposed via the API to the caller.
 
 ```plantuml
 Actor Caller
