@@ -115,8 +115,10 @@ func verifyAuthInfoMatchesAgentTarget(
 }
 
 func (httpOptions *HttpOptions) addHeaderTo(request *http.Request) {
-	for header_key, header_value := range httpOptions.Command.Headers {
-		request.Header.Add(header_key, header_value)
+	for headerKey, headerValues := range httpOptions.Command.Headers {
+		for _, headerValue := range headerValues {
+			request.Header.Add(headerKey, headerValue)
+		}
 	}
 }
 

@@ -38,7 +38,7 @@ func TestOpenC2Request(t *testing.T) {
 	command := cacao.Command{
 		Type:    "http-api",
 		Command: "POST / HTTP/1.1",
-		Headers: map[string]string{"accept": "application/json"},
+		Headers: map[string][]string{"accept": {"application/json"}},
 	}
 
 	cacaoVariable := cacao.Variable{

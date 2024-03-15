@@ -155,15 +155,15 @@ type ExtensionDefinition struct {
 }
 
 type Command struct {
-	Type             string            `bson:"type"  json:"type" validate:"required"`
-	Command          string            `bson:"command" json:"command" validate:"required"`
-	Description      string            `bson:"description,omitempty" json:"description,omitempty"`
-	CommandB64       string            `bson:"command_b64,omitempty" json:"command_b64,omitempty"`
-	Version          string            `bson:"version,omitempty" json:"version,omitempty"`
-	PlaybookActivity string            `bson:"playbook_activity,omitempty" json:"playbook_activity,omitempty"`
-	Headers          map[string]string `bson:"headers,omitempty" json:"headers,omitempty"`
-	Content          string            `bson:"content,omitempty" json:"content,omitempty"`
-	ContentB64       string            `bson:"content_b64,omitempty" json:"content_b64,omitempty"`
+	Type             string              `bson:"type"  json:"type" validate:"required"`
+	Command          string              `bson:"command" json:"command" validate:"required"`
+	Description      string              `bson:"description,omitempty" json:"description,omitempty"`
+	CommandB64       string              `bson:"command_b64,omitempty" json:"command_b64,omitempty"`
+	Version          string              `bson:"version,omitempty" json:"version,omitempty"`
+	PlaybookActivity string              `bson:"playbook_activity,omitempty" json:"playbook_activity,omitempty"`
+	Headers          map[string][]string `bson:"headers,omitempty" json:"headers,omitempty"`
+	Content          string              `bson:"content,omitempty" json:"content,omitempty"`
+	ContentB64       string              `bson:"content_b64,omitempty" json:"content_b64,omitempty"`
 }
 
 type Step struct {
