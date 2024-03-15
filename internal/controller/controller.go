@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"reflect"
+	"strconv"
 
 	"soarca/internal/capability"
 	capabilityController "soarca/internal/capability/controller"
@@ -46,11 +47,21 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	http := new(http.HttpCapability)
 	capabilities[http.GetType()] = http
 
-	finCapabilities := controller.finController.GetRegisteredCapabilities()
-	for key := range finCapabilities {
-		prot := protocol.New(&guid.Guid{}, protocol.Topic(key), "localhost", 1883)
-		fin := finExecutor.New(&prot)
-		capabilities[key] = fin
+	enableFins, _ := strconv.ParseBool(utils.GetEnv("ENABLE_FINS", "false"))
+
+	if enableFins {
+		broker := utils.GetEnv("MQTT_BROKER", "localhost")
+		port, err := strconv.Atoi(utils.GetEnv("MQTT_PORT", "1883"))
+		if err != nil {
+			port = 1883
+		}
+
+		finCapabilities := controller.finController.GetRegisteredCapabilities()
+		for key := range finCapabilities {
+			prot := protocol.New(&guid.Guid{}, protocol.Topic(key), protocol.Broker(broker), port)
+			fin := finExecutor.New(&prot)
+			capabilities[key] = fin
+		}
 	}
 
 	executer := executer.New(capabilities)
