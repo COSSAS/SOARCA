@@ -13,9 +13,15 @@ SOARCA finds its home within the Community for Open Source Security Automation S
 SOARCA is a project initiated and supported by [TNO](https://tno.nl), the Netherlands Organisation for Applied Scientific Research. TNO, an independent research, development, and consultancy organization in the Netherlands, is dedicated to driving innovation for a safer, healthier, and more sustainable life. TNO focuses on areas such as sustainability, health, safety, and digital transformation. Its mission is to make knowledge serve the common good, connecting expertise to create impactful innovations. TNO actively engages with society, aiming for a positive impact through its work and insights. Learn more about TNO on their official [website](https://tno.nl).
 
 
-## Developers 
+## Core Team 
 
-`TO BE ADDED`
+- Maarten de Kruijf (TNO)
+- Jan-Paul Konijn (TNO)
+- Hidde-Jan Jongsma (TNO)
+- Luca Morgese (TNO)
+- Richard Kerkdijk (TNO)
+- Frank Fransen (TNO)
+- Shari Finner (TNO)
 
 ## Special Thanks
 
