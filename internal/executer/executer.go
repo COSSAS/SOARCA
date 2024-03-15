@@ -43,11 +43,28 @@ func (executer *Executer) Execute(metadata execution.Metadata,
 	command cacao.Command,
 	authentication cacao.AuthenticationInformation,
 	target cacao.AgentTarget,
-	variable cacao.Variables,
+	variables cacao.Variables,
 	agent cacao.AgentTarget) (uuid.UUID, cacao.Variables, error) {
 
 	if capability, ok := executer.capabilities[agent.Name]; ok {
-		returnVariables, err := capability.Execute(metadata, command, authentication, target, variable)
+		command.Command = variables.Interpolate(command.Command)
+
+		for key, addresses := range target.Address {
+			var slice []string
+			for _, address := range addresses {
+				slice = append(slice, variables.Interpolate(address))
+			}
+			target.Address[key] = slice
+		}
+
+		authentication.Password = variables.Interpolate(authentication.Password)
+		authentication.Username = variables.Interpolate(authentication.Username)
+		authentication.UserId = variables.Interpolate(authentication.UserId)
+		authentication.Token = variables.Interpolate(authentication.Token)
+		authentication.OauthHeader = variables.Interpolate(authentication.OauthHeader)
+		authentication.PrivateKey = variables.Interpolate(authentication.PrivateKey)
+
+		returnVariables, err := capability.Execute(metadata, command, authentication, target, variables)
 		return metadata.ExecutionId, returnVariables, err
 	} else {
 		empty := cacao.NewVariables()
