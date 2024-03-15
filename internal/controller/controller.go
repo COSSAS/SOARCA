@@ -50,11 +50,7 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	enableFins, _ := strconv.ParseBool(utils.GetEnv("ENABLE_FINS", "false"))
 
 	if enableFins {
-		broker := utils.GetEnv("MQTT_BROKER", "localhost")
-		port, err := strconv.Atoi(utils.GetEnv("MQTT_PORT", "1883"))
-		if err != nil {
-			port = 1883
-		}
+		broker, port := getMqttDetails()
 
 		finCapabilities := controller.finController.GetRegisteredCapabilities()
 		for key := range finCapabilities {
@@ -97,12 +93,15 @@ func (controller *Controller) GetDatabaseInstance() playbookrepository.IPlaybook
 
 func Initialize() error {
 	app := gin.New()
-	log.Info("Testing if info log works")
-	log.Debug("Testing if debug log works")
-	log.Trace("Testing if Trace log works")
+	log.Info("Log level is info")
+	log.Debug("Log level is debug")
+	log.Trace("Log level is trace")
 
-	if err := mainController.setupAndRunMqtt(); err != nil {
-		log.Error(err)
+	enableFins, _ := strconv.ParseBool(utils.GetEnv("ENABLE_FINS", "false"))
+	if enableFins {
+		if err := mainController.setupAndRunMqtt(); err != nil {
+			log.Error(err)
+		}
 	}
 
 	errCore := initializeCore(app)
@@ -149,7 +148,8 @@ func initializeCore(app *gin.Engine) error {
 }
 
 func (controller *Controller) setupAndRunMqtt() error {
-	mqttClient := capabilityController.NewClient("localhost", 1883)
+	broker, port := getMqttDetails()
+	mqttClient := capabilityController.NewClient(protocol.Broker(broker), port)
 	capabilityController := capabilityController.New(*mqttClient)
 	controller.finController = capabilityController
 	err := capabilityController.ConnectAndSubscribe()
@@ -159,4 +159,13 @@ func (controller *Controller) setupAndRunMqtt() error {
 	}
 	go capabilityController.Run()
 	return nil
+}
+
+func getMqttDetails() (string, int) {
+	broker := utils.GetEnv("MQTT_BROKER", "localhost")
+	port, err := strconv.Atoi(utils.GetEnv("MQTT_PORT", "1883"))
+	if err != nil {
+		port = 1883
+	}
+	return broker, port
 }
