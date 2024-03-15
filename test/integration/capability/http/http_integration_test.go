@@ -16,7 +16,7 @@ func TestHttpConnection(t *testing.T) {
 	expectedCommand := cacao.Command{
 		Type:    "http-api",
 		Command: "GET https://httpbin.org/",
-		Headers: map[string]string{"accept": "application/json"},
+		Headers: map[string][]string{"accept": {"application/json"}},
 	}
 
 	var variable1 = cacao.Variable{
@@ -56,7 +56,7 @@ func TestHttpOAuth2(t *testing.T) {
 	expectedCommand := cacao.Command{
 		Type:    "http-api",
 		Command: "GET https://httpbin.org/bearer",
-		Headers: map[string]string{"accept": "application/json"},
+		Headers: map[string][]string{"accept": {"application/json"}},
 	}
 
 	var variable1 = cacao.Variable{
@@ -102,7 +102,7 @@ func TestHttpBasicAuth(t *testing.T) {
 	expectedCommand := cacao.Command{
 		Type:    "http-api",
 		Command: "GET https://httpbin.org/hidden-basic-auth/username_test/password_test",
-		Headers: map[string]string{"accept": "application/json"},
+		Headers: map[string][]string{"accept": {"application/json"}},
 	}
 
 	var variable1 = cacao.Variable{

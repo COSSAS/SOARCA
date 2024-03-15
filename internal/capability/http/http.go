@@ -67,8 +67,10 @@ func (httpCapability *HttpCapability) Execute(
 		return cacao.NewVariables(), err
 	}
 
-	for key, httpCapability := range command.Headers {
-		request.Header.Add(key, httpCapability)
+	for key, httpHeaders := range command.Headers {
+		for _, httpHeader := range httpHeaders {
+			request.Header.Add(key, httpHeader)
+		}
 	}
 	if target.ID != "" {
 		if err := verifyAuthInfoMatchesAgentTarget(&target, &authentication); err != nil {
