@@ -72,6 +72,10 @@ To change logging for your SOARCA instance you can use the following environment
 |LOG_MODE |development \| production  |If production is chosen the `LOG_GLOBAL_LEVEL` is used for all modules defaults to `production`
 |LOG_FILE_PATH |filepath  |Path to the logfile you want to use for all logging. Defaults to `""` (empty string)
 |LOG_FORMAT |text \| json  |The logging can be in plain text format or in JSON format. Defaults to `json`
+|MQTT_BROKER | dns name or ip | The broker address for SOARCA to connect to, for communication with fins default is `localhost`
+|MQTT_PORT   | port | The broker address for SOARCA to connect to, for communication with fins default is `1883`
+|ENABLE_FINS| true \| false | Enable fins in SOARCA defaults to `false`
+
 
 
 This can be set as environment variables or loaded through the `.env`
