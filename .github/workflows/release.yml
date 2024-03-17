@@ -82,7 +82,7 @@ jobs:
           build-args: |
             VERSION=${{ env.describe_version }}
           push: true
-          tags: cossas/soarca:${{ env.describe_version }}
+          tags: cossas/soarca:${{ env.describe_version }},cossas/soarca:latest
 
   release-binary:
     needs: compile
