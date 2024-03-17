@@ -1,0 +1,82 @@
+version: '3.7'
+services:
+  mongodb_container:
+    image: mongo:latest
+    container_name: mongo_soarca_stack
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "root"
+      MONGO_INITDB_ROOT_PASSWORD: "rootpassword"
+    networks:
+      - db-net
+    volumes:
+      - mongodb_data_container:/data/db
+
+  mosquitto:
+    image: eclipse-mosquitto
+    container_name: mosquitto
+    volumes:
+      - type: volume
+        source: mosquitto_config
+        target: /mosquitto/config
+      - type: volume
+        source: mosquitto_data
+        target: /mosquitto/data
+      - type: volume
+        source: mosquitto_log
+        target: /mosquitto/log
+    ports:
+      - target: 1883
+        published: 1883
+        protocol: tcp
+        mode: host
+      - target: 9001
+        published: 9001
+        protocol: tcp
+        mode: host
+
+  soarca:
+    image: cossas/soarca:latest
+    container_name: soarca_server
+    environment:
+      PORT: 8080
+      MONGODB_URI: "mongodb://mongodb_container:27017"
+      DATABASE_NAME: "soarca"
+      DB_USERNAME: "root"
+      DB_PASSWORD: "rootpassword"
+      PLAYBOOK_API_LOG_LEVEL: trace
+      DATABASE: "false"
+      ENABLE_FINS: false
+      MQTT_BROKER: "mosquitto"
+      MQTT_PORT: 1883
+    ports:
+      - 127.0.0.1:8080:8080
+      - 127.0.0.1:1883:1883
+    depends_on:
+      - mongodb_container
+      - mosquitto
+
+networks:
+  db-net:
+  mqqt-net:
+
+
+volumes:
+  mongodb_data_container:
+  mosquitto_config:
+    driver: local # Define the driver and options under the volume name
+    driver_opts:
+      type: none
+      device: ./config
+      o: bind
+  mosquitto_data:
+    driver: local # Define the driver and options under the volume name
+    driver_opts:
+      type: none
+      device: ./data
+      o: bind
+  mosquitto_log:
+    driver: local # Define the driver and options under the volume name
+    driver_opts:
+      type: none
+      device: ./log
+      o: bind
