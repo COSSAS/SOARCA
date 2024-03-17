@@ -10,6 +10,7 @@ import (
 	capabilityController "soarca/internal/capability/controller"
 	finExecutor "soarca/internal/capability/fin"
 	"soarca/internal/capability/http"
+	"soarca/internal/capability/openc2"
 	"soarca/internal/capability/ssh"
 	"soarca/internal/decomposer"
 	"soarca/internal/executer"
@@ -17,6 +18,7 @@ import (
 	"soarca/internal/guid"
 	"soarca/logger"
 	"soarca/utils"
+	httpUtil "soarca/utils/http"
 
 	"github.com/gin-gonic/gin"
 
@@ -46,6 +48,10 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 
 	http := new(http.HttpCapability)
 	capabilities[http.GetType()] = http
+
+	httpUtil := new(httpUtil.HttpRequest)
+	openc2 := openc2.New(httpUtil)
+	capabilities[openc2.GetType()] = openc2
 
 	enableFins, _ := strconv.ParseBool(utils.GetEnv("ENABLE_FINS", "false"))
 
