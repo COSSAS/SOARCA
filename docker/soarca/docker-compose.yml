@@ -9,7 +9,9 @@ services:
     networks:
       - db-net
     volumes:
-      - mongodb_data_container:/data/db
+      - type: volume
+        source: mongodb_data_container
+        target: /data/db
 
   mosquitto:
     image: eclipse-mosquitto
@@ -24,6 +26,8 @@ services:
       - type: volume
         source: mosquitto_log
         target: /mosquitto/log
+    networks:
+      - mqtt-net
     ports:
       - target: 1883
         published: 1883
@@ -72,14 +76,6 @@ volumes:
       device: ./config
       o: bind
   mosquitto_data:
-    driver: local # Define the driver and options under the volume name
-    driver_opts:
-      type: none
-      device: ./data
-      o: bind
   mosquitto_log:
-    driver: local # Define the driver and options under the volume name
-    driver_opts:
-      type: none
-      device: ./log
-      o: bind
+
+

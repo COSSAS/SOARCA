@@ -31,14 +31,4 @@ volumes:
       device: ./config
       o: bind
   mosquitto_data:
-    driver: local # Define the driver and options under the volume name
-    driver_opts:
-      type: none
-      device: ./data
-      o: bind
   mosquitto_log:
-    driver: local # Define the driver and options under the volume name
-    driver_opts:
-      type: none
-      device: ./log
-      o: bind
