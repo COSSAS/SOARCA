@@ -45,6 +45,10 @@ services:
       DB_PASSWORD: "rootpassword"
       PLAYBOOK_API_LOG_LEVEL: trace
       DATABASE: "true"
+      LOG_GLOBAL_LEVEL: "info"
+      LOG_MODE: "production"
+      LOG_FILE_PATH: ""
+      LOG_FORMAT: "json"
       ENABLE_FINS: true
       MQTT_BROKER: "mosquitto"
       MQTT_PORT: 1883
