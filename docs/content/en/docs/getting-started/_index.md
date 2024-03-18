@@ -20,7 +20,7 @@ Before you begin, you might need to install the following tools (Linux Ubuntu 22
 
 ## Quick Run
 
-Below, we outline various options to kickstart SOARCA. The latest pre-compiled releases can be found [here]().
+Below, we outline various options to kickstart SOARCA. The latest pre-compiled releases can be found [here](https://github.com/COSSAS/SOARCA/releases).
 
 {{< tabpane langEqualsHeader=false  >}}
 {{< tab header="make" lang="sh" >}}
