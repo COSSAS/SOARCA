@@ -32,7 +32,7 @@ func TestHTTPOptionsCorrectlyGenerated(t *testing.T) {
 	command := cacao.Command{
 		Type:    "http-api",
 		Command: "POST / HTTP/1.1",
-		Headers: map[string]string{"accept": "application/json"},
+		Headers: map[string][]string{"accept": {"application/json"}},
 	}
 
 	var variable1 = cacao.Variable{
@@ -82,7 +82,7 @@ func TestHTTPOptionsEmptyAuth(t *testing.T) {
 	command := cacao.Command{
 		Type:    "http-api",
 		Command: "POST / HTTP/1.1",
-		Headers: map[string]string{"accept": "application/json"},
+		Headers: map[string][]string{"accept": {"application/json"}},
 	}
 
 	var variable1 = cacao.Variable{
