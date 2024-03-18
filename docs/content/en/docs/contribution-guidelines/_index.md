@@ -44,7 +44,7 @@ The CI is configured to only allow for certain branch naming namely:
 - development
 - feature/<your feature name here>
 - feature/docs/<your feature to update docs>
-- bugfix/<your bugfix here> #it should be small!
+- bugfix/<your bugfix here>
 - release/x.x
 - hotfix/<your hotfix on a release branch>
 
@@ -83,4 +83,4 @@ If you've just spotted something you'd like to change while using the docs, Docs
 
 ## License 
 
-The project is licensed under the Apache License 2.0. See full license [here](https://github.com).
+The project is licensed under the Apache License 2.0. See full license [here](https://github.com/COSSAS/SOARCA/blob/development/LICENSE).

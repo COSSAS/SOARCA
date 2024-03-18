@@ -28,10 +28,11 @@ SOARCA is a project initiated and supported by [TNO](https://tno.nl), the Nether
 A special thanks to:
 
 - Sebastiaan Huskins for laying the initial and technical foundation for SOARCA. 
-- Myla Fransen for the logo designs. 
+- Myla Fransen for the logo designs.
+- David Roefs as part of the AInception team
 
 ## About SOARCA 
 
-This work has received funding from the European Union’s Horizon Europe Energy Research and Innovation programme under Grant Agreement No. 101075665 ([eFORT](https://efort-project.eu/) project) and the European Defence Fund (EDF) under Grant Agreement No. 101103385 ([AInception](https://www.ainception.eu/) project). Views and opinions expressed in this documentation are those of the authors only and do not necessarily reflect those of the European Union. Neither the European Union nor the granting authority can be held responsible for them.
+This work has received funding from the European Union’s Horizon Europe Energy Research and Innovation programme under Grant Agreement No. 101075665 ([eFORT](https://efort-project.eu/) project) and the European Defence Fund (EDF) under Grant Agreement No. 101103385 ([AInception](https://www.ainception.eu/) project). Views and opinions expressed are those of the authors only and do not necessarily reflect those of the European Union or European Climate, Infrastructure and Environment Executive Agency (CINEA). Neither the European Union nor the granting authority can be held responsible for them.
 
 ![eu-funded](/SOARCA/images/eu-funded-logo.png)
