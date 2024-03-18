@@ -3,7 +3,7 @@ RUN apk update && apk upgrade && apk add --no-cache ca-certificates
 RUN update-ca-certificates
 
 FROM scratch
-LABEL MAINTAINER Author maarten de kruijf, jan-paul konijn
+LABEL MAINTAINER Author maarten de kruijf, RabbITCybErSeC
 
 ARG BINARY_NAME=soarca
 ARG VERSION
