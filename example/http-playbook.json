@@ -1,0 +1,77 @@
+{
+    "type": "playbook",
+    "spec_version": "cacao-2.0",
+    "id": "playbook--300270f9-0e64-42c8-93cc-0927edbe3ae7",
+    "name": "Example ssh",
+    "description": "This playbook will block malware by performing multiple actions",
+    "playbook_types": [
+        "notification"
+    ],
+    "created_by": "identity--96abab60-238a-44ff-8962-5806aa60cbce",
+    "created": "2023-11-20T15:56:00.123456Z",
+    "modified": "2023-11-20T15:56:00.123456Z",
+    "valid_from": "2023-11-20T15:56:00.123456Z",
+    "valid_until": "2123-11-20T15:56:00.123456Z",
+    "priority": 1,
+    "severity": 1,
+    "impact": 1,
+    "labels": [
+        "soarca",
+        "http-api",
+        "basic-auth"
+    ],
+    "agent_definitions": {
+        "soarca--00020001-1000-1000-a000-000100010001": {
+            "type": "soarca",
+            "name": "soarca-http-api"
+        }
+    },
+    "target_definitions": {
+        "http-api--1c3900b4-f86b-430d-b415-12312b9e31f4": {
+            "type": "http-api",
+            "name": "httpbin",
+            "address": {
+                "dname": [
+                    "httpbin.org"
+                ]
+            }
+        }
+    },
+    "external_references": [
+        {
+            "name": "TNO COSSAS",
+            "description": "TNO COSSAS",
+            "source": "TNO COSSAS",
+            "url": "https://cossas-project.org"
+        }
+    ],
+    "workflow_start": "start--9e7d62b2-88ac-4656-94e1-dbd4413ba008",
+    "workflow_exception": "end--a6f0b81e-affb-4bca-b4f6-a2d5af908958",
+    "workflow": {
+        "start--9e7d62b2-88ac-4656-94e1-dbd4413ba008": {
+            "type": "start",
+            "name": "Start example flow http-api",
+            "on_completion": "action--eb9372d4-d524-49fc-bf24-be26ea084779"
+        },
+        "action--eb9372d4-d524-49fc-bf24-be26ea084779": {
+            "type": "action",
+            "name": "get",
+            "description": "Get request with ",
+            "on_completion": "end--a6f0b81e-affb-4bca-b4f6-a2d5af908958",
+            "commands": [
+                {
+                    "type": "http-api",
+                    "command": "GET get HTTP1.1"
+                }
+            ],
+            "targets": [
+                "http-api--1c3900b4-f86b-430d-b415-12312b9e31f4"
+            ],
+            "agent": "soarca--00020001-1000-1000-a000-000100010001"
+        },
+        "end--a6f0b81e-affb-4bca-b4f6-a2d5af908958": {
+            "type": "end",
+            "name": "End Flow"
+        }
+    }
+}
