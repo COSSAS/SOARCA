@@ -56,6 +56,9 @@ services:
       ENABLE_FINS: true
       MQTT_BROKER: "mosquitto"
       MQTT_PORT: 1883
+    networks:
+      - db-net
+      - mqtt-net
     ports:
       - 127.0.0.1:8080:8080
     depends_on:
@@ -64,7 +67,7 @@ services:
 
 networks:
   db-net:
-  mqqt-net:
+  mqtt-net:
 
 
 volumes:
