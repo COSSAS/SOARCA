@@ -31,6 +31,7 @@ wget https://github.com/COSSAS/SOARCA/releases/download/SOARCA_1.0.0/SOARCA_1.0.
 {{< /tab >}}
 {{< tab header="Docker Compose" lang="sh" >}}
 cd docker/soarca && sudo docker compose up -d
+{{< /tab >}}
 {{< /tabpane >}}
 
 
