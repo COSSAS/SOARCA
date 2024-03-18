@@ -3,7 +3,7 @@
     "spec_version": "cacao-2.0",
     "id": "playbook--300270f9-0e64-42c8-93cc-0927edbe3ae7",
     "name": "Example ssh",
-    "description": "This playbook will block malware by performing multiple actions",
+    "description": "This playbook demonstrates ssh functionality",
     "playbook_types": [
         "notification"
     ],
