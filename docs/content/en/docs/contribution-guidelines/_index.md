@@ -44,7 +44,7 @@ The CI is configured to only allow for certain branch naming namely:
 - development
 - feature/<your feature name here>
 - feature/docs/<your feature to update docs>
-- bugfix/<your bugfix here> #it should be small!
+- bugfix/<your bugfix here>
 - release/x.x
 - hotfix/<your hotfix on a release branch>
 
