@@ -1,94 +1,175 @@
-package ssh_test
+package http_test
+
+// Build http capability with New() using mock http Request
+// test correct parsing of HttpOptions fields and errors handling
 
 import (
 	"errors"
 	"soarca/internal/capability/http"
 	"soarca/models/cacao"
+	"soarca/models/execution"
+	mock_request "soarca/test/unittest/mocks/mock_utils/http"
+	http_request "soarca/utils/http"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
+	"github.com/google/uuid"
 )
 
-// Tests for data fetching from command
-func TestHttpObtainMethodFromCommandValid(t *testing.T) {
+func TestHTTPOptionsCorrectlyGenerated(t *testing.T) {
+	mock_http_request := new(mock_request.MockHttpRequest)
+	httpCapability := http.New(mock_http_request)
 
-	expectedCommand := cacao.Command{
+	var oauth2_info = cacao.AuthenticationInformation{
+		ID:    "6ba7b810-9dad-11d1-80b4-00c04fd430c9",
+		Type:  "oauth2",
+		Token: "this-is-a-test",
+	}
+
+	target := cacao.AgentTarget{Address: map[cacao.NetAddressType][]string{
+		"url": {"https://httpbin.org/post"},
+	}}
+	command := cacao.Command{
 		Type:    "http-api",
-		Command: "POST https://google.com/",
+		Command: "POST / HTTP/1.1",
+		Headers: map[string][]string{"accept": {"application/json"}},
 	}
 
-	httpMethod, httpUrl, err := http.ObtainHttpMethodAndUrlFromCommand(expectedCommand)
-	assert.Equal(t, httpMethod, "POST")
-	assert.Equal(t, httpUrl, "https://google.com/")
-	assert.Equal(t, err, nil)
+	var variable1 = cacao.Variable{
+		Type:  "string",
+		Name:  "test request building",
+		Value: "",
+	}
+
+	var executionId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	var playbookId, _ = uuid.Parse("d09351a2-a075-40c8-8054-0b7c423db83f")
+	var stepId, _ = uuid.Parse("81eff59f-d084-4324-9e0a-59e353dbd28f")
+	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId.String(), StepId: stepId.String()}
+
+	httpOptions := http_request.HttpOptions{
+		Command: &command,
+		Target:  &target,
+		Auth:    &oauth2_info,
+	}
+
+	payload := "payload test"
+	payload_byte := []byte(payload)
+	mock_http_request.On("Request", httpOptions).Return(payload_byte, nil)
+
+	results, err := httpCapability.Execute(
+		metadata,
+		command,
+		oauth2_info,
+		target,
+		cacao.NewVariables(variable1))
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+	assert.Equal(t, results["__soarca_http_api_result__"].Value, payload)
+	t.Log(results)
+
+	mock_http_request.AssertExpectations(t)
 }
 
-func TestHttpObtainMethodAndUrlFromCommandInvalid(t *testing.T) {
+func TestHTTPOptionsEmptyAuth(t *testing.T) {
+	mock_http_request := &mock_request.MockHttpRequest{}
+	httpCapability := http.New(mock_http_request)
 
-	expectedCommand := cacao.Command{
+	target := cacao.AgentTarget{Address: map[cacao.NetAddressType][]string{
+		"url": {"https://httpbin.org/post"},
+	}}
+	command := cacao.Command{
 		Type:    "http-api",
-		Command: "https://google.com/", // No method
+		Command: "POST / HTTP/1.1",
+		Headers: map[string][]string{"accept": {"application/json"}},
 	}
 
-	httpMethod, httpUrl, err := http.ObtainHttpMethodAndUrlFromCommand(expectedCommand)
+	var variable1 = cacao.Variable{
+		Type:  "string",
+		Name:  "test request building",
+		Value: "",
+	}
 
-	assert.Equal(t, httpMethod, "")
-	assert.Equal(t, httpUrl, "")
-	assert.Equal(t, err, errors.New("method or url missing from command"))
+	var executionId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	var playbookId, _ = uuid.Parse("d09351a2-a075-40c8-8054-0b7c423db83f")
+	var stepId, _ = uuid.Parse("81eff59f-d084-4324-9e0a-59e353dbd28f")
+	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId.String(), StepId: stepId.String()}
+	empty_auth := new(cacao.AuthenticationInformation)
 
+	httpOptions := http_request.HttpOptions{
+		Command: &command,
+		Target:  &target,
+		Auth:    empty_auth,
+	}
+
+	payload := "payload test"
+	payload_byte := []byte(payload)
+	mock_http_request.On("Request", httpOptions).Return(payload_byte, nil)
+
+	results, err := httpCapability.Execute(
+		metadata,
+		command,
+		*empty_auth,
+		target,
+		cacao.NewVariables(variable1))
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+	assert.Equal(t, results["__soarca_http_api_result__"].Value, payload)
+	t.Log(results)
+
+	mock_http_request.AssertExpectations(t)
 }
 
-// Tests obtain content from command
-func TestObtainHttpRequestContentDataFromCommandBothTypes(t *testing.T) {
-	test_content := "414141"
-	test_b64_content := "923948a09a"
-	expectedCommand := cacao.Command{
-		Type:       "http-api",
-		Command:    "GET 0.0.0.0:80/",
-		Content:    test_content,
-		ContentB64: test_b64_content,
+func TestHTTPOptionsEmptyCommand(t *testing.T) {
+	mock_http_request := &mock_request.MockHttpRequest{}
+	httpCapability := http.New(mock_http_request)
+
+	target := cacao.AgentTarget{Address: map[cacao.NetAddressType][]string{
+		"url": {"https://httpbin.org/post"},
+	}}
+	empty_command := new(cacao.Command)
+
+	var oauth2_info = cacao.AuthenticationInformation{
+		ID:    "6ba7b810-9dad-11d1-80b4-00c04fd430c9",
+		Type:  "oauth2",
+		Token: "this-is-a-test",
 	}
 
-	ret_content, err := http.ObtainHttpRequestContentDataFromCommand(expectedCommand)
-
-	assert.Equal(t, ret_content, []byte(test_content))
-	assert.Equal(t, err, nil)
-}
-func TestObtainHttpRequestContentDataFromCommandB64Only(t *testing.T) {
-	test_b64_content := "R08gU09BUkNBIQ=="
-	expectedCommand := cacao.Command{
-		Type:       "http-api",
-		Command:    "GET 0.0.0.0:80/",
-		ContentB64: test_b64_content,
+	var variable1 = cacao.Variable{
+		Type:  "string",
+		Name:  "test request building",
+		Value: "",
 	}
 
-	ret_content, err := http.ObtainHttpRequestContentDataFromCommand(expectedCommand)
+	var executionId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	var playbookId, _ = uuid.Parse("d09351a2-a075-40c8-8054-0b7c423db83f")
+	var stepId, _ = uuid.Parse("81eff59f-d084-4324-9e0a-59e353dbd28f")
+	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId.String(), StepId: stepId.String()}
 
-	assert.Equal(t, ret_content, []byte("GO SOARCA!"))
-	assert.Equal(t, err, nil)
-}
-func TestObtainHttpRequestContentDataFromCommandPlainTextOnly(t *testing.T) {
-	test_content := "414141"
-	expectedCommand := cacao.Command{
-		Type:    "http-api",
-		Command: "GET 0.0.0.0:80/",
-		Content: test_content,
+	httpOptions := http_request.HttpOptions{
+		Command: empty_command,
+		Target:  &target,
+		Auth:    &oauth2_info,
 	}
 
-	ret_content, err := http.ObtainHttpRequestContentDataFromCommand(expectedCommand)
+	expected_error := errors.New("command pointer is empty")
+	mock_http_request.On("Request", httpOptions).Return([]byte{}, expected_error)
 
-	assert.Equal(t, ret_content, []byte(test_content))
-	assert.Equal(t, err, nil)
-}
-
-func TestObtainHttpRequestContentDataFromCommandEmpty(t *testing.T) {
-	expectedCommand := cacao.Command{
-		Type:    "http-api",
-		Command: "GET 0.0.0.0:80/",
+	results, err := httpCapability.Execute(
+		metadata,
+		*empty_command,
+		oauth2_info,
+		target,
+		cacao.NewVariables(variable1))
+	if err == nil {
+		t.Log(err)
+		t.Fail()
 	}
+	assert.Equal(t, err, expected_error)
+	t.Log(results)
 
-	ret_content, err := http.ObtainHttpRequestContentDataFromCommand(expectedCommand)
-
-	assert.Equal(t, ret_content, nil)
-	assert.Equal(t, err, nil)
+	mock_http_request.AssertExpectations(t)
 }

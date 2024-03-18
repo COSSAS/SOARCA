@@ -46,10 +46,10 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	ssh := new(ssh.SshCapability)
 	capabilities := map[string]capability.ICapability{ssh.GetType(): ssh}
 
-	http := new(http.HttpCapability)
+	httpUtil := new(httpUtil.HttpRequest)
+	http := http.New(httpUtil)
 	capabilities[http.GetType()] = http
 
-	httpUtil := new(httpUtil.HttpRequest)
 	openc2 := openc2.New(httpUtil)
 	capabilities[openc2.GetType()] = openc2
 
