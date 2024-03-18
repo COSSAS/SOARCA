@@ -4,15 +4,18 @@ description: Getting SOARCA quickly setup
 categories: [documentation, getting-started]
 tags: [docker, bash]
 weight: 2
-date: 2023-01-05
+date: 2024-03-18
 ---
 
 ## Prerequisites
 
-Before you begin, you might need to install the following tools:
-
+Before you begin, you might need to install the following tools (Linux Ubuntu 22.04 adapt for your needs): 
 
 - [golang](https://go.dev/doc/install)
+- go gin `go get -u github.com/gin-gonic/gin`
+- swaggo `go install github.com/swaggo/swag/cmd/swag@latest`
+- cyclonedx-gomod `go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@latest`
+- make `sudo apt install build-essential`
 - [docker & docker compose](https://docs.docker.com/engine/install/)
 
 ## Quick Run
@@ -21,17 +24,13 @@ Below, we outline various options to kickstart SOARCA. The latest pre-compiled r
 
 {{< tabpane langEqualsHeader=false  >}}
 {{< tab header="make" lang="sh" >}}
-make run
+make build && ./build/soarca
 {{< /tab >}}
 {{< tab header="Linux" lang="sh" >}}
-wget .... && chmod +x {}
-{{< /tab >}}
-{{< tab header="Docker" lang="sh" >}}
-sudo docker compose up -d
+wget https://github.com/COSSAS/SOARCA/releases/download/SOARCA_1.0.0/SOARCA_1.0.0_linux_amd64.tar.gz  && tar -xvf SOARCA* && ./SOARCA
 {{< /tab >}}
 {{< tab header="Docker Compose" lang="sh" >}}
-make run
-{{< /tab >}}
+cd docker/soarca && sudo docker compose up -d
 {{< /tabpane >}}
 
 
@@ -79,8 +78,13 @@ LOG_FORMAT: "json"
 
 ### Docker hub 
 
-`<to be added soon>`
+`docker pull cossas/soarca`
 
 ### Building from Source
 
-`<to be added soon>`
+```bash
+git clone https://github.com/COSSAS/SOARCA.git
+make build
+cp .env.example .env
+./build/soarca
+```
