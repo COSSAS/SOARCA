@@ -44,13 +44,12 @@ services:
       DB_USERNAME: "root"
       DB_PASSWORD: "rootpassword"
       PLAYBOOK_API_LOG_LEVEL: trace
-      DATABASE: "false"
-      ENABLE_FINS: false
+      DATABASE: "true"
+      ENABLE_FINS: true
       MQTT_BROKER: "mosquitto"
       MQTT_PORT: 1883
     ports:
       - 127.0.0.1:8080:8080
-      - 127.0.0.1:1883:1883
     depends_on:
       - mongodb_container
       - mosquitto
