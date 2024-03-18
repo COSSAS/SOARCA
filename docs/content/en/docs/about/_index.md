@@ -28,7 +28,8 @@ SOARCA is a project initiated and supported by [TNO](https://tno.nl), the Nether
 A special thanks to:
 
 - Sebastiaan Huskins for laying the initial and technical foundation for SOARCA. 
-- Myla Fransen for the logo designs. 
+- Myla Fransen for the logo designs.
+- David Roefs as part of the AInception team
 
 ## About SOARCA 
 
