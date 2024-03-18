@@ -59,11 +59,11 @@ Compiled binary files can be found under `/bin`.
 
 You can use the following commands to execute the example playbooks via the terminal while SOARCA is running assuming on localhost. Alternatively you can go to `http://localhost:8080/swagger/index.html` and use the trigger/playbook endpoint.
 
-{{% alert title="Tip" %}}
+
 Example playbooks:
 {{< tabpane langEqualsHeader=false  >}}
 {{< tab header="ssh" lang="sh" >}}
-`# make sure an ssh server is running on adres 192.168.0.10`
+# make sure an ssh server is running on adres 192.168.0.10
 curl -X POST -H "Content-Type: application/json" -d @./example/ssh-playbook.json localhost:8080/trigger/playbook
 {{< /tab >}}
 {{< tab header="http" lang="sh" >}}
@@ -73,7 +73,6 @@ curl -X POST -H "Content-Type: application/json" -d @./example/http-playbook.jso
 curl -X POST -H "Content-Type: application/json" -d @./example/openc2-playbook.json localhost:8080/trigger/playbook
 {{< /tab >}}
 {{< /tabpane >}}
-{{% /alert %}}
 
 
 ## Configuration
