@@ -83,4 +83,4 @@ If you've just spotted something you'd like to change while using the docs, Docs
 
 ## License 
 
-The project is licensed under the Apache License 2.0. See full license [here](https://github.com).
+The project is licensed under the Apache License 2.0. See full license [here](https://github.com/COSSAS/SOARCA/blob/development/LICENSE).
