@@ -13,7 +13,7 @@ import (
 	"soarca/internal/capability/openc2"
 	"soarca/internal/capability/ssh"
 	"soarca/internal/decomposer"
-	"soarca/internal/executer"
+	"soarca/internal/executors/action"
 	"soarca/internal/fin/protocol"
 	"soarca/internal/guid"
 	"soarca/logger"
@@ -66,9 +66,9 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 		}
 	}
 
-	executer := executer.New(capabilities)
+	actionExecutor := action.New(capabilities)
 	guid := new(guid.Guid)
-	decompose := decomposer.New(executer, guid)
+	decompose := decomposer.New(actionExecutor, guid)
 	return decompose
 }
 
