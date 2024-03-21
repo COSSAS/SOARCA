@@ -139,9 +139,9 @@ type AuthenticationInformation struct {
 
 type ExternalReferences struct {
 	Name        string `bson:"name" json:"name" validate:"required"`
-	Description string `bson:"description" json:"description" validate:"required"`
-	Source      string `bson:"source" json:"source" validate:"required"`
-	URL         string `bson:"url" json:"url" validate:"required,url"`
+	Description string `bson:"description" json:"description,omitempty"`
+	Source      string `bson:"source" json:"source,omitempty"`
+	URL         string `bson:"url" json:"url,omitempty"`
 	ExternalId  string `bson:"external_id" json:"external_id,omitempty"`
 	ReferenceId string `bson:"reference_id" json:"reference_id,omitempty"`
 }
