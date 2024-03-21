@@ -425,7 +425,8 @@ Variables information structure
 |field              |content        |type    | description |
 | ----------------- | ------------- | ------ | ----------- |
 |type |variable type |[variable-type-ov](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256556)  | The cacao variable type see CACAO V2 chapter 10.18, 10.18.4 Variable Type Vocabulary
-|description        |description    |string                     |Description of the step 
+|name               |name           |string                     |Name of the variable this `must` be the same as the key on the map
+|description        |description    |string                     |Description of the variable 
 |value              |value          |string                     |Value of the variable 
 |constant           |true or false  |bool                       |whether it is constant  
 |external           |true or false  |bool                       |whether it is external to the playbook
@@ -436,6 +437,7 @@ Variables information structure
 {
     "__<var1>__": {
         "type": "<cacao.variable-type-ov>",
+        "name": "<string>",
         "description": "<string>",
         "value": "<string>",
         "constant": "<bool>",
