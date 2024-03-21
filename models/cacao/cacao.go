@@ -142,6 +142,8 @@ type ExternalReferences struct {
 	Description string `bson:"description" json:"description" validate:"required"`
 	Source      string `bson:"source" json:"source" validate:"required"`
 	URL         string `bson:"url" json:"url" validate:"required,url"`
+	ExternalId  string `bson:"external_id" json:"external_id,omitempty"`
+	ReferenceId string `bson:"reference_id" json:"reference_id,omitempty"`
 }
 
 type ExtensionDefinition struct {
