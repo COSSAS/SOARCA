@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+
 	"soarca/internal/executors/action"
 	"soarca/internal/guid"
 	"soarca/logger"
@@ -15,8 +16,10 @@ import (
 
 type Empty struct{}
 
-var component = reflect.TypeOf(Empty{}).PkgPath()
-var log *logger.Log
+var (
+	component = reflect.TypeOf(Empty{}).PkgPath()
+	log       *logger.Log
+)
 
 type ExecutionDetails struct {
 	ExecutionId uuid.UUID
@@ -33,7 +36,7 @@ func init() {
 }
 
 func New(actionExecutor action.IExecuter, guid guid.IGuid) *Decomposer {
-	var instance = Decomposer{}
+	instance := Decomposer{}
 	if instance.actionExecutor == nil {
 		instance.actionExecutor = actionExecutor
 	}
@@ -130,8 +133,18 @@ func (decomposer *Decomposer) ExecuteStep(step cacao.Step, scopeVariables cacao.
 
 	switch step.Type {
 	case cacao.StepTypeAction:
-		details := action.StepDetails{Step: step, Targets: decomposer.playbook.TargetDefinitions, Auth: decomposer.playbook.AuthenticationInfoDefinitions, Agent: decomposer.playbook.AgentDefinitions[step.Agent], Variables: variables}
-		metadata := execution.Metadata{ExecutionId: decomposer.details.ExecutionId, PlaybookId: decomposer.details.PlaybookId, StepId: step.ID}
+		details := action.StepDetails{
+			Step:      step,
+			Targets:   decomposer.playbook.TargetDefinitions,
+			Auth:      decomposer.playbook.AuthenticationInfoDefinitions,
+			Agent:     decomposer.playbook.AgentDefinitions[step.Agent],
+			Variables: variables,
+		}
+		metadata := execution.Metadata{
+			ExecutionId: decomposer.details.ExecutionId,
+			PlaybookId:  decomposer.details.PlaybookId,
+			StepId:      step.ID,
+		}
 		return decomposer.actionExecutor.Execute(metadata, details)
 	default:
 		// NOTE: This currently silently handles unknown step types. Should we return an error instead?
