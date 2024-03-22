@@ -172,9 +172,7 @@ end
 
 ### Playbook action executor
 The playbook executor handles execution of playbook action steps. The variables from the top level playbook are injected into the be executed playbook. 
-It could happen that in the downstream playbook the variables `collide` with the top level playbook. In this case the top level playbook variables are `NOT` transferred to the downstream playbook. `Agents and Targets cannot be transferred` between playbooks at this time
-
-Playbooks are only loaded in the executor and then a new Decomposer is created to execute the playbook. 
+It could happen that in the downstream playbook the variables `collide` with the top level playbook. In this case the top level playbook variables are `NOT` transferred to the downstream playbook. `Agents and Targets cannot be transferred` between playbooks at this time. Playbooks are only loaded in the executor and then a new Decomposer is created to execute the playbook. 
 
 The result of the step execution will be returned to the decomposer. A result can be either output variables or error status.
 
