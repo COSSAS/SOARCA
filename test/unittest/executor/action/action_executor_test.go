@@ -2,12 +2,13 @@ package action_executor_test
 
 import (
 	"errors"
+	"testing"
+
 	"soarca/internal/capability"
 	"soarca/internal/executors/action"
 	"soarca/models/cacao"
 	"soarca/models/execution"
 	"soarca/test/unittest/mocks/mock_capability"
-	"testing"
 
 	"github.com/go-playground/assert/v2"
 	"github.com/google/uuid"
@@ -20,11 +21,11 @@ func TestExecuteStep(t *testing.T) {
 	capabilities := map[string]capability.ICapability{"mock-ssh": mock_ssh, "http-api": mock_http}
 
 	executerObject := action.New(capabilities)
-	var executionId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
-	var playbookId = "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
-	var stepId = "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
+	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	playbookId := "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
+	stepId := "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
 
-	var metadata = execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId, StepId: stepId}
+	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId, StepId: stepId}
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -64,7 +65,13 @@ func TestExecuteStep(t *testing.T) {
 		Targets:       []string{"target1"},
 	}
 
-	details := action.StepDetails{Step: step, Targets: map[string]cacao.AgentTarget{expectedTarget.ID: expectedTarget}, Auth: map[string]cacao.AuthenticationInformation{expectedAuth.ID: expectedAuth}, Agent: agent, Variables: cacao.NewVariables(expectedVariables)}
+	details := action.StepDetails{
+		Step:      step,
+		Targets:   map[string]cacao.AgentTarget{expectedTarget.ID: expectedTarget},
+		Auth:      map[string]cacao.AuthenticationInformation{expectedAuth.ID: expectedAuth},
+		Agent:     agent,
+		Variables: cacao.NewVariables(expectedVariables),
+	}
 
 	mock_ssh.On("Execute",
 		metadata,
@@ -80,22 +87,20 @@ func TestExecuteStep(t *testing.T) {
 
 	assert.Equal(t, err, nil)
 	mock_ssh.AssertExpectations(t)
-
 }
 
 func TestExecuteActionStep(t *testing.T) {
-
 	mock_ssh := new(mock_capability.Mock_Capability)
 	mock_http := new(mock_capability.Mock_Capability)
 
 	capabilities := map[string]capability.ICapability{"ssh": mock_ssh, "http-api": mock_http}
 
 	executerObject := action.New(capabilities)
-	var executionId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
-	var playbookId = "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
-	var stepId = "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
+	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	playbookId := "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
+	stepId := "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
 
-	var metadata = execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId, StepId: stepId}
+	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId, StepId: stepId}
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -142,18 +147,17 @@ func TestExecuteActionStep(t *testing.T) {
 }
 
 func TestNonExistingCapabilityStep(t *testing.T) {
-
 	mock_ssh := new(mock_capability.Mock_Capability)
 	mock_http := new(mock_capability.Mock_Capability)
 
 	capabilities := map[string]capability.ICapability{"ssh": mock_ssh, "http-api": mock_http}
 
 	executerObject := action.New(capabilities)
-	var executionId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
-	var playbookId = "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
-	var stepId = "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
+	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	playbookId := "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
+	stepId := "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
 
-	var metadata = execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId, StepId: stepId}
+	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId, StepId: stepId}
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -191,17 +195,16 @@ func TestNonExistingCapabilityStep(t *testing.T) {
 }
 
 func TestVariableInterpolation(t *testing.T) {
-
 	mock_capability1 := new(mock_capability.Mock_Capability)
 
 	capabilities := map[string]capability.ICapability{"cap1": mock_capability1}
 
 	executerObject := action.New(capabilities)
-	var executionId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
-	var playbookId = "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
-	var stepId = "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
+	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	playbookId := "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
+	stepId := "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
 
-	var metadata = execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId, StepId: stepId}
+	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId, StepId: stepId}
 
 	inputCommand := cacao.Command{
 		Type:    "ssh",
