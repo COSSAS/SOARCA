@@ -84,7 +84,7 @@ func TestExecutePlaybook(t *testing.T) {
 
 	uuid_mock.On("New").Return(executionId)
 
-	stepDetails := action.StepDetails{
+	playbookStepMetadata := action.PlaybookStepMetadata{
 		Step:      step1,
 		Targets:   playbook.TargetDefinitions,
 		Auth:      playbook.AuthenticationInfoDefinitions,
@@ -92,7 +92,7 @@ func TestExecutePlaybook(t *testing.T) {
 		Variables: cacao.NewVariables(expectedVariables),
 	}
 
-	mock_action_executor.On("Execute", metaStep1, stepDetails).Return(cacao.NewVariables(cacao.Variable{Name: "return", Value: "value"}), nil)
+	mock_action_executor.On("Execute", metaStep1, playbookStepMetadata).Return(cacao.NewVariables(cacao.Variable{Name: "return", Value: "value"}), nil)
 
 	details, err := decomposer.Execute(playbook)
 	uuid_mock.AssertExpectations(t)
@@ -208,7 +208,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 
 	firstResult := cacao.Variable{Name: "result", Value: "value"}
 
-	stepDetails1 := action.StepDetails{
+	playbookStepMetadata1 := action.PlaybookStepMetadata{
 		Step:      step1,
 		Targets:   playbook.TargetDefinitions,
 		Auth:      playbook.AuthenticationInfoDefinitions,
@@ -216,9 +216,9 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 		Variables: cacao.NewVariables(expectedVariables),
 	}
 
-	mock_action_executor.On("Execute", metaStep1, stepDetails1).Return(cacao.NewVariables(firstResult), nil)
+	mock_action_executor.On("Execute", metaStep1, playbookStepMetadata1).Return(cacao.NewVariables(firstResult), nil)
 
-	stepDetails2 := action.StepDetails{
+	playbookStepMetadata2 := action.PlaybookStepMetadata{
 		Step:      step2,
 		Targets:   playbook.TargetDefinitions,
 		Auth:      playbook.AuthenticationInfoDefinitions,
@@ -226,7 +226,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 		Variables: cacao.NewVariables(expectedVariables2, firstResult),
 	}
 
-	mock_action_executor.On("Execute", metaStep2, stepDetails2).Return(cacao.NewVariables(cacao.Variable{Name: "result", Value: "updated"}), nil)
+	mock_action_executor.On("Execute", metaStep2, playbookStepMetadata2).Return(cacao.NewVariables(cacao.Variable{Name: "result", Value: "updated"}), nil)
 
 	details, err := decomposer.Execute(playbook)
 	uuid_mock.AssertExpectations(t)

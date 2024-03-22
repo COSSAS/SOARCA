@@ -14,7 +14,7 @@ type Mock_Action_Executor struct {
 
 func (executer *Mock_Action_Executor) Execute(
 	metadata execution.Metadata,
-	details action.StepDetails) (cacao.Variables,
+	details action.PlaybookStepMetadata) (cacao.Variables,
 	error) {
 	args := executer.Called(metadata, details)
 	return args.Get(0).(cacao.Variables), args.Error(1)

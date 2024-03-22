@@ -65,7 +65,7 @@ func TestExecuteStep(t *testing.T) {
 		Targets:       []string{"target1"},
 	}
 
-	details := action.StepDetails{
+	actionMetadata := action.PlaybookStepMetadata{
 		Step:      step,
 		Targets:   map[string]cacao.AgentTarget{expectedTarget.ID: expectedTarget},
 		Auth:      map[string]cacao.AuthenticationInformation{expectedAuth.ID: expectedAuth},
@@ -83,7 +83,7 @@ func TestExecuteStep(t *testing.T) {
 			nil)
 
 	_, err := executerObject.Execute(metadata,
-		details)
+		actionMetadata)
 
 	assert.Equal(t, err, nil)
 	mock_ssh.AssertExpectations(t)

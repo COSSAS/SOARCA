@@ -23,7 +23,7 @@ func New(capabilities map[string]capability.ICapability) *Executor {
 	return &instance
 }
 
-type StepDetails struct {
+type PlaybookStepMetadata struct {
 	Step      cacao.Step
 	Targets   map[string]cacao.AgentTarget
 	Auth      map[string]cacao.AuthenticationInformation
@@ -33,40 +33,40 @@ type StepDetails struct {
 
 type IExecuter interface {
 	Execute(metadata execution.Metadata,
-		step StepDetails) (cacao.Variables, error)
+		step PlaybookStepMetadata) (cacao.Variables, error)
 }
 
 type Executor struct {
 	capabilities map[string]capability.ICapability
 }
 
-func (executor *Executor) Execute(meta execution.Metadata, details StepDetails) (cacao.Variables, error) {
+func (executor *Executor) Execute(meta execution.Metadata, metadata PlaybookStepMetadata) (cacao.Variables, error) {
 
-	if details.Step.Type != cacao.StepTypeAction {
+	if metadata.Step.Type != cacao.StepTypeAction {
 		err := errors.New("the provided step type is not compatible with this executor")
 		log.Error(err)
 		return cacao.NewVariables(), err
 	}
 	returnVariables := cacao.NewVariables()
-	for _, command := range details.Step.Commands {
+	for _, command := range metadata.Step.Commands {
 		// NOTE: This assumes we want to run Command for every Target individually.
 		//       Is that something we want to enforce or leave up to the capability?
-		for _, element := range details.Step.Targets {
+		for _, element := range metadata.Step.Targets {
 			// NOTE: What about Agent authentication?
-			target := details.Targets[element]
-			auth := details.Auth[target.AuthInfoIdentifier]
+			target := metadata.Targets[element]
+			auth := metadata.Auth[target.AuthInfoIdentifier]
 
 			outputVariables, err := executor.ExecuteActionStep(
 				meta,
 				command,
 				auth,
 				target,
-				details.Variables,
-				details.Agent)
+				metadata.Variables,
+				metadata.Agent)
 
-			if len(details.Step.OutArgs) > 0 {
+			if len(metadata.Step.OutArgs) > 0 {
 				// If OutArgs is set, only update execution args that are explicitly referenced
-				outputVariables = outputVariables.Select(details.Step.OutArgs)
+				outputVariables = outputVariables.Select(metadata.Step.OutArgs)
 			}
 
 			returnVariables.Merge(outputVariables)

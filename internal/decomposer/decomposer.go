@@ -133,7 +133,7 @@ func (decomposer *Decomposer) ExecuteStep(step cacao.Step, scopeVariables cacao.
 
 	switch step.Type {
 	case cacao.StepTypeAction:
-		details := action.StepDetails{
+		actionMetadata := action.PlaybookStepMetadata{
 			Step:      step,
 			Targets:   decomposer.playbook.TargetDefinitions,
 			Auth:      decomposer.playbook.AuthenticationInfoDefinitions,
@@ -145,7 +145,7 @@ func (decomposer *Decomposer) ExecuteStep(step cacao.Step, scopeVariables cacao.
 			PlaybookId:  decomposer.details.PlaybookId,
 			StepId:      step.ID,
 		}
-		return decomposer.actionExecutor.Execute(metadata, details)
+		return decomposer.actionExecutor.Execute(metadata, actionMetadata)
 	default:
 		// NOTE: This currently silently handles unknown step types. Should we return an error instead?
 		return cacao.NewVariables(), nil
