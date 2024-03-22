@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"soarca/internal/decomposer"
+	"soarca/internal/executors/action"
 	"soarca/models/cacao"
 	"soarca/models/execution"
 	"soarca/test/unittest/mocks/mock_executor"
@@ -16,7 +17,7 @@ import (
 )
 
 func TestExecutePlaybook(t *testing.T) {
-	mock_executer := new(mock_executor.Mock_Executor)
+	mock_action_executor := new(mock_executor.Mock_Action_Executor)
 	uuid_mock := new(mock_guid.Mock_Guid)
 
 	expectedCommand := cacao.Command{
@@ -30,9 +31,9 @@ func TestExecutePlaybook(t *testing.T) {
 		Value: "testing",
 	}
 
-	decomposer := decomposer.New(mock_executer, uuid_mock)
+	decomposer := decomposer.New(mock_action_executor, uuid_mock)
 
-	var step1 = cacao.Step{
+	step1 := cacao.Step{
 		Type:          "action",
 		ID:            "action--test",
 		Name:          "ssh-tests",
@@ -44,7 +45,7 @@ func TestExecutePlaybook(t *testing.T) {
 		Targets:       []string{"target1"},
 	}
 
-	var end = cacao.Step{
+	end := cacao.Step{
 		Type: "end",
 		ID:   "end--test",
 		Name: "end step",
@@ -52,11 +53,13 @@ func TestExecutePlaybook(t *testing.T) {
 
 	expectedAuth := cacao.AuthenticationInformation{
 		Name: "user",
+		ID:   "auth1",
 	}
 
 	expectedTarget := cacao.AgentTarget{
 		Name:               "sometarget",
-		AuthInfoIdentifier: "id",
+		AuthInfoIdentifier: "auth1",
+		ID:                 "target1",
 	}
 
 	expectedAgent := cacao.AgentTarget{
@@ -76,31 +79,34 @@ func TestExecutePlaybook(t *testing.T) {
 		Workflow: map[string]cacao.Step{step1.ID: step1, end.ID: end},
 	}
 
-	var executionId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	metaStep1 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step1.ID}
 
 	uuid_mock.On("New").Return(executionId)
 
-	mock_executer.On("Execute", metaStep1, expectedCommand,
-		expectedAuth,
-		expectedTarget,
-		cacao.NewVariables(expectedVariables),
-		expectedAgent).Return(executionId, cacao.NewVariables(cacao.Variable{Name: "return", Value: "value"}), nil)
+	playbookStepMetadata := action.PlaybookStepMetadata{
+		Step:      step1,
+		Targets:   playbook.TargetDefinitions,
+		Auth:      playbook.AuthenticationInfoDefinitions,
+		Agent:     expectedAgent,
+		Variables: cacao.NewVariables(expectedVariables),
+	}
+
+	mock_action_executor.On("Execute", metaStep1, playbookStepMetadata).Return(cacao.NewVariables(cacao.Variable{Name: "return", Value: "value"}), nil)
 
 	details, err := decomposer.Execute(playbook)
 	uuid_mock.AssertExpectations(t)
 	fmt.Println(err)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, details.ExecutionId, executionId)
-	mock_executer.AssertExpectations(t)
+	mock_action_executor.AssertExpectations(t)
 	value, found := details.Variables.Find("return")
 	assert.Equal(t, found, true)
 	assert.Equal(t, value.Value, "value")
 }
 
 func TestExecutePlaybookMultiStep(t *testing.T) {
-
-	mock_executer := new(mock_executor.Mock_Executor)
+	mock_action_executor := new(mock_executor.Mock_Action_Executor)
 	uuid_mock := new(mock_guid.Mock_Guid)
 
 	expectedCommand := cacao.Command{
@@ -125,9 +131,9 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 		Value: "testing2",
 	}
 
-	decomposer := decomposer.New(mock_executer, uuid_mock)
+	decomposer := decomposer.New(mock_action_executor, uuid_mock)
 
-	var step1 = cacao.Step{
+	step1 := cacao.Step{
 		Type:          "action",
 		ID:            "action--test",
 		Name:          "ssh-tests",
@@ -137,10 +143,10 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 		OnCompletion:  "action--test2",
 		Agent:         "agent1",
 		Targets:       []string{"target1"},
-		//OnCompletion:  "action--test2",
+		// OnCompletion:  "action--test2",
 	}
 
-	var step2 = cacao.Step{
+	step2 := cacao.Step{
 		Type:          "action",
 		ID:            "action--test2",
 		Name:          "ssh-tests",
@@ -151,7 +157,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 		Targets:       []string{"target1"},
 		OnCompletion:  "end--test",
 	}
-	var step3 = cacao.Step{
+	step3 := cacao.Step{
 		Type:          "action",
 		ID:            "action--test3",
 		Name:          "ssh-tests",
@@ -160,7 +166,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 		Agent:         "agent1",
 		// Targets:       []string{"target1"},
 	}
-	var end = cacao.Step{
+	end := cacao.Step{
 		Type: "end",
 		ID:   "end--test",
 		Name: "end step",
@@ -168,11 +174,13 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 
 	expectedAuth := cacao.AuthenticationInformation{
 		Name: "user",
+		ID:   "auth1",
 	}
 
 	expectedTarget := cacao.AgentTarget{
 		Name:               "sometarget",
-		AuthInfoIdentifier: "id",
+		AuthInfoIdentifier: "auth1",
+		ID:                 "target1",
 	}
 
 	expectedAgent := cacao.AgentTarget{
@@ -192,38 +200,40 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 		Workflow: map[string]cacao.Step{step1.ID: step1, step2.ID: step2, step3.ID: step3, end.ID: end},
 	}
 
-	var executionId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	metaStep1 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step1.ID}
 	metaStep2 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step2.ID}
 
 	uuid_mock.On("New").Return(executionId)
 
-	mock_executer.On("Execute", metaStep1,
-		expectedCommand,
-		expectedAuth,
-		expectedTarget,
-		cacao.NewVariables(expectedVariables),
-		expectedAgent).Return(
-		executionId,
-		cacao.NewVariables(cacao.Variable{Name: "result", Value: "value"}),
-		nil)
+	firstResult := cacao.Variable{Name: "result", Value: "value"}
 
-	mock_executer.On("Execute", metaStep2,
-		expectedCommand2,
-		expectedAuth,
-		expectedTarget,
-		cacao.NewVariables(expectedVariables2, cacao.Variable{Name: "result", Value: "value"}),
-		expectedAgent).Return(
-		executionId,
-		cacao.NewVariables(cacao.Variable{Name: "result", Value: "updated"}),
-		nil)
+	playbookStepMetadata1 := action.PlaybookStepMetadata{
+		Step:      step1,
+		Targets:   playbook.TargetDefinitions,
+		Auth:      playbook.AuthenticationInfoDefinitions,
+		Agent:     expectedAgent,
+		Variables: cacao.NewVariables(expectedVariables),
+	}
+
+	mock_action_executor.On("Execute", metaStep1, playbookStepMetadata1).Return(cacao.NewVariables(firstResult), nil)
+
+	playbookStepMetadata2 := action.PlaybookStepMetadata{
+		Step:      step2,
+		Targets:   playbook.TargetDefinitions,
+		Auth:      playbook.AuthenticationInfoDefinitions,
+		Agent:     expectedAgent,
+		Variables: cacao.NewVariables(expectedVariables2, firstResult),
+	}
+
+	mock_action_executor.On("Execute", metaStep2, playbookStepMetadata2).Return(cacao.NewVariables(cacao.Variable{Name: "result", Value: "updated"}), nil)
 
 	details, err := decomposer.Execute(playbook)
 	uuid_mock.AssertExpectations(t)
 	fmt.Println(err)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, details.ExecutionId, executionId)
-	mock_executer.AssertExpectations(t)
+	mock_action_executor.AssertExpectations(t)
 
 	value, found := details.Variables.Find("result")
 	assert.Equal(t, found, true)
@@ -234,8 +244,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 Test with an Empty OnCompletion will result in not executing the step.
 */
 func TestExecuteEmptyMultiStep(t *testing.T) {
-
-	mock_executer2 := new(mock_executor.Mock_Executor)
+	mock_action_executor2 := new(mock_executor.Mock_Action_Executor)
 	uuid_mock2 := new(mock_guid.Mock_Guid)
 
 	expectedCommand := cacao.Command{
@@ -259,9 +268,9 @@ func TestExecuteEmptyMultiStep(t *testing.T) {
 		Name: "soarca-ssh",
 	}
 
-	decomposer2 := decomposer.New(mock_executer2, uuid_mock2)
+	decomposer2 := decomposer.New(mock_action_executor2, uuid_mock2)
 
-	var step1 = cacao.Step{
+	step1 := cacao.Step{
 		Type:          "ssh",
 		ID:            "action--test",
 		Name:          "ssh-tests",
@@ -282,7 +291,7 @@ func TestExecuteEmptyMultiStep(t *testing.T) {
 		Workflow:          map[string]cacao.Step{step1.ID: step1},
 	}
 
-	var id, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	id, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	uuid_mock2.On("New").Return(id)
 
 	returnedId, err := decomposer2.Execute(playbook)
@@ -290,15 +299,14 @@ func TestExecuteEmptyMultiStep(t *testing.T) {
 	fmt.Println(err)
 	assert.Equal(t, err, errors.New("empty success step"))
 	assert.Equal(t, returnedId.ExecutionId, id)
-	mock_executer2.AssertExpectations(t)
+	mock_action_executor2.AssertExpectations(t)
 }
 
 /*
 Test with an not occuring on completion id will result in not executing the step.
 */
 func TestExecuteIllegalMultiStep(t *testing.T) {
-
-	mock_executer2 := new(mock_executor.Mock_Executor)
+	mock_action_executor2 := new(mock_executor.Mock_Action_Executor)
 	uuid_mock2 := new(mock_guid.Mock_Guid)
 
 	expectedCommand := cacao.Command{
@@ -312,9 +320,9 @@ func TestExecuteIllegalMultiStep(t *testing.T) {
 		Value: "testing",
 	}
 
-	decomposer2 := decomposer.New(mock_executer2, uuid_mock2)
+	decomposer2 := decomposer.New(mock_action_executor2, uuid_mock2)
 
-	var step1 = cacao.Step{
+	step1 := cacao.Step{
 		Type:          "action",
 		ID:            "action--test",
 		Name:          "ssh-tests",
@@ -333,7 +341,7 @@ func TestExecuteIllegalMultiStep(t *testing.T) {
 		Workflow: map[string]cacao.Step{step1.ID: step1},
 	}
 
-	var id, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	id, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	uuid_mock2.On("New").Return(id)
 
 	returnedId, err := decomposer2.Execute(playbook)
@@ -341,5 +349,5 @@ func TestExecuteIllegalMultiStep(t *testing.T) {
 	fmt.Println(err)
 	assert.Equal(t, err, errors.New("empty success step"))
 	assert.Equal(t, returnedId.ExecutionId, id)
-	mock_executer2.AssertExpectations(t)
+	mock_action_executor2.AssertExpectations(t)
 }

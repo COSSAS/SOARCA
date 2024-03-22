@@ -4,7 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"soarca/internal/executer"
+
+	"soarca/internal/executors/action"
 	"soarca/internal/guid"
 	"soarca/logger"
 	"soarca/models/cacao"
@@ -15,8 +16,10 @@ import (
 
 type Empty struct{}
 
-var component = reflect.TypeOf(Empty{}).PkgPath()
-var log *logger.Log
+var (
+	component = reflect.TypeOf(Empty{}).PkgPath()
+	log       *logger.Log
+)
 
 type ExecutionDetails struct {
 	ExecutionId uuid.UUID
@@ -32,10 +35,10 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
-func New(executor executer.IExecuter, guid guid.IGuid) *Decomposer {
-	var instance = Decomposer{}
-	if instance.executor == nil {
-		instance.executor = executor
+func New(actionExecutor action.IExecuter, guid guid.IGuid) *Decomposer {
+	instance := Decomposer{}
+	if instance.actionExecutor == nil {
+		instance.actionExecutor = actionExecutor
 	}
 	if instance.guid == nil {
 		instance.guid = guid
@@ -44,10 +47,10 @@ func New(executor executer.IExecuter, guid guid.IGuid) *Decomposer {
 }
 
 type Decomposer struct {
-	playbook cacao.Playbook
-	details  ExecutionDetails
-	executor executer.IExecuter
-	guid     guid.IGuid
+	playbook       cacao.Playbook
+	details        ExecutionDetails
+	actionExecutor action.IExecuter
+	guid           guid.IGuid
 }
 
 // Execute a Playbook
@@ -129,59 +132,22 @@ func (decomposer *Decomposer) ExecuteStep(step cacao.Step, scopeVariables cacao.
 	variables.Merge(step.StepVariables)
 
 	switch step.Type {
-	case "action":
-		return decomposer.ExecuteActionStep(step, variables)
+	case cacao.StepTypeAction:
+		actionMetadata := action.PlaybookStepMetadata{
+			Step:      step,
+			Targets:   decomposer.playbook.TargetDefinitions,
+			Auth:      decomposer.playbook.AuthenticationInfoDefinitions,
+			Agent:     decomposer.playbook.AgentDefinitions[step.Agent],
+			Variables: variables,
+		}
+		metadata := execution.Metadata{
+			ExecutionId: decomposer.details.ExecutionId,
+			PlaybookId:  decomposer.details.PlaybookId,
+			StepId:      step.ID,
+		}
+		return decomposer.actionExecutor.Execute(metadata, actionMetadata)
 	default:
 		// NOTE: This currently silently handles unknown step types. Should we return an error instead?
 		return cacao.NewVariables(), nil
 	}
-}
-
-// Execute a Step of type Action
-func (decomposer *Decomposer) ExecuteActionStep(step cacao.Step, scopeVariables cacao.Variables) (cacao.Variables, error) {
-	log.Debug("Executing action step")
-
-	agent := decomposer.playbook.AgentDefinitions[step.Agent]
-	returnVariables := cacao.NewVariables()
-
-	for _, command := range step.Commands {
-		// NOTE: This assumes we want to run Command for every Target individually.
-		//       Is that something we want to enforce or leave up to the capability?
-		for _, element := range step.Targets {
-			target := decomposer.playbook.TargetDefinitions[element]
-			// NOTE: What about Agent authentication?
-			auth := decomposer.playbook.AuthenticationInfoDefinitions[target.AuthInfoIdentifier]
-
-			meta := execution.Metadata{
-				ExecutionId: decomposer.details.ExecutionId,
-				PlaybookId:  decomposer.playbook.ID,
-				StepId:      step.ID,
-			}
-
-			_, outputVariables, err := decomposer.executor.Execute(
-				meta,
-				command,
-				auth,
-				target,
-				scopeVariables,
-				agent)
-
-			if len(step.OutArgs) > 0 {
-				// If OutArgs is set, only update execution args that are explicitly referenced
-				outputVariables = outputVariables.Select(step.OutArgs)
-			}
-
-			returnVariables.Merge(outputVariables)
-			scopeVariables.Merge(outputVariables)
-
-			if err != nil {
-				log.Error("Error executing Command")
-				return cacao.NewVariables(), err
-			} else {
-				log.Debug("Command executed")
-			}
-		}
-	}
-
-	return returnVariables, nil
 }
