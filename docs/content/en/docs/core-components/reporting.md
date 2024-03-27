@@ -29,14 +29,15 @@ The schema below represents the architecture concept.
 @startuml
 set separator ::
 
-interface IReporter{
-    ReportWorkflow(cacao.Workflow)
-    ReportStep(cacao.Step, cacao.Variables, error)
+interface IWorkflowReporter{
+    ReportWorkflow(cacao.workflow)
 }
 
-class Reporter {
-    reporters
+interface IStepReporter{
+    ReportStep(cacao.workflow.Step, cacao.Variables, error)
 }
+
+class Reporter 
 class DB
 class 3PTool
 class Decomposer
@@ -45,11 +46,15 @@ class Executor
 Decomposer -up-> Reporter
 Executor -up-> Reporter
 
-Reporter .up.|> IReporter
-Reporter -up-> IReporter
+Reporter .up.|> IWorkflowReporter
+Reporter -up-> IWorkflowReporter
+Reporter .up.|> IStepReporter
+Reporter -up-> IStepReporter
 
-DB .up.|> IReporter
-3PTool .up.|> IReporter
+DB .up.|> IWorkflowReporter
+DB .up.|> IStepReporter
+3PTool .up.|> IWorkflowReporter
+3PTool .up.|> IStepReporter
 
 Reporter -left-> DB
 Reporter -right-> 3PTool
@@ -58,9 +63,9 @@ Reporter -right-> 3PTool
 
 ### Interfaces
 
-The logic and extensibility is implemented in the SOARCA architecture by means of the *IReporter* interface. At this stage, the interface implements *ReportWorkflow* to push information about the  entire workflow to be executed, and *ReportStep* to push step-specific information as the steps of the workflow are executed.
+The logic and extensibility is implemented in the SOARCA architecture by means of reporting interfaces. At this stage, we implement an *IDecomposerReporter* to push information about the  entire workflow to be executed, and an *IExecuterReporter* to push step-specific information as the steps of the workflow are executed.
 
-A high level *Reporter* class will maintain the list of reporters activated for the SOARCA instance. The *Reporter* class will invoke all reporting functions for each active reporter.
+A high level *Reporter* class will implement both interfaces, and maintain the list of decomposer and executor reporters activated  for the SOARCA instance. The *Reporter* class will invoke all reporting functions for each active reporter.
 
 ## Future plans
 

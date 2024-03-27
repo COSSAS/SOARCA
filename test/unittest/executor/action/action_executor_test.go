@@ -9,6 +9,7 @@ import (
 	"soarca/models/cacao"
 	"soarca/models/execution"
 	"soarca/test/unittest/mocks/mock_capability"
+	"soarca/test/unittest/mocks/mock_reporter"
 
 	"github.com/go-playground/assert/v2"
 	"github.com/google/uuid"
@@ -20,7 +21,7 @@ func TestExecuteStep(t *testing.T) {
 
 	capabilities := map[string]capability.ICapability{"mock-ssh": mock_ssh, "http-api": mock_http}
 
-	executerObject := action.New(capabilities)
+	executerObject := action.New(capabilities, new(mock_reporter.Mock_Reporter))
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	playbookId := "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
 	stepId := "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
@@ -95,7 +96,7 @@ func TestExecuteActionStep(t *testing.T) {
 
 	capabilities := map[string]capability.ICapability{"ssh": mock_ssh, "http-api": mock_http}
 
-	executerObject := action.New(capabilities)
+	executerObject := action.New(capabilities, new(mock_reporter.Mock_Reporter))
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	playbookId := "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
 	stepId := "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
@@ -152,7 +153,7 @@ func TestNonExistingCapabilityStep(t *testing.T) {
 
 	capabilities := map[string]capability.ICapability{"ssh": mock_ssh, "http-api": mock_http}
 
-	executerObject := action.New(capabilities)
+	executerObject := action.New(capabilities, new(mock_reporter.Mock_Reporter))
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	playbookId := "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
 	stepId := "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
@@ -199,7 +200,7 @@ func TestVariableInterpolation(t *testing.T) {
 
 	capabilities := map[string]capability.ICapability{"cap1": mock_capability1}
 
-	executerObject := action.New(capabilities)
+	executerObject := action.New(capabilities, new(mock_reporter.Mock_Reporter))
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	playbookId := "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
 	stepId := "step--81eff59f-d084-4324-9e0a-59e353dbd28f"

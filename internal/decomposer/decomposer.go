@@ -36,7 +36,7 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
-func New(actionExecutor action.IExecuter, guid guid.IGuid, reporter reporters.IReporter) *Decomposer {
+func New(actionExecutor action.IExecuter, guid guid.IGuid, reporter reporters.IWorkflowReporter) *Decomposer {
 	instance := Decomposer{}
 	if instance.actionExecutor == nil {
 		instance.actionExecutor = actionExecutor
@@ -55,7 +55,7 @@ type Decomposer struct {
 	details        ExecutionDetails
 	actionExecutor action.IExecuter
 	guid           guid.IGuid
-	reporter       reporters.IReporter
+	reporter       reporters.IWorkflowReporter
 }
 
 // Execute a Playbook
@@ -122,10 +122,10 @@ func (decomposer *Decomposer) ExecuteBranch(stepId string, scopeVariables cacao.
 		outputVariables, err := decomposer.ExecuteStep(currentStep, scopeVariables)
 
 		// Step execution reporting
-		report_err := decomposer.reporter.ReportStep(currentStep, outputVariables, err)
-		if report_err != nil {
-			log.Warn(report_err)
-		}
+		// report_err := decomposer.reporter.ReportStep(currentStep, outputVariables, err)
+		// if report_err != nil {
+		// 	log.Warn(report_err)
+		// }
 
 		if err == nil {
 			stepId = onSuccessStepId
