@@ -17,25 +17,30 @@ func init() {
 
 // Reporter interfaces
 
-type IReporter interface {
+type IWorkflowReporter interface {
 	ReportWorkflow(workflow cacao.Workflow) error
+	//ReportStep(step cacao.Step, out_vars cacao.Variables, err error) error
+}
+
+type IStepReporter interface {
 	ReportStep(step cacao.Step, out_vars cacao.Variables, err error) error
 }
 
 // High-level reporter class with injection of specific reporters
 
 type Reporter struct {
-	reporters []IReporter
+	workflowReporters []IWorkflowReporter
+	stepReporters     []IStepReporter
 }
 
-func New(reporters []IReporter) *Reporter {
+func New(workflowReporters []IWorkflowReporter, stepReporters []IStepReporter) *Reporter {
 
-	return &Reporter{reporters: reporters}
+	return &Reporter{workflowReporters: workflowReporters, stepReporters: stepReporters}
 }
 
 func (reporter *Reporter) ReportWorkflow(workflow cacao.Workflow) error {
 	log.Trace("reporting workflow")
-	for _, rep := range reporter.reporters {
+	for _, rep := range reporter.workflowReporters {
 		err := rep.ReportWorkflow(workflow)
 		if err != nil {
 			return err
@@ -46,7 +51,7 @@ func (reporter *Reporter) ReportWorkflow(workflow cacao.Workflow) error {
 
 func (reporter *Reporter) ReportStep(step cacao.Step, out_vars cacao.Variables, err error) error {
 	log.Trace("reporting step data")
-	for _, rep := range reporter.reporters {
+	for _, rep := range reporter.stepReporters {
 		err := rep.ReportStep(step, out_vars, err)
 		if err != nil {
 			return err

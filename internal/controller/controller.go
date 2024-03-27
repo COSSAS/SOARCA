@@ -71,11 +71,12 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	}
 
 	// TODO: Instantiate reporters from config
-
-	actionExecutor := action.New(capabilities)
 	reporter := reporters.New(
-		[]reporters.IReporter{new(db_reporter.DatabaseReporter)},
+		[]reporters.IWorkflowReporter{new(db_reporter.DatabaseReporter)},
+		[]reporters.IStepReporter{new(db_reporter.DatabaseReporter)},
 	)
+
+	actionExecutor := action.New(capabilities, reporter)
 	guid := new(guid.Guid)
 	decompose := decomposer.New(actionExecutor, guid, reporter)
 	return decompose
