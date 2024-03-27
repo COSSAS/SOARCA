@@ -16,14 +16,18 @@ import (
 	"soarca/internal/executors/action"
 	"soarca/internal/fin/protocol"
 	"soarca/internal/guid"
+	"soarca/internal/reporters"
 	"soarca/logger"
 	"soarca/utils"
 	httpUtil "soarca/utils/http"
+
+	//mockReporter "soarca/test/unittest/mocks/mock_reporter"
 
 	"github.com/gin-gonic/gin"
 
 	mongo "soarca/database/mongodb"
 	playbookrepository "soarca/database/playbook"
+	db_reporter "soarca/internal/reporters/database"
 	routes "soarca/routes"
 )
 
@@ -66,9 +70,14 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 		}
 	}
 
+	// TODO: Instantiate reporters from config
+
 	actionExecutor := action.New(capabilities)
+	reporter := reporters.New(
+		[]reporters.IReporter{new(db_reporter.DatabaseReporter)},
+	)
 	guid := new(guid.Guid)
-	decompose := decomposer.New(actionExecutor, guid)
+	decompose := decomposer.New(actionExecutor, guid, reporter)
 	return decompose
 }
 
