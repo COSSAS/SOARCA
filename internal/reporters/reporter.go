@@ -34,8 +34,17 @@ type Reporter struct {
 }
 
 func New(workflowReporters []IWorkflowReporter, stepReporters []IStepReporter) *Reporter {
-
 	return &Reporter{workflowReporters: workflowReporters, stepReporters: stepReporters}
+}
+
+func (reporter *Reporter) RegisterWorkflowReporters(workflowReporters []IWorkflowReporter) []IWorkflowReporter {
+	reporter.workflowReporters = append(reporter.workflowReporters, workflowReporters...)
+	return reporter.workflowReporters
+}
+
+func (reporter *Reporter) RegisterStepReporters(stepReporters []IStepReporter) []IStepReporter {
+	reporter.stepReporters = append(reporter.stepReporters, stepReporters...)
+	return reporter.stepReporters
 }
 
 func (reporter *Reporter) ReportWorkflow(workflow cacao.Workflow) error {

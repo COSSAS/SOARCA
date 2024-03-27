@@ -21,13 +21,12 @@ import (
 	"soarca/utils"
 	httpUtil "soarca/utils/http"
 
-	//mockReporter "soarca/test/unittest/mocks/mock_reporter"
+	dbReporter "soarca/internal/reporters/database"
 
 	"github.com/gin-gonic/gin"
 
 	mongo "soarca/database/mongodb"
 	playbookrepository "soarca/database/playbook"
-	db_reporter "soarca/internal/reporters/database"
 	routes "soarca/routes"
 )
 
@@ -71,10 +70,11 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	}
 
 	// TODO: Instantiate reporters from config
-	reporter := reporters.New(
-		[]reporters.IWorkflowReporter{new(db_reporter.DatabaseReporter)},
-		[]reporters.IStepReporter{new(db_reporter.DatabaseReporter)},
-	)
+	reporter := reporters.New([]reporters.IWorkflowReporter{}, []reporters.IStepReporter{})
+	workflowReporters := []reporters.IWorkflowReporter{new(dbReporter.DatabaseReporter)}
+	stepReporters := []reporters.IStepReporter{new(dbReporter.DatabaseReporter)}
+	reporter.RegisterStepReporters(stepReporters)
+	reporter.RegisterWorkflowReporters(workflowReporters)
 
 	actionExecutor := action.New(capabilities, reporter)
 	guid := new(guid.Guid)
