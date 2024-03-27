@@ -37,7 +37,13 @@ interface IStepReporter{
     ReportStep(cacao.workflow.Step, cacao.Variables, error)
 }
 
-class Reporter 
+class Reporter {
+    stepReporters []IStepReporter
+    workflowReporters []IWorkflowReporter
+
+    registerStepReporter()
+    registerWorkflowReporter()
+}
 class DB
 class 3PTool
 class Decomposer
@@ -46,8 +52,8 @@ class Executor
 Decomposer -up-> Reporter
 Executor -up-> Reporter
 
-Reporter .up.|> IWorkflowReporter
 Reporter -up-> IWorkflowReporter
+Reporter .up.|> IWorkflowReporter
 Reporter .up.|> IStepReporter
 Reporter -up-> IStepReporter
 
@@ -56,8 +62,8 @@ DB .up.|> IStepReporter
 3PTool .up.|> IWorkflowReporter
 3PTool .up.|> IStepReporter
 
-Reporter -left-> DB
-Reporter -right-> 3PTool
+Reporter --left--> DB
+Reporter --right--> 3PTool
 
 ```
 
