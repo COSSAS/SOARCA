@@ -11,6 +11,7 @@ import (
 	"soarca/models/execution"
 	"soarca/test/unittest/mocks/mock_executor"
 	"soarca/test/unittest/mocks/mock_guid"
+	"soarca/test/unittest/mocks/mock_reporter"
 
 	"github.com/go-playground/assert/v2"
 	"github.com/google/uuid"
@@ -19,6 +20,7 @@ import (
 func TestExecutePlaybook(t *testing.T) {
 	mock_action_executor := new(mock_executor.Mock_Action_Executor)
 	uuid_mock := new(mock_guid.Mock_Guid)
+	mock_reporter := new(mock_reporter.Mock_Reporter)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -31,7 +33,7 @@ func TestExecutePlaybook(t *testing.T) {
 		Value: "testing",
 	}
 
-	decomposer := decomposer.New(mock_action_executor, uuid_mock)
+	decomposer := decomposer.New(mock_action_executor, uuid_mock, mock_reporter)
 
 	step1 := cacao.Step{
 		Type:          "action",
@@ -108,6 +110,7 @@ func TestExecutePlaybook(t *testing.T) {
 func TestExecutePlaybookMultiStep(t *testing.T) {
 	mock_action_executor := new(mock_executor.Mock_Action_Executor)
 	uuid_mock := new(mock_guid.Mock_Guid)
+	mock_reporter := new(mock_reporter.Mock_Reporter)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -131,7 +134,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 		Value: "testing2",
 	}
 
-	decomposer := decomposer.New(mock_action_executor, uuid_mock)
+	decomposer := decomposer.New(mock_action_executor, uuid_mock, mock_reporter)
 
 	step1 := cacao.Step{
 		Type:          "action",
@@ -246,6 +249,7 @@ Test with an Empty OnCompletion will result in not executing the step.
 func TestExecuteEmptyMultiStep(t *testing.T) {
 	mock_action_executor2 := new(mock_executor.Mock_Action_Executor)
 	uuid_mock2 := new(mock_guid.Mock_Guid)
+	mock_reporter := new(mock_reporter.Mock_Reporter)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -268,7 +272,7 @@ func TestExecuteEmptyMultiStep(t *testing.T) {
 		Name: "soarca-ssh",
 	}
 
-	decomposer2 := decomposer.New(mock_action_executor2, uuid_mock2)
+	decomposer2 := decomposer.New(mock_action_executor2, uuid_mock2, mock_reporter)
 
 	step1 := cacao.Step{
 		Type:          "ssh",
@@ -308,6 +312,7 @@ Test with an not occuring on completion id will result in not executing the step
 func TestExecuteIllegalMultiStep(t *testing.T) {
 	mock_action_executor2 := new(mock_executor.Mock_Action_Executor)
 	uuid_mock2 := new(mock_guid.Mock_Guid)
+	mock_reporter := new(mock_reporter.Mock_Reporter)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -320,7 +325,7 @@ func TestExecuteIllegalMultiStep(t *testing.T) {
 		Value: "testing",
 	}
 
-	decomposer2 := decomposer.New(mock_action_executor2, uuid_mock2)
+	decomposer2 := decomposer.New(mock_action_executor2, uuid_mock2, mock_reporter)
 
 	step1 := cacao.Step{
 		Type:          "action",

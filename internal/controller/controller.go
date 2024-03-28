@@ -16,9 +16,12 @@ import (
 	"soarca/internal/executors/action"
 	"soarca/internal/fin/protocol"
 	"soarca/internal/guid"
+	"soarca/internal/reporters"
 	"soarca/logger"
 	"soarca/utils"
 	httpUtil "soarca/utils/http"
+
+	dbReporter "soarca/internal/reporters/database"
 
 	"github.com/gin-gonic/gin"
 
@@ -66,9 +69,16 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 		}
 	}
 
-	actionExecutor := action.New(capabilities)
+	// TODO: Instantiate reporters from config
+	reporter := reporters.New([]reporters.IWorkflowReporter{}, []reporters.IStepReporter{})
+	workflowReporters := []reporters.IWorkflowReporter{new(dbReporter.DatabaseReporter)}
+	stepReporters := []reporters.IStepReporter{new(dbReporter.DatabaseReporter)}
+	reporter.RegisterStepReporters(stepReporters)
+	reporter.RegisterWorkflowReporters(workflowReporters)
+
+	actionExecutor := action.New(capabilities, reporter)
 	guid := new(guid.Guid)
-	decompose := decomposer.New(actionExecutor, guid)
+	decompose := decomposer.New(actionExecutor, guid, reporter)
 	return decompose
 }
 
