@@ -29,15 +29,21 @@ The schema below represents the architecture concept.
 @startuml
 set separator ::
 
-interface IDecomposerReporter{
+interface IWorkflowReporter{
     ReportWorkflow(cacao.workflow)
 }
 
-interface IExecuterReporter{
-    ReportStep(cacao.workflow.Step)
+interface IStepReporter{
+    ReportStep(cacao.workflow.Step, cacao.Variables, error)
 }
 
-class Reporter 
+class Reporter {
+    stepReporters []IStepReporter
+    workflowReporters []IWorkflowReporter
+
+    registerStepReporter()
+    registerWorkflowReporter()
+}
 class DB
 class 3PTool
 class Decomposer
@@ -46,18 +52,18 @@ class Executor
 Decomposer -up-> Reporter
 Executor -up-> Reporter
 
-Reporter .up.|> IDecomposerReporter
-Reporter -up-> IDecomposerReporter
-Reporter .up.|> IExecuterReporter
-Reporter -up-> IExecuterReporter
+Reporter -up-> IWorkflowReporter
+Reporter .up.|> IWorkflowReporter
+Reporter .up.|> IStepReporter
+Reporter -up-> IStepReporter
 
-DB .up.|> IDecomposerReporter
-DB .up.|> IExecuterReporter
-3PTool .up.|> IDecomposerReporter
-3PTool .up.|> IExecuterReporter
+DB .up.|> IWorkflowReporter
+DB .up.|> IStepReporter
+3PTool .up.|> IWorkflowReporter
+3PTool .up.|> IStepReporter
 
-Reporter -left-> DB
-Reporter -right-> 3PTool
+Reporter --left--> DB
+Reporter --right--> 3PTool
 
 ```
 
