@@ -19,13 +19,13 @@ type DatabaseReporter struct {
 }
 
 // Workflow instantiation reporting logic
-func (database_reporter *DatabaseReporter) ReportWorkflow(workflow cacao.Workflow) error {
+func (database_reporter *DatabaseReporter) ReportWorkflow(workflow cacao.Workflow) (interface{}, error) {
 	log.Trace("workflow instantiation reported to database")
-	return nil
+	return workflow, nil
 }
 
 // Step execution reporting logic
-func (database_reporter *DatabaseReporter) ReportStep(workflow cacao.Step, vars cacao.Variables, err error) error {
+func (database_reporter *DatabaseReporter) ReportStep(step cacao.Step, vars cacao.Variables, err error) (interface{}, error) {
 	log.Trace("step execution reported to database")
-	return nil
+	return new(interface{}), nil
 }

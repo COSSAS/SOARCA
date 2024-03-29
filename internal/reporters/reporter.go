@@ -24,23 +24,30 @@ func init() {
 // Reporter interfaces
 
 type IWorkflowReporter interface {
-	ReportWorkflow(workflow cacao.Workflow) error
+	ReportWorkflow(workflow cacao.Workflow) (interface{}, error)
 	//ReportStep(step cacao.Step, out_vars cacao.Variables, err error) error
 }
 
 type IStepReporter interface {
-	ReportStep(step cacao.Step, out_vars cacao.Variables, err error) error
+	ReportStep(step cacao.Step, out_vars cacao.Variables, err error) (interface{}, error)
 }
 
 // High-level reporter class with injection of specific reporters
 
 type Reporter struct {
-	workflowReporters []IWorkflowReporter
-	stepReporters     []IStepReporter
+	workflowReporters    []IWorkflowReporter
+	stepReporters        []IStepReporter
+	workflowReportsCache ReporterCache
+	stepReportsCache     ReporterCache
 }
 
 func New(workflowReporters []IWorkflowReporter, stepReporters []IStepReporter) *Reporter {
-	return &Reporter{workflowReporters: workflowReporters, stepReporters: stepReporters}
+	return &Reporter{
+		workflowReporters:    workflowReporters,
+		stepReporters:        stepReporters,
+		workflowReportsCache: ReporterCache{size: 5},
+		stepReportsCache:     ReporterCache{size: 20},
+	}
 }
 
 func (reporter *Reporter) RegisterWorkflowReporters(workflowReporters []IWorkflowReporter) []IWorkflowReporter {
@@ -53,26 +60,28 @@ func (reporter *Reporter) RegisterStepReporters(stepReporters []IStepReporter) [
 	return reporter.stepReporters
 }
 
-func (reporter *Reporter) ReportWorkflow(workflow cacao.Workflow) error {
+func (reporter *Reporter) ReportWorkflow(workflow cacao.Workflow) (interface{}, error) {
 	log.Trace("reporting workflow")
 	for _, rep := range reporter.workflowReporters {
-		err := rep.ReportWorkflow(workflow)
+		res, err := rep.ReportWorkflow(workflow)
 		if err != nil {
 			log.Warning(err)
 		}
+		reporter.workflowReportsCache.addToCache(res)
 	}
 	// Errors are handled internally to the Reporter component
-	return nil
+	return reporter.workflowReportsCache.cache[0], nil
 }
 
-func (reporter *Reporter) ReportStep(step cacao.Step, out_vars cacao.Variables, err error) error {
+func (reporter *Reporter) ReportStep(step cacao.Step, out_vars cacao.Variables, err error) (interface{}, error) {
 	log.Trace("reporting step data")
 	for _, rep := range reporter.stepReporters {
-		err := rep.ReportStep(step, out_vars, err)
+		res, err := rep.ReportStep(step, out_vars, err)
 		if err != nil {
 			log.Warning(err)
 		}
+		reporter.stepReportsCache.addToCache(res)
 	}
 	// Errors are handled internally to the Reporter component
-	return nil
+	return reporter.stepReportsCache.cache[0], nil
 }
