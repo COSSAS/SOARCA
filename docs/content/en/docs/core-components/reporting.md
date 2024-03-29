@@ -1,8 +1,8 @@
 ---
-title: Reporting
+title: Reporter
 weight: 8
 categories: [architecture]
-tags: [apis]
+tags: [api]
 description: >
     Reporting of Playbook worfklow information and steps execution
 ---
@@ -14,7 +14,8 @@ SOARCA utilizes push-based reporting to provide information on the instantiation
 
 For the execution of a playbook, a *Decomposer* and invoked *Executor*s are injected with a *Reporter*. The *Reporter* maintains the reporting logic that reports execution information to a set of specified and available targets.
 
-A reporting target can be internal to SOARCA, such as the [database](https://cossas.github.io/SOARCA/docs/core-components/database/), and the [report] API. A reporting target can also be a third-party tool, such as an external SOAR, or incident case management system.
+A reporting target can be internal to SOARCA, such as the [database](https://cossas.github.io/SOARCA/docs/core-components/database/), and the [report] API. 
+A reporting target can also be a third-party tool, such as an external SOAR/ SIEM, or incident case management system.
 
 Upon execution trigger for a playbook, information about the chain of playbook steps to be executed will be pushed to the targets via dedicated reporting classes.
 
@@ -41,10 +42,10 @@ class Reporter {
     stepReporters []IStepReporter
     workflowReporters []IWorkflowReporter
 
-    registerStepReporter()
-    registerWorkflowReporter()
+    RegisterStepReporter()
+    RegisterWorkflowReporter()
 }
-class DB
+class Database as DB
 class 3PTool
 class Decomposer
 class Executor
@@ -75,6 +76,6 @@ A high level *Reporter* component will implement both interfaces, and maintain t
 
 ## Future plans
 
-At this stage, third-party tools integrations may be built in SOARCA via packages implementing reporting logic for the specific tools. Alternatively, third-party tools may implement pull-based mechanisms to get information from the execution of a playbook via SOARCA.
+At this stage, third-party tools integrations may be built in SOARCA via packages implementing reporting logic for the specific tools. Alternatively, third-party tools may implement pull-based mechanisms (via the API) to get information from the execution of a playbook via SOARCA.
 
 In the near future, we will (also) make available a SOARCA Report API that can establish a WebSocket connection to a third-party tool. As such, this will thus allow SOARCA to push execution updates as they come to third-party tools, without external tools having to poll SOARCA.
