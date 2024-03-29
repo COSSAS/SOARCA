@@ -6,6 +6,12 @@ import (
 	"soarca/models/cacao"
 )
 
+//TODO:
+// DONE Add error logging in the reporter
+// DONE In decomposer and executer just discard with _
+// Add cache to the reporter for caching reports outputs
+// Add tests for caching
+
 type Empty struct{}
 
 var component = reflect.TypeOf(Empty{}).PkgPath()
@@ -52,9 +58,10 @@ func (reporter *Reporter) ReportWorkflow(workflow cacao.Workflow) error {
 	for _, rep := range reporter.workflowReporters {
 		err := rep.ReportWorkflow(workflow)
 		if err != nil {
-			return err
+			log.Warning(err)
 		}
 	}
+	// Errors are handled internally to the Reporter component
 	return nil
 }
 
@@ -63,8 +70,9 @@ func (reporter *Reporter) ReportStep(step cacao.Step, out_vars cacao.Variables, 
 	for _, rep := range reporter.stepReporters {
 		err := rep.ReportStep(step, out_vars, err)
 		if err != nil {
-			return err
+			log.Warning(err)
 		}
 	}
+	// Errors are handled internally to the Reporter component
 	return nil
 }

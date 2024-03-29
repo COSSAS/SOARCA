@@ -71,10 +71,7 @@ func (decomposer *Decomposer) Execute(playbook cacao.Playbook) (*ExecutionDetail
 	variables.Merge(playbook.PlaybookVariables)
 
 	// Reporting workflow instantiation
-	err := decomposer.reporter.ReportWorkflow(playbook.Workflow)
-	if err != nil {
-		log.Warn(err)
-	}
+	_ = decomposer.reporter.ReportWorkflow(playbook.Workflow)
 
 	outputVariables, err := decomposer.ExecuteBranch(stepId, variables)
 

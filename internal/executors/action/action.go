@@ -76,20 +76,14 @@ func (executor *Executor) Execute(meta execution.Metadata, metadata PlaybookStep
 
 			if err != nil {
 				log.Error("Error executing Command ", err)
-				err := executor.reporter.ReportStep(metadata.Step, returnVariables, err)
-				if err != nil {
-					log.Warn(err)
-				}
+				_ = executor.reporter.ReportStep(metadata.Step, returnVariables, err)
 				return cacao.NewVariables(), err
 			} else {
 				log.Debug("Command executed")
 			}
 		}
 	}
-	err := executor.reporter.ReportStep(metadata.Step, returnVariables, nil)
-	if err != nil {
-		log.Warn(err)
-	}
+	_ = executor.reporter.ReportStep(metadata.Step, returnVariables, nil)
 	return returnVariables, nil
 }
 
