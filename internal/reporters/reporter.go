@@ -42,12 +42,17 @@ type Reporter struct {
 }
 
 func New(workflowReporters []IWorkflowReporter, stepReporters []IStepReporter) *Reporter {
-	return &Reporter{
-		workflowReporters:    workflowReporters,
-		stepReporters:        stepReporters,
-		workflowReportsCache: ReporterCache{size: 5},
-		stepReportsCache:     ReporterCache{size: 20},
+	instance := Reporter{}
+	if instance.workflowReporters == nil {
+		instance.workflowReporters = workflowReporters
 	}
+	if instance.stepReporters == nil {
+		instance.stepReporters = stepReporters
+	}
+	instance.workflowReportsCache = ReporterCache{Size: 5}
+	instance.stepReportsCache = ReporterCache{Size: 20}
+
+	return &instance
 }
 
 func (reporter *Reporter) RegisterWorkflowReporters(workflowReporters []IWorkflowReporter) []IWorkflowReporter {
@@ -67,7 +72,8 @@ func (reporter *Reporter) ReportWorkflow(workflow cacao.Workflow) (interface{}, 
 		if err != nil {
 			log.Warning(err)
 		}
-		reporter.workflowReportsCache.addToCache(res)
+		data := CacheEntry{Name: reflect.TypeOf(rep).Name(), Data: res}
+		reporter.workflowReportsCache.Add(data)
 	}
 	// Errors are handled internally to the Reporter component
 	return reporter.workflowReportsCache.cache[0], nil
@@ -80,7 +86,8 @@ func (reporter *Reporter) ReportStep(step cacao.Step, out_vars cacao.Variables, 
 		if err != nil {
 			log.Warning(err)
 		}
-		reporter.stepReportsCache.addToCache(res)
+		data := CacheEntry{Name: reflect.TypeOf(rep).Name(), Data: res}
+		reporter.stepReportsCache.Add(data)
 	}
 	// Errors are handled internally to the Reporter component
 	return reporter.stepReportsCache.cache[0], nil
