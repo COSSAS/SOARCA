@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"reflect"
 
-	"soarca/internal/controller/decomposer"
+	"soarca/internal/controller/decomposer_controller"
 	"soarca/logger"
 	"soarca/models/decoder"
 	"soarca/routes/error"
@@ -26,10 +26,10 @@ func init() {
 }
 
 type TriggerApi struct {
-	controller decomposer.IController
+	controller decomposer_controller.IController
 }
 
-func New(controller decomposer.IController) *TriggerApi {
+func New(controller decomposer_controller.IController) *TriggerApi {
 	instance := TriggerApi{}
 	instance.controller = controller
 	return &instance

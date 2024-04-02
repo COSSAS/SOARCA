@@ -1,4 +1,4 @@
-package decomposer
+package decomposer_controller
 
 import (
 	"soarca/internal/decomposer"
