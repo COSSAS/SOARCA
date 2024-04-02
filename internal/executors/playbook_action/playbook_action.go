@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"reflect"
 	"soarca/internal/controller/database"
-	"soarca/internal/controller/decomposer"
+	"soarca/internal/controller/decomposer_controller"
 	"soarca/logger"
 	"soarca/models/cacao"
 	"soarca/models/execution"
 )
 
 type PlaybookAction struct {
-	decomposerController decomposer.IController
+	decomposerController decomposer_controller.IController
 	databaseController   database.IController
 }
 
@@ -23,7 +23,7 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
-func New(controller decomposer.IController,
+func New(controller decomposer_controller.IController,
 	database database.IController) *PlaybookAction {
 	return &PlaybookAction{decomposerController: controller, databaseController: database}
 }
