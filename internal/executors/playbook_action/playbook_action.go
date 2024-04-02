@@ -16,12 +16,6 @@ const (
 	capabilityName = "playbook-action"
 )
 
-type IExecuter interface {
-	Execute(execution.Metadata,
-		cacao.Step,
-		cacao.Variables) (cacao.Variables, error)
-}
-
 type PlaybookAction struct {
 	decomposerController decomposer.IController
 	databaseController   database.IController
@@ -34,11 +28,8 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
-func (playbookAction *PlaybookAction) GetType() string {
-	return capabilityName
-}
-
-func New(controller decomposer.IController, database database.IController) *PlaybookAction {
+func New(controller decomposer.IController,
+	database database.IController) *PlaybookAction {
 	return &PlaybookAction{decomposerController: controller, databaseController: database}
 }
 
