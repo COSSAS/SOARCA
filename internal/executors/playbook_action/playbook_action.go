@@ -11,11 +11,6 @@ import (
 	"soarca/models/execution"
 )
 
-const (
-	resultVariable = "__soarca_playbook_action_result__"
-	capabilityName = "playbook-action"
-)
-
 type PlaybookAction struct {
 	decomposerController decomposer.IController
 	databaseController   database.IController
