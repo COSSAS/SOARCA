@@ -2,7 +2,7 @@ package routes
 
 import (
 	"soarca/internal/controller/database"
-	"soarca/internal/controller/decomposer"
+	"soarca/internal/controller/decomposer_controller"
 	coa_routes "soarca/routes/coa"
 	operator "soarca/routes/operator"
 	playbook_routes "soarca/routes/playbook"
@@ -30,7 +30,7 @@ func Logging(app *gin.Engine) {
 }
 
 func Api(app *gin.Engine,
-	controller decomposer.IController,
+	controller decomposer_controller.IController,
 ) error {
 	log.Trace("Trying to setup all Routes")
 	// gin.SetMode(gin.ReleaseMode)
