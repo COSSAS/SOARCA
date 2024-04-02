@@ -11,7 +11,7 @@ const (
 	StepTypeEnd             = "end"
 	StepTypeStart           = "start"
 	StepTypeAction          = "action"
-	StepTypePlaybook        = "playbook-action"
+	StepTypePlaybookAction  = "playbook-action"
 	StepTypeParallel        = "parallel"
 	StepTypeIfCondition     = "if-condition"
 	StepTypeWhileCondition  = "while-condition"
