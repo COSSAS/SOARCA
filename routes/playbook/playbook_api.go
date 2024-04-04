@@ -22,14 +22,14 @@ func NewPlaybookController(controller database.IController) *playbookController 
 }
 
 // getAllPlaybooks GET handler for obtaining all the playbooks in the database and return this to the gin context in json format
-// @Summary gets all the UUIDs for the stored playbooks
-// @Schemes
-// @Description return all stored playbooks default limit:100
-// @Tags playbook
-// @Produce json
-// @success 200 {array} cacao.Playbook
-// @error	400
-// @Router /playbook/ [GET]
+//	@Summary	gets all the UUIDs for the stored playbooks
+//	@Schemes
+//	@Description	return all stored playbooks default limit:100
+//	@Tags			playbook
+//	@Produce		json
+//	@success		200	{array}	cacao.Playbook
+//	@error			400
+//	@Router			/playbook/ [GET]
 func (plabookCtrl *playbookController) getAllPlaybooks(g *gin.Context) {
 	log.Trace("Trying to obtain all playbook IDs")
 
@@ -45,14 +45,14 @@ func (plabookCtrl *playbookController) getAllPlaybooks(g *gin.Context) {
 
 // getAllPlaybookMetas GET handler for obtaining all the meta data of all the stored playbooks
 // in the database and return this to the gin context in json format
-// @Summary gets all the meta information for the stored playbooks
-// @Schemes
-// @Description get playbook meta information for playbook
-// @Tags playbook
-// @Produce json
-// @success 200 {array} api.PlaybookMeta
-// @error	400
-// @Router /playbook/meta [GET]
+//	@Summary	gets all the meta information for the stored playbooks
+//	@Schemes
+//	@Description	get playbook meta information for playbook
+//	@Tags			playbook
+//	@Produce		json
+//	@success		200	{array}	api.PlaybookMeta
+//	@error			400
+//	@Router			/playbook/meta [GET]
 func (plabookCtrl *playbookController) getAllPlaybookMetas(g *gin.Context) {
 	log.Trace("Trying to obtain all playbook IDs")
 
@@ -67,16 +67,16 @@ func (plabookCtrl *playbookController) getAllPlaybookMetas(g *gin.Context) {
 }
 
 // submitPlaybook POST handler for creating playbooks.
-// @Summary submit playbook via the api
-// @Schemes
-// @Description submit a new playbook api
-// @Tags playbook
-// @Produce json
-// @Accept json
-// @Param data body cacao.Playbook true "playbook"
-// @Success 200  {object} cacao.Playbook
-// @error 400
-// @Router /playbook/ [POST]
+//	@Summary	submit playbook via the api
+//	@Schemes
+//	@Description	submit a new playbook api
+//	@Tags			playbook
+//	@Produce		json
+//	@Accept			json
+//	@Param			data	body		cacao.Playbook	true	"playbook"
+//	@Success		200		{object}	cacao.Playbook
+//	@error			400
+//	@Router			/playbook/ [POST]
 func (plabookCtrl *playbookController) submitPlaybook(g *gin.Context) {
 	jsonData, err := io.ReadAll(g.Request.Body)
 	if err != nil {
@@ -98,16 +98,16 @@ func (plabookCtrl *playbookController) submitPlaybook(g *gin.Context) {
 }
 
 // getPlaybookByID GET handler that finds playbook by id
-// @Summary get CACAO playbook by its ID
-// @Schemes
-// @Description get playbook by ID
-// @Tags playbook
-// @Produce json
-// @Accept json
-// @Param id path string true "playbook ID"
-// @Success 200  {object} cacao.Playbook
-// @error 400
-// @Router /playbook/{id} [GET]
+//	@Summary	get CACAO playbook by its ID
+//	@Schemes
+//	@Description	get playbook by ID
+//	@Tags			playbook
+//	@Produce		json
+//	@Accept			json
+//	@Param			id	path		string	true	"playbook ID"
+//	@Success		200	{object}	cacao.Playbook
+//	@error			400
+//	@Router			/playbook/{id} [GET]
 func (plabookCtrl *playbookController) getPlaybookByID(g *gin.Context) {
 	id := g.Param("id")
 	log.Trace("Trying to obtain playbook for id: ", id)
@@ -122,17 +122,17 @@ func (plabookCtrl *playbookController) getPlaybookByID(g *gin.Context) {
 }
 
 // updatePlaybookyID PUT handler that allows updating playbook object by ID.
-// @Summary update playbook
-// @Schemes
-// @Description update playbook by Id
-// @Tags playbook
-// @Produce json
-// @Accept json
-// @Param id path string true "playbook Id"
-// @Param data body cacao.Playbook true "playbook"
-// @Success 200  {object} cacao.Playbook
-// @error 400
-// @Router /playbook/{id} [PUT]
+//	@Summary	update playbook
+//	@Schemes
+//	@Description	update playbook by Id
+//	@Tags			playbook
+//	@Produce		json
+//	@Accept			json
+//	@Param			id		path		string			true	"playbook Id"
+//	@Param			data	body		cacao.Playbook	true	"playbook"
+//	@Success		200		{object}	cacao.Playbook
+//	@error			400
+//	@Router			/playbook/{id} [PUT]
 func (plabookCtrl *playbookController) updatePlaybookByID(g *gin.Context) {
 	id := g.Param("id")
 	log.Trace("Trying to update playbook for id: ", id)
@@ -153,16 +153,16 @@ func (plabookCtrl *playbookController) updatePlaybookByID(g *gin.Context) {
 }
 
 // deleteByPlaybookID DELETE handler for deleting playbook by ID.
-// @Summary delete playbook by Id
-// @Schemes
-// @Description delete playbook by Id
-// @Tags playbook
-// @Produce json
-// @Accept json
-// @Param id path string true "playbook ID"
-// @Success 200
-// @error 400
-// @Router /playbook/{id} [DELETE]
+//	@Summary	delete playbook by Id
+//	@Schemes
+//	@Description	delete playbook by Id
+//	@Tags			playbook
+//	@Produce		json
+//	@Accept			json
+//	@Param			id	path	string	true	"playbook ID"
+//	@Success		200
+//	@error			400
+//	@Router			/playbook/{id} [DELETE]
 func (plabookCtrl *playbookController) deleteByPlaybookID(g *gin.Context) {
 	id := g.Param("id")
 	err := plabookCtrl.playbookRepo.Delete(id)

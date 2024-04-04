@@ -1,4 +1,21 @@
 definitions:
+  api.PlaybookMeta:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      labels:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      valid_from:
+        type: string
+      valid_until:
+        type: string
+    type: object
   cacao.AgentTarget:
     properties:
       address:
@@ -8,9 +25,7 @@ definitions:
           type: array
         type: object
       agent_target_extensions:
-        items:
-          type: string
-        type: array
+        $ref: '#/definitions/cacao.Extensions'
       authentication_info:
         type: string
       category:
@@ -20,8 +35,6 @@ definitions:
       contact:
         $ref: '#/definitions/cacao.Contact'
       description:
-        type: string
-      http_url:
         type: string
       id:
         type: string
@@ -40,7 +53,6 @@ definitions:
       type:
         type: string
     required:
-    - id
     - name
     - type
     type: object
@@ -71,7 +83,6 @@ definitions:
       username:
         type: string
     required:
-    - id
     - type
     type: object
   cacao.CivicLocation:
@@ -117,7 +128,9 @@ definitions:
         type: string
       headers:
         additionalProperties:
-          type: string
+          items:
+            type: string
+          type: array
         type: object
       playbook_activity:
         type: string
@@ -130,6 +143,17 @@ definitions:
     - type
     type: object
   cacao.Contact:
+    properties:
+      contact_details:
+        type: string
+      email:
+        additionalProperties:
+          type: string
+        type: object
+      phone:
+        additionalProperties:
+          type: string
+        type: object
     type: object
   cacao.DataMarking:
     properties:
@@ -159,6 +183,8 @@ definitions:
         items:
           type: string
         type: array
+      marking_extensions:
+        $ref: '#/definitions/cacao.Extensions'
       name:
         type: string
       permitted_actions:
@@ -181,22 +207,55 @@ definitions:
         type: string
       valid_until:
         type: string
+    required:
+    - created
+    - created_by
+    - id
+    - type
+    type: object
+  cacao.ExtensionDefinition:
+    properties:
+      created_by:
+        type: string
+      description:
+        type: string
+      external_references:
+        items:
+          $ref: '#/definitions/cacao.ExternalReferences'
+        type: array
+      name:
+        type: string
+      schema:
+        type: string
+      type:
+        type: string
+      version:
+        type: string
+    required:
+    - created_by
+    - schema
+    - type
+    - version
+    type: object
+  cacao.Extensions:
+    additionalProperties: true
     type: object
   cacao.ExternalReferences:
     properties:
       description:
         type: string
+      external_id:
+        type: string
       name:
+        type: string
+      reference_id:
         type: string
       source:
         type: string
       url:
         type: string
     required:
-    - description
     - name
-    - source
-    - url
     type: object
   cacao.Playbook:
     properties:
@@ -209,18 +268,23 @@ definitions:
           $ref: '#/definitions/cacao.AuthenticationInformation'
         type: object
       created:
-        description: date time is already validate by the field type!
         type: string
       created_by:
         type: string
       data_marking_definitions:
-        $ref: '#/definitions/cacao.DataMarking'
+        additionalProperties:
+          $ref: '#/definitions/cacao.DataMarking'
+        type: object
       derived_from:
         items:
           type: string
         type: array
       description:
         type: string
+      extension_definitions:
+        additionalProperties:
+          $ref: '#/definitions/cacao.ExtensionDefinition'
+        type: object
       external_references:
         items:
           $ref: '#/definitions/cacao.ExternalReferences'
@@ -238,14 +302,17 @@ definitions:
           type: string
         type: array
       modified:
-        description: ',datetime=2006-01-02T15:04:05Z07:00"`'
         type: string
       name:
         type: string
+      playbook_extensions:
+        $ref: '#/definitions/cacao.Extensions'
       playbook_types:
         items:
           type: string
         type: array
+      playbook_variables:
+        $ref: '#/definitions/cacao.Variables'
       priority:
         type: integer
       severity:
@@ -271,22 +338,12 @@ definitions:
     required:
     - created
     - created_by
-    - description
-    - external_references
     - id
-    - impact
-    - labels
     - modified
     - name
-    - playbook_types
-    - priority
-    - severity
     - spec_version
     - type
-    - valid_from
-    - valid_until
     - workflow
-    - workflow_exception
     - workflow_start
     type: object
   cacao.Step:
@@ -343,12 +400,12 @@ definitions:
         type: string
       playbook_id:
         type: string
-      playbook_variables:
-        additionalProperties:
-          $ref: '#/definitions/cacao.Variables'
-        type: object
       playbook_version:
         type: string
+      step_extensions:
+        $ref: '#/definitions/cacao.Extensions'
+      step_variables:
+        $ref: '#/definitions/cacao.Variables'
       switch:
         type: string
       targets:
@@ -359,8 +416,10 @@ definitions:
         type: integer
       type:
         type: string
+    required:
+    - type
     type: object
-  cacao.Variables:
+  cacao.Variable:
     properties:
       constant:
         type: boolean
@@ -374,6 +433,12 @@ definitions:
         type: string
       value:
         type: string
+    required:
+    - type
+    type: object
+  cacao.Variables:
+    additionalProperties:
+      $ref: '#/definitions/cacao.Variable'
     type: object
   cacao.Workflow:
     additionalProperties:
@@ -382,11 +447,127 @@ definitions:
 info:
   contact: {}
 paths:
-  /trigger/workflow:
+  /playbook/:
+    get:
+      description: return all stored playbooks default limit:100
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/cacao.Playbook'
+            type: array
+      summary: gets all the UUIDs for the stored playbooks
+      tags:
+      - playbook
     post:
       consumes:
       - application/json
-      description: trigger workflow
+      description: submit a new playbook api
+      parameters:
+      - description: playbook
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/cacao.Playbook'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/cacao.Playbook'
+      summary: submit playbook via the api
+      tags:
+      - playbook
+  /playbook/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: delete playbook by Id
+      parameters:
+      - description: playbook ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: delete playbook by Id
+      tags:
+      - playbook
+    get:
+      consumes:
+      - application/json
+      description: get playbook by ID
+      parameters:
+      - description: playbook ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/cacao.Playbook'
+      summary: get CACAO playbook by its ID
+      tags:
+      - playbook
+    put:
+      consumes:
+      - application/json
+      description: update playbook by Id
+      parameters:
+      - description: playbook Id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: playbook
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/cacao.Playbook'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/cacao.Playbook'
+      summary: update playbook
+      tags:
+      - playbook
+  /playbook/meta:
+    get:
+      description: get playbook meta information for playbook
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/api.PlaybookMeta'
+            type: array
+      summary: gets all the meta information for the stored playbooks
+      tags:
+      - playbook
+  /trigger/playbook:
+    post:
+      consumes:
+      - application/json
+      description: trigger playbook
       parameters:
       - description: execute playbook by payload
         in: body
@@ -399,108 +580,7 @@ paths:
       responses:
         "200":
           description: '{"execution_id":"uuid","payload":"playbook--uuid"}'
-      summary: trigger a workflow with via cacao payload
+      summary: trigger a playbook by supplying a cacao playbook payload
       tags:
       - trigger
-  /workflow/:
-    get:
-      description: get UUIDs for workflow
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              type: string
-            type: array
-      summary: gets all the UUIDs for the stored workflows
-      tags:
-      - workflow
-    post:
-      consumes:
-      - application/json
-      description: submit a new workflow api
-      parameters:
-      - description: workflow
-        in: body
-        name: data
-        required: true
-        schema:
-          $ref: '#/definitions/cacao.Playbook'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/cacao.Playbook'
-      summary: submit workflow via the api
-      tags:
-      - workflow
-  /workflow/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: delete workflow by ID
-      parameters:
-      - description: workflow ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-      summary: delete worflow
-      tags:
-      - workflow
-    get:
-      consumes:
-      - application/json
-      description: get workflow by ID
-      parameters:
-      - description: workflow ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/cacao.Playbook'
-      summary: get CACAO playbook workflow by its ID
-      tags:
-      - workflow
-    put:
-      consumes:
-      - application/json
-      description: update workflow by ID
-      parameters:
-      - description: workflow ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: workflow
-        in: body
-        name: data
-        required: true
-        schema:
-          $ref: '#/definitions/cacao.Playbook'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/cacao.Playbook'
-      summary: update workflow
-      tags:
-      - workflow
 swagger: "2.0"
