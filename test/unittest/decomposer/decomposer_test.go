@@ -12,6 +12,7 @@ import (
 	"soarca/test/unittest/mocks/mock_executor"
 	mock_playbook_action_executor "soarca/test/unittest/mocks/mock_executor/playbook_action"
 	"soarca/test/unittest/mocks/mock_guid"
+	"soarca/test/unittest/mocks/mock_reporter"
 
 	"github.com/go-playground/assert/v2"
 	"github.com/google/uuid"
@@ -21,6 +22,7 @@ func TestExecutePlaybook(t *testing.T) {
 	mock_action_executor := new(mock_executor.Mock_Action_Executor)
 	mock_playbook_action_executor := new(mock_playbook_action_executor.Mock_PlaybookActionExecutor)
 	uuid_mock := new(mock_guid.Mock_Guid)
+	mock_reporter := new(mock_reporter.Mock_Reporter)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -35,7 +37,7 @@ func TestExecutePlaybook(t *testing.T) {
 
 	decomposer := decomposer.New(mock_action_executor,
 		mock_playbook_action_executor,
-		uuid_mock)
+		uuid_mock, mock_reporter)
 
 	step1 := cacao.Step{
 		Type:          "action",
@@ -113,6 +115,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 	mock_action_executor := new(mock_executor.Mock_Action_Executor)
 	mock_playbook_action_executor := new(mock_playbook_action_executor.Mock_PlaybookActionExecutor)
 	uuid_mock := new(mock_guid.Mock_Guid)
+	mock_reporter := new(mock_reporter.Mock_Reporter)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -138,7 +141,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 
 	decomposer := decomposer.New(mock_action_executor,
 		mock_playbook_action_executor,
-		uuid_mock)
+		uuid_mock, mock_reporter)
 
 	step1 := cacao.Step{
 		Type:          "action",
@@ -254,6 +257,7 @@ func TestExecuteEmptyMultiStep(t *testing.T) {
 	mock_action_executor2 := new(mock_executor.Mock_Action_Executor)
 	mock_playbook_action_executor2 := new(mock_playbook_action_executor.Mock_PlaybookActionExecutor)
 	uuid_mock2 := new(mock_guid.Mock_Guid)
+	mock_reporter := new(mock_reporter.Mock_Reporter)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -278,7 +282,7 @@ func TestExecuteEmptyMultiStep(t *testing.T) {
 
 	decomposer2 := decomposer.New(mock_action_executor2,
 		mock_playbook_action_executor2,
-		uuid_mock2)
+		uuid_mock2, mock_reporter)
 
 	step1 := cacao.Step{
 		Type:          "ssh",
@@ -319,6 +323,7 @@ func TestExecuteIllegalMultiStep(t *testing.T) {
 	mock_action_executor2 := new(mock_executor.Mock_Action_Executor)
 	mock_playbook_action_executor2 := new(mock_playbook_action_executor.Mock_PlaybookActionExecutor)
 	uuid_mock2 := new(mock_guid.Mock_Guid)
+	mock_reporter := new(mock_reporter.Mock_Reporter)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -333,7 +338,7 @@ func TestExecuteIllegalMultiStep(t *testing.T) {
 
 	decomposer2 := decomposer.New(mock_action_executor2,
 		mock_playbook_action_executor2,
-		uuid_mock2)
+		uuid_mock2, mock_reporter)
 
 	step1 := cacao.Step{
 		Type:          "action",
@@ -369,7 +374,7 @@ func TestExecutePlaybookAction(t *testing.T) {
 	mock_action_executor := new(mock_executor.Mock_Action_Executor)
 	mock_playbook_action_executor := new(mock_playbook_action_executor.Mock_PlaybookActionExecutor)
 	uuid_mock := new(mock_guid.Mock_Guid)
-
+	mock_reporter := new(mock_reporter.Mock_Reporter)
 	expectedVariables := cacao.Variable{
 		Type:  "string",
 		Name:  "var1",
@@ -378,7 +383,7 @@ func TestExecutePlaybookAction(t *testing.T) {
 
 	decomposer := decomposer.New(mock_action_executor,
 		mock_playbook_action_executor,
-		uuid_mock)
+		uuid_mock, mock_reporter)
 
 	step1 := cacao.Step{
 		Type:          "playbook-action",

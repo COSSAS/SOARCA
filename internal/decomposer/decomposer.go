@@ -8,6 +8,7 @@ import (
 	"soarca/internal/executors"
 	"soarca/internal/executors/action"
 	"soarca/internal/guid"
+	"soarca/internal/reporter"
 	"soarca/logger"
 	"soarca/models/cacao"
 	"soarca/models/execution"
@@ -36,6 +37,7 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
+<<<<<<< HEAD
 func New(actionExecutor action.IExecuter,
 	playbookActionExecutor executors.IPlaybookExecuter,
 	guid guid.IGuid) *Decomposer {
@@ -51,6 +53,28 @@ type Decomposer struct {
 	actionExecutor         action.IExecuter
 	playbookActionExecutor executors.IPlaybookExecuter
 	guid                   guid.IGuid
+=======
+func New(actionExecutor action.IExecuter, guid guid.IGuid, reporter reporter.IWorkflowReporter) *Decomposer {
+	instance := Decomposer{}
+	if instance.actionExecutor == nil {
+		instance.actionExecutor = actionExecutor
+	}
+	if instance.guid == nil {
+		instance.guid = guid
+	}
+	if instance.reporter == nil {
+		instance.reporter = reporter
+	}
+	return &instance
+}
+
+type Decomposer struct {
+	playbook       cacao.Playbook
+	details        ExecutionDetails
+	actionExecutor action.IExecuter
+	guid           guid.IGuid
+	reporter       reporter.IWorkflowReporter
+>>>>>>> 45d3513 (add decomposer with reporting)
 }
 
 // Execute a Playbook
@@ -64,6 +88,13 @@ func (decomposer *Decomposer) Execute(playbook cacao.Playbook) (*ExecutionDetail
 	stepId := playbook.WorkflowStart
 	variables := cacao.NewVariables()
 	variables.Merge(playbook.PlaybookVariables)
+
+	// Reporting workflow instantiation
+	metadata := execution.Metadata{
+		ExecutionId: decomposer.details.ExecutionId,
+		PlaybookId:  decomposer.details.PlaybookId,
+	}
+	_ = decomposer.reporter.ReportWorkflow(metadata, playbook)
 
 	outputVariables, err := decomposer.ExecuteBranch(stepId, variables)
 
