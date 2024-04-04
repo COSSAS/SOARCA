@@ -36,7 +36,7 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
-func New(actionExecutor action.IExecuter, guid guid.IGuid, reporter reporter.IReporter) *Decomposer {
+func New(actionExecutor action.IExecuter, guid guid.IGuid, reporter reporter.IWorkflowReporter) *Decomposer {
 	instance := Decomposer{}
 	if instance.actionExecutor == nil {
 		instance.actionExecutor = actionExecutor
@@ -55,7 +55,7 @@ type Decomposer struct {
 	details        ExecutionDetails
 	actionExecutor action.IExecuter
 	guid           guid.IGuid
-	reporter       reporter.IReporter
+	reporter       reporter.IWorkflowReporter
 }
 
 // Execute a Playbook

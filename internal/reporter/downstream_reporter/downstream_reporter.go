@@ -8,15 +8,12 @@ import (
 )
 
 type IDownStreamReporter interface {
-	// ReportResults should be called immediately upon creations to link results to execution
-	// Then:
-	//	- Substitute with new report entries, OR
-	// 	- Edit report entries
 	ReportWorkflow(workflowEntry WorkflowEntry) error
 	ReportStep(stepEntry StepEntry) error
 }
 
 type WorkflowEntry struct {
+	// TODO Change to context
 	ExecutionId uuid.UUID
 	Playbook    cacao.Playbook
 }

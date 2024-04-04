@@ -10,26 +10,6 @@ import (
 	"soarca/models/execution"
 )
 
-//TODO:
-// DONE Add error logging in the reporter
-// DONE In decomposer and executer just discard with _
-// Add cache to the reporter for caching reports outputs
-// Add tests for caching
-// Caching:
-// - The decomposer creates the entry for the execution ID
-// - Report workflow includes the excution ID
-// - Step also has execution ID, once a step is executed and reports, the reporter should already have the execution ID of the workflow
-// - Once the step reporter calls report, the step results will be added to the execution-ID reports, and continue reporting
-// - The cache of reporter should have a custom structure containing a map of execution ID -> map[string]StepResults
-
-// - Perhaps use interface for downstream reporters
-// - downstream reporters should implement only a function to report results to ReportEntry
-
-// TODO
-// FIRST IMPLEMENT REPORTING FUNCTIONINGS
-// DROP DATABASE REPORTER STUB
-// CACHE REPORTER TO BE IMPLEMENTED IN OTHER PULL REQUEST
-
 type Empty struct{}
 
 var component = reflect.TypeOf(Empty{}).PkgPath()
@@ -41,9 +21,12 @@ func init() {
 
 // Reporter interfaces
 
-type IReporter interface {
+type IWorkflowReporter interface {
 	// -> Give info to downstream reporters
 	ReportWorkflow(executionContext execution.Metadata, playbook cacao.Playbook) error
+}
+type IStepReporter interface {
+	// -> Give info to downstream reporters
 	ReportStep(executionContext execution.Metadata, step cacao.Step, outVars cacao.Variables, err error) error
 }
 
@@ -52,6 +35,8 @@ type IReporter interface {
 type Reporter struct {
 	reporters []ds_reporter.IDownStreamReporter
 }
+
+const MaxReporters int = 100
 
 func New(reporters []ds_reporter.IDownStreamReporter) *Reporter {
 	instance := Reporter{}
@@ -63,7 +48,7 @@ func New(reporters []ds_reporter.IDownStreamReporter) *Reporter {
 
 func (reporter *Reporter) RegisterReporters(reporters []ds_reporter.IDownStreamReporter) error {
 	// TODO: how many reporters?
-	if (len(reporter.reporters) + len(reporters)) > 100 {
+	if (len(reporter.reporters) + len(reporters)) > MaxReporters {
 		log.Warning("reporter not registered, too many reporters")
 		return errors.New("attempting to register too many reporters")
 	}

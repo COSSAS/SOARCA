@@ -18,7 +18,7 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
-func New(capabilities map[string]capability.ICapability, reporter reporter.IReporter) *Executor {
+func New(capabilities map[string]capability.ICapability, reporter reporter.IStepReporter) *Executor {
 	var instance = Executor{}
 	instance.capabilities = capabilities
 	instance.reporter = reporter
@@ -40,7 +40,7 @@ type IExecuter interface {
 
 type Executor struct {
 	capabilities map[string]capability.ICapability
-	reporter     reporter.IReporter
+	reporter     reporter.IStepReporter
 }
 
 func (executor *Executor) Execute(meta execution.Metadata, metadata PlaybookStepMetadata) (cacao.Variables, error) {
