@@ -73,7 +73,10 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	// TODO: Instantiate reporters from config
 	reporter := reporter.New([]downstream_reporter.IDownStreamReporter{})
 	reporters := []downstream_reporter.IDownStreamReporter{new(dbReporter.DatabaseReporter)}
-	reporter.RegisterReporters(reporters)
+	err := reporter.RegisterReporters(reporters)
+	if err != nil {
+		log.Warn(err)
+	}
 
 	actionExecutor := action.New(capabilities, reporter)
 	guid := new(guid.Guid)

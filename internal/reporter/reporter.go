@@ -62,7 +62,9 @@ func New(reporters []ds_reporter.IDownStreamReporter) *Reporter {
 }
 
 func (reporter *Reporter) RegisterReporters(reporters []ds_reporter.IDownStreamReporter) error {
-	if (len(reporter.reporters) + len(reporters)) > 30 {
+	// TODO: how many reporters?
+	if (len(reporter.reporters) + len(reporters)) > 100 {
+		log.Warning("reporter not registered, too many reporters")
 		return errors.New("attempting to register too many reporters")
 	}
 	reporter.reporters = append(reporter.reporters, reporters...)

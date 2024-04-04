@@ -12,7 +12,7 @@ func TestRegisterReporter(t *testing.T) {
 	mock_ds_reporter := mock_reporter.Mock_Downstream_Reporter{}
 	reporter := reporter.New([]ds_reporter.IDownStreamReporter{})
 	err := reporter.RegisterReporters([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
-	if err == nil {
+	if err != nil {
 		t.Fail()
 	}
 }
