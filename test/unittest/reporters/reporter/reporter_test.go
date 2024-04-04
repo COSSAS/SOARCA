@@ -11,5 +11,8 @@ import (
 func TestRegisterReporter(t *testing.T) {
 	mock_ds_reporter := mock_reporter.Mock_Downstream_Reporter{}
 	reporter := reporter.New([]ds_reporter.IDownStreamReporter{})
-	reporter.RegisterReporters([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
+	err := reporter.RegisterReporters([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
+	if err == nil {
+		t.Fail()
+	}
 }
