@@ -17,9 +17,13 @@ import (
 	"soarca/internal/executors/playbook_action"
 	"soarca/internal/fin/protocol"
 	"soarca/internal/guid"
+	"soarca/internal/reporter"
 	"soarca/logger"
 	"soarca/utils"
 	httpUtil "soarca/utils/http"
+
+	downstream_reporter "soarca/internal/reporter/downstream_reporter"
+	dbReporter "soarca/internal/reporter/downstream_reporter/database"
 
 	"github.com/gin-gonic/gin"
 
@@ -67,10 +71,18 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 		}
 	}
 
-	actionExecutor := action.New(capabilities)
+	// TODO: Instantiate reporters from config
+	reporter := reporter.New([]downstream_reporter.IDownStreamReporter{})
+	reporters := []downstream_reporter.IDownStreamReporter{new(dbReporter.DatabaseReporter)}
+	err := reporter.RegisterReporters(reporters)
+	if err != nil {
+		log.Warn(err)
+	}
+
+	actionExecutor := action.New(capabilities, reporter)
 	playbookActionExecutor := playbook_action.New(controller, controller)
 	guid := new(guid.Guid)
-	decompose := decomposer.New(actionExecutor, playbookActionExecutor, guid)
+	decompose := decomposer.New(actionExecutor, guid, reporter)
 	return decompose
 }
 
