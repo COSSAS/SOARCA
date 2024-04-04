@@ -2,6 +2,7 @@ package mock_reporter
 
 import (
 	"soarca/models/cacao"
+	"soarca/models/execution"
 
 	"github.com/stretchr/testify/mock"
 )
@@ -10,10 +11,10 @@ type Mock_Reporter struct {
 	mock.Mock
 }
 
-func (decomposer_reporter *Mock_Reporter) ReportWorkflow(workflow cacao.Workflow) (interface{}, error) {
-	return new(interface{}), nil
+func (reporter *Mock_Reporter) ReportWorkflow(executionContext execution.Metadata, playbook cacao.Playbook) error {
+	return nil
 }
 
-func (decomposer_reporter *Mock_Reporter) ReportStep(step cacao.Step, vars cacao.Variables, err error) (interface{}, error) {
-	return new(interface{}), nil
+func (reporter *Mock_Reporter) ReportStep(executionContext execution.Metadata, step cacao.Step, outVars cacao.Variables, err error) error {
+	return nil
 }

@@ -2,8 +2,8 @@ package database
 
 import (
 	"reflect"
+	ds_reporter "soarca/internal/reporter/downstream_reporter"
 	"soarca/logger"
-	"soarca/models/cacao"
 )
 
 type Empty struct{}
@@ -19,15 +19,15 @@ type DatabaseReporter struct {
 }
 
 // Workflow instantiation reporting logic
-func (database_reporter *DatabaseReporter) ReportWorkflow(workflow cacao.Workflow) (interface{}, error) {
+func (database_reporter *DatabaseReporter) ReportWorkflow(workflowEntry ds_reporter.WorkflowEntry) error {
 	log.Trace("workflow instantiation reported to database")
 	// TODO
-	return workflow, nil
+	return nil
 }
 
 // Step execution reporting logic
-func (database_reporter *DatabaseReporter) ReportStep(step cacao.Step, vars cacao.Variables, err error) (interface{}, error) {
+func (database_reporter *DatabaseReporter) ReportStep(stepEntry ds_reporter.StepEntry) error {
 	log.Trace("step execution reported to database")
 	// TODO
-	return new(interface{}), nil
+	return nil
 }

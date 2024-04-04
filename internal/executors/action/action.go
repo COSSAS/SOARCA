@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"soarca/internal/capability"
-	"soarca/internal/reporters"
+	"soarca/internal/reporter"
 	"soarca/logger"
 	"soarca/models/cacao"
 	"soarca/models/execution"
@@ -18,7 +18,7 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
-func New(capabilities map[string]capability.ICapability, reporter reporters.IStepReporter) *Executor {
+func New(capabilities map[string]capability.ICapability, reporter reporter.IReporter) *Executor {
 	var instance = Executor{}
 	instance.capabilities = capabilities
 	instance.reporter = reporter
@@ -40,7 +40,7 @@ type IExecuter interface {
 
 type Executor struct {
 	capabilities map[string]capability.ICapability
-	reporter     reporters.IStepReporter
+	reporter     reporter.IReporter
 }
 
 func (executor *Executor) Execute(meta execution.Metadata, metadata PlaybookStepMetadata) (cacao.Variables, error) {
@@ -76,14 +76,14 @@ func (executor *Executor) Execute(meta execution.Metadata, metadata PlaybookStep
 
 			if err != nil {
 				log.Error("Error executing Command ", err)
-				_, _ = executor.reporter.ReportStep(metadata.Step, returnVariables, err)
+				_ = executor.reporter.ReportStep(meta, metadata.Step, returnVariables, err)
 				return cacao.NewVariables(), err
 			} else {
 				log.Debug("Command executed")
 			}
 		}
 	}
-	_, _ = executor.reporter.ReportStep(metadata.Step, returnVariables, nil)
+	_ = executor.reporter.ReportStep(meta, metadata.Step, returnVariables, nil)
 	return returnVariables, nil
 }
 
