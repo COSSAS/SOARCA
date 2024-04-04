@@ -114,7 +114,7 @@ The message is used to register a fin to SOARCA. It has the following payload.
 |type               |action         |string                     |Action type 
 |name               |name           |string                     |message id 
 |description        |description    |string                     |Description of the step 
-|external_references|<references>   |[external reference](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256542) |References to external recourses to further enhance the step also see CACAO V2 10.9.
+|external_references|<references>   |list of [external reference](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256542) |References to external recourses to further enhance the step also see CACAO V2 10.9.
 |command            |command        |string                     |Command to execute
 |target             |UUID           |string                     |Target UUID cto execute command against
 
