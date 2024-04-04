@@ -54,12 +54,12 @@ type Capability struct {
 
 // Step structure as example to the executor
 type Step struct {
-	Type               string                   `json:"type"`
-	Name               string                   `json:"name"`
-	Description        string                   `json:"description"`
-	ExternalReferences cacao.ExternalReferences `json:"external_references"`
-	Command            string                   `json:"command"`
-	Target             string                   `json:"target"`
+	Type               string                   	`json:"type"`
+	Name               string                   	`json:"name"`
+	Description        string                   	`json:"description"`
+	ExternalReferences []cacao.ExternalReferences 	`json:"external_references"`
+	Command            string                   	`json:"command"`
+	Target             string                   	`json:"target"`
 }
 
 // Unregister command structure
