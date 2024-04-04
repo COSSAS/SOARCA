@@ -4,7 +4,7 @@ import (
 	"errors"
 	"reflect"
 
-	ds_reporter "soarca/internal/reporter/downstream_reporter"
+	downstreamReporter "soarca/internal/reporter/downstream_reporter"
 	"soarca/logger"
 	"soarca/models/cacao"
 	"soarca/models/execution"
@@ -33,12 +33,12 @@ type IStepReporter interface {
 // High-level reporter class with injection of specific reporters
 
 type Reporter struct {
-	reporters []ds_reporter.IDownStreamReporter
+	reporters []downstreamReporter.IDownStreamReporter
 }
 
 const MaxReporters int = 100
 
-func New(reporters []ds_reporter.IDownStreamReporter) *Reporter {
+func New(reporters []downstreamReporter.IDownStreamReporter) *Reporter {
 	instance := Reporter{}
 	if instance.reporters == nil {
 		instance.reporters = reporters
@@ -46,7 +46,7 @@ func New(reporters []ds_reporter.IDownStreamReporter) *Reporter {
 	return &instance
 }
 
-func (reporter *Reporter) RegisterReporters(reporters []ds_reporter.IDownStreamReporter) error {
+func (reporter *Reporter) RegisterReporters(reporters []downstreamReporter.IDownStreamReporter) error {
 	// TODO: how many reporters?
 	if (len(reporter.reporters) + len(reporters)) > MaxReporters {
 		log.Warning("reporter not registered, too many reporters")
@@ -58,7 +58,7 @@ func (reporter *Reporter) RegisterReporters(reporters []ds_reporter.IDownStreamR
 
 func (reporter *Reporter) ReportWorkflow(executionContext execution.Metadata, playbook cacao.Playbook) error {
 	log.Trace("reporting workflow")
-	workflowEntry := ds_reporter.WorkflowEntry{ExecutionId: executionContext.ExecutionId, Playbook: playbook}
+	workflowEntry := downstreamReporter.WorkflowEntry{ExecutionContext: executionContext, Playbook: playbook}
 	for _, rep := range reporter.reporters {
 		err := rep.ReportWorkflow(workflowEntry)
 		if err != nil {
@@ -71,7 +71,7 @@ func (reporter *Reporter) ReportWorkflow(executionContext execution.Metadata, pl
 
 func (reporter *Reporter) ReportStep(executionContext execution.Metadata, step cacao.Step, outVars cacao.Variables, err error) error {
 	log.Trace("reporting step data")
-	stepEntry := ds_reporter.StepEntry{ExecutionContext: executionContext, Variables: outVars, Error: err}
+	stepEntry := downstreamReporter.StepEntry{ExecutionContext: executionContext, Variables: outVars, Error: err}
 	for _, rep := range reporter.reporters {
 		err := rep.ReportStep(stepEntry)
 		if err != nil {

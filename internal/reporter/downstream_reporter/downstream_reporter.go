@@ -3,8 +3,6 @@ package downstream_reporter
 import (
 	"soarca/models/cacao"
 	"soarca/models/execution"
-
-	"github.com/google/uuid"
 )
 
 type IDownStreamReporter interface {
@@ -14,8 +12,8 @@ type IDownStreamReporter interface {
 
 type WorkflowEntry struct {
 	// TODO Change to context
-	ExecutionId uuid.UUID
-	Playbook    cacao.Playbook
+	ExecutionContext execution.Metadata
+	Playbook         cacao.Playbook
 }
 
 type StepEntry struct {
