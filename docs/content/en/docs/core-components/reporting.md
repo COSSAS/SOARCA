@@ -49,6 +49,7 @@ class Reporter {
 
     RegisterReporters() error
     ReportWorkflow() error
+    ReportStep() error
 }
 
 class Database
