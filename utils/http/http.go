@@ -204,7 +204,7 @@ func (httpOptions *HttpOptions) ExtractUrl() (string, error) {
 		}
 	}
 
-	// If for an http-api command the agent-target address is a URL, it must be handled differently
+	// If for an http-api command the agent-target address is a URL, it must be handled differently than dname and ip addresses
 	if len(target.Address["url"]) > 0 {
 		if target.Address["url"][0] != "" {
 			urlObject, err := parsePathBasedUrl(target.Address["url"][0])
