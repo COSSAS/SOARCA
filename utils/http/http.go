@@ -21,6 +21,10 @@ var (
 	log       *logger.Log
 )
 
+func init() {
+	log = logger.Logger(component, logger.Info, "", logger.Json)
+}
+
 type HttpOptions struct {
 	Target  *cacao.AgentTarget
 	Command *cacao.Command
@@ -44,7 +48,6 @@ const (
 )
 
 func (httpRequest *HttpRequest) Request(httpOptions HttpOptions) ([]byte, error) {
-	log = logger.Logger(component, logger.Info, "", logger.Json)
 	request, err := httpOptions.setupRequest()
 	if err != nil {
 		return []byte{}, err
@@ -171,9 +174,17 @@ func (httpOptions *HttpOptions) ExtractUrl() (string, error) {
 		}
 	}
 
+	// If for an http-api command the agent-target address is a URL, it must be handled differently
 	if len(target.Address["url"]) > 0 {
 		if target.Address["url"][0] != "" {
-			return parsePathBasedUrl(target.Address["url"][0])
+			urlObject, err := parsePathBasedUrl(target.Address["url"][0])
+			if err != nil {
+				return "", err
+			}
+			if (urlObject.Path != "" && urlObject.Path != "/") && urlObject.Path != path {
+				log.Warn("agent-target url has path that does not match http-api command path")
+			}
+			return urlObject.String(), nil
 		}
 	}
 	return buildSchemeAndHostname(path, target)
@@ -183,7 +194,7 @@ func buildSchemeAndHostname(path string, target *cacao.AgentTarget) (string, err
 	var hostname string
 
 	scheme := setDefaultScheme(target)
-	hostname, err := extractHostname(scheme, target)
+	hostname, err := extractHostname(target)
 	if err != nil {
 		return "", err
 	}
@@ -210,7 +221,7 @@ func setDefaultScheme(target *cacao.AgentTarget) string {
 	return scheme
 }
 
-func extractHostname(scheme string, target *cacao.AgentTarget) (string, error) {
+func extractHostname(target *cacao.AgentTarget) (string, error) {
 	var address string
 
 	if len(target.Address["dname"]) > 0 {
@@ -226,28 +237,22 @@ func extractHostname(scheme string, target *cacao.AgentTarget) (string, error) {
 			return "", errors.New("failed regex rule for domain name")
 		}
 		address = target.Address["ipv4"][0]
-	} else if len(target.Address["url"]) > 0 {
-		match, _ := regexp.MatchString(ipv4Regex, target.Address["url"][0])
-		if !match {
-			return "", errors.New("failed regex rule for domain name")
-		}
-		address = target.Address["url"][0]
+
 	} else {
 		return "", errors.New("unsupported target address type")
 	}
 	return address, nil
 }
 
-func parsePathBasedUrl(httpUrl string) (string, error) {
+func parsePathBasedUrl(httpUrl string) (*url.URL, error) {
 	parsedUrl, err := url.ParseRequestURI(httpUrl)
 	if err != nil {
-		return "", err
+		return parsedUrl, err
 	}
-
 	if parsedUrl.Hostname() == "" {
-		return "", errors.New("no domain name")
+		return parsedUrl, errors.New("no domain name")
 	}
-	return parsedUrl.String(), nil
+	return parsedUrl, nil
 }
 
 func validatePort(port string) error {
