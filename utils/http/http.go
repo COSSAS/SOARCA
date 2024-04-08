@@ -204,17 +204,17 @@ func (httpOptions *HttpOptions) ExtractUrl() (string, error) {
 		}
 	}
 
-	// If for an http-api command the agent-target address is a URL, it must be handled differently than dname and ip addresses
+	// If for an http-api command the agent-target address is a URL,
+	// we should warn for misuse of the field when appendind command-specified path
 	if len(target.Address["url"]) > 0 {
 		if target.Address["url"][0] != "" {
 			urlObject, err := parsePathBasedUrl(target.Address["url"][0])
 			if err != nil {
 				return "", err
 			}
-			if (urlObject.Path != "" && urlObject.Path != "/") && urlObject.Path != path {
-				log.Warn("agent-target url has path that does not match http-api command path")
+			if (urlObject.Path != "" && urlObject.Path != "/") && urlObject.Path == path {
+				log.Warn("possible http api invocation path duplication: agent-target url has same path of http-api command path")
 			}
-			return urlObject.String(), nil
 		}
 	}
 	return buildSchemeAndHostname(path, target)
@@ -227,6 +227,20 @@ func buildSchemeAndHostname(path string, target *cacao.AgentTarget) (string, err
 	hostname, err := extractHostname(target)
 	if err != nil {
 		return "", err
+	}
+
+	// If only URL is used to compose the URL target, then
+	// scheme and port are not considered
+	if len(target.Address["url"]) > 0 &&
+		len(target.Address["dname"]) == 0 &&
+		len(target.Address["ipv4"]) == 0 &&
+		len(target.Address["ipv6"]) == 0 {
+
+		url := strings.TrimSuffix(hostname, "/")
+		if len(path) > 1 && !strings.HasPrefix(path, "/") {
+			path = "/" + path
+		}
+		return strings.TrimSuffix(url+path, "/"), nil
 	}
 
 	parsedUrl := &url.URL{
@@ -267,6 +281,13 @@ func extractHostname(target *cacao.AgentTarget) (string, error) {
 			return "", errors.New("failed regex rule for domain name")
 		}
 		address = target.Address["ipv4"][0]
+
+	} else if len(target.Address["url"]) > 0 {
+		_, err := parsePathBasedUrl(target.Address["url"][0])
+		if err != nil {
+			return "", err
+		}
+		address = target.Address["url"][0]
 
 	} else {
 		return "", errors.New("unsupported target address type")

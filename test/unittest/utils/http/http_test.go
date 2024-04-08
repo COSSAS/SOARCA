@@ -470,6 +470,32 @@ func TestHttpPathParser(t *testing.T) {
 	assert.Equal(t, parsedUrl, "https://godcapability.tno.nl")
 }
 
+func TestHttpPathUrlComposition(t *testing.T) {
+	target := cacao.AgentTarget{
+		Address: map[cacao.NetAddressType][]string{
+			"url": {"https://godcapability.tno.nl/isp"},
+		},
+	}
+
+	command := cacao.Command{
+		Type:    "http-api",
+		Command: "POST /isp/cst HTTP/1.1",
+		Headers: map[string][]string{"accept": {"application/json"}},
+	}
+	httpOptions := http.HttpOptions{
+		Target:  &target,
+		Command: &command,
+	}
+
+	parsedUrl, err := httpOptions.ExtractUrl()
+	if err != nil {
+		t.Error("failed test because: ", err)
+	}
+	// Duplication of path values if present is INTENDED behaviour and
+	// a warning will be issued
+	assert.Equal(t, parsedUrl, "https://godcapability.tno.nl/isp/isp/cst")
+}
+
 func TestHttpPathBreakingParser(t *testing.T) {
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
