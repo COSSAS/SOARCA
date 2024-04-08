@@ -55,56 +55,20 @@ func New(guid guid.IGuid, topic Topic, broker Broker, port int) FinProtocol {
 	return prot
 }
 
-func (protocol *FinProtocol) SendAck(result fin.Result, authentication cacao.AuthenticationInformation) error {
-
-	client, err := protocol.Connect(authentication)
-	if err != nil {
-		log.Error("could not connect to mqtt broker")
-		return err
-	}
-
+func (protocol *FinProtocol) SendAck(result fin.Result, client mqttlib.Client) {
 	ack := fin.NewAck(result.MessageId)
 	json, _ := fin.Encode(ack)
-
-	protocol.Subscribe(client)
-
 	log.Trace("Sending ack for message id: ", result.MessageId)
 	token := client.Publish(string(protocol.Topic), defaultQos, false, json)
-
 	token.Wait()
-	protocol.Disconnect(client)
-
-	if err := token.Error(); err != nil {
-		log.Error(err)
-		return err
-	}
-	return nil
 }
 
-func (protocol *FinProtocol) SendNack(result fin.Result, authentication cacao.AuthenticationInformation) error {
-
-	client, err := protocol.Connect(authentication)
-	if err != nil {
-		log.Error("could not connect to mqtt broker")
-		return err
-	}
-
+func (protocol *FinProtocol) SendNack(result fin.Result, client mqttlib.Client) {
 	nack := fin.NewNack(result.MessageId)
 	json, _ := fin.Encode(nack)
-
-	protocol.Subscribe(client)
-
-	log.Trace("Sending ack for message id: ", result.MessageId)
+	log.Trace("Sending nack for message id: ", result.MessageId)
 	token := client.Publish(string(protocol.Topic), defaultQos, false, json)
-
 	token.Wait()
-	protocol.Disconnect(client)
-
-	if err := token.Error(); err != nil {
-		log.Error(err)
-		return err
-	}
-	return nil
 }
 
 func (protocol *FinProtocol) SendCommand(command fin.Command) (cacao.Variables, error) {
@@ -121,13 +85,13 @@ func (protocol *FinProtocol) SendCommand(command fin.Command) (cacao.Variables, 
 		protocol.Disconnect(client)
 		return map[string]cacao.Variable{}, err
 	}
-	result, err := protocol.AwaitResultOrTimeout(command)
+	result, err := protocol.AwaitResultOrTimeout(command, client)
 	protocol.Disconnect(client)
 
 	return result, err
 }
 
-func (protocol *FinProtocol) AwaitResultOrTimeout(command fin.Command) (map[string]cacao.Variable, error) {
+func (protocol *FinProtocol) AwaitResultOrTimeout(command fin.Command, client mqttlib.Client) (map[string]cacao.Variable, error) {
 	timeout := command.CommandSubstructure.Context.Timeout
 
 	if command.CommandSubstructure.Context.Timeout == 0 {
@@ -152,6 +116,7 @@ func (protocol *FinProtocol) AwaitResultOrTimeout(command fin.Command) (map[stri
 				break
 			}
 			log.Info(finMessage)
+			// This now accepts any ack, should be changed
 			if finMessage.Type == fin.MessageTypeAck {
 				ackReceived = true
 			} else if finMessage.Type == fin.MessageTypeResult {
@@ -161,16 +126,19 @@ func (protocol *FinProtocol) AwaitResultOrTimeout(command fin.Command) (map[stri
 					log.Trace(err)
 					return map[string]cacao.Variable{}, err
 				}
+				log.Info("Outside")
 				if ackReceived {
+					log.Info("Inside")
 					if finResult.ResultStructure.Context.ExecutionId == command.CommandSubstructure.Context.ExecutionId {
-						protocol.SendAck(finResult, command.CommandSubstructure.Authentication)
+						log.Info("test")
+						protocol.SendAck(finResult, client)
 						return finResult.ResultStructure.Variables, nil
 					} else {
-						protocol.SendNack(finResult, command.CommandSubstructure.Authentication)
+						protocol.SendNack(finResult, client)
 					}
 
 				} else {
-					protocol.SendNack(finResult, command.CommandSubstructure.Authentication)
+					protocol.SendNack(finResult, client)
 				}
 			}
 		}
