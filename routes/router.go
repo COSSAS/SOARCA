@@ -10,6 +10,7 @@ import (
 	swagger "soarca/routes/swagger"
 	"soarca/routes/trigger"
 
+	"github.com/gin-contrib/cors"
 	gin "github.com/gin-gonic/gin"
 )
 
@@ -48,4 +49,11 @@ func Api(app *gin.Engine,
 
 func Swagger(app *gin.Engine) {
 	swagger.Routes(app)
+}
+
+func Cors(app *gin.Engine, origins []string) {
+
+	config := cors.DefaultConfig()
+	config.AllowOrigins = origins
+	app.Use(cors.New(config))
 }

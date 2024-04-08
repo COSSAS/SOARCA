@@ -65,9 +65,22 @@ services:
       - mongodb_container
       - mosquitto
 
+  webshell:
+    build:
+      dockerfile: Dockerfile
+    container_name: webshell
+    environment:
+      PORT: $PORT
+    networks:
+      - demo-net
+    ports:
+      - 0.0.0.0:2222:2222
+      - 0.0.0.0:$PORT:80
+
 networks:
   db-net:
   mqtt-net:
+  demo-net:
 
 
 volumes:

@@ -5,6 +5,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"soarca/internal/capability"
 	capabilityController "soarca/internal/capability/controller"
@@ -155,8 +156,12 @@ func initializeCore(app *gin.Engine) error {
 			return err
 		}
 	}
+
+	origins := strings.Split(utils.GetEnv("ORIGINS", ""), ",")
+
 	routes.Logging(app)
 	routes.Swagger(app)
+	routes.Cors(app, origins)
 	return err
 }
 
