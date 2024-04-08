@@ -59,11 +59,11 @@ class 3PTool
 class Decomposer
 class Executor
 
-Decomposer -up-> Reporter
-Executor -up-> Reporter
+Decomposer -right-> IWorkflowReporter
+Executor -left-> IStepReporter
 
-Reporter .up.|> IWorkflowReporter
 Reporter .up.|> IStepReporter
+Reporter .up.|> IWorkflowReporter
 Reporter -right-> IDownStreamReporter
 
 

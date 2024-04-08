@@ -20,7 +20,7 @@ func init() {
 }
 
 // Reporter interfaces
-
+// Drop error returns
 type IWorkflowReporter interface {
 	// -> Give info to downstream reporters
 	ReportWorkflow(executionContext execution.Metadata, playbook cacao.Playbook) error
