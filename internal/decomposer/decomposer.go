@@ -94,7 +94,7 @@ func (decomposer *Decomposer) Execute(playbook cacao.Playbook) (*ExecutionDetail
 		ExecutionId: decomposer.details.ExecutionId,
 		PlaybookId:  decomposer.details.PlaybookId,
 	}
-	_ = decomposer.reporter.ReportWorkflow(metadata, playbook)
+	decomposer.reporter.ReportWorkflow(metadata, playbook)
 
 	outputVariables, err := decomposer.ExecuteBranch(stepId, variables)
 

@@ -48,8 +48,8 @@ class Reporter {
     reporters []IDownStreamReporter
 
     RegisterReporters() error
-    ReportWorkflow() error
-    ReportStep() error
+    ReportWorkflow()
+    ReportStep()
 }
 
 class Database

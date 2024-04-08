@@ -11,10 +11,10 @@ type Mock_Reporter struct {
 	mock.Mock
 }
 
-func (reporter *Mock_Reporter) ReportWorkflow(executionContext execution.Metadata, playbook cacao.Playbook) error {
-	return nil
+func (reporter *Mock_Reporter) ReportWorkflow(executionContext execution.Metadata, playbook cacao.Playbook) {
+
 }
 
-func (reporter *Mock_Reporter) ReportStep(executionContext execution.Metadata, step cacao.Step, outVars cacao.Variables, err error) error {
-	return nil
+func (reporter *Mock_Reporter) ReportStep(executionContext execution.Metadata, step cacao.Step, outVars cacao.Variables, err error) {
+
 }

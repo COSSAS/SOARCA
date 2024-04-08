@@ -23,11 +23,11 @@ func init() {
 // Drop error returns
 type IWorkflowReporter interface {
 	// -> Give info to downstream reporters
-	ReportWorkflow(executionContext execution.Metadata, playbook cacao.Playbook) error
+	ReportWorkflow(executionContext execution.Metadata, playbook cacao.Playbook)
 }
 type IStepReporter interface {
 	// -> Give info to downstream reporters
-	ReportStep(executionContext execution.Metadata, step cacao.Step, outVars cacao.Variables, err error) error
+	ReportStep(executionContext execution.Metadata, step cacao.Step, outVars cacao.Variables, err error)
 }
 
 // High-level reporter class with injection of specific reporters
@@ -56,7 +56,7 @@ func (reporter *Reporter) RegisterReporters(reporters []downstreamReporter.IDown
 	return nil
 }
 
-func (reporter *Reporter) ReportWorkflow(executionContext execution.Metadata, playbook cacao.Playbook) error {
+func (reporter *Reporter) ReportWorkflow(executionContext execution.Metadata, playbook cacao.Playbook) {
 	log.Trace("reporting workflow")
 	workflowEntry := downstreamReporter.WorkflowEntry{ExecutionContext: executionContext, Playbook: playbook}
 	for _, rep := range reporter.reporters {
@@ -65,11 +65,9 @@ func (reporter *Reporter) ReportWorkflow(executionContext execution.Metadata, pl
 			log.Warning(err)
 		}
 	}
-	// Errors are handled internally to the Reporter component
-	return nil
 }
 
-func (reporter *Reporter) ReportStep(executionContext execution.Metadata, step cacao.Step, outVars cacao.Variables, err error) error {
+func (reporter *Reporter) ReportStep(executionContext execution.Metadata, step cacao.Step, outVars cacao.Variables, err error) {
 	log.Trace("reporting step data")
 	stepEntry := downstreamReporter.StepEntry{ExecutionContext: executionContext, Variables: outVars, Error: err}
 	for _, rep := range reporter.reporters {
@@ -78,6 +76,4 @@ func (reporter *Reporter) ReportStep(executionContext execution.Metadata, step c
 			log.Warning(err)
 		}
 	}
-	// Errors are handled internally to the Reporter component
-	return nil
 }
