@@ -126,11 +126,11 @@ func (protocol *FinProtocol) AwaitResultOrTimeout(command fin.Command, client mq
 					log.Trace(err)
 					return map[string]cacao.Variable{}, err
 				}
-				log.Info("Outside")
+
 				if ackReceived {
-					log.Info("Inside")
+
 					if finResult.ResultStructure.Context.ExecutionId == command.CommandSubstructure.Context.ExecutionId {
-						log.Info("test")
+
 						protocol.SendAck(finResult, client)
 						return finResult.ResultStructure.Variables, nil
 					} else {
