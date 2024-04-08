@@ -44,7 +44,7 @@ func TestTimeoutAndCallbackTimerElaspsed(t *testing.T) {
 	expectedCommand := model.NewCommand()
 	expectedCommand.CommandSubstructure.Context.Timeout = 1
 
-	result, err := prot.AwaitResultOrTimeout(expectedCommand)
+	result, err := prot.AwaitResultOrTimeout(expectedCommand, &mock_client)
 
 	assert.Equal(t, err, errors.New("no message received from fin while it was expected"))
 	assert.Equal(t, result, map[string]cacao.Variable{})
@@ -72,11 +72,13 @@ func TestTimeoutAndCallbackHandlerCalled(t *testing.T) {
 
 	fmt.Println("calling await")
 	go helper(&prot)
-	result, err := prot.AwaitResultOrTimeout(expectedCommand)
+	result, err := prot.AwaitResultOrTimeout(expectedCommand, &mock_client)
 	fmt.Println("done waiting")
 
 	assert.Equal(t, err, nil)
 	assert.Equal(t, result, map[string]cacao.Variable{"test": {Name: "test"}})
+	mock_client.AssertExpectations(t)
+	mock_token.AssertExpectations(t)
 	mock_token_ack.AssertExpectations(t)
 }
 
