@@ -166,7 +166,7 @@ func (protocol *FinProtocol) AwaitResultOrTimeout(command fin.Command) (map[stri
 						protocol.SendAck(finResult, command.CommandSubstructure.Authentication)
 						return finResult.ResultStructure.Variables, nil
 					} else {
-						protocol.SendAck(finResult, command.CommandSubstructure.Authentication)
+						protocol.SendNack(finResult, command.CommandSubstructure.Authentication)
 					}
 
 				} else {
