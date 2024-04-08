@@ -86,8 +86,10 @@ func (finController *FinController) Run() {
 
 // Handle goroutine call from mqtt stack
 func (finController *FinController) Handler(client mqtt.Client, msg mqtt.Message) {
+	// Might need to filter on fin topics in the future if communication is needed
 	if msg.Topic() != string("soarca") {
 		log.Trace("message was receive in wrong topic: " + msg.Topic())
+		return
 	}
 	payload := msg.Payload()
 	log.Trace(string(payload))
