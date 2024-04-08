@@ -3,10 +3,12 @@ package reporter
 import (
 	"errors"
 	"reflect"
+	"strconv"
 
 	downstreamReporter "soarca/internal/reporter/downstream_reporter"
 	"soarca/logger"
 	"soarca/models/cacao"
+	"soarca/utils"
 
 	"github.com/google/uuid"
 )
@@ -35,7 +37,7 @@ type Reporter struct {
 	reporters []downstreamReporter.IDownStreamReporter
 }
 
-const MaxReporters int = 100
+const MaxReporters int = 10
 
 func New(reporters []downstreamReporter.IDownStreamReporter) *Reporter {
 	instance := Reporter{}
@@ -46,8 +48,8 @@ func New(reporters []downstreamReporter.IDownStreamReporter) *Reporter {
 }
 
 func (reporter *Reporter) RegisterReporters(reporters []downstreamReporter.IDownStreamReporter) error {
-	// TODO: how many reporters?
-	if (len(reporter.reporters) + len(reporters)) > MaxReporters {
+	maxReporters, _ := strconv.Atoi(utils.GetEnv("MAX_REPORTERS", strconv.Itoa(MaxReporters)))
+	if (len(reporter.reporters) + len(reporters)) > maxReporters {
 		log.Warning("reporter not registered, too many reporters")
 		return errors.New("attempting to register too many reporters")
 	}
