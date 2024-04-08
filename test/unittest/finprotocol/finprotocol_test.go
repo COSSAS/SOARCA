@@ -54,15 +54,22 @@ func TestTimeoutAndCallbackHandlerCalled(t *testing.T) {
 	mock_client := mock_mqtt.Mock_MqttClient{}
 	mock_token := mock_mqtt.Mock_MqttToken{}
 
+	mock_token_ack := mock_mqtt.Mock_MqttToken{}
+
 	guid := new(guid.Guid)
 
 	prot := protocol.New(guid, "testing", "localhost", 1883)
 	mock_token.On("Wait").Return(true)
 	mock_client.On("Subscribe", "testing", uint8(1), mock.Anything).Return(&mock_token)
+
 	prot.Subscribe(&mock_client)
 
 	expectedCommand := model.NewCommand()
 	expectedCommand.CommandSubstructure.Context.Timeout = 1
+
+	mock_token_ack.On("Wait").Return(true)
+	mock_client.On("Publish", "testing", uint8(1), false, mock.Anything).Return(&mock_token_ack)
+
 	fmt.Println("calling await")
 	go helper(&prot)
 	result, err := prot.AwaitResultOrTimeout(expectedCommand)
@@ -70,6 +77,7 @@ func TestTimeoutAndCallbackHandlerCalled(t *testing.T) {
 
 	assert.Equal(t, err, nil)
 	assert.Equal(t, result, map[string]cacao.Variable{"test": {Name: "test"}})
+	mock_token_ack.AssertExpectations(t)
 }
 
 // Helper for TestTimeoutAndCallbackHandlerCalled
