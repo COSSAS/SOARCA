@@ -53,6 +53,7 @@ class Reporter {
 }
 
 class Database
+class Cache
 class 3PTool
 
 class Decomposer
@@ -63,24 +64,22 @@ Executor -up-> Reporter
 
 Reporter .up.|> IWorkflowReporter
 Reporter .up.|> IStepReporter
+Reporter -right-> IDownStreamReporter
 
 
 Database .up.|> IDownStreamReporter
+Cache .up.|> IDownStreamReporter
 3PTool .up.|> IDownStreamReporter
-
-
-Reporter -> Database
-Reporter -down-> 3PTool
 
 ```
 
 ### Interfaces
 
-The logic and extensibility is implemented in the SOARCA architecture by means of reporting interfaces. At this stage, we implement an *IWorkflowReporter* to push information about the entire workflow to be executed, and an *IStepReporter* to push step-specific information as the steps of the workflow are executed.
+The reporting logic and extensibility is implemented in the SOARCA architecture by means of reporting interfaces. At this stage, we implement an *IWorkflowReporter* to push information about the entire workflow to be executed, and an *IStepReporter* to push step-specific information as the steps of the workflow are executed.
 
-A high level *Reporter* component will implement both interfaces, and maintain the list of decomposer and executor reporters activated for the SOARCA instance. The *Reporter* class will invoke all reporting functions for each active reporter. Executer and Decomposer components will be injected each with the Reporter, as interface of respectively workflow, and step, to keep the reporting scope separated.
+A high level *Reporter* component will implement both interfaces, and maintain the list of *DownStreamRepporter*s activated for the SOARCA instance. The *Reporter* class will invoke all reporting functions for each active reporter. The *Executer* and *Decomposer* components will be injected each with the Reporter though, as interface of respectively workflow reporter, and step reporter, to keep the reporting scope separated.
 
-The *DownStream* reporters will instead implement push-specific reporting functions as per the *IDownStreamReporter* interface. Internal components to SOARCA, and third-party tool reporters, will implement the same interface. 
+The *DownStream* reporters will implement push-based reporting functions specific for the reporting target, as shown in the *IDownStreamReporter* interface. Internal components to SOARCA, and third-party tool reporters, will thus implement the *IDownStreamReporter* interface.
 
 ## Future plans
 
