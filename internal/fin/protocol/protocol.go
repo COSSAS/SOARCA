@@ -15,7 +15,7 @@ import (
 
 const defaultTimeout = 1
 const disconnectTimeout = 100
-const clientId = "soarca"
+const clientId = "soarca-fin-capability"
 const defaultQos = AtLeastOnce
 
 const (
