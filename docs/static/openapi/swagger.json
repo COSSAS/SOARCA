@@ -4,61 +4,30 @@
         "contact": {}
     },
     "paths": {
-        "/trigger/workflow": {
-            "post": {
-                "description": "trigger workflow",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "trigger"
-                ],
-                "summary": "trigger a workflow with via cacao payload",
-                "parameters": [
-                    {
-                        "description": "execute playbook by payload",
-                        "name": "playbook",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/cacao.Playbook"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "{\"execution_id\":\"uuid\",\"payload\":\"playbook--uuid\"}"
-                    }
-                }
-            }
-        },
-        "/workflow/": {
+        "/playbook/": {
             "get": {
-                "description": "get UUIDs for workflow",
+                "description": "return all stored playbooks default limit:100",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "workflow"
+                    "playbook"
                 ],
-                "summary": "gets all the UUIDs for the stored workflows",
+                "summary": "gets all the UUIDs for the stored playbooks",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "string"
+                                "$ref": "#/definitions/cacao.Playbook"
                             }
                         }
                     }
                 }
             },
             "post": {
-                "description": "submit a new workflow api",
+                "description": "submit a new playbook api",
                 "consumes": [
                     "application/json"
                 ],
@@ -66,12 +35,12 @@
                     "application/json"
                 ],
                 "tags": [
-                    "workflow"
+                    "playbook"
                 ],
-                "summary": "submit workflow via the api",
+                "summary": "submit playbook via the api",
                 "parameters": [
                     {
-                        "description": "workflow",
+                        "description": "playbook",
                         "name": "data",
                         "in": "body",
                         "required": true,
@@ -90,9 +59,32 @@
                 }
             }
         },
-        "/workflow/{id}": {
+        "/playbook/meta": {
             "get": {
-                "description": "get workflow by ID",
+                "description": "get playbook meta information for playbook",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "playbook"
+                ],
+                "summary": "gets all the meta information for the stored playbooks",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/api.PlaybookMeta"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playbook/{id}": {
+            "get": {
+                "description": "get playbook by ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -100,13 +92,13 @@
                     "application/json"
                 ],
                 "tags": [
-                    "workflow"
+                    "playbook"
                 ],
-                "summary": "get CACAO playbook workflow by its ID",
+                "summary": "get CACAO playbook by its ID",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "workflow ID",
+                        "description": "playbook ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -122,7 +114,7 @@
                 }
             },
             "put": {
-                "description": "update workflow by ID",
+                "description": "update playbook by Id",
                 "consumes": [
                     "application/json"
                 ],
@@ -130,19 +122,19 @@
                     "application/json"
                 ],
                 "tags": [
-                    "workflow"
+                    "playbook"
                 ],
-                "summary": "update workflow",
+                "summary": "update playbook",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "workflow ID",
+                        "description": "playbook Id",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "workflow",
+                        "description": "playbook",
                         "name": "data",
                         "in": "body",
                         "required": true,
@@ -161,7 +153,7 @@
                 }
             },
             "delete": {
-                "description": "delete workflow by ID",
+                "description": "delete playbook by Id",
                 "consumes": [
                     "application/json"
                 ],
@@ -169,13 +161,13 @@
                     "application/json"
                 ],
                 "tags": [
-                    "workflow"
+                    "playbook"
                 ],
-                "summary": "delete worflow",
+                "summary": "delete playbook by Id",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "workflow ID",
+                        "description": "playbook ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -187,13 +179,69 @@
                     }
                 }
             }
+        },
+        "/trigger/playbook": {
+            "post": {
+                "description": "trigger playbook",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "trigger"
+                ],
+                "summary": "trigger a playbook by supplying a cacao playbook payload",
+                "parameters": [
+                    {
+                        "description": "execute playbook by payload",
+                        "name": "playbook",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cacao.Playbook"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"execution_id\":\"uuid\",\"payload\":\"playbook--uuid\"}"
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "api.PlaybookMeta": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "labels": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "valid_from": {
+                    "type": "string"
+                },
+                "valid_until": {
+                    "type": "string"
+                }
+            }
+        },
         "cacao.AgentTarget": {
             "type": "object",
             "required": [
-                "id",
                 "name",
                 "type"
             ],
@@ -208,10 +256,7 @@
                     }
                 },
                 "agent_target_extensions": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "$ref": "#/definitions/cacao.Extensions"
                 },
                 "authentication_info": {
                     "type": "string"
@@ -226,9 +271,6 @@
                     "$ref": "#/definitions/cacao.Contact"
                 },
                 "description": {
-                    "type": "string"
-                },
-                "http_url": {
                     "type": "string"
                 },
                 "id": {
@@ -260,7 +302,6 @@
         "cacao.AuthenticationInformation": {
             "type": "object",
             "required": [
-                "id",
                 "type"
             ],
             "properties": {
@@ -371,7 +412,10 @@
                 "headers": {
                     "type": "object",
                     "additionalProperties": {
-                        "type": "string"
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 },
                 "playbook_activity": {
@@ -386,10 +430,33 @@
             }
         },
         "cacao.Contact": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "contact_details": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "phone": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
         },
         "cacao.DataMarking": {
             "type": "object",
+            "required": [
+                "created",
+                "created_by",
+                "id",
+                "type"
+            ],
             "properties": {
                 "affected_party_notifications": {
                     "type": "string"
@@ -430,6 +497,9 @@
                         "type": "string"
                     }
                 },
+                "marking_extensions": {
+                    "$ref": "#/definitions/cacao.Extensions"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -465,19 +535,61 @@
                 }
             }
         },
+        "cacao.ExtensionDefinition": {
+            "type": "object",
+            "required": [
+                "created_by",
+                "schema",
+                "type",
+                "version"
+            ],
+            "properties": {
+                "created_by": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "external_references": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/cacao.ExternalReferences"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "schema": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "cacao.Extensions": {
+            "type": "object",
+            "additionalProperties": true
+        },
         "cacao.ExternalReferences": {
             "type": "object",
             "required": [
-                "description",
-                "name",
-                "source",
-                "url"
+                "name"
             ],
             "properties": {
                 "description": {
                     "type": "string"
                 },
+                "external_id": {
+                    "type": "string"
+                },
                 "name": {
+                    "type": "string"
+                },
+                "reference_id": {
                     "type": "string"
                 },
                 "source": {
@@ -493,22 +605,12 @@
             "required": [
                 "created",
                 "created_by",
-                "description",
-                "external_references",
                 "id",
-                "impact",
-                "labels",
                 "modified",
                 "name",
-                "playbook_types",
-                "priority",
-                "severity",
                 "spec_version",
                 "type",
-                "valid_from",
-                "valid_until",
                 "workflow",
-                "workflow_exception",
                 "workflow_start"
             ],
             "properties": {
@@ -525,14 +627,16 @@
                     }
                 },
                 "created": {
-                    "description": "date time is already validate by the field type!",
                     "type": "string"
                 },
                 "created_by": {
                     "type": "string"
                 },
                 "data_marking_definitions": {
-                    "$ref": "#/definitions/cacao.DataMarking"
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/cacao.DataMarking"
+                    }
                 },
                 "derived_from": {
                     "type": "array",
@@ -542,6 +646,12 @@
                 },
                 "description": {
                     "type": "string"
+                },
+                "extension_definitions": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/cacao.ExtensionDefinition"
+                    }
                 },
                 "external_references": {
                     "type": "array",
@@ -568,17 +678,22 @@
                     }
                 },
                 "modified": {
-                    "description": ",datetime=2006-01-02T15:04:05Z07:00\"`",
                     "type": "string"
                 },
                 "name": {
                     "type": "string"
+                },
+                "playbook_extensions": {
+                    "$ref": "#/definitions/cacao.Extensions"
                 },
                 "playbook_types": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
+                },
+                "playbook_variables": {
+                    "$ref": "#/definitions/cacao.Variables"
                 },
                 "priority": {
                     "type": "integer"
@@ -617,6 +732,9 @@
         },
         "cacao.Step": {
             "type": "object",
+            "required": [
+                "type"
+            ],
             "properties": {
                 "agent": {
                     "type": "string"
@@ -696,14 +814,14 @@
                 "playbook_id": {
                     "type": "string"
                 },
-                "playbook_variables": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/cacao.Variables"
-                    }
-                },
                 "playbook_version": {
                     "type": "string"
+                },
+                "step_extensions": {
+                    "$ref": "#/definitions/cacao.Extensions"
+                },
+                "step_variables": {
+                    "$ref": "#/definitions/cacao.Variables"
                 },
                 "switch": {
                     "type": "string"
@@ -722,8 +840,11 @@
                 }
             }
         },
-        "cacao.Variables": {
+        "cacao.Variable": {
             "type": "object",
+            "required": [
+                "type"
+            ],
             "properties": {
                 "constant": {
                     "type": "boolean"
@@ -743,6 +864,12 @@
                 "value": {
                     "type": "string"
                 }
+            }
+        },
+        "cacao.Variables": {
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "#/definitions/cacao.Variable"
             }
         },
         "cacao.Workflow": {
