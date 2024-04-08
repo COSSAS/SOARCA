@@ -2,26 +2,13 @@ package downstream_reporter
 
 import (
 	"soarca/models/cacao"
-	"soarca/models/execution"
+
+	"github.com/google/uuid"
 )
 
-// Change custom structs to explicit arguments
+// TODO:
+// We should understand better how to handle variables at execution level, not reporting, so that only relevant data is sent to reporting
 type IDownStreamReporter interface {
-	ReportWorkflow(workflowEntry WorkflowEntry) error
-	ReportStep(stepEntry StepEntry) error
-}
-
-type WorkflowEntry struct {
-	// TODO Change to context
-	// Only execution ID and playbook
-	ExecutionContext execution.Metadata
-	Playbook         cacao.Playbook
-}
-
-type StepEntry struct {
-	// Only execution ID, Step (contains ID, stepvars, in args, out args), results (of step execution: returnvariables), error
-	// We should understand better how to handle variables at execution level, not reporting, so that only relevant data is sent to reporting
-	ExecutionContext execution.Metadata
-	Variables        cacao.Variables
-	Error            error
+	ReportWorkflow(executionId uuid.UUID, playbook cacao.Playbook) error
+	ReportStep(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, err error) error
 }

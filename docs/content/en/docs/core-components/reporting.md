@@ -40,8 +40,8 @@ interface IWorkflowReporter{
 
 
 interface IDownStreamReporter {
-    ReportWorkflow(workflowEntry WorkflowEntry) error
-	ReportStep(stepEntry StepEntry) error
+    ReportWorkflow() error
+	ReportStep() error
 }
 
 class Reporter {

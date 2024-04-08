@@ -7,7 +7,8 @@ import (
 	downstreamReporter "soarca/internal/reporter/downstream_reporter"
 	"soarca/logger"
 	"soarca/models/cacao"
-	"soarca/models/execution"
+
+	"github.com/google/uuid"
 )
 
 type Empty struct{}
@@ -20,18 +21,16 @@ func init() {
 }
 
 // Reporter interfaces
-// Drop error returns
 type IWorkflowReporter interface {
 	// -> Give info to downstream reporters
-	ReportWorkflow(executionContext execution.Metadata, playbook cacao.Playbook)
+	ReportWorkflow(executionId uuid.UUID, playbook cacao.Playbook)
 }
 type IStepReporter interface {
 	// -> Give info to downstream reporters
-	ReportStep(executionContext execution.Metadata, step cacao.Step, outVars cacao.Variables, err error)
+	ReportStep(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, err error)
 }
 
 // High-level reporter class with injection of specific reporters
-
 type Reporter struct {
 	reporters []downstreamReporter.IDownStreamReporter
 }
@@ -56,22 +55,20 @@ func (reporter *Reporter) RegisterReporters(reporters []downstreamReporter.IDown
 	return nil
 }
 
-func (reporter *Reporter) ReportWorkflow(executionContext execution.Metadata, playbook cacao.Playbook) {
+func (reporter *Reporter) ReportWorkflow(executionId uuid.UUID, playbook cacao.Playbook) {
 	log.Trace("reporting workflow")
-	workflowEntry := downstreamReporter.WorkflowEntry{ExecutionContext: executionContext, Playbook: playbook}
 	for _, rep := range reporter.reporters {
-		err := rep.ReportWorkflow(workflowEntry)
+		err := rep.ReportWorkflow(executionId, playbook)
 		if err != nil {
 			log.Warning(err)
 		}
 	}
 }
 
-func (reporter *Reporter) ReportStep(executionContext execution.Metadata, step cacao.Step, outVars cacao.Variables, err error) {
+func (reporter *Reporter) ReportStep(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, err error) {
 	log.Trace("reporting step data")
-	stepEntry := downstreamReporter.StepEntry{ExecutionContext: executionContext, Variables: outVars, Error: err}
 	for _, rep := range reporter.reporters {
-		err := rep.ReportStep(stepEntry)
+		err := rep.ReportStep(executionId, step, returnVars, err)
 		if err != nil {
 			log.Warning(err)
 		}
