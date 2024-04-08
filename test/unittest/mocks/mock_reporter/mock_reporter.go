@@ -12,9 +12,9 @@ type Mock_Reporter struct {
 }
 
 func (reporter *Mock_Reporter) ReportWorkflow(executionId uuid.UUID, playbook cacao.Playbook) {
-
+	_ = reporter.Called(executionId, playbook)
 }
 
 func (reporter *Mock_Reporter) ReportStep(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, err error) {
-
+	_ = reporter.Called(executionId, step, returnVars, err)
 }

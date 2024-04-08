@@ -98,6 +98,7 @@ func TestExecutePlaybook(t *testing.T) {
 		Variables: cacao.NewVariables(expectedVariables),
 	}
 
+	mock_reporter.On("ReportWorkflow", executionId, playbook).Return()
 	mock_action_executor.On("Execute", metaStep1, playbookStepMetadata).Return(cacao.NewVariables(cacao.Variable{Name: "return", Value: "value"}), nil)
 
 	details, err := decomposer.Execute(playbook)
@@ -226,6 +227,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 		Variables: cacao.NewVariables(expectedVariables),
 	}
 
+	mock_reporter.On("ReportWorkflow", executionId, playbook).Return()
 	mock_action_executor.On("Execute", metaStep1, playbookStepMetadata1).Return(cacao.NewVariables(firstResult), nil)
 
 	playbookStepMetadata2 := action.PlaybookStepMetadata{
@@ -308,6 +310,8 @@ func TestExecuteEmptyMultiStep(t *testing.T) {
 	id, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	uuid_mock2.On("New").Return(id)
 
+	mock_reporter.On("ReportWorkflow", id, playbook).Return()
+
 	returnedId, err := decomposer2.Execute(playbook)
 	uuid_mock2.AssertExpectations(t)
 	fmt.Println(err)
@@ -361,6 +365,7 @@ func TestExecuteIllegalMultiStep(t *testing.T) {
 
 	id, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	uuid_mock2.On("New").Return(id)
+	mock_reporter.On("ReportWorkflow", id, playbook).Return()
 
 	returnedId, err := decomposer2.Execute(playbook)
 	uuid_mock2.AssertExpectations(t)
