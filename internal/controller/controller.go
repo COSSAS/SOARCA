@@ -137,6 +137,8 @@ func Initialize() error {
 
 func initializeCore(app *gin.Engine) error {
 
+	origins := strings.Split(utils.GetEnv("ORIGINS", "*"), ",")
+	routes.Cors(app, origins)
 	err := routes.Api(app, &mainController)
 	if err != nil {
 		log.Error(err)
@@ -157,11 +159,9 @@ func initializeCore(app *gin.Engine) error {
 		}
 	}
 
-	origins := strings.Split(utils.GetEnv("ORIGINS", ""), ",")
-
 	routes.Logging(app)
 	routes.Swagger(app)
-	routes.Cors(app, origins)
+
 	return err
 }
 
