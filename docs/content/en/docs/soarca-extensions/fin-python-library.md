@@ -8,10 +8,64 @@ weight: 2
 date: 2024-04-10
 ---
 
-## Documentation
 For documentation about the fin protocol we refer the reader to de documention page of [SOARCA](https://cossas.github.io/SOARCA/docs/soarca-extensions/fin-protocol/)
 
+## Quick Start
+To use the SOARCA Fin library use the following command to install the library using pip:
+```bash
+pip install soarca-fin-library
+```
 
+### Example
+An example on how to use the library is given below. 
+For more examples and the source code, we will refer to the Github page of the [project](https://github.com/COSSAS/SOARCA-FIN-python-library).
+```python
+def capability_pong_callback(command: Command) -> ResultStructure:
+    print("Received ping, returning pong!")
+    out = Variable(
+        type=VariableTypeEnum.string,
+        name="pong_output",
+        description="If ping, return pong",
+        value="pong",
+        constant=True,
+        external=False)
+    context = command.command.context
+    return ResultStructure(
+        state="success", context=context, variables={"result": out})
+
+
+agent = AgentStructure(name="soarca-fin--123")
+
+external_reference = ExternalReference(name="external-reference-name")
+
+step_structure = StepStructure(
+    name="step_name",
+    description="step description",
+    external_references=[external_reference],
+    command="test-command",
+    target="123456")
+
+capability_structure = CapabilityStructure(
+    capability_id="mod-pong--e896aa3b-bb37-429e-8ece-2d4286cf326d",
+    type=WorkFlowStepEnum.action,
+    name="capability_name",
+    version="0.0.1",
+    step={
+        "test": step_structure},
+    agent={
+        "testagent": agent})
+
+# Create Soarca fin
+fin = SoarcaFin("123456789")
+# Set config for MQTT Server
+fin.set_config_MQTT_server(mqtt_broker, mqtt_port, username, password)
+# Register Capabilities
+fin.create_fin_capability(capability_structure, capability_pong_callback)
+# Start the fin
+fin.start_fin()
+```
+
+## Architecture
 ### Application Layout
 The main object of the application is the `SoarcaFin` object, which is responsible for configuring and creating and controlling the capabilities.
 The SoarcaFin creates `MQTTClient`s for each capability registered, plus one for registering, unregistering and controlling the fin.
@@ -125,6 +179,6 @@ Soarca --> "MQTTClient (Fin)" :  Message.Ack [Fin ID Topic]
 "MQTTClient (Fin)" -> "Executor (Fin)" : Message.Ack
 ```
 
-### Bugs and Contributing
+## Bugs or Contributing
 Want to contribute to this project? It is possible to contribute [here](https://github.com/COSSAS/SOARCA-FIN-python-library).
 Have you found a bug or want to request a feature? Please create an issue [here](https://github.com/COSSAS/SOARCA-FIN-python-library/issues).
