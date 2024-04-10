@@ -19,6 +19,8 @@ services:
     container_name: soarca_server
     environment:
       PORT: 8080
+      SOARCA_ALLOWED_ORIGINS: "*"
+      GIN_MODE: "release"
       MONGODB_URI: "mongodb://mongodb_container:27017"
       DATABASE_NAME: "soarca"
       DB_USERNAME: "root"
@@ -32,6 +34,7 @@ services:
 
 networks:
   db-net:
+
 
 volumes:
   mongodb_data_container:

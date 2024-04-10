@@ -137,7 +137,8 @@ func Initialize() error {
 
 func initializeCore(app *gin.Engine) error {
 
-	origins := strings.Split(utils.GetEnv("ORIGINS", "*"), ",")
+	origins := strings.Split(strings.ReplaceAll(utils.GetEnv("SOARCA_ALLOWED_ORIGINS", "*"), " ", ""), ",")
+
 	routes.Cors(app, origins)
 	err := routes.Api(app, &mainController)
 	if err != nil {
