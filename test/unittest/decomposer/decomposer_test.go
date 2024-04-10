@@ -19,7 +19,7 @@ import (
 
 func TestExecutePlaybook(t *testing.T) {
 	mock_action_executor := new(mock_executor.Mock_Action_Executor)
-	mock_playbook_action_executor := new(mock_playbook_action_executor.Mock_Playybook_Action_Executor)
+	mock_playbook_action_executor := new(mock_playbook_action_executor.Mock_PlaybookActionExecutor)
 	uuid_mock := new(mock_guid.Mock_Guid)
 
 	expectedCommand := cacao.Command{
@@ -111,7 +111,7 @@ func TestExecutePlaybook(t *testing.T) {
 
 func TestExecutePlaybookMultiStep(t *testing.T) {
 	mock_action_executor := new(mock_executor.Mock_Action_Executor)
-	mock_playbook_action_executor := new(mock_playbook_action_executor.Mock_Playybook_Action_Executor)
+	mock_playbook_action_executor := new(mock_playbook_action_executor.Mock_PlaybookActionExecutor)
 	uuid_mock := new(mock_guid.Mock_Guid)
 
 	expectedCommand := cacao.Command{
@@ -252,7 +252,7 @@ Test with an Empty OnCompletion will result in not executing the step.
 */
 func TestExecuteEmptyMultiStep(t *testing.T) {
 	mock_action_executor2 := new(mock_executor.Mock_Action_Executor)
-	mock_playbook_action_executor2 := new(mock_playbook_action_executor.Mock_Playybook_Action_Executor)
+	mock_playbook_action_executor2 := new(mock_playbook_action_executor.Mock_PlaybookActionExecutor)
 	uuid_mock2 := new(mock_guid.Mock_Guid)
 
 	expectedCommand := cacao.Command{
@@ -317,7 +317,7 @@ Test with an not occuring on completion id will result in not executing the step
 */
 func TestExecuteIllegalMultiStep(t *testing.T) {
 	mock_action_executor2 := new(mock_executor.Mock_Action_Executor)
-	mock_playbook_action_executor2 := new(mock_playbook_action_executor.Mock_Playybook_Action_Executor)
+	mock_playbook_action_executor2 := new(mock_playbook_action_executor.Mock_PlaybookActionExecutor)
 	uuid_mock2 := new(mock_guid.Mock_Guid)
 
 	expectedCommand := cacao.Command{
