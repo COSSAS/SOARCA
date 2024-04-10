@@ -131,6 +131,12 @@ func (decomposer *Decomposer) ExecuteStep(step cacao.Step, scopeVariables cacao.
 	variables.Merge(scopeVariables)
 	variables.Merge(step.StepVariables)
 
+	metadata := execution.Metadata{
+		ExecutionId: decomposer.details.ExecutionId,
+		PlaybookId:  decomposer.details.PlaybookId,
+		StepId:      step.ID,
+	}
+
 	switch step.Type {
 	case cacao.StepTypeAction:
 		actionMetadata := action.PlaybookStepMetadata{
@@ -140,12 +146,9 @@ func (decomposer *Decomposer) ExecuteStep(step cacao.Step, scopeVariables cacao.
 			Agent:     decomposer.playbook.AgentDefinitions[step.Agent],
 			Variables: variables,
 		}
-		metadata := execution.Metadata{
-			ExecutionId: decomposer.details.ExecutionId,
-			PlaybookId:  decomposer.details.PlaybookId,
-			StepId:      step.ID,
-		}
 		return decomposer.actionExecutor.Execute(metadata, actionMetadata)
+	case cacao.StepTypePlaybookAction:
+		return decomposer.playbookActionExecutor.Execute(metadata, step, variables)
 	default:
 		// NOTE: This currently silently handles unknown step types. Should we return an error instead?
 		return cacao.NewVariables(), nil

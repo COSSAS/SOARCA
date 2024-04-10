@@ -364,3 +364,62 @@ func TestExecuteIllegalMultiStep(t *testing.T) {
 	assert.Equal(t, returnedId.ExecutionId, id)
 	mock_action_executor2.AssertExpectations(t)
 }
+
+func TestExecutePlaybookAction(t *testing.T) {
+	mock_action_executor := new(mock_executor.Mock_Action_Executor)
+	mock_playbook_action_executor := new(mock_playbook_action_executor.Mock_PlaybookActionExecutor)
+	uuid_mock := new(mock_guid.Mock_Guid)
+
+	expectedVariables := cacao.Variable{
+		Type:  "string",
+		Name:  "var1",
+		Value: "testing",
+	}
+
+	decomposer := decomposer.New(mock_action_executor,
+		mock_playbook_action_executor,
+		uuid_mock)
+
+	step1 := cacao.Step{
+		Type:          "playbook-action",
+		ID:            "playbook-action--test",
+		Name:          "ssh-tests",
+		StepVariables: cacao.NewVariables(expectedVariables),
+		PlaybookID:    "playbook--1",
+		OnCompletion:  "end--test",
+	}
+
+	end := cacao.Step{
+		Type: "end",
+		ID:   "end--test",
+		Name: "end step",
+	}
+
+	playbook := cacao.Playbook{
+		ID:            "test",
+		Type:          "test",
+		Name:          "playbook-test",
+		WorkflowStart: step1.ID,
+		Workflow:      map[string]cacao.Step{step1.ID: step1, end.ID: end},
+	}
+
+	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	metaStep1 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step1.ID}
+
+	uuid_mock.On("New").Return(executionId)
+
+	mock_playbook_action_executor.On("Execute",
+		metaStep1,
+		step1,
+		cacao.NewVariables(expectedVariables)).Return(cacao.NewVariables(cacao.Variable{Name: "return", Value: "value"}), nil)
+
+	details, err := decomposer.Execute(playbook)
+	uuid_mock.AssertExpectations(t)
+	fmt.Println(err)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, details.ExecutionId, executionId)
+	mock_action_executor.AssertExpectations(t)
+	value, found := details.Variables.Find("return")
+	assert.Equal(t, found, true)
+	assert.Equal(t, value.Value, "value")
+}
