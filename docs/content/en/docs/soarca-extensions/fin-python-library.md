@@ -20,49 +20,75 @@ pip install soarca-fin-library
 An example on how to use the library is given below. 
 For more examples and the source code, we will refer to the Github page of the [project](https://github.com/COSSAS/SOARCA-FIN-python-library).
 ```python
+
 def capability_pong_callback(command: Command) -> ResultStructure:
     print("Received ping, returning pong!")
-    out = Variable(
+
+    result = Variable(
         type=VariableTypeEnum.string,
         name="pong_output",
         description="If ping, return pong",
         value="pong",
         constant=True,
         external=False)
+
     context = command.command.context
+
     return ResultStructure(
-        state="success", context=context, variables={"result": out})
+        state="success", context=context, variables={"result": result})
 
 
-agent = AgentStructure(name="soarca-fin--123")
+def main(mqtt_broker: str, mqtt_port: int, username: str, password: str) -> None:
 
-external_reference = ExternalReference(name="external-reference-name")
+    finId = "soarca-fin--pingpong-f877bb3a-bb37-429e-8ece-2d4286cf326d"
+    agentName = "soarca-fin-pong-f896bb3b-bb37-429e-8ece-2d4286cf326d"
+    externalReferenceName = "external-reference-example-name"
+    capabilityId = "mod-pong--e896aa3b-bb37-429e-8ece-2d4286cf326d"
 
-step_structure = StepStructure(
-    name="step_name",
-    description="step description",
-    external_references=[external_reference],
-    command="test-command",
-    target="123456")
+    # Create AgentStructure
+    agent = AgentStructure(
+        name=agentName)
 
-capability_structure = CapabilityStructure(
-    capability_id="mod-pong--e896aa3b-bb37-429e-8ece-2d4286cf326d",
-    type=WorkFlowStepEnum.action,
-    name="capability_name",
-    version="0.0.1",
-    step={
-        "test": step_structure},
-    agent={
-        "testagent": agent})
+    # Create ExternalReference
+    external_reference = ExternalReference(name=externalReferenceName)
 
-# Create Soarca fin
-fin = SoarcaFin("123456789")
-# Set config for MQTT Server
-fin.set_config_MQTT_server(mqtt_broker, mqtt_port, username, password)
-# Register Capabilities
-fin.create_fin_capability(capability_structure, capability_pong_callback)
-# Start the fin
-fin.start_fin()
+    # Create StepStructure
+    step_structure = StepStructure(
+        name="step_name",
+        description="step description",
+        external_references=[external_reference],
+        command="pong",
+        target=agentName)
+
+    # Create CapabilityStructure
+    capability_structure = CapabilityStructure(
+        capability_id=capabilityId,
+        type=WorkFlowStepEnum.action,
+        name="Ping Pong capability",
+        version="0.0.1",
+        step={
+            "test": step_structure},
+        agent={
+            "testagent": agent})
+
+    # Create Soarca fin
+    fin = SoarcaFin(finId)
+    # Set config for MQTT Server
+    fin.set_config_MQTT_server(mqtt_broker, mqtt_port, username, password)
+    # Register Capabilities
+    fin.create_fin_capability(capability_structure, capability_pong_callback)
+    # Start the fin
+    fin.start_fin()
+
+
+if __name__ == "__main__":
+    load_dotenv()
+    MQTT_BROKER = os.getenv("MQTT_BROKER", "localhost")
+    MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
+    USERNAME = os.getenv("MQTT_USERNAME", "soarca")
+    PASSWD = os.getenv("MQTT_PASSWD", "password")
+
+    main(MQTT_BROKER, MQTT_PORT, USERNAME, PASSWD)
 ```
 
 ## Architecture
