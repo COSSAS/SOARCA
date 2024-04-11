@@ -81,8 +81,5 @@ jobs:
           context: .
           build-args: |
             VERSION=${{ env.describe_version }}
-          platforms: |
-            - linux/amd64
-            - linux/arm64
           push: true
           tags: cossas/soarca:${{ env.describe_version }},cossas/soarca:development
