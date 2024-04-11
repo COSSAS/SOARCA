@@ -141,7 +141,7 @@ IParser <|.. Parser
 IExecutor <|.. Executor
 
 IMQTTClient <- SoarcaFin
-IExecutor <- MQTTClient
+MQTTClient -> IExecutor
 IParser <-MQTTClient
 ```
 
