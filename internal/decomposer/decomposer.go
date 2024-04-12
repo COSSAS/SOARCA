@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"soarca/internal/executors"
 	"soarca/internal/executors/action"
 	"soarca/internal/guid"
 	"soarca/logger"
@@ -35,22 +36,21 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
-func New(actionExecutor action.IExecuter, guid guid.IGuid) *Decomposer {
-	instance := Decomposer{}
-	if instance.actionExecutor == nil {
-		instance.actionExecutor = actionExecutor
-	}
-	if instance.guid == nil {
-		instance.guid = guid
-	}
-	return &instance
+func New(actionExecutor action.IExecuter,
+	playbookActionExecutor executors.IPlaybookExecuter,
+	guid guid.IGuid) *Decomposer {
+
+	return &Decomposer{actionExecutor: actionExecutor,
+		playbookActionExecutor: playbookActionExecutor,
+		guid:                   guid}
 }
 
 type Decomposer struct {
-	playbook       cacao.Playbook
-	details        ExecutionDetails
-	actionExecutor action.IExecuter
-	guid           guid.IGuid
+	playbook               cacao.Playbook
+	details                ExecutionDetails
+	actionExecutor         action.IExecuter
+	playbookActionExecutor executors.IPlaybookExecuter
+	guid                   guid.IGuid
 }
 
 // Execute a Playbook
@@ -131,6 +131,12 @@ func (decomposer *Decomposer) ExecuteStep(step cacao.Step, scopeVariables cacao.
 	variables.Merge(scopeVariables)
 	variables.Merge(step.StepVariables)
 
+	metadata := execution.Metadata{
+		ExecutionId: decomposer.details.ExecutionId,
+		PlaybookId:  decomposer.details.PlaybookId,
+		StepId:      step.ID,
+	}
+
 	switch step.Type {
 	case cacao.StepTypeAction:
 		actionMetadata := action.PlaybookStepMetadata{
@@ -140,12 +146,9 @@ func (decomposer *Decomposer) ExecuteStep(step cacao.Step, scopeVariables cacao.
 			Agent:     decomposer.playbook.AgentDefinitions[step.Agent],
 			Variables: variables,
 		}
-		metadata := execution.Metadata{
-			ExecutionId: decomposer.details.ExecutionId,
-			PlaybookId:  decomposer.details.PlaybookId,
-			StepId:      step.ID,
-		}
 		return decomposer.actionExecutor.Execute(metadata, actionMetadata)
+	case cacao.StepTypePlaybookAction:
+		return decomposer.playbookActionExecutor.Execute(metadata, step, variables)
 	default:
 		// NOTE: This currently silently handles unknown step types. Should we return an error instead?
 		return cacao.NewVariables(), nil

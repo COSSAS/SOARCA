@@ -14,6 +14,7 @@ import (
 	"soarca/internal/capability/ssh"
 	"soarca/internal/decomposer"
 	"soarca/internal/executors/action"
+	"soarca/internal/executors/playbook_action"
 	"soarca/internal/fin/protocol"
 	"soarca/internal/guid"
 	"soarca/logger"
@@ -67,8 +68,9 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	}
 
 	actionExecutor := action.New(capabilities)
+	playbookActionExecutor := playbook_action.New(controller, controller)
 	guid := new(guid.Guid)
-	decompose := decomposer.New(actionExecutor, guid)
+	decompose := decomposer.New(actionExecutor, playbookActionExecutor, guid)
 	return decompose
 }
 
