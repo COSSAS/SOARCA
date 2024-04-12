@@ -12,7 +12,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// TODO
 func TestRegisterReporter(t *testing.T) {
 	mock_ds_reporter := mock_reporter.Mock_Downstream_Reporter{}
 	reporter := reporter.New([]ds_reporter.IDownStreamReporter{})
