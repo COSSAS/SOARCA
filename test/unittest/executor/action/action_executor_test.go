@@ -89,6 +89,7 @@ func TestExecuteStep(t *testing.T) {
 		actionMetadata)
 
 	assert.Equal(t, err, nil)
+	mock_reporter.AssertExpectations(t)
 	mock_ssh.AssertExpectations(t)
 }
 
@@ -147,6 +148,7 @@ func TestExecuteActionStep(t *testing.T) {
 		agent)
 
 	assert.Equal(t, err, nil)
+	mock_reporter.AssertExpectations(t)
 	mock_ssh.AssertExpectations(t)
 }
 

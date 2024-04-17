@@ -74,7 +74,7 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	reporter := reporter.New([]downstreamReporter.IDownStreamReporter{})
 
 	actionExecutor := action.New(capabilities, reporter)
-	playbookActionExecutor := playbook_action.New(controller, controller)
+	playbookActionExecutor := playbook_action.New(controller, controller, reporter)
 	guid := new(guid.Guid)
 	decompose := decomposer.New(actionExecutor, playbookActionExecutor, guid, reporter)
 	return decompose
