@@ -107,6 +107,7 @@ func TestExecutePlaybook(t *testing.T) {
 	assert.Equal(t, err, nil)
 	assert.Equal(t, details.ExecutionId, executionId)
 	mock_action_executor.AssertExpectations(t)
+	mock_reporter.AssertExpectations(t)
 	value, found := details.Variables.Find("return")
 	assert.Equal(t, found, true)
 	assert.Equal(t, value.Value, "value")
@@ -246,6 +247,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 	assert.Equal(t, err, nil)
 	assert.Equal(t, details.ExecutionId, executionId)
 	mock_action_executor.AssertExpectations(t)
+	mock_reporter.AssertExpectations(t)
 
 	value, found := details.Variables.Find("result")
 	assert.Equal(t, found, true)
@@ -318,6 +320,7 @@ func TestExecuteEmptyMultiStep(t *testing.T) {
 	assert.Equal(t, err, errors.New("empty success step"))
 	assert.Equal(t, returnedId.ExecutionId, id)
 	mock_action_executor2.AssertExpectations(t)
+	mock_reporter.AssertExpectations(t)
 }
 
 /*
@@ -417,6 +420,7 @@ func TestExecutePlaybookAction(t *testing.T) {
 	metaStep1 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step1.ID}
 
 	uuid_mock.On("New").Return(executionId)
+	mock_reporter.On("ReportWorkflow", executionId, playbook).Return()
 
 	mock_playbook_action_executor.On("Execute",
 		metaStep1,
@@ -428,6 +432,7 @@ func TestExecutePlaybookAction(t *testing.T) {
 	fmt.Println(err)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, details.ExecutionId, executionId)
+	mock_reporter.AssertExpectations(t)
 	mock_action_executor.AssertExpectations(t)
 	value, found := details.Variables.Find("return")
 	assert.Equal(t, found, true)

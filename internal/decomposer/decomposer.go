@@ -37,14 +37,14 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
-<<<<<<< HEAD
 func New(actionExecutor action.IExecuter,
 	playbookActionExecutor executors.IPlaybookExecuter,
-	guid guid.IGuid) *Decomposer {
+	guid guid.IGuid, reporter reporter.IWorkflowReporter) *Decomposer {
 
 	return &Decomposer{actionExecutor: actionExecutor,
 		playbookActionExecutor: playbookActionExecutor,
-		guid:                   guid}
+		guid:                   guid,
+		reporter:               reporter}
 }
 
 type Decomposer struct {
@@ -53,28 +53,7 @@ type Decomposer struct {
 	actionExecutor         action.IExecuter
 	playbookActionExecutor executors.IPlaybookExecuter
 	guid                   guid.IGuid
-=======
-func New(actionExecutor action.IExecuter, guid guid.IGuid, reporter reporter.IWorkflowReporter) *Decomposer {
-	instance := Decomposer{}
-	if instance.actionExecutor == nil {
-		instance.actionExecutor = actionExecutor
-	}
-	if instance.guid == nil {
-		instance.guid = guid
-	}
-	if instance.reporter == nil {
-		instance.reporter = reporter
-	}
-	return &instance
-}
-
-type Decomposer struct {
-	playbook       cacao.Playbook
-	details        ExecutionDetails
-	actionExecutor action.IExecuter
-	guid           guid.IGuid
-	reporter       reporter.IWorkflowReporter
->>>>>>> 45d3513 (add decomposer with reporting)
+	reporter               reporter.IWorkflowReporter
 }
 
 // Execute a Playbook
