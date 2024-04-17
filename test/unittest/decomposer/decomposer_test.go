@@ -372,6 +372,7 @@ func TestExecuteIllegalMultiStep(t *testing.T) {
 
 	returnedId, err := decomposer2.Execute(playbook)
 	uuid_mock2.AssertExpectations(t)
+	mock_reporter.AssertExpectations(t)
 	fmt.Println(err)
 	assert.Equal(t, err, errors.New("empty success step"))
 	assert.Equal(t, returnedId.ExecutionId, id)
