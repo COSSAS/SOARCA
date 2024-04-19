@@ -70,7 +70,6 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 		}
 	}
 
-	// TODO: Instantiate reporters from config
 	reporter := reporter.New([]downstreamReporter.IDownStreamReporter{})
 
 	actionExecutor := action.New(capabilities, reporter)
