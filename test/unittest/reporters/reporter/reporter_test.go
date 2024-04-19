@@ -30,9 +30,7 @@ func TestRegisterTooManyReporters(t *testing.T) {
 
 	reporter := reporter.New([]ds_reporter.IDownStreamReporter{})
 	err := reporter.RegisterReporters(too_many_reporters)
-	if err == nil {
-		t.Fail()
-	}
+
 	expected_err := errors.New("attempting to register too many reporters")
 	assert.Equal(t, expected_err, err)
 }
