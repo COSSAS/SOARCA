@@ -32,24 +32,25 @@ type IStepReporter interface {
 	ReportStep(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, err error)
 }
 
-// High-level reporter class with injection of specific reporters
-type Reporter struct {
-	reporters []downstreamReporter.IDownStreamReporter
-}
-
 const MaxReporters int = 10
 
+// High-level reporter class with injection of specific reporters
+type Reporter struct {
+	reporters    []downstreamReporter.IDownStreamReporter
+	maxReporters int
+}
+
 func New(reporters []downstreamReporter.IDownStreamReporter) *Reporter {
-	instance := Reporter{}
-	if instance.reporters == nil {
-		instance.reporters = reporters
+	maxReporters, _ := strconv.Atoi(utils.GetEnv("MAX_REPORTERS", strconv.Itoa(MaxReporters)))
+	instance := Reporter{
+		reporters:    reporters,
+		maxReporters: maxReporters,
 	}
 	return &instance
 }
 
 func (reporter *Reporter) RegisterReporters(reporters []downstreamReporter.IDownStreamReporter) error {
-	maxReporters, _ := strconv.Atoi(utils.GetEnv("MAX_REPORTERS", strconv.Itoa(MaxReporters)))
-	if (len(reporter.reporters) + len(reporters)) > maxReporters {
+	if (len(reporter.reporters) + len(reporters)) > reporter.maxReporters {
 		log.Warning("reporter not registered, too many reporters")
 		return errors.New("attempting to register too many reporters")
 	}
