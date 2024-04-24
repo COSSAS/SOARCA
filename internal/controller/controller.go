@@ -17,9 +17,12 @@ import (
 	"soarca/internal/executors/playbook_action"
 	"soarca/internal/fin/protocol"
 	"soarca/internal/guid"
+	"soarca/internal/reporter"
 	"soarca/logger"
 	"soarca/utils"
 	httpUtil "soarca/utils/http"
+
+	downstreamReporter "soarca/internal/reporter/downstream_reporter"
 
 	"github.com/gin-gonic/gin"
 
@@ -67,10 +70,12 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 		}
 	}
 
-	actionExecutor := action.New(capabilities)
-	playbookActionExecutor := playbook_action.New(controller, controller)
+	reporter := reporter.New([]downstreamReporter.IDownStreamReporter{})
+
+	actionExecutor := action.New(capabilities, reporter)
+	playbookActionExecutor := playbook_action.New(controller, controller, reporter)
 	guid := new(guid.Guid)
-	decompose := decomposer.New(actionExecutor, playbookActionExecutor, guid)
+	decompose := decomposer.New(actionExecutor, playbookActionExecutor, guid, reporter)
 	return decompose
 }
 

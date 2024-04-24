@@ -30,49 +30,56 @@ The schema below represents the architecture concept.
 @startuml
 set separator ::
 
-interface IWorkflowReporter{
-    ReportWorkflow(cacao.workflow)
+interface IStepReporter{
+   ReportStep() error
 }
 
-interface IStepReporter{
-    ReportStep(cacao.workflow.Step, cacao.Variables, error)
+interface IWorkflowReporter{
+    ReportWorkflow() error
+}
+
+
+interface IDownStreamReporter {
+    ReportWorkflow() error
+	ReportStep() error
 }
 
 class Reporter {
-    stepReporters []IStepReporter
-    workflowReporters []IWorkflowReporter
+    reporters []IDownStreamReporter
 
-    RegisterStepReporter()
-    RegisterWorkflowReporter()
+    RegisterReporters() error
+    ReportWorkflow()
+    ReportStep()
 }
-class Database as DB
+
+class Database
+class Cache
 class 3PTool
+
 class Decomposer
 class Executor
 
-Decomposer -up-> Reporter
-Executor -up-> Reporter
+Decomposer -right-> IWorkflowReporter
+Executor -left-> IStepReporter
 
-Reporter -up-> IWorkflowReporter
-Reporter .up.|> IWorkflowReporter
 Reporter .up.|> IStepReporter
-Reporter -up-> IStepReporter
+Reporter .up.|> IWorkflowReporter
+Reporter -right-> IDownStreamReporter
 
-DB .up.|> IWorkflowReporter
-DB .up.|> IStepReporter
-3PTool .up.|> IWorkflowReporter
-3PTool .up.|> IStepReporter
 
-Reporter --left--> DB
-Reporter --right--> 3PTool
+Database .up.|> IDownStreamReporter
+Cache .up.|> IDownStreamReporter
+3PTool .up.|> IDownStreamReporter
 
 ```
 
 ### Interfaces
 
-The logic and extensibility is implemented in the SOARCA architecture by means of reporting interfaces. At this stage, we implement an *IWorkflowReporter* to push information about the entire workflow to be executed, and an *IStepReporter* to push step-specific information as the steps of the workflow are executed.
+The reporting logic and extensibility is implemented in the SOARCA architecture by means of reporting interfaces. At this stage, we implement an *IWorkflowReporter* to push information about the entire workflow to be executed, and an *IStepReporter* to push step-specific information as the steps of the workflow are executed.
 
-A high level *Reporter* component will implement both interfaces, and maintain the list of decomposer and executor reporters activated for the SOARCA instance. The *Reporter* class will invoke all reporting functions for each active reporter.
+A high level *Reporter* component will implement both interfaces, and maintain the list of *DownStreamRepporter*s activated for the SOARCA instance. The *Reporter* class will invoke all reporting functions for each active reporter. The *Executer* and *Decomposer* components will be injected each with the Reporter though, as interface of respectively workflow reporter, and step reporter, to keep the reporting scope separated.
+
+The *DownStream* reporters will implement push-based reporting functions specific for the reporting target, as shown in the *IDownStreamReporter* interface. Internal components to SOARCA, and third-party tool reporters, will thus implement the *IDownStreamReporter* interface.
 
 ## Future plans
 

@@ -12,6 +12,7 @@ import (
 	"soarca/test/unittest/mocks/mock_executor"
 	mock_playbook_action_executor "soarca/test/unittest/mocks/mock_executor/playbook_action"
 	"soarca/test/unittest/mocks/mock_guid"
+	"soarca/test/unittest/mocks/mock_reporter"
 
 	"github.com/go-playground/assert/v2"
 	"github.com/google/uuid"
@@ -21,6 +22,7 @@ func TestExecutePlaybook(t *testing.T) {
 	mock_action_executor := new(mock_executor.Mock_Action_Executor)
 	mock_playbook_action_executor := new(mock_playbook_action_executor.Mock_PlaybookActionExecutor)
 	uuid_mock := new(mock_guid.Mock_Guid)
+	mock_reporter := new(mock_reporter.Mock_Reporter)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -35,7 +37,7 @@ func TestExecutePlaybook(t *testing.T) {
 
 	decomposer := decomposer.New(mock_action_executor,
 		mock_playbook_action_executor,
-		uuid_mock)
+		uuid_mock, mock_reporter)
 
 	step1 := cacao.Step{
 		Type:          "action",
@@ -96,6 +98,7 @@ func TestExecutePlaybook(t *testing.T) {
 		Variables: cacao.NewVariables(expectedVariables),
 	}
 
+	mock_reporter.On("ReportWorkflow", executionId, playbook).Return()
 	mock_action_executor.On("Execute", metaStep1, playbookStepMetadata).Return(cacao.NewVariables(cacao.Variable{Name: "return", Value: "value"}), nil)
 
 	details, err := decomposer.Execute(playbook)
@@ -104,6 +107,7 @@ func TestExecutePlaybook(t *testing.T) {
 	assert.Equal(t, err, nil)
 	assert.Equal(t, details.ExecutionId, executionId)
 	mock_action_executor.AssertExpectations(t)
+	mock_reporter.AssertExpectations(t)
 	value, found := details.Variables.Find("return")
 	assert.Equal(t, found, true)
 	assert.Equal(t, value.Value, "value")
@@ -113,6 +117,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 	mock_action_executor := new(mock_executor.Mock_Action_Executor)
 	mock_playbook_action_executor := new(mock_playbook_action_executor.Mock_PlaybookActionExecutor)
 	uuid_mock := new(mock_guid.Mock_Guid)
+	mock_reporter := new(mock_reporter.Mock_Reporter)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -138,7 +143,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 
 	decomposer := decomposer.New(mock_action_executor,
 		mock_playbook_action_executor,
-		uuid_mock)
+		uuid_mock, mock_reporter)
 
 	step1 := cacao.Step{
 		Type:          "action",
@@ -223,6 +228,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 		Variables: cacao.NewVariables(expectedVariables),
 	}
 
+	mock_reporter.On("ReportWorkflow", executionId, playbook).Return()
 	mock_action_executor.On("Execute", metaStep1, playbookStepMetadata1).Return(cacao.NewVariables(firstResult), nil)
 
 	playbookStepMetadata2 := action.PlaybookStepMetadata{
@@ -241,6 +247,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 	assert.Equal(t, err, nil)
 	assert.Equal(t, details.ExecutionId, executionId)
 	mock_action_executor.AssertExpectations(t)
+	mock_reporter.AssertExpectations(t)
 
 	value, found := details.Variables.Find("result")
 	assert.Equal(t, found, true)
@@ -254,6 +261,7 @@ func TestExecuteEmptyMultiStep(t *testing.T) {
 	mock_action_executor2 := new(mock_executor.Mock_Action_Executor)
 	mock_playbook_action_executor2 := new(mock_playbook_action_executor.Mock_PlaybookActionExecutor)
 	uuid_mock2 := new(mock_guid.Mock_Guid)
+	mock_reporter := new(mock_reporter.Mock_Reporter)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -278,7 +286,7 @@ func TestExecuteEmptyMultiStep(t *testing.T) {
 
 	decomposer2 := decomposer.New(mock_action_executor2,
 		mock_playbook_action_executor2,
-		uuid_mock2)
+		uuid_mock2, mock_reporter)
 
 	step1 := cacao.Step{
 		Type:          "ssh",
@@ -304,12 +312,15 @@ func TestExecuteEmptyMultiStep(t *testing.T) {
 	id, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	uuid_mock2.On("New").Return(id)
 
+	mock_reporter.On("ReportWorkflow", id, playbook).Return()
+
 	returnedId, err := decomposer2.Execute(playbook)
 	uuid_mock2.AssertExpectations(t)
 	fmt.Println(err)
 	assert.Equal(t, err, errors.New("empty success step"))
 	assert.Equal(t, returnedId.ExecutionId, id)
 	mock_action_executor2.AssertExpectations(t)
+	mock_reporter.AssertExpectations(t)
 }
 
 /*
@@ -319,6 +330,7 @@ func TestExecuteIllegalMultiStep(t *testing.T) {
 	mock_action_executor2 := new(mock_executor.Mock_Action_Executor)
 	mock_playbook_action_executor2 := new(mock_playbook_action_executor.Mock_PlaybookActionExecutor)
 	uuid_mock2 := new(mock_guid.Mock_Guid)
+	mock_reporter := new(mock_reporter.Mock_Reporter)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -333,7 +345,7 @@ func TestExecuteIllegalMultiStep(t *testing.T) {
 
 	decomposer2 := decomposer.New(mock_action_executor2,
 		mock_playbook_action_executor2,
-		uuid_mock2)
+		uuid_mock2, mock_reporter)
 
 	step1 := cacao.Step{
 		Type:          "action",
@@ -356,9 +368,11 @@ func TestExecuteIllegalMultiStep(t *testing.T) {
 
 	id, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	uuid_mock2.On("New").Return(id)
+	mock_reporter.On("ReportWorkflow", id, playbook).Return()
 
 	returnedId, err := decomposer2.Execute(playbook)
 	uuid_mock2.AssertExpectations(t)
+	mock_reporter.AssertExpectations(t)
 	fmt.Println(err)
 	assert.Equal(t, err, errors.New("empty success step"))
 	assert.Equal(t, returnedId.ExecutionId, id)
@@ -369,7 +383,7 @@ func TestExecutePlaybookAction(t *testing.T) {
 	mock_action_executor := new(mock_executor.Mock_Action_Executor)
 	mock_playbook_action_executor := new(mock_playbook_action_executor.Mock_PlaybookActionExecutor)
 	uuid_mock := new(mock_guid.Mock_Guid)
-
+	mock_reporter := new(mock_reporter.Mock_Reporter)
 	expectedVariables := cacao.Variable{
 		Type:  "string",
 		Name:  "var1",
@@ -378,7 +392,7 @@ func TestExecutePlaybookAction(t *testing.T) {
 
 	decomposer := decomposer.New(mock_action_executor,
 		mock_playbook_action_executor,
-		uuid_mock)
+		uuid_mock, mock_reporter)
 
 	step1 := cacao.Step{
 		Type:          "playbook-action",
@@ -407,6 +421,7 @@ func TestExecutePlaybookAction(t *testing.T) {
 	metaStep1 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step1.ID}
 
 	uuid_mock.On("New").Return(executionId)
+	mock_reporter.On("ReportWorkflow", executionId, playbook).Return()
 
 	mock_playbook_action_executor.On("Execute",
 		metaStep1,
@@ -418,6 +433,7 @@ func TestExecutePlaybookAction(t *testing.T) {
 	fmt.Println(err)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, details.ExecutionId, executionId)
+	mock_reporter.AssertExpectations(t)
 	mock_action_executor.AssertExpectations(t)
 	value, found := details.Variables.Find("return")
 	assert.Equal(t, found, true)

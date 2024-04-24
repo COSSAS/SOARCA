@@ -8,6 +8,7 @@ import (
 	"soarca/internal/executors"
 	"soarca/internal/executors/action"
 	"soarca/internal/guid"
+	"soarca/internal/reporter"
 	"soarca/logger"
 	"soarca/models/cacao"
 	"soarca/models/execution"
@@ -38,11 +39,12 @@ func init() {
 
 func New(actionExecutor action.IExecuter,
 	playbookActionExecutor executors.IPlaybookExecuter,
-	guid guid.IGuid) *Decomposer {
+	guid guid.IGuid, reporter reporter.IWorkflowReporter) *Decomposer {
 
 	return &Decomposer{actionExecutor: actionExecutor,
 		playbookActionExecutor: playbookActionExecutor,
-		guid:                   guid}
+		guid:                   guid,
+		reporter:               reporter}
 }
 
 type Decomposer struct {
@@ -51,6 +53,7 @@ type Decomposer struct {
 	actionExecutor         action.IExecuter
 	playbookActionExecutor executors.IPlaybookExecuter
 	guid                   guid.IGuid
+	reporter               reporter.IWorkflowReporter
 }
 
 // Execute a Playbook
@@ -64,6 +67,9 @@ func (decomposer *Decomposer) Execute(playbook cacao.Playbook) (*ExecutionDetail
 	stepId := playbook.WorkflowStart
 	variables := cacao.NewVariables()
 	variables.Merge(playbook.PlaybookVariables)
+
+	// Reporting workflow instantiation
+	decomposer.reporter.ReportWorkflow(decomposer.details.ExecutionId, playbook)
 
 	outputVariables, err := decomposer.ExecuteBranch(stepId, variables)
 

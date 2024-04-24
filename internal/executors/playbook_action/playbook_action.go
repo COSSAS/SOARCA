@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"soarca/internal/controller/database"
 	"soarca/internal/controller/decomposer_controller"
+	"soarca/internal/reporter"
 	"soarca/logger"
 	"soarca/models/cacao"
 	"soarca/models/execution"
@@ -14,6 +15,7 @@ import (
 type PlaybookAction struct {
 	decomposerController decomposer_controller.IController
 	databaseController   database.IController
+	reporter             reporter.IStepReporter
 }
 
 var component = reflect.TypeOf(PlaybookAction{}).PkgPath()
@@ -24,8 +26,8 @@ func init() {
 }
 
 func New(controller decomposer_controller.IController,
-	database database.IController) *PlaybookAction {
-	return &PlaybookAction{decomposerController: controller, databaseController: database}
+	database database.IController, reporter reporter.IStepReporter) *PlaybookAction {
+	return &PlaybookAction{decomposerController: controller, databaseController: database, reporter: reporter}
 }
 
 func (playbookAction *PlaybookAction) Execute(metadata execution.Metadata,
@@ -54,8 +56,10 @@ func (playbookAction *PlaybookAction) Execute(metadata execution.Metadata,
 	if err != nil {
 		err = errors.New(fmt.Sprint("execution of playbook failed with error: ", err))
 		log.Error(err)
+		playbookAction.reporter.ReportStep(metadata.ExecutionId, step, playbook.PlaybookVariables, err)
 		return cacao.NewVariables(), err
 	}
+	playbookAction.reporter.ReportStep(metadata.ExecutionId, step, playbook.PlaybookVariables, nil)
 	return details.Variables, nil
 
 }
