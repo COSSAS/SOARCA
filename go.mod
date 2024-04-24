@@ -1,6 +1,6 @@
 module soarca
 
-go 1.22.0
+go 1.22
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.4.3
@@ -15,6 +15,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.0
+	github.com/swaggo/swag v1.16.1
 	go.mongodb.org/mongo-driver v1.12.1
 	golang.org/x/crypto v0.21.0
 )
@@ -50,8 +51,7 @@ require (
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
 	github.com/pelletier/go-toml/v2 v2.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/stretchr/objx v0.5.0 // indirect
-	github.com/swaggo/swag v1.16.1 // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
