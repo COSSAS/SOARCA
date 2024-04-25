@@ -89,16 +89,12 @@ SOARCA implements internally reporting modules to handle database and caches rep
 
 ## Cache reporter
 
-The *Cache* reporter mediates between [decomposer](https://cossas.github.io/SOARCA/docs/core-components/decomposer/) and [executors](https://cossas.github.io/SOARCA/docs/core-components/executer/), [database](https://cossas.github.io/SOARCA/docs/core-components/database/), and reporting APIs. As *DownStreamReporter*, the *Cache* stores workflow and step reports in-memory for an _ongoing_ execution. As *IExecutionInformant*, the *Cache* provides information to the reporting API. The schema below shows how it is positioned in the SOARCA architecture.
+The *Cache* reporter mediates between [decomposer](https://cossas.github.io/SOARCA/docs/core-components/decomposer/) and [executors](https://cossas.github.io/SOARCA/docs/core-components/executer/), [database](https://cossas.github.io/SOARCA/docs/core-components/database/), and reporting APIs. As *DownStreamReporter*, the *Cache* stores workflow and step reports in-memory for an ongoing execution. As *IExecutionInformant*, the *Cache* provides information to the reporting API. The schema below shows how it is positioned in the SOARCA architecture.
 
 ```plantuml
 @startuml
 
-protocol /reporter {
-    endpoint1
-    endpoint2
-    endpoint3
-}
+protocol /reporter
 
 interface IDownStreamReporter {
     ReportWorkflow() error
@@ -106,18 +102,13 @@ interface IDownStreamReporter {
 }
 interface IDatabase
 
-interface IExecutionInformant {
-    GetWorkflowInfo() WorkflowInfo, error
-	GetStepInfo() StepInfo, error
-}
+interface IExecutionInformant
 
-class ReporterApi {
-    ReporerApiCall1()
-	ReporterApiCall2()
-    ReporterApiCall3()
-}
+class ReporterApi
 class Reporter
-class Cache #line.bold
+class Cache {
+    
+}
 
 "/reporter" -right-> ReporterApi
 
