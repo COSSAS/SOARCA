@@ -102,13 +102,14 @@ interface IDownStreamReporter {
 }
 interface IDatabase
 
-interface IExecutionInformant
+interface IExecutionInformer
 
 class ReporterApi
 class Reporter
 class Cache {
-    
+    cache []ExecutionEntry
 }
+
 
 "/reporter" -right-> ReporterApi
 
@@ -116,8 +117,8 @@ Reporter -left-> IDownStreamReporter
 Cache -left-> IDatabase
 
 Cache .up.|> IDownStreamReporter
-Cache .up.|> IExecutionInformant
-ReporterApi -down-> IExecutionInformant
+Cache .up.|> IExecutionInformer
+ReporterApi -down-> IExecutionInformer
 
 ```
 
