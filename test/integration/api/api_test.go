@@ -9,8 +9,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func initializeSoarca(t *testing.T) {
+	err := controller.Initialize()
+	if err != nil {
+		t.Log(err)
+	}
+}
+
 func TestCorsHeader(t *testing.T) {
-	go controller.Initialize()
+	go initializeSoarca(t)
 
 	client := http.Client{}
 	buffer := bytes.NewBufferString("")
