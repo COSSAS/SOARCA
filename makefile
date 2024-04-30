@@ -23,6 +23,7 @@ test:
 	go test ./test/unittest/... -v
 
 integration-test:
+	swag init -o swaggerdocs
 	go test ./test/integration/... -v
 
 ci-test: test integration-test
