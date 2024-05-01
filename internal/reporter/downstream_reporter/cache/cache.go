@@ -28,6 +28,30 @@ func New() *Cache {
 	}
 }
 
+func (cacheReporter *Cache) getExecution(executionKey uuid.UUID) (report.ExecutionEntry, error) {
+	executionKeyStr := executionKey.String()
+	executionEntry, ok := cacheReporter.Cache[executionKeyStr]
+	if !ok {
+		err := errors.New("execution is not in cache")
+		return report.ExecutionEntry{}, err
+		// TODO Retrieve from database
+	}
+	return executionEntry, nil
+}
+func (cacheReporter *Cache) getExecutionStep(executionKey uuid.UUID, stepKey string) (report.StepResult, error) {
+	executionEntry, err := cacheReporter.getExecution(executionKey)
+	if err != nil {
+		return report.StepResult{}, err
+	}
+	executionStep, ok := executionEntry.StepResults[stepKey]
+	if !ok {
+		err := errors.New("execution step is not in cache")
+		return report.StepResult{}, err
+		// TODO Retrieve from database
+	}
+	return executionStep, nil
+}
+
 // Adding executions in FIFO logic
 func (cacheReporter *Cache) AddExecution(newExecutionEntry report.ExecutionEntry) error {
 
@@ -54,6 +78,7 @@ func (cacheReporter *Cache) AddExecution(newExecutionEntry report.ExecutionEntry
 
 func (cacheReporter *Cache) ReportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook) error {
 	newExecutionEntry := report.ExecutionEntry{
+		ExecutionId:    executionId,
 		PlaybookId:     playbook.ID,
 		Started:        time.Now(),
 		Ended:          time.Time{},
@@ -68,18 +93,16 @@ func (cacheReporter *Cache) ReportWorkflowStart(executionId uuid.UUID, playbook 
 	return nil
 }
 
-func (cacheReporter *Cache) ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook, err error) error {
+func (cacheReporter *Cache) ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook, workflowError error) error {
 
-	executionEntry, ok := cacheReporter.Cache[executionId.String()]
-	if !ok {
-		return errors.New("execution is not in cache.")
-		// TODO Retrieve from database
+	executionEntry, err := cacheReporter.getExecution(executionId)
+	if err != nil {
+		return err
 	}
 
 	executionEntry.Ended = time.Now()
-
-	if err != nil {
-		executionEntry.PlaybookResult = err
+	if workflowError != nil {
+		executionEntry.PlaybookResult = workflowError
 		executionEntry.Status = report.Failed
 	} else {
 		executionEntry.Status = report.SuccessfullyExecuted
@@ -88,12 +111,37 @@ func (cacheReporter *Cache) ReportWorkflowEnd(executionId uuid.UUID, playbook ca
 	return nil
 }
 
-func (cacheReporter *Cache) ReportStepStart(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, err error) error {
-	// TODO
+func (cacheReporter *Cache) ReportStepStart(executionId uuid.UUID, step cacao.Step, variables cacao.Variables) error {
+	executionEntry, err := cacheReporter.getExecution(executionId)
+	if err != nil {
+		return err
+	}
+	newStepEntry := report.StepResult{
+		ExecutionId: executionId,
+		StepId:      step.ID,
+		Started:     time.Now(),
+		Ended:       time.Time{},
+		Variables:   variables,
+		Status:      report.Ongoing,
+		Error:       nil,
+	}
+	executionEntry.StepResults[step.ID] = newStepEntry
 	return nil
 }
-func (cacheReporter *Cache) ReportStepEnd(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, err error) error {
-	// TODO
+func (cacheReporter *Cache) ReportStepEnd(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, stepError error) error {
+	executionStepResult, err := cacheReporter.getExecutionStep(executionId, step.ID)
+	if err != nil {
+		return err
+	}
+
+	executionStepResult.Ended = time.Now()
+	if stepError != nil {
+		executionStepResult.Error = stepError
+		executionStepResult.Status = report.ServerSideError
+	} else {
+		executionStepResult.Status = report.SuccessfullyExecuted
+	}
+	executionStepResult.Variables = stepResults
 	return nil
 }
 

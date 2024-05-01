@@ -26,12 +26,12 @@ func init() {
 type IWorkflowReporter interface {
 	// -> Give info to downstream reporters
 	ReportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook)
-	ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook, err error)
+	ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook, workflowError error)
 }
 type IStepReporter interface {
 	// -> Give info to downstream reporters
 	ReportStepStart(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables)
-	ReportStepEnd(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, err error)
+	ReportStepEnd(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, stepError error)
 }
 
 const MaxReporters int = 10
@@ -69,10 +69,10 @@ func (reporter *Reporter) ReportWorkflowStart(executionId uuid.UUID, playbook ca
 		}
 	}
 }
-func (reporter *Reporter) ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook, err error) {
+func (reporter *Reporter) ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook, workflowError error) {
 	log.Trace("reporting workflow")
 	for _, rep := range reporter.reporters {
-		err := rep.ReportWorkflowEnd(executionId, playbook, err)
+		err := rep.ReportWorkflowEnd(executionId, playbook, workflowError)
 		if err != nil {
 			log.Warning(err)
 		}
@@ -89,10 +89,10 @@ func (reporter *Reporter) ReportStepStart(executionId uuid.UUID, step cacao.Step
 	}
 }
 
-func (reporter *Reporter) ReportStepEnd(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, err error) {
+func (reporter *Reporter) ReportStepEnd(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, stepError error) {
 	log.Trace("reporting step data")
 	for _, rep := range reporter.reporters {
-		err := rep.ReportStepEnd(executionId, step, returnVars, err)
+		err := rep.ReportStepEnd(executionId, step, returnVars, stepError)
 		if err != nil {
 			log.Warning(err)
 		}

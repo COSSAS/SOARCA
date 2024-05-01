@@ -1,9 +1,10 @@
 package report
 
 import (
-	"soarca/internal/guid"
 	"soarca/models/cacao"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Status uint8
@@ -19,7 +20,7 @@ const (
 )
 
 type ExecutionEntry struct {
-	ExecutionId    guid.IGuid
+	ExecutionId    uuid.UUID
 	PlaybookId     string
 	Started        time.Time
 	Ended          time.Time
@@ -29,7 +30,7 @@ type ExecutionEntry struct {
 }
 
 type StepResult struct {
-	ExecutionId guid.IGuid
+	ExecutionId uuid.UUID
 	StepId      string
 	Started     time.Time
 	Ended       time.Time
@@ -37,5 +38,5 @@ type StepResult struct {
 	// the execution ID for the invoked playbook
 	Variables cacao.Variables
 	Status    Status
-	Errors    []error
+	Error     error
 }
