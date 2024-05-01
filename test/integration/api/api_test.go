@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"soarca/internal/controller"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -19,6 +20,8 @@ func initializeSoarca(t *testing.T) {
 func TestCorsHeader(t *testing.T) {
 	go initializeSoarca(t)
 
+	time.Sleep(400 * time.Millisecond)
+
 	client := http.Client{}
 	buffer := bytes.NewBufferString("")
 	request, err := http.NewRequest("POST", "http://localhost:8080", buffer)
@@ -27,7 +30,11 @@ func TestCorsHeader(t *testing.T) {
 	}
 
 	request.Header.Add("Origin", "http://example.com")
-	response, _ := client.Do(request)
+	response, err := client.Do(request)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
 	origins := response.Header.Get("Access-Control-Allow-Origin")
 	assert.Equal(t, "*", origins)
 
