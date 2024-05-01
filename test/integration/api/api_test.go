@@ -46,6 +46,7 @@ func TestCorsHeaderFromNonAllowedOrigin(t *testing.T) {
 
 	// Set example.com as allowed origin
 	t.Setenv("SOARCA_ALLOWED_ORIGINS", "http://example.com")
+	t.Setenv("PORT", "8081")
 
 	// Start SOARCA in separate threat
 	go initializeSoarca(t)
@@ -55,7 +56,7 @@ func TestCorsHeaderFromNonAllowedOrigin(t *testing.T) {
 
 	client := http.Client{}
 	buffer := bytes.NewBufferString("")
-	request, err := http.NewRequest("POST", "http://localhost:8080", buffer)
+	request, err := http.NewRequest("POST", "http://localhost:8081", buffer)
 	if err != nil {
 		t.Fail()
 	}
@@ -73,7 +74,7 @@ func TestCorsHeaderFromNonAllowedOrigin(t *testing.T) {
 
 	client2 := http.Client{}
 	buffer2 := bytes.NewBufferString("")
-	request2, err := http.NewRequest("POST", "http://localhost:8080", buffer2)
+	request2, err := http.NewRequest("POST", "http://localhost:8081", buffer2)
 	if err != nil {
 		t.Fail()
 	}
