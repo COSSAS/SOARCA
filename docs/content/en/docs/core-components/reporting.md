@@ -123,3 +123,14 @@ ReporterApi -down-> IExecutionInformer
 ```
 
 The *Cache* thus reports the execution information downstream both in the database, and in memory. Upon execution information requests from the `/reporter` API, the cache can provide information fetching either from memory, or querying the database.
+
+### Notes
+- Add *results* functions in database (alongside playbook), implementing intermediate class in database that handles results information
+- Extend projections class with results information
+- Later instantiate "resultsRepo" in controller logic
+
+Extension of reporting interface
+- ReportStepStart/End
+- ReportWorkflowStart/End
+- Reporter infers the time values
+- Add time interface with "Now()" (to mock)
