@@ -11,12 +11,20 @@ type Mock_Downstream_Reporter struct {
 	mock.Mock
 }
 
-func (reporter *Mock_Downstream_Reporter) ReportWorkflow(executionId uuid.UUID, playbook cacao.Playbook) error {
+func (reporter *Mock_Downstream_Reporter) ReportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook) error {
+	args := reporter.Called(executionId, playbook)
+	return args.Error(0)
+}
+func (reporter *Mock_Downstream_Reporter) ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook) error {
 	args := reporter.Called(executionId, playbook)
 	return args.Error(0)
 }
 
-func (reporter *Mock_Downstream_Reporter) ReportStep(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, err error) error {
+func (reporter *Mock_Downstream_Reporter) ReportStepStart(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, err error) error {
+	args := reporter.Called(executionId, step, stepResults, err)
+	return args.Error(0)
+}
+func (reporter *Mock_Downstream_Reporter) ReportStepEnd(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, err error) error {
 	args := reporter.Called(executionId, step, stepResults, err)
 	return args.Error(0)
 }

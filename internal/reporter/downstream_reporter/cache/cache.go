@@ -31,12 +31,20 @@ func (cacheReporter *Cache) GetExecutionReport(executionId uuid.UUID, playbook c
 	return nil
 }
 
-func (cacheReporter *Cache) ReportWorkflow(executionId uuid.UUID, playbook cacao.Playbook) error {
+func (cacheReporter *Cache) ReportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook) error {
+	// TODO
+	return nil
+}
+func (cacheReporter *Cache) ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook) error {
 	// TODO
 	return nil
 }
 
-func (cacheReporter *Cache) ReportStep(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, err error) error {
+func (cacheReporter *Cache) ReportStepStart(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, err error) error {
+	// TODO
+	return nil
+}
+func (cacheReporter *Cache) ReportStepEnd(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, err error) error {
 	// TODO
 	return nil
 }

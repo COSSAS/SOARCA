@@ -25,11 +25,13 @@ func init() {
 // Reporter interfaces
 type IWorkflowReporter interface {
 	// -> Give info to downstream reporters
-	ReportWorkflow(executionId uuid.UUID, playbook cacao.Playbook)
+	ReportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook)
+	ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook)
 }
 type IStepReporter interface {
 	// -> Give info to downstream reporters
-	ReportStep(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, err error)
+	ReportStepStart(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, err error)
+	ReportStepEnd(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, err error)
 }
 
 const MaxReporters int = 10
@@ -58,20 +60,39 @@ func (reporter *Reporter) RegisterReporters(reporters []downstreamReporter.IDown
 	return nil
 }
 
-func (reporter *Reporter) ReportWorkflow(executionId uuid.UUID, playbook cacao.Playbook) {
+func (reporter *Reporter) ReportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook) {
 	log.Trace("reporting workflow")
 	for _, rep := range reporter.reporters {
-		err := rep.ReportWorkflow(executionId, playbook)
+		err := rep.ReportWorkflowStart(executionId, playbook)
+		if err != nil {
+			log.Warning(err)
+		}
+	}
+}
+func (reporter *Reporter) ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook) {
+	log.Trace("reporting workflow")
+	for _, rep := range reporter.reporters {
+		err := rep.ReportWorkflowEnd(executionId, playbook)
 		if err != nil {
 			log.Warning(err)
 		}
 	}
 }
 
-func (reporter *Reporter) ReportStep(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, err error) {
+func (reporter *Reporter) ReportStepStart(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, err error) {
 	log.Trace("reporting step data")
 	for _, rep := range reporter.reporters {
-		err := rep.ReportStep(executionId, step, returnVars, err)
+		err := rep.ReportStepStart(executionId, step, returnVars, err)
+		if err != nil {
+			log.Warning(err)
+		}
+	}
+}
+
+func (reporter *Reporter) ReportStepEnd(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, err error) {
+	log.Trace("reporting step data")
+	for _, rep := range reporter.reporters {
+		err := rep.ReportStepEnd(executionId, step, returnVars, err)
 		if err != nil {
 			log.Warning(err)
 		}

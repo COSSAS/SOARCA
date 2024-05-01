@@ -35,7 +35,7 @@ func TestRegisterTooManyReporters(t *testing.T) {
 	assert.Equal(t, expected_err, err)
 }
 
-func TestReportWorkflow(t *testing.T) {
+func TestReportWorkflowStart(t *testing.T) {
 	mock_ds_reporter := mock_reporter.Mock_Downstream_Reporter{}
 	reporter := reporter.New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
 
@@ -98,11 +98,11 @@ func TestReportWorkflow(t *testing.T) {
 
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
-	mock_ds_reporter.On("ReportWorkflow", executionId, playbook).Return(nil)
-	reporter.ReportWorkflow(executionId, playbook)
+	mock_ds_reporter.On("ReportWorkflowStart", executionId, playbook).Return(nil)
+	reporter.ReportWorkflowStart(executionId, playbook)
 }
 
-func TestReportStep(t *testing.T) {
+func TestReportStepEnd(t *testing.T) {
 	mock_ds_reporter := mock_reporter.Mock_Downstream_Reporter{}
 	reporter := reporter.New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
 
@@ -131,6 +131,6 @@ func TestReportStep(t *testing.T) {
 
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
-	mock_ds_reporter.On("ReportStep", executionId, step1, cacao.NewVariables(expectedVariables), nil).Return(nil)
-	reporter.ReportStep(executionId, step1, cacao.NewVariables(expectedVariables), nil)
+	mock_ds_reporter.On("ReportStepEnd", executionId, step1, cacao.NewVariables(expectedVariables), nil).Return(nil)
+	reporter.ReportStepEnd(executionId, step1, cacao.NewVariables(expectedVariables), nil)
 }

@@ -7,6 +7,9 @@ import (
 )
 
 type IDownStreamReporter interface {
-	ReportWorkflow(executionId uuid.UUID, playbook cacao.Playbook) error
-	ReportStep(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, err error) error
+	ReportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook) error
+	ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook) error
+
+	ReportStepStart(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, err error) error
+	ReportStepEnd(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, err error) error
 }
