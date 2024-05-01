@@ -18,8 +18,10 @@ func initializeSoarca(t *testing.T) {
 }
 
 func TestCorsHeader(t *testing.T) {
+	// Start SOARCA in separate threat
 	go initializeSoarca(t)
 
+	// Wait for the server to be online
 	time.Sleep(400 * time.Millisecond)
 
 	client := http.Client{}
