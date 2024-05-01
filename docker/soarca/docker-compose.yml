@@ -43,6 +43,8 @@ services:
     container_name: soarca_server
     environment:
       PORT: 8080
+      SOARCA_ALLOWED_ORIGINS: "*"
+      GIN_MODE: "release"
       MONGODB_URI: "mongodb://mongodb_container:27017"
       DATABASE_NAME: "soarca"
       DB_USERNAME: "root"
@@ -58,7 +60,6 @@ services:
       MQTT_PORT: 1883
     networks:
       - db-net
-      - mqtt-net
     ports:
       - 127.0.0.1:8080:8080
     depends_on:
