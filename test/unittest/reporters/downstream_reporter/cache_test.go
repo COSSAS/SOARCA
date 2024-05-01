@@ -503,7 +503,7 @@ func TestReportStepEnd(t *testing.T) {
 	mock_time.AssertExpectations(t)
 }
 
-func TestInvalidStepReport(t *testing.T) {
+func TestInvalidStepReportAfterExecutionEnd(t *testing.T) {
 	mock_time := new(mock_time.MockTime)
 	cacheReporter := cache.New(mock_time)
 
@@ -578,7 +578,87 @@ func TestInvalidStepReport(t *testing.T) {
 		t.Fail()
 	}
 
-	expectedErr := errors.New("trying to report on the execution of a step for a completed or failed execution")
+	expectedErr := errors.New("trying to report on the execution of a step for an already reported completed or failed execution")
+	assert.Equal(t, err, expectedErr)
+	mock_time.AssertExpectations(t)
+}
+
+func TestInvalidStepReportAfterStepEnd(t *testing.T) {
+	mock_time := new(mock_time.MockTime)
+	cacheReporter := cache.New(mock_time)
+
+	expectedCommand := cacao.Command{
+		Type:    "ssh",
+		Command: "ssh ls -la",
+	}
+
+	expectedVariables := cacao.Variable{
+		Type:  "string",
+		Name:  "var1",
+		Value: "testing",
+	}
+
+	step1 := cacao.Step{
+		Type:          "action",
+		ID:            "action--test",
+		Name:          "ssh-tests",
+		StepVariables: cacao.NewVariables(expectedVariables),
+		Commands:      []cacao.Command{expectedCommand},
+		Cases:         map[string]string{},
+		OnCompletion:  "end--test",
+		Agent:         "agent1",
+		Targets:       []string{"target1"},
+	}
+
+	end := cacao.Step{
+		Type: "end",
+		ID:   "end--test",
+		Name: "end step",
+	}
+
+	expectedAuth := cacao.AuthenticationInformation{
+		Name: "user",
+		ID:   "auth1",
+	}
+
+	expectedTarget := cacao.AgentTarget{
+		Name:               "sometarget",
+		AuthInfoIdentifier: "auth1",
+		ID:                 "target1",
+	}
+
+	expectedAgent := cacao.AgentTarget{
+		Type: "soarca",
+		Name: "soarca-ssh",
+	}
+
+	playbook := cacao.Playbook{
+		ID:                            "test",
+		Type:                          "test",
+		Name:                          "ssh-test",
+		WorkflowStart:                 step1.ID,
+		AuthenticationInfoDefinitions: map[string]cacao.AuthenticationInformation{"id": expectedAuth},
+		AgentDefinitions:              map[string]cacao.AgentTarget{"agent1": expectedAgent},
+		TargetDefinitions:             map[string]cacao.AgentTarget{"target1": expectedTarget},
+
+		Workflow: map[string]cacao.Step{step1.ID: step1, end.ID: end},
+	}
+	executionId0, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
+	layout := "2006-01-02T15:04:05.000Z"
+	str := "2014-11-12T11:45:26.371Z"
+	timeNow, _ := time.Parse(layout, str)
+	mock_time.On("Now").Return(timeNow)
+
+	cacheReporter.ReportWorkflowStart(executionId0, playbook)
+	cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables))
+	cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil)
+	err := cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil)
+
+	if err == nil {
+		t.Fail()
+	}
+
+	expectedErr := errors.New("trying to report on the execution of a step that was already reported completed or failed")
 	assert.Equal(t, err, expectedErr)
 	mock_time.AssertExpectations(t)
 }

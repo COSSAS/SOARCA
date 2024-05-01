@@ -132,7 +132,7 @@ func (cacheReporter *Cache) ReportStepStart(executionId uuid.UUID, step cacao.St
 	}
 
 	if executionEntry.Status != report.Ongoing {
-		return errors.New("trying to report on the execution of a step for a completed or failed execution")
+		return errors.New("trying to report on the execution of a step for an already reported completed or failed execution")
 	}
 
 	fmt.Println(executionEntry)
@@ -162,15 +162,16 @@ func (cacheReporter *Cache) ReportStepEnd(executionId uuid.UUID, step cacao.Step
 	}
 
 	if executionEntry.Status != report.Ongoing {
-		return errors.New("trying to report on the execution of a step for a completed or failed execution")
+		return errors.New("trying to report on the execution of a step for an already reported completed or failed execution")
 	}
 
 	executionStepResult, err := cacheReporter.getExecutionStep(executionId, step.ID)
 	if err != nil {
 		return err
 	}
+
 	if executionStepResult.Status != report.Ongoing {
-		return errors.New("trying to report end execution of a step that already completed")
+		return errors.New("trying to report on the execution of a step that was already reported completed or failed")
 	}
 
 	if stepError != nil {
