@@ -8,8 +8,8 @@ import (
 
 type IDownStreamReporter interface {
 	ReportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook) error
-	ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook) error
+	ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook, err error) error
 
-	ReportStepStart(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, err error) error
+	ReportStepStart(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables) error
 	ReportStepEnd(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, err error) error
 }

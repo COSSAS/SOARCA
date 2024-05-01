@@ -15,13 +15,13 @@ func (reporter *Mock_Downstream_Reporter) ReportWorkflowStart(executionId uuid.U
 	args := reporter.Called(executionId, playbook)
 	return args.Error(0)
 }
-func (reporter *Mock_Downstream_Reporter) ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook) error {
-	args := reporter.Called(executionId, playbook)
+func (reporter *Mock_Downstream_Reporter) ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook, err error) error {
+	args := reporter.Called(executionId, playbook, err)
 	return args.Error(0)
 }
 
-func (reporter *Mock_Downstream_Reporter) ReportStepStart(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, err error) error {
-	args := reporter.Called(executionId, step, stepResults, err)
+func (reporter *Mock_Downstream_Reporter) ReportStepStart(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables) error {
+	args := reporter.Called(executionId, step, stepResults)
 	return args.Error(0)
 }
 func (reporter *Mock_Downstream_Reporter) ReportStepEnd(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, err error) error {

@@ -35,7 +35,7 @@ func (playbookAction *PlaybookAction) Execute(metadata execution.Metadata,
 	variables cacao.Variables) (cacao.Variables, error) {
 	log.Trace(metadata.ExecutionId)
 
-	playbookAction.reporter.ReportStepStart(metadata.ExecutionId, step, variables, nil)
+	playbookAction.reporter.ReportStepStart(metadata.ExecutionId, step, variables)
 
 	if step.Type != cacao.StepTypePlaybookAction {
 		err := errors.New(fmt.Sprint("step type is not of type ", cacao.StepTypePlaybookAction))

@@ -45,7 +45,7 @@ type Executor struct {
 
 func (executor *Executor) Execute(meta execution.Metadata, metadata PlaybookStepMetadata) (cacao.Variables, error) {
 
-	executor.reporter.ReportStepStart(meta.ExecutionId, metadata.Step, cacao.NewVariables(), nil)
+	executor.reporter.ReportStepStart(meta.ExecutionId, metadata.Step, cacao.NewVariables())
 
 	if metadata.Step.Type != cacao.StepTypeAction {
 		err := errors.New("the provided step type is not compatible with this executor")

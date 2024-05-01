@@ -167,8 +167,8 @@ func TestReportWorkflowEnd(t *testing.T) {
 
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
-	mock_ds_reporter.On("ReportWorkflowEnd", executionId, playbook).Return(nil)
-	reporter.ReportWorkflowEnd(executionId, playbook)
+	mock_ds_reporter.On("ReportWorkflowEnd", executionId, playbook, nil).Return(nil)
+	reporter.ReportWorkflowEnd(executionId, playbook, nil)
 
 	mock_ds_reporter.AssertExpectations(t)
 }
@@ -202,8 +202,8 @@ func TestReportStepStart(t *testing.T) {
 
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
-	mock_ds_reporter.On("ReportStepStart", executionId, step1, cacao.NewVariables(expectedVariables), nil).Return(nil)
-	reporter.ReportStepStart(executionId, step1, cacao.NewVariables(expectedVariables), nil)
+	mock_ds_reporter.On("ReportStepStart", executionId, step1, cacao.NewVariables(expectedVariables)).Return(nil)
+	reporter.ReportStepStart(executionId, step1, cacao.NewVariables(expectedVariables))
 
 	mock_ds_reporter.AssertExpectations(t)
 }

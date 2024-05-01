@@ -26,11 +26,11 @@ func init() {
 type IWorkflowReporter interface {
 	// -> Give info to downstream reporters
 	ReportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook)
-	ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook)
+	ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook, err error)
 }
 type IStepReporter interface {
 	// -> Give info to downstream reporters
-	ReportStepStart(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, err error)
+	ReportStepStart(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables)
 	ReportStepEnd(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, err error)
 }
 
@@ -69,20 +69,20 @@ func (reporter *Reporter) ReportWorkflowStart(executionId uuid.UUID, playbook ca
 		}
 	}
 }
-func (reporter *Reporter) ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook) {
+func (reporter *Reporter) ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook, err error) {
 	log.Trace("reporting workflow")
 	for _, rep := range reporter.reporters {
-		err := rep.ReportWorkflowEnd(executionId, playbook)
+		err := rep.ReportWorkflowEnd(executionId, playbook, err)
 		if err != nil {
 			log.Warning(err)
 		}
 	}
 }
 
-func (reporter *Reporter) ReportStepStart(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, err error) {
+func (reporter *Reporter) ReportStepStart(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables) {
 	log.Trace("reporting step data")
 	for _, rep := range reporter.reporters {
-		err := rep.ReportStepStart(executionId, step, returnVars, err)
+		err := rep.ReportStepStart(executionId, step, returnVars)
 		if err != nil {
 			log.Warning(err)
 		}

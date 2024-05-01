@@ -14,12 +14,12 @@ type Mock_Reporter struct {
 func (reporter *Mock_Reporter) ReportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook) {
 	_ = reporter.Called(executionId, playbook)
 }
-func (reporter *Mock_Reporter) ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook) {
-	_ = reporter.Called(executionId, playbook)
+func (reporter *Mock_Reporter) ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook, err error) {
+	_ = reporter.Called(executionId, playbook, err)
 }
 
-func (reporter *Mock_Reporter) ReportStepStart(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, err error) {
-	_ = reporter.Called(executionId, step, returnVars, err)
+func (reporter *Mock_Reporter) ReportStepStart(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables) {
+	_ = reporter.Called(executionId, step, returnVars)
 }
 func (reporter *Mock_Reporter) ReportStepEnd(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, err error) {
 	_ = reporter.Called(executionId, step, returnVars, err)

@@ -75,7 +75,7 @@ func (decomposer *Decomposer) Execute(playbook cacao.Playbook) (*ExecutionDetail
 
 	decomposer.details.Variables = outputVariables
 	// Reporting workflow end
-	decomposer.reporter.ReportWorkflowEnd(decomposer.details.ExecutionId, playbook)
+	decomposer.reporter.ReportWorkflowEnd(decomposer.details.ExecutionId, playbook, err)
 	return &decomposer.details, err
 }
 
