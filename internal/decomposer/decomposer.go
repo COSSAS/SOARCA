@@ -40,12 +40,16 @@ func init() {
 
 func New(actionExecutor action.IExecuter,
 	playbookActionExecutor executors.IPlaybookExecuter,
-	guid guid.IGuid, reporter reporter.IWorkflowReporter) *Decomposer {
+	condition condition.IExecuter,
+	guid guid.IGuid,
+	reporter reporter.IWorkflowReporter) *Decomposer {
 
 	return &Decomposer{actionExecutor: actionExecutor,
 		playbookActionExecutor: playbookActionExecutor,
+		conditionExecutor:      condition,
 		guid:                   guid,
-		reporter:               reporter}
+		reporter:               reporter,
+	}
 }
 
 type Decomposer struct {
@@ -160,7 +164,7 @@ func (decomposer *Decomposer) ExecuteStep(step cacao.Step, scopeVariables cacao.
 	case cacao.StepTypePlaybookAction:
 		return decomposer.playbookActionExecutor.Execute(metadata, step, variables)
 	case cacao.StepTypeIfCondition:
-		stepId, branch, err := decomposer.conditionExecutor.Execute(metadata, step)
+		stepId, branch, err := decomposer.conditionExecutor.Execute(metadata, step, variables)
 		if err != nil {
 			return cacao.NewVariables(), err
 		}

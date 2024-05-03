@@ -25,14 +25,14 @@ func New(capabilities map[string]capability.ICapability) *Executor {
 
 type IExecuter interface {
 	Execute(metadata execution.Metadata,
-		step cacao.Step) (string, bool, error)
+		step cacao.Step, variables cacao.Variables) (string, bool, error)
 }
 
 type Executor struct {
 	capabilities map[string]capability.ICapability
 }
 
-func (executor *Executor) Execute(meta execution.Metadata, step cacao.Step) (string, bool, error) {
+func (executor *Executor) Execute(meta execution.Metadata, step cacao.Step, variables cacao.Variables) (string, bool, error) {
 
 	if step.Type != cacao.StepTypeIfCondition {
 		err := errors.New("the provided step type is not compatible with this executor")
