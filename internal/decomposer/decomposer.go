@@ -7,6 +7,7 @@ import (
 
 	"soarca/internal/executors"
 	"soarca/internal/executors/action"
+	"soarca/internal/executors/condition"
 	"soarca/internal/guid"
 	"soarca/internal/reporter"
 	"soarca/logger"
@@ -52,6 +53,7 @@ type Decomposer struct {
 	details                ExecutionDetails
 	actionExecutor         action.IExecuter
 	playbookActionExecutor executors.IPlaybookExecuter
+	conditionExecutor      condition.IExecuter
 	guid                   guid.IGuid
 	reporter               reporter.IWorkflowReporter
 }
@@ -157,6 +159,15 @@ func (decomposer *Decomposer) ExecuteStep(step cacao.Step, scopeVariables cacao.
 		return decomposer.actionExecutor.Execute(metadata, actionMetadata)
 	case cacao.StepTypePlaybookAction:
 		return decomposer.playbookActionExecutor.Execute(metadata, step, variables)
+	case cacao.StepTypeIfCondition:
+		stepId, branch, err := decomposer.conditionExecutor.Execute(metadata, step)
+		if err != nil {
+			return cacao.NewVariables(), err
+		}
+		if branch {
+			return decomposer.ExecuteBranch(stepId, variables)
+		}
+		return variables, nil
 	default:
 		// NOTE: This currently silently handles unknown step types. Should we return an error instead?
 		return cacao.NewVariables(), nil
