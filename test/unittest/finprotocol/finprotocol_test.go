@@ -76,7 +76,7 @@ func TestTimeoutAndCallbackHandlerCalled(t *testing.T) {
 	fmt.Println("done waiting")
 
 	assert.Equal(t, err, nil)
-	assert.Equal(t, result, map[string]cacao.Variable{"test": {Name: "test"}})
+	assert.Equal(t, result, cacao.NewVariables(cacao.Variable{Name: "test"}))
 	mock_client.AssertExpectations(t)
 	mock_token.AssertExpectations(t)
 	mock_token_ack.AssertExpectations(t)
@@ -106,7 +106,7 @@ func helper(prot *protocol.FinProtocol) {
 
 	result := fin.Result{}
 	result.Type = fin.MessageTypeResult
-	result.ResultStructure.Variables = map[string]cacao.Variable{"test": {Name: "test"}}
+	result.ResultStructure.Variables = cacao.NewVariables(cacao.Variable{Name: "test"})
 
 	payload, err := json.Marshal(result)
 	if err != nil {
