@@ -278,7 +278,7 @@ func compareHash(parts []string) (bool, error) {
 	case 128:
 		log.Trace("SHA512 type hash")
 	default:
-		log.Warning("unknown hash length of: " + string(len(lhs)))
+		log.Warning("unknown hash length of: " + fmt.Sprint(len(lhs)))
 	}
 
 	return stringCompare(parts)
