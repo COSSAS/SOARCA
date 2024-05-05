@@ -3,7 +3,6 @@ package condition
 import (
 	"errors"
 	"reflect"
-	"soarca/internal/capability"
 	"soarca/logger"
 	"soarca/models/cacao"
 	"soarca/models/execution"
@@ -17,9 +16,8 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
-func New(capabilities map[string]capability.ICapability) *Executor {
+func New() *Executor {
 	var instance = Executor{}
-	instance.capabilities = capabilities
 	return &instance
 }
 
@@ -29,7 +27,6 @@ type IExecuter interface {
 }
 
 type Executor struct {
-	capabilities map[string]capability.ICapability
 }
 
 func (executor *Executor) Execute(meta execution.Metadata, step cacao.Step, variables cacao.Variables) (string, bool, error) {
