@@ -3,9 +3,15 @@ package stix
 import (
 	"errors"
 	"fmt"
+	"net"
+	"net/url"
+	"reflect"
+	"soarca/logger"
 	"soarca/models/cacao"
 	"strconv"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 const (
@@ -21,6 +27,17 @@ const (
 	IsSubset       = "ISSUBSET"
 	IsSuperSet     = "ISSUPERSET"
 )
+
+type Empty struct{}
+
+var (
+	component = reflect.TypeOf(Empty{}).PkgPath()
+	log       *logger.Log
+)
+
+func init() {
+	log = logger.Logger(component, logger.Info, "", logger.Json)
+}
 
 func Evaluate(expression string, vars cacao.Variables) (bool, error) {
 
@@ -42,6 +59,8 @@ func Evaluate(expression string, vars cacao.Variables) (bool, error) {
 	parts[0] = vars.Interpolate(parts[0])
 
 	switch usedVariable.Type {
+	case cacao.VariableTypeBool:
+		return boolCompare(parts)
 	case cacao.VariableTypeString:
 		return stringCompare(parts)
 	case cacao.VariableTypeInt:
@@ -50,7 +69,27 @@ func Evaluate(expression string, vars cacao.Variables) (bool, error) {
 		return numberCompare(parts)
 	case cacao.VariableTypeFloat:
 		return floatCompare(parts)
-
+	case cacao.VariableTypeIpv4Address:
+		return compareIp(parts)
+	case cacao.VariableTypeIpv6Address:
+		return compareIp(parts)
+	case cacao.VariableTypeMacAddress:
+		return compareMac(parts)
+	case cacao.VariableTypeHash:
+		// Just compare the hash strings
+		return compareHash(parts)
+	case cacao.VariableTypeMd5Has:
+		// Just compare the hash strings
+		return compareHash(parts)
+	case cacao.VariableTypeSha256:
+		// Just compare the hash strings
+		return compareHash(parts)
+	case cacao.VariableTypeHexString:
+		return stringCompare(parts)
+	case cacao.VariableTypeUri:
+		return compareUri(parts)
+	case cacao.VariableTypeUuid:
+		return compareUuid(parts)
 	default:
 		err := errors.New("variable type is not a cacao variable type")
 		return false, err
@@ -67,12 +106,6 @@ func findVariable(variable string, vars cacao.Variables) (cacao.Variable, error)
 
 	}
 	return cacao.Variable{}, nil
-}
-
-func checkIpInRange(ipString string, ipRangeString string) {
-	// ip, ipRange, err := net.ParseCIDR(ipString)
-	// ip2, ipRange2, err2 := net.ParseCIDR(ipRangeString)
-	// ipRange.Mask.Size()
 }
 
 func stringCompare(parts []string) (bool, error) {
@@ -97,7 +130,7 @@ func stringCompare(parts []string) (bool, error) {
 	case In:
 		return strings.Contains(lhs, rhs), nil
 	default:
-		err := errors.New("operator not valid")
+		err := errors.New("operator: " + comparator + " not valid or implemented")
 		return false, err
 	}
 }
@@ -128,19 +161,19 @@ func numberCompare(parts []string) (bool, error) {
 	case GreaterOrEqual:
 		return lhs >= rhs, nil
 	default:
-		err := errors.New("operator not valid")
+		err := errors.New("operator: " + comparator + " not valid or implemented")
 		return false, err
 	}
 }
 
 func floatCompare(parts []string) (bool, error) {
-	lhs, err := strconv.ParseFloat(parts[0], 0)
+	lhs, err := strconv.ParseFloat(parts[0], 64)
 
 	if err != nil {
 		return false, err
 	}
 	comparator := parts[1]
-	rhs, err := strconv.ParseFloat(parts[2], 0)
+	rhs, err := strconv.ParseFloat(parts[2], 64)
 	if err != nil {
 		return false, err
 	}
@@ -159,7 +192,138 @@ func floatCompare(parts []string) (bool, error) {
 	case GreaterOrEqual:
 		return lhs >= rhs, nil
 	default:
-		err := errors.New("operator not valid")
+		err := errors.New("operator: " + comparator + " not valid or implemented")
+		return false, err
+	}
+}
+
+func boolCompare(parts []string) (bool, error) {
+	lhs, err := strconv.ParseBool(parts[0])
+	if err != nil {
+		return false, err
+	}
+	comparator := parts[1]
+	rhs, err := strconv.ParseBool(parts[2])
+	if err != nil {
+		return false, err
+	}
+	switch comparator {
+	case Equal:
+		return lhs == rhs, nil
+	case NotEqual:
+		return lhs != rhs, nil
+	default:
+		err := errors.New("operator: " + comparator + " not valid or implemented")
+		return false, err
+	}
+}
+
+func compareIp(parts []string) (bool, error) {
+	lhsIp := net.ParseIP(parts[0])
+
+	comparator := parts[1]
+	rhsIp := net.ParseIP(parts[2])
+	switch comparator {
+	case Equal:
+		return lhsIp.Equal(rhsIp), nil
+	case NotEqual:
+		return !lhsIp.Equal(rhsIp), nil
+	case In:
+		_, rhsNet, err := net.ParseCIDR(parts[2])
+		if err != nil {
+			return false, err
+		}
+		return rhsNet.Contains(lhsIp), err
+	default:
+		err := errors.New("operator: " + comparator + " not valid or implemented")
+		return false, err
+	}
+}
+
+// Validate if they are hardware MAC addresses and do a string compare
+func compareMac(parts []string) (bool, error) {
+	lhs, err := net.ParseMAC(parts[0])
+	if err != nil {
+		return false, err
+	}
+
+	rhs, err := net.ParseMAC(parts[2])
+	if err != nil {
+		return false, err
+	}
+
+	newParts := []string{lhs.String(), parts[1], rhs.String()}
+
+	return stringCompare(newParts)
+}
+
+func compareHash(parts []string) (bool, error) {
+	lhs := parts[0]
+	rhs := parts[2]
+	if len(lhs) != len(rhs) {
+		log.Warning("hash lengths do not match")
+	}
+
+	switch len(lhs) {
+	case 32:
+		log.Trace("MD5 type hash")
+	case 40:
+		log.Trace("SHA1 type hash")
+	case 56:
+		log.Trace("SHA224 type hash")
+	case 64:
+		log.Trace("SHA256 type hash")
+	case 96:
+		log.Trace("SHA384 type hash")
+	case 128:
+		log.Trace("SHA512 type hash")
+	default:
+		log.Warning("unknown hash length of: " + string(len(lhs)))
+	}
+
+	return stringCompare(parts)
+}
+
+func compareUri(parts []string) (bool, error) {
+	lhs, err := url.Parse(parts[0])
+	if err != nil {
+		return false, err
+	}
+	comparator := parts[1]
+	rhs, err := url.Parse(parts[2])
+	if err != nil {
+		return false, err
+	}
+
+	switch comparator {
+	case Equal:
+		return lhs.String() == rhs.String(), nil
+	case NotEqual:
+		return lhs.String() != rhs.String(), nil
+	default:
+		err := errors.New("operator: " + comparator + " not valid or implemented")
+		return false, err
+	}
+}
+
+func compareUuid(parts []string) (bool, error) {
+	lhs, err := uuid.Parse(parts[0])
+	if err != nil {
+		return false, err
+	}
+	comparator := parts[1]
+	rhs, err := uuid.Parse(parts[2])
+	if err != nil {
+		return false, err
+	}
+
+	switch comparator {
+	case Equal:
+		return lhs == rhs, nil
+	case NotEqual:
+		return lhs != rhs, nil
+	default:
+		err := errors.New("operator: " + comparator + " not valid or implemented")
 		return false, err
 	}
 }
