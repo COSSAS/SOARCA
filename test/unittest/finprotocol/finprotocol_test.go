@@ -47,7 +47,7 @@ func TestTimeoutAndCallbackTimerElaspsed(t *testing.T) {
 	result, err := prot.AwaitResultOrTimeout(expectedCommand, &mock_client)
 
 	assert.Equal(t, err, errors.New("no message received from fin while it was expected"))
-	assert.Equal(t, result, map[string]cacao.Variable{})
+	assert.Equal(t, result, cacao.NewVariables())
 }
 
 func TestTimeoutAndCallbackHandlerCalled(t *testing.T) {
