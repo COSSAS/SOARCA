@@ -1,6 +1,7 @@
 package ssh_test
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -264,6 +265,52 @@ func TestHttpPostWithContentConnection(t *testing.T) {
 
 	testJsonObj := testJson{Id: "28818819", User: "test", Description: "very interesting description"}
 	requestBody, err := json.Marshal(testJsonObj)
+	body := "some payload body"
+	if err != nil {
+		t.Error("error Marshall JSON: ", err)
+	}
+	if len(requestBody) == 0 {
+		t.Error("empty response")
+	}
+
+	target := cacao.AgentTarget{
+		Address: map[cacao.NetAddressType][]string{
+			"url": {"https://httpbin.org/anything"},
+		},
+	}
+
+	command := cacao.Command{
+		Type:    "http-api",
+		Command: "POST / HTTP/1.1",
+		Headers: map[string][]string{"accept": {"application/json"}},
+		Content: body,
+	}
+	httpOptions := http.HttpOptions{
+		Command: &command,
+		Target:  &target,
+	}
+	response, err := httpRequest.Request(httpOptions)
+
+	t.Log(string(response))
+	if err != nil {
+		t.Error("http post request with body content has failed: ", err)
+	}
+
+	// specific format used by httpbin.org
+	var httpBinReponse httpBinResponseBody
+	err = json.Unmarshal(response, &httpBinReponse)
+	fmt.Println(httpBinReponse)
+	if err != nil {
+		t.Error("Could not unmashall reponse token for bearer test,", err)
+	}
+	assert.Equal(t, httpBinReponse.Data, body)
+}
+
+func TestHttpPostWithBase64ContentConnection(t *testing.T) {
+	httpRequest := http.HttpRequest{}
+
+	testJsonObj := testJson{Id: "28818819", User: "test", Description: "very interesting description"}
+	requestBody, err := json.Marshal(testJsonObj)
 	base64EncodedBody := b64.StdEncoding.EncodeToString(requestBody)
 	if err != nil {
 		t.Error("error Marshall JSON: ", err)
@@ -302,7 +349,12 @@ func TestHttpPostWithContentConnection(t *testing.T) {
 	if err != nil {
 		t.Error("Could not unmashall reponse token for bearer test,", err)
 	}
-	assert.Equal(t, httpBinReponse.Data, base64EncodedBody)
+	decodedObject, err := base64.StdEncoding.DecodeString(base64EncodedBody)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+	assert.Equal(t, httpBinReponse.Data, string(decodedObject))
 }
 
 func TestHttpPathDnameParser(t *testing.T) {
