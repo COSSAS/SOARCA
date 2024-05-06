@@ -206,20 +206,53 @@ func TestReportWorkflowStartFifo(t *testing.T) {
 		"6ba7b810-9dad-11d1-80b4-00c04fd430ca",
 	}
 
-	_ = cacheReporter.ReportWorkflowStart(executionId0, playbook)
-	_ = cacheReporter.ReportWorkflowStart(executionId1, playbook)
-	_ = cacheReporter.ReportWorkflowStart(executionId2, playbook)
-	_ = cacheReporter.ReportWorkflowStart(executionId3, playbook)
-	_ = cacheReporter.ReportWorkflowStart(executionId4, playbook)
-	_ = cacheReporter.ReportWorkflowStart(executionId5, playbook)
-	_ = cacheReporter.ReportWorkflowStart(executionId6, playbook)
-	_ = cacheReporter.ReportWorkflowStart(executionId7, playbook)
-	_ = cacheReporter.ReportWorkflowStart(executionId8, playbook)
-	_ = cacheReporter.ReportWorkflowStart(executionId9, playbook)
+	err := cacheReporter.ReportWorkflowStart(executionId0, playbook)
+	if err != nil {
+		t.Fail()
+	}
+	err = cacheReporter.ReportWorkflowStart(executionId1, playbook)
+	if err != nil {
+		t.Fail()
+	}
+	err = cacheReporter.ReportWorkflowStart(executionId2, playbook)
+	if err != nil {
+		t.Fail()
+	}
+	err = cacheReporter.ReportWorkflowStart(executionId3, playbook)
+	if err != nil {
+		t.Fail()
+	}
+	err = cacheReporter.ReportWorkflowStart(executionId4, playbook)
+	if err != nil {
+		t.Fail()
+	}
+	err = cacheReporter.ReportWorkflowStart(executionId5, playbook)
+	if err != nil {
+		t.Fail()
+	}
+	err = cacheReporter.ReportWorkflowStart(executionId6, playbook)
+	if err != nil {
+		t.Fail()
+	}
+	err = cacheReporter.ReportWorkflowStart(executionId7, playbook)
+	if err != nil {
+		t.Fail()
+	}
+	err = cacheReporter.ReportWorkflowStart(executionId8, playbook)
+	if err != nil {
+		t.Fail()
+	}
+	err = cacheReporter.ReportWorkflowStart(executionId9, playbook)
+	if err != nil {
+		t.Fail()
+	}
 
 	assert.Equal(t, expectedExecutionsFull, cacheReporter.GetExecutionsIDs())
 
-	_ = cacheReporter.ReportWorkflowStart(executionId10, playbook)
+	err = cacheReporter.ReportWorkflowStart(executionId10, playbook)
+	if err != nil {
+		t.Fail()
+	}
 	assert.Equal(t, expectedExecutionsFifo, cacheReporter.GetExecutionsIDs())
 	mock_time.AssertExpectations(t)
 }
@@ -294,8 +327,14 @@ func TestReportWorkflowEnd(t *testing.T) {
 
 	expectedExecutions := []string{"6ba7b810-9dad-11d1-80b4-00c04fd430c0"}
 
-	_ = cacheReporter.ReportWorkflowStart(executionId0, playbook)
-	_ = cacheReporter.ReportWorkflowEnd(executionId0, playbook, nil)
+	err := cacheReporter.ReportWorkflowStart(executionId0, playbook)
+	if err != nil {
+		t.Fail()
+	}
+	err = cacheReporter.ReportWorkflowEnd(executionId0, playbook, nil)
+	if err != nil {
+		t.Fail()
+	}
 
 	expectedExecutionEntry := report.ExecutionEntry{
 		ExecutionId: executionId0,
@@ -383,8 +422,14 @@ func TestReportStepStart(t *testing.T) {
 	timeNow, _ := time.Parse(layout, str)
 	mock_time.On("Now").Return(timeNow)
 
-	_ = cacheReporter.ReportWorkflowStart(executionId0, playbook)
-	_ = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables))
+	err := cacheReporter.ReportWorkflowStart(executionId0, playbook)
+	if err != nil {
+		t.Fail()
+	}
+	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables))
+	if err != nil {
+		t.Fail()
+	}
 
 	expectedStepResult := report.StepResult{
 		ExecutionId: executionId0,
@@ -475,9 +520,18 @@ func TestReportStepEnd(t *testing.T) {
 	timeNow, _ := time.Parse(layout, str)
 	mock_time.On("Now").Return(timeNow)
 
-	_ = cacheReporter.ReportWorkflowStart(executionId0, playbook)
-	_ = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables))
-	_ = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil)
+	err := cacheReporter.ReportWorkflowStart(executionId0, playbook)
+	if err != nil {
+		t.Fail()
+	}
+	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables))
+	if err != nil {
+		t.Fail()
+	}
+	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil)
+	if err != nil {
+		t.Fail()
+	}
 
 	expectedStepResult := report.StepResult{
 		ExecutionId: executionId0,
@@ -569,11 +623,20 @@ func TestInvalidStepReportAfterExecutionEnd(t *testing.T) {
 	timeNow, _ := time.Parse(layout, str)
 	mock_time.On("Now").Return(timeNow)
 
-	_ = cacheReporter.ReportWorkflowStart(executionId0, playbook)
-	_ = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables))
-	_ = cacheReporter.ReportWorkflowEnd(executionId0, playbook, nil)
-	err := cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil)
+	err := cacheReporter.ReportWorkflowStart(executionId0, playbook)
+	if err != nil {
+		t.Fail()
+	}
+	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables))
+	if err != nil {
+		t.Fail()
+	}
+	err = cacheReporter.ReportWorkflowEnd(executionId0, playbook, nil)
+	if err != nil {
+		t.Fail()
+	}
 
+	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil)
 	if err == nil {
 		t.Fail()
 	}
@@ -649,11 +712,20 @@ func TestInvalidStepReportAfterStepEnd(t *testing.T) {
 	timeNow, _ := time.Parse(layout, str)
 	mock_time.On("Now").Return(timeNow)
 
-	_ = cacheReporter.ReportWorkflowStart(executionId0, playbook)
-	_ = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables))
-	_ = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil)
-	err := cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil)
+	err := cacheReporter.ReportWorkflowStart(executionId0, playbook)
+	if err != nil {
+		t.Fail()
+	}
+	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables))
+	if err != nil {
+		t.Fail()
+	}
+	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil)
+	if err != nil {
+		t.Fail()
+	}
 
+	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil)
 	if err == nil {
 		t.Fail()
 	}
