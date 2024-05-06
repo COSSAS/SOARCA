@@ -27,6 +27,7 @@ services:
       DB_PASSWORD: "rootpassword"
       PLAYBOOK_API_LOG_LEVEL: trace
       DATABASE: "false"
+      HTTP_SKIP_CERT_VALIDATION: false
     ports:
       - 127.0.0.1:8080:8080
     depends_on:

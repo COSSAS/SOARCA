@@ -58,6 +58,7 @@ services:
       ENABLE_FINS: true
       MQTT_BROKER: "mosquitto"
       MQTT_PORT: 1883
+      HTTP_SKIP_CERT_VALIDATION: false
     networks:
       - db-net
     ports:
