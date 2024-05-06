@@ -10,7 +10,7 @@ description: >
 SOARCA utilizes push-based reporting to provide information on the instantiation of a CACAO workflow, and information on the execution of workflow steps.
 
 
-# General Reporting Architecture
+## General Reporting Architecture
 
 For the execution of a playbook, a *Decomposer* and invoked *Executor*s are injected with a *Reporter*. The *Reporter* maintains the reporting logic that reports execution information to a set of specified and available targets.
 
@@ -83,11 +83,11 @@ At this stage, third-party tools integrations may be built in SOARCA via package
 
 In the near future, we will (also) make available a SOARCA Report API that can establish a WebSocket connection to a third-party tool. As such, this will thus allow SOARCA to push execution updates as they come to third-party tools, without external tools having to poll SOARCA.
 
-# Native Reporters
+## Native Reporters
 
 SOARCA implements internally reporting modules to handle database and caches reporting.
 
-## Cache reporter
+### Cache reporter
 
 The *Cache* reporter mediates between [decomposer](https://cossas.github.io/SOARCA/docs/core-components/decomposer/) and [executors](https://cossas.github.io/SOARCA/docs/core-components/executer/), [database](https://cossas.github.io/SOARCA/docs/core-components/database/), and reporting APIs. As *DownStreamReporter*, the *Cache* stores workflow and step reports in-memory for an ongoing execution. As *IExecutionInformant*, the *Cache* provides information to the reporting API. The schema below shows how it is positioned in the SOARCA architecture.
 
@@ -113,7 +113,7 @@ class Cache {
 
 "/reporter" -right-> ReporterApi
 
-Reporter -left-> IDownStreamReporter
+Reporter -> IDownStreamReporter
 Cache -left-> IDatabase
 
 Cache .up.|> IDownStreamReporter
