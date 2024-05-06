@@ -123,6 +123,8 @@ func (httpRequest *HttpOptions) handleResponse(response *http.Response) ([]byte,
 		return []byte{}, err
 	}
 	sc := response.StatusCode
+	log.Trace(fmt.Sprint(sc))
+	log.Trace(string(responseBytes))
 	if sc < 200 || sc > 299 {
 		return []byte{}, errors.New(string(responseBytes))
 	}
