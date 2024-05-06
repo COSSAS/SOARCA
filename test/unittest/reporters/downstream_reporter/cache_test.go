@@ -356,7 +356,7 @@ func TestReportWorkflowEnd(t *testing.T) {
 	mock_time.AssertExpectations(t)
 }
 
-func TestReportStepStart(t *testing.T) {
+func TestReportStepStartAndEnd(t *testing.T) {
 	mock_time := new(mock_time.MockTime)
 	cacheReporter := cache.New(mock_time)
 
@@ -431,7 +431,7 @@ func TestReportStepStart(t *testing.T) {
 		t.Fail()
 	}
 
-	expectedStepResult := report.StepResult{
+	expectedStepStatus := report.StepResult{
 		ExecutionId: executionId0,
 		StepId:      step1.ID,
 		Started:     timeNow,
@@ -442,92 +442,16 @@ func TestReportStepStart(t *testing.T) {
 	}
 
 	exec, err := cacheReporter.GetExecutionReport(executionId0)
-	stepResult := exec.StepResults[step1.ID]
-	assert.Equal(t, stepResult.ExecutionId, expectedStepResult.ExecutionId)
-	assert.Equal(t, stepResult.StepId, expectedStepResult.StepId)
-	assert.Equal(t, stepResult.Started, expectedStepResult.Started)
-	assert.Equal(t, stepResult.Ended, expectedStepResult.Ended)
-	assert.Equal(t, stepResult.Variables, expectedStepResult.Variables)
-	assert.Equal(t, stepResult.Status, expectedStepResult.Status)
-	assert.Equal(t, stepResult.Error, expectedStepResult.Error)
+	stepStatus := exec.StepResults[step1.ID]
+	assert.Equal(t, stepStatus.ExecutionId, expectedStepStatus.ExecutionId)
+	assert.Equal(t, stepStatus.StepId, expectedStepStatus.StepId)
+	assert.Equal(t, stepStatus.Started, expectedStepStatus.Started)
+	assert.Equal(t, stepStatus.Ended, expectedStepStatus.Ended)
+	assert.Equal(t, stepStatus.Variables, expectedStepStatus.Variables)
+	assert.Equal(t, stepStatus.Status, expectedStepStatus.Status)
+	assert.Equal(t, stepStatus.Error, expectedStepStatus.Error)
 	assert.Equal(t, err, nil)
-	mock_time.AssertExpectations(t)
-}
 
-func TestReportStepEnd(t *testing.T) {
-	mock_time := new(mock_time.MockTime)
-	cacheReporter := cache.New(mock_time)
-
-	expectedCommand := cacao.Command{
-		Type:    "ssh",
-		Command: "ssh ls -la",
-	}
-
-	expectedVariables := cacao.Variable{
-		Type:  "string",
-		Name:  "var1",
-		Value: "testing",
-	}
-
-	step1 := cacao.Step{
-		Type:          "action",
-		ID:            "action--test",
-		Name:          "ssh-tests",
-		StepVariables: cacao.NewVariables(expectedVariables),
-		Commands:      []cacao.Command{expectedCommand},
-		Cases:         map[string]string{},
-		OnCompletion:  "end--test",
-		Agent:         "agent1",
-		Targets:       []string{"target1"},
-	}
-
-	end := cacao.Step{
-		Type: "end",
-		ID:   "end--test",
-		Name: "end step",
-	}
-
-	expectedAuth := cacao.AuthenticationInformation{
-		Name: "user",
-		ID:   "auth1",
-	}
-
-	expectedTarget := cacao.AgentTarget{
-		Name:               "sometarget",
-		AuthInfoIdentifier: "auth1",
-		ID:                 "target1",
-	}
-
-	expectedAgent := cacao.AgentTarget{
-		Type: "soarca",
-		Name: "soarca-ssh",
-	}
-
-	playbook := cacao.Playbook{
-		ID:                            "test",
-		Type:                          "test",
-		Name:                          "ssh-test",
-		WorkflowStart:                 step1.ID,
-		AuthenticationInfoDefinitions: map[string]cacao.AuthenticationInformation{"id": expectedAuth},
-		AgentDefinitions:              map[string]cacao.AgentTarget{"agent1": expectedAgent},
-		TargetDefinitions:             map[string]cacao.AgentTarget{"target1": expectedTarget},
-
-		Workflow: map[string]cacao.Step{step1.ID: step1, end.ID: end},
-	}
-	executionId0, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
-	layout := "2006-01-02T15:04:05.000Z"
-	str := "2014-11-12T11:45:26.371Z"
-	timeNow, _ := time.Parse(layout, str)
-	mock_time.On("Now").Return(timeNow)
-
-	err := cacheReporter.ReportWorkflowStart(executionId0, playbook)
-	if err != nil {
-		t.Fail()
-	}
-	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables))
-	if err != nil {
-		t.Fail()
-	}
 	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil)
 	if err != nil {
 		t.Fail()
@@ -543,9 +467,8 @@ func TestReportStepEnd(t *testing.T) {
 		Error:       nil,
 	}
 
-	exec, err := cacheReporter.GetExecutionReport(executionId0)
+	exec, err = cacheReporter.GetExecutionReport(executionId0)
 	stepResult := exec.StepResults[step1.ID]
-
 	assert.Equal(t, stepResult.ExecutionId, expectedStepResult.ExecutionId)
 	assert.Equal(t, stepResult.StepId, expectedStepResult.StepId)
 	assert.Equal(t, stepResult.Started, expectedStepResult.Started)
