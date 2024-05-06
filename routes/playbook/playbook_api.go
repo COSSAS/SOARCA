@@ -22,6 +22,7 @@ func NewPlaybookController(controller database.IController) *playbookController 
 }
 
 // getAllPlaybooks GET handler for obtaining all the playbooks in the database and return this to the gin context in json format
+//
 //	@Summary	gets all the UUIDs for the stored playbooks
 //	@Schemes
 //	@Description	return all stored playbooks default limit:100
@@ -45,6 +46,7 @@ func (plabookCtrl *playbookController) getAllPlaybooks(g *gin.Context) {
 
 // getAllPlaybookMetas GET handler for obtaining all the meta data of all the stored playbooks
 // in the database and return this to the gin context in json format
+//
 //	@Summary	gets all the meta information for the stored playbooks
 //	@Schemes
 //	@Description	get playbook meta information for playbook
@@ -67,6 +69,7 @@ func (plabookCtrl *playbookController) getAllPlaybookMetas(g *gin.Context) {
 }
 
 // submitPlaybook POST handler for creating playbooks.
+//
 //	@Summary	submit playbook via the api
 //	@Schemes
 //	@Description	submit a new playbook api
@@ -98,6 +101,7 @@ func (plabookCtrl *playbookController) submitPlaybook(g *gin.Context) {
 }
 
 // getPlaybookByID GET handler that finds playbook by id
+//
 //	@Summary	get CACAO playbook by its ID
 //	@Schemes
 //	@Description	get playbook by ID
@@ -122,6 +126,7 @@ func (plabookCtrl *playbookController) getPlaybookByID(g *gin.Context) {
 }
 
 // updatePlaybookyID PUT handler that allows updating playbook object by ID.
+//
 //	@Summary	update playbook
 //	@Schemes
 //	@Description	update playbook by Id
@@ -153,6 +158,7 @@ func (plabookCtrl *playbookController) updatePlaybookByID(g *gin.Context) {
 }
 
 // deleteByPlaybookID DELETE handler for deleting playbook by ID.
+//
 //	@Summary	delete playbook by Id
 //	@Schemes
 //	@Description	delete playbook by Id

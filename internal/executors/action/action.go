@@ -45,9 +45,12 @@ type Executor struct {
 
 func (executor *Executor) Execute(meta execution.Metadata, metadata PlaybookStepMetadata) (cacao.Variables, error) {
 
+	executor.reporter.ReportStepStart(meta.ExecutionId, metadata.Step, metadata.Variables)
+
 	if metadata.Step.Type != cacao.StepTypeAction {
 		err := errors.New("the provided step type is not compatible with this executor")
 		log.Error(err)
+		executor.reporter.ReportStepEnd(meta.ExecutionId, metadata.Step, cacao.NewVariables(), err)
 		return cacao.NewVariables(), err
 	}
 	returnVariables := cacao.NewVariables()
@@ -76,14 +79,14 @@ func (executor *Executor) Execute(meta execution.Metadata, metadata PlaybookStep
 
 			if err != nil {
 				log.Error("Error executing Command ", err)
-				executor.reporter.ReportStep(meta.ExecutionId, metadata.Step, returnVariables, err)
+				executor.reporter.ReportStepEnd(meta.ExecutionId, metadata.Step, returnVariables, err)
 				return cacao.NewVariables(), err
 			} else {
 				log.Debug("Command executed")
 			}
 		}
 	}
-	executor.reporter.ReportStep(meta.ExecutionId, metadata.Step, returnVariables, nil)
+	executor.reporter.ReportStepEnd(meta.ExecutionId, metadata.Step, returnVariables, nil)
 	return returnVariables, nil
 }
 

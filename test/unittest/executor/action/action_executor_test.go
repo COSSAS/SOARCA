@@ -74,8 +74,9 @@ func TestExecuteStep(t *testing.T) {
 		Agent:     agent,
 		Variables: cacao.NewVariables(expectedVariables),
 	}
+	mock_reporter.On("ReportStepStart", executionId, step, cacao.NewVariables(expectedVariables)).Return()
 
-	mock_reporter.On("ReportStep", executionId, step, cacao.NewVariables(expectedVariables), nil).Return()
+	mock_reporter.On("ReportStepEnd", executionId, step, cacao.NewVariables(expectedVariables), nil).Return()
 	mock_ssh.On("Execute",
 		metadata,
 		expectedCommand,

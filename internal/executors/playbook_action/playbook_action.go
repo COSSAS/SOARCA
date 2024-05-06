@@ -35,9 +35,12 @@ func (playbookAction *PlaybookAction) Execute(metadata execution.Metadata,
 	variables cacao.Variables) (cacao.Variables, error) {
 	log.Trace(metadata.ExecutionId)
 
+	playbookAction.reporter.ReportStepStart(metadata.ExecutionId, step, variables)
+
 	if step.Type != cacao.StepTypePlaybookAction {
 		err := errors.New(fmt.Sprint("step type is not of type ", cacao.StepTypePlaybookAction))
 		log.Error(err)
+		playbookAction.reporter.ReportStepEnd(metadata.ExecutionId, step, cacao.NewVariables(), nil)
 		return cacao.NewVariables(), err
 	}
 
@@ -56,10 +59,10 @@ func (playbookAction *PlaybookAction) Execute(metadata execution.Metadata,
 	if err != nil {
 		err = errors.New(fmt.Sprint("execution of playbook failed with error: ", err))
 		log.Error(err)
-		playbookAction.reporter.ReportStep(metadata.ExecutionId, step, playbook.PlaybookVariables, err)
+		playbookAction.reporter.ReportStepEnd(metadata.ExecutionId, step, playbook.PlaybookVariables, err)
 		return cacao.NewVariables(), err
 	}
-	playbookAction.reporter.ReportStep(metadata.ExecutionId, step, playbook.PlaybookVariables, nil)
+	playbookAction.reporter.ReportStepEnd(metadata.ExecutionId, step, playbook.PlaybookVariables, nil)
 	return details.Variables, nil
 
 }

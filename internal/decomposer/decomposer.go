@@ -69,11 +69,13 @@ func (decomposer *Decomposer) Execute(playbook cacao.Playbook) (*ExecutionDetail
 	variables.Merge(playbook.PlaybookVariables)
 
 	// Reporting workflow instantiation
-	decomposer.reporter.ReportWorkflow(decomposer.details.ExecutionId, playbook)
+	decomposer.reporter.ReportWorkflowStart(decomposer.details.ExecutionId, playbook)
 
 	outputVariables, err := decomposer.ExecuteBranch(stepId, variables)
 
 	decomposer.details.Variables = outputVariables
+	// Reporting workflow end
+	decomposer.reporter.ReportWorkflowEnd(decomposer.details.ExecutionId, playbook, err)
 	return &decomposer.details, err
 }
 
