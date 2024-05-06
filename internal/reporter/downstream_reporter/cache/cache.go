@@ -186,7 +186,7 @@ func (cacheReporter *Cache) ReportStepEnd(executionId uuid.UUID, step cacao.Step
 	return nil
 }
 
-func (cacheReporter *Cache) GetExecutionsIDs() []string {
+func (cacheReporter *Cache) GetExecutionsIds() []string {
 	executions := make([]string, len(cacheReporter.fifoRegister))
 	_ = copy(executions, cacheReporter.fifoRegister)
 	return executions

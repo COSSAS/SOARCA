@@ -20,9 +20,11 @@ import (
 	"soarca/internal/fin/protocol"
 	"soarca/internal/guid"
 	"soarca/internal/reporter"
+	"soarca/internal/reporter/downstream_reporter/cache"
 	"soarca/logger"
 	"soarca/utils"
 	httpUtil "soarca/utils/http"
+	timeUtil "soarca/utils/time"
 	"soarca/utils/stix/expression/comparison"
 
 	downstreamReporter "soarca/internal/reporter/downstream_reporter"
@@ -31,7 +33,7 @@ import (
 
 	mongo "soarca/database/mongodb"
 	playbookrepository "soarca/database/playbook"
-	routes "soarca/routes"
+	"soarca/routes"
 )
 
 var log *logger.Log
@@ -169,6 +171,15 @@ func initializeCore(app *gin.Engine) error {
 			log.Error(err)
 			return err
 		}
+	}
+
+	// NOTE: Assuming that the cache is the main information mediator for
+	// the reporter API
+	informer := cache.New(&timeUtil.Time{})
+	err = routes.Reporter(app, informer)
+	if err != nil {
+		log.Error(err)
+		return err
 	}
 
 	routes.Logging(app)

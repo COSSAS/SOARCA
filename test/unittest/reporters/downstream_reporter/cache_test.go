@@ -97,7 +97,7 @@ func TestReportWorkflowStartFirst(t *testing.T) {
 	}
 
 	exec, err := cacheReporter.GetExecutionReport(executionId0)
-	assert.Equal(t, expectedExecutions, cacheReporter.GetExecutionsIDs())
+	assert.Equal(t, expectedExecutions, cacheReporter.GetExecutionsIds())
 	assert.Equal(t, expectedExecutionEntry.ExecutionId, exec.ExecutionId)
 	assert.Equal(t, expectedExecutionEntry.PlaybookId, exec.PlaybookId)
 	assert.Equal(t, expectedExecutionEntry.StepResults, exec.StepResults)
@@ -251,13 +251,13 @@ func TestReportWorkflowStartFifo(t *testing.T) {
 		t.Fail()
 	}
 
-	assert.Equal(t, expectedExecutionsFull, cacheReporter.GetExecutionsIDs())
+	assert.Equal(t, expectedExecutionsFull, cacheReporter.GetExecutionsIds())
 
 	err = cacheReporter.ReportWorkflowStart(executionId10, playbook)
 	if err != nil {
 		t.Fail()
 	}
-	assert.Equal(t, expectedExecutionsFifo, cacheReporter.GetExecutionsIDs())
+	assert.Equal(t, expectedExecutionsFifo, cacheReporter.GetExecutionsIds())
 	mock_time.AssertExpectations(t)
 }
 
@@ -350,7 +350,7 @@ func TestReportWorkflowEnd(t *testing.T) {
 	}
 
 	exec, err := cacheReporter.GetExecutionReport(executionId0)
-	assert.Equal(t, expectedExecutions, cacheReporter.GetExecutionsIDs())
+	assert.Equal(t, expectedExecutions, cacheReporter.GetExecutionsIds())
 	assert.Equal(t, expectedExecutionEntry.ExecutionId, exec.ExecutionId)
 	assert.Equal(t, expectedExecutionEntry.PlaybookId, exec.PlaybookId)
 	assert.Equal(t, expectedExecutionEntry.StepResults, exec.StepResults)
