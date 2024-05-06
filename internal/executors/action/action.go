@@ -99,6 +99,8 @@ func (executor *Executor) ExecuteActionStep(metadata execution.Metadata,
 
 	if capability, ok := executor.capabilities[agent.Name]; ok {
 		command.Command = variables.Interpolate(command.Command)
+		command.Content = variables.Interpolate(command.Content)
+		command.ContentB64 = variables.Interpolate(command.ContentB64)
 
 		for key, addresses := range target.Address {
 			var slice []string
