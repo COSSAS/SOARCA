@@ -242,3 +242,87 @@ func TestReportStepEnd(t *testing.T) {
 
 	mock_ds_reporter.AssertExpectations(t)
 }
+
+func TestMultipleDownstreamReporters(t *testing.T) {
+	mock_ds_reporter1 := mock_reporter.Mock_Downstream_Reporter{}
+	mock_ds_reporter2 := mock_reporter.Mock_Downstream_Reporter{}
+	reporter := reporter.New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter1, &mock_ds_reporter2})
+	expectedCommand := cacao.Command{
+		Type:    "ssh",
+		Command: "ssh ls -la",
+	}
+
+	expectedVariables := cacao.Variable{
+		Type:  "string",
+		Name:  "var1",
+		Value: "testing",
+	}
+
+	step1 := cacao.Step{
+		Type:          "action",
+		ID:            "action--test",
+		Name:          "ssh-tests",
+		StepVariables: cacao.NewVariables(expectedVariables),
+		Commands:      []cacao.Command{expectedCommand},
+		Cases:         map[string]string{},
+		OnCompletion:  "end--test",
+		Agent:         "agent1",
+		Targets:       []string{"target1"},
+	}
+
+	end := cacao.Step{
+		Type: "end",
+		ID:   "end--test",
+		Name: "end step",
+	}
+
+	expectedAuth := cacao.AuthenticationInformation{
+		Name: "user",
+		ID:   "auth1",
+	}
+
+	expectedTarget := cacao.AgentTarget{
+		Name:               "sometarget",
+		AuthInfoIdentifier: "auth1",
+		ID:                 "target1",
+	}
+
+	expectedAgent := cacao.AgentTarget{
+		Type: "soarca",
+		Name: "soarca-ssh",
+	}
+
+	playbook := cacao.Playbook{
+		ID:                            "test",
+		Type:                          "test",
+		Name:                          "ssh-test",
+		WorkflowStart:                 step1.ID,
+		AuthenticationInfoDefinitions: map[string]cacao.AuthenticationInformation{"id": expectedAuth},
+		AgentDefinitions:              map[string]cacao.AgentTarget{"agent1": expectedAgent},
+		TargetDefinitions:             map[string]cacao.AgentTarget{"target1": expectedTarget},
+
+		Workflow: map[string]cacao.Step{step1.ID: step1, end.ID: end},
+	}
+
+	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+
+	mock_ds_reporter1.On("ReportWorkflowStart", executionId, playbook).Return(nil)
+	mock_ds_reporter2.On("ReportWorkflowStart", executionId, playbook).Return(nil)
+
+	mock_ds_reporter1.On("ReportStepStart", executionId, step1, cacao.NewVariables(expectedVariables)).Return(nil)
+	mock_ds_reporter2.On("ReportStepStart", executionId, step1, cacao.NewVariables(expectedVariables)).Return(nil)
+
+	mock_ds_reporter1.On("ReportStepEnd", executionId, step1, cacao.NewVariables(expectedVariables), nil).Return(nil)
+	mock_ds_reporter2.On("ReportStepEnd", executionId, step1, cacao.NewVariables(expectedVariables), nil).Return(nil)
+
+	mock_ds_reporter1.On("ReportWorkflowEnd", executionId, playbook, nil).Return(nil)
+	mock_ds_reporter2.On("ReportWorkflowEnd", executionId, playbook, nil).Return(nil)
+
+	reporter.ReportWorkflowStart(executionId, playbook)
+	reporter.ReportStepStart(executionId, step1, cacao.NewVariables(expectedVariables))
+	reporter.ReportStepEnd(executionId, step1, cacao.NewVariables(expectedVariables), nil)
+	reporter.ReportWorkflowEnd(executionId, playbook, nil)
+
+	mock_ds_reporter1.AssertExpectations(t)
+	mock_ds_reporter2.AssertExpectations(t)
+}
