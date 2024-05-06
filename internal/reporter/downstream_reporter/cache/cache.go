@@ -61,7 +61,6 @@ func (cacheReporter *Cache) getExecutionStep(executionKey uuid.UUID, stepKey str
 	if !ok {
 		err := errors.New("execution step is not in cache")
 		return report.StepResult{}, err
-		// TODO Retrieve from database
 	}
 	return executionStep, nil
 }
