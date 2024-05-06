@@ -91,7 +91,11 @@ func TestReportWorkflowStartFirst(t *testing.T) {
 	}
 	expectedExecutions := []string{"6ba7b810-9dad-11d1-80b4-00c04fd430c0"}
 
-	_ = cacheReporter.ReportWorkflowStart(executionId0, playbook)
+	err := cacheReporter.ReportWorkflowStart(executionId0, playbook)
+	if err != nil {
+		t.Fail()
+	}
+
 	exec, err := cacheReporter.GetExecutionReport(executionId0)
 	assert.Equal(t, expectedExecutions, cacheReporter.GetExecutionsIDs())
 	assert.Equal(t, expectedExecutionEntry.ExecutionId, exec.ExecutionId)
