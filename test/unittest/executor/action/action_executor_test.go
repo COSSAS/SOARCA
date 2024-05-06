@@ -273,6 +273,12 @@ func TestVariableInterpolation(t *testing.T) {
 		Value: "soarca-privatekey",
 	}
 
+	varHttpContent := cacao.Variable{
+		Type:  cacao.VariableTypeString,
+		Name:  "__http-api-content__",
+		Value: "some content of the body",
+	}
+
 	inputAuth := cacao.AuthenticationInformation{
 		Name:        "soarca",
 		Username:    "__user__:value",
@@ -333,4 +339,40 @@ func TestVariableInterpolation(t *testing.T) {
 	assert.Equal(t, err, nil)
 	mock_capability1.AssertExpectations(t)
 	assert.Equal(t, inputCommand.Command, "ssh __var1__:value")
+
+	httpCommand := cacao.Command{
+		Type:       "http-api",
+		Command:    "GET / HTTP1.1",
+		Content:    "__http-api-content__:value",
+		ContentB64: "__http-api-content__:value",
+	}
+
+	expectedHttpCommand := cacao.Command{
+		Type:       "http-api",
+		Command:    "GET / HTTP1.1",
+		Content:    "some content of the body",
+		ContentB64: "some content of the body",
+	}
+
+	metadataHttp := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId, StepId: stepId}
+
+	mock_capability1.On("Execute",
+		metadataHttp,
+		expectedHttpCommand,
+		expectedAuth,
+		expectedTarget,
+		cacao.NewVariables(varHttpContent)).
+		Return(cacao.NewVariables(var1),
+			nil)
+
+	_, err = executerObject.ExecuteActionStep(metadata,
+		httpCommand,
+		expectedAuth,
+		expectedTarget,
+		cacao.NewVariables(varHttpContent),
+		agent)
+
+	assert.Equal(t, err, nil)
+	mock_capability1.AssertExpectations(t)
+
 }
