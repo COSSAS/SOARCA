@@ -2,6 +2,7 @@ package http
 
 import (
 	"bytes"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -51,6 +52,7 @@ func (httpRequest *HttpRequest) Request(httpOptions HttpOptions) ([]byte, error)
 	}
 
 	client := &http.Client{}
+	log.Trace(request)
 	response, err := client.Do(request)
 	if err != nil {
 		log.Error(err)
@@ -71,7 +73,22 @@ func (httpOptions *HttpOptions) setupRequest() (*http.Request, error) {
 		log.Error(err)
 		return nil, err
 	}
-	requestBuffer := bytes.NewBufferString(httpOptions.Command.ContentB64)
+
+	requestBuffer := bytes.NewBufferString("")
+	if httpOptions.Command.Content != "" {
+		log.Debug("using the content field")
+		requestBuffer = bytes.NewBufferString(httpOptions.Command.Content)
+	} else if httpOptions.Command.ContentB64 != "" {
+		log.Debug("using base64 content")
+		byteString, err := base64.StdEncoding.DecodeString(httpOptions.Command.ContentB64)
+		if err != nil {
+			log.Error("error decoding base64", err)
+		} else {
+			log.Trace(string(byteString))
+			requestBuffer = bytes.NewBufferString(string(byteString))
+		}
+	}
+	log.Trace("request buffer is: ", requestBuffer)
 	request, err := http.NewRequest(method, parsedUrl, requestBuffer)
 	if err != nil {
 		log.Error(err)
