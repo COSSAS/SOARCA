@@ -83,7 +83,7 @@ func (protocol *FinProtocol) SendCommand(command fin.Command) (cacao.Variables, 
 	err = protocol.Publish(client, command)
 	if err != nil {
 		protocol.Disconnect(client)
-		return map[string]cacao.Variable{}, err
+		return cacao.NewVariables(), err
 	}
 	result, err := protocol.AwaitResultOrTimeout(command, client)
 	protocol.Disconnect(client)
@@ -91,7 +91,7 @@ func (protocol *FinProtocol) SendCommand(command fin.Command) (cacao.Variables, 
 	return result, err
 }
 
-func (protocol *FinProtocol) AwaitResultOrTimeout(command fin.Command, client mqttlib.Client) (map[string]cacao.Variable, error) {
+func (protocol *FinProtocol) AwaitResultOrTimeout(command fin.Command, client mqttlib.Client) (cacao.Variables, error) {
 	timeout := command.CommandSubstructure.Context.Timeout
 
 	if command.CommandSubstructure.Context.Timeout == 0 {
@@ -107,7 +107,7 @@ func (protocol *FinProtocol) AwaitResultOrTimeout(command fin.Command, client mq
 		select {
 		case <-timer.C:
 			err := errors.New("no message received from fin while it was expected")
-			return map[string]cacao.Variable{}, err
+			return cacao.NewVariables(), err
 		case result := <-protocol.channel:
 			finMessage := fin.Message{}
 			err := fin.Decode(result, &finMessage)
@@ -124,7 +124,7 @@ func (protocol *FinProtocol) AwaitResultOrTimeout(command fin.Command, client mq
 				err := fin.Decode(result, &finResult)
 				if err != nil {
 					log.Trace(err)
-					return map[string]cacao.Variable{}, err
+					return cacao.NewVariables(), err
 				}
 
 				if ackReceived {

@@ -99,7 +99,9 @@ func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
 		log.Error(err)
 		return cacao.NewVariables(), err
 	}
-	results := cacao.NewVariables(cacao.Variable{Name: sshResultVariableName, Value: string(response)})
+	results := cacao.NewVariables(cacao.Variable{Type: cacao.VariableTypeString,
+		Name:  sshResultVariableName,
+		Value: string(response)})
 	log.Trace("Finished ssh execution will return the variables: ", results)
 	return results, err
 }

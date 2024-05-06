@@ -51,6 +51,24 @@ type Variable struct {
 	External    bool   `bson:"external,omitempty" json:"external,omitempty"`
 }
 
+const (
+	VariableTypeBool        = "bool"
+	VariableTypeDictionary  = "dictionary"
+	VariableTypeFloat       = "float"
+	VariableTypeHexString   = "hexstring"
+	VariableTypeInt         = "integer"
+	VariableTypeIpv4Address = "ipv4-addr"
+	VariableTypeIpv6Address = "ipv6-addr"
+	VariableTypeLong        = "long"
+	VariableTypeMacAddress  = "mac-addr"
+	VariableTypeHash        = "hash"
+	VariableTypeMd5Has      = "md5-hash"
+	VariableTypeSha256      = "sha256-hash"
+	VariableTypeString      = "string"
+	VariableTypeUri         = "uri"
+	VariableTypeUuid        = "uuid"
+)
+
 type Variables map[string]Variable
 
 type Playbook struct {

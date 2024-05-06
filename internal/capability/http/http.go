@@ -58,7 +58,9 @@ func (httpCapability *HttpCapability) Execute(
 		return cacao.NewVariables(), err
 	}
 	respString := string(responseBytes)
-	variable := cacao.Variable{Name: httpApiResultVariableName, Value: respString}
+	variable := cacao.Variable{Type: cacao.VariableTypeString,
+		Name:  httpApiResultVariableName,
+		Value: respString}
 
 	return cacao.NewVariables(variable), nil
 

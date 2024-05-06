@@ -57,7 +57,9 @@ func (OpenC2Capability *OpenC2Capability) Execute(
 		return cacao.NewVariables(), err
 	}
 
-	results := cacao.NewVariables(cacao.Variable{Name: openc2ResultVariableName, Value: string(response)})
+	results := cacao.NewVariables(cacao.Variable{Type: cacao.VariableTypeString,
+		Name:  openc2ResultVariableName,
+		Value: string(response)})
 	log.Trace("Finished openc2 execution, will return the variables: ", results)
 	return results, nil
 }
