@@ -28,10 +28,8 @@ const (
 	IsSuperSet     = "ISSUPERSET"
 )
 
-type Empty struct{}
-
 var (
-	component = reflect.TypeOf(Empty{}).PkgPath()
+	component = reflect.TypeOf(Stix{}).PkgPath()
 	log       *logger.Log
 )
 
@@ -39,7 +37,17 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
-func Evaluate(expression string, vars cacao.Variables) (bool, error) {
+type IStix interface {
+	Evaluate(string, cacao.Variables) (bool, error)
+}
+
+func New() *Stix {
+	return &Stix{}
+}
+
+type Stix struct{}
+
+func (s *Stix) Evaluate(expression string, vars cacao.Variables) (bool, error) {
 
 	//"condition": "__variable__:value == '10.0.0.0/8'"
 	//"condition": "__ip__:value/__subnet__:value == '10.0.0.0/8'"
