@@ -39,11 +39,11 @@ func (executionInformer *executionInformer) getExecutions(g *gin.Context) {
 // Returns this to the gin context as a PlaybookExecutionReport object at soarca/model/api/reporter
 //
 //	@Summary		gets information about an ongoing playbook execution
-//	@Schemes		soarca/models/api/PlaybookExecutionEntry
+//	@Schemes		soarca/models/api/PlaybookExecutionReport
 //	@Description	return execution information
 //	@Tags			reporter
 //	@Produce		json
-//	@success		200	PlaybookExecutionEntry
+//	@success		200	PlaybookExecutionReport
 //	@error			400
 //	@Router			/report/:id [GET]
 func (executionInformer *executionInformer) getExecutionReport(g *gin.Context) {
