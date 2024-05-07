@@ -63,7 +63,7 @@ Response data model:
 
 |field              |content                |type               | description |
 | ----------------- | --------------------- | ----------------- | ----------- |
-|type               |execution-status       |string             |The type of this content
+|type               |"execution_status"     |string           |The type of this content
 |id                 |UUID                   |string             |The id of the execution
 |execution_id       |UUID                   |string             |The id of the execution
 |playbook_id        |UUID                   |string             |The id of the CACAO playbook executed by the execution
@@ -71,7 +71,7 @@ Response data model:
 |ended              |timestamp              |string             |The time at which the execution of the playbook ended (if so)
 |status             |execution-status-enum  |string             |The current [status](#execution-stataus) of the execution
 |status_text        |explanation            |string             |A natural language explanation of the current status or related info
-|errors             |errors                 |list of string     |Errors raised along the execution of the playbook at execution level
+|error              |error                  |string     |Error raised along the execution of the playbook at execution level
 |step_results       |step_results           |dictionary         |Map of step-id to related [step execution data](#step-execution-data)
 |request_interval   |seconds                |integer            |Suggests the polling interval for the next request (default suggested is 5 seconds).
 
@@ -85,7 +85,7 @@ Response data model:
 |ended              |timestamp              |string             |The time at which the execution of the step ended (if so)
 |status             |execution-status-enum  |string             |The current [status](#execution-stataus) of the execution of this step
 |status_text        |explanation            |string             |A natural language explanation of the current status or related info
-|errors             |errors                 |list of string     |Errors raised along the execution of the step
+|error              |error                  |string             |Error raised along the execution of the step
 |variables          |cacao variables        |dictionary         |Map of [cacao variables](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256555) handled in the step (both in and out) with current values and definitions
 
 ##### Execution stataus 
