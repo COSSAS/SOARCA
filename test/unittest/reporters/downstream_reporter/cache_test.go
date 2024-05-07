@@ -4,7 +4,7 @@ import (
 	"errors"
 	"soarca/internal/reporter/downstream_reporter/cache"
 	"soarca/models/cacao"
-	"soarca/models/report"
+	report "soarca/models/cache"
 	"soarca/test/unittest/mocks/mock_utils/time"
 	"testing"
 	"time"

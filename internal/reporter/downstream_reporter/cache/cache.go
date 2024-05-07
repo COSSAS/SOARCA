@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"soarca/logger"
 	"soarca/models/cacao"
-	"soarca/models/report"
+	cache_report "soarca/models/cache"
 	"soarca/utils"
 	itime "soarca/utils/time"
 	"strconv"
@@ -28,45 +28,45 @@ const MaxSteps int = 10
 type Cache struct {
 	Size         int
 	timeUtil     itime.ITime
-	Cache        map[string]report.ExecutionEntry // Cached up to max
-	fifoRegister []string                         // Used for O(1) FIFO cache management
+	Cache        map[string]cache_report.ExecutionEntry // Cached up to max
+	fifoRegister []string                               // Used for O(1) FIFO cache management
 }
 
 func New(timeUtil itime.ITime) *Cache {
 	maxExecutions, _ := strconv.Atoi(utils.GetEnv("MAX_EXECUTIONS", strconv.Itoa(MaxExecutions)))
 	return &Cache{
 		Size:     maxExecutions,
-		Cache:    make(map[string]report.ExecutionEntry),
+		Cache:    make(map[string]cache_report.ExecutionEntry),
 		timeUtil: timeUtil,
 	}
 }
 
-func (cacheReporter *Cache) getExecution(executionKey uuid.UUID) (report.ExecutionEntry, error) {
+func (cacheReporter *Cache) getExecution(executionKey uuid.UUID) (cache_report.ExecutionEntry, error) {
 	executionKeyStr := executionKey.String()
 	executionEntry, ok := cacheReporter.Cache[executionKeyStr]
 	if !ok {
 		err := errors.New("execution is not in cache")
 		log.Warning("execution is not in cache. consider increasing cache size.")
-		return report.ExecutionEntry{}, err
+		return cache_report.ExecutionEntry{}, err
 		// TODO Retrieve from database
 	}
 	return executionEntry, nil
 }
-func (cacheReporter *Cache) getExecutionStep(executionKey uuid.UUID, stepKey string) (report.StepResult, error) {
+func (cacheReporter *Cache) getExecutionStep(executionKey uuid.UUID, stepKey string) (cache_report.StepResult, error) {
 	executionEntry, err := cacheReporter.getExecution(executionKey)
 	if err != nil {
-		return report.StepResult{}, err
+		return cache_report.StepResult{}, err
 	}
 	executionStep, ok := executionEntry.StepResults[stepKey]
 	if !ok {
 		err := errors.New("execution step is not in cache")
-		return report.StepResult{}, err
+		return cache_report.StepResult{}, err
 	}
 	return executionStep, nil
 }
 
 // Adding executions in FIFO logic
-func (cacheReporter *Cache) addExecution(newExecutionEntry report.ExecutionEntry) error {
+func (cacheReporter *Cache) addExecution(newExecutionEntry cache_report.ExecutionEntry) error {
 
 	if !(len(cacheReporter.fifoRegister) == len(cacheReporter.Cache)) {
 		return errors.New("cache fifo register and content are desynchronized")
@@ -90,13 +90,13 @@ func (cacheReporter *Cache) addExecution(newExecutionEntry report.ExecutionEntry
 }
 
 func (cacheReporter *Cache) ReportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook) error {
-	newExecutionEntry := report.ExecutionEntry{
+	newExecutionEntry := cache_report.ExecutionEntry{
 		ExecutionId: executionId,
 		PlaybookId:  playbook.ID,
 		Started:     cacheReporter.timeUtil.Now(),
 		Ended:       time.Time{},
-		StepResults: map[string]report.StepResult{},
-		Status:      report.Ongoing,
+		StepResults: map[string]cache_report.StepResult{},
+		Status:      cache_report.Ongoing,
 	}
 	err := cacheReporter.addExecution(newExecutionEntry)
 	if err != nil {
@@ -114,9 +114,9 @@ func (cacheReporter *Cache) ReportWorkflowEnd(executionId uuid.UUID, playbook ca
 
 	if workflowError != nil {
 		executionEntry.PlaybookResult = workflowError
-		executionEntry.Status = report.Failed
+		executionEntry.Status = cache_report.Failed
 	} else {
-		executionEntry.Status = report.SuccessfullyExecuted
+		executionEntry.Status = cache_report.SuccessfullyExecuted
 	}
 	executionEntry.Ended = cacheReporter.timeUtil.Now()
 	cacheReporter.Cache[executionId.String()] = executionEntry
@@ -130,7 +130,7 @@ func (cacheReporter *Cache) ReportStepStart(executionId uuid.UUID, step cacao.St
 		return err
 	}
 
-	if executionEntry.Status != report.Ongoing {
+	if executionEntry.Status != cache_report.Ongoing {
 		return errors.New("trying to report on the execution of a step for an already reported completed or failed execution")
 	}
 
@@ -141,13 +141,13 @@ func (cacheReporter *Cache) ReportStepStart(executionId uuid.UUID, step cacao.St
 		log.Warning("a step execution was already reported for this step. overwriting.")
 	}
 
-	newStepEntry := report.StepResult{
+	newStepEntry := cache_report.StepResult{
 		ExecutionId: executionId,
 		StepId:      step.ID,
 		Started:     cacheReporter.timeUtil.Now(),
 		Ended:       time.Time{},
 		Variables:   variables,
-		Status:      report.Ongoing,
+		Status:      cache_report.Ongoing,
 		Error:       nil,
 	}
 	executionEntry.StepResults[step.ID] = newStepEntry
@@ -160,7 +160,7 @@ func (cacheReporter *Cache) ReportStepEnd(executionId uuid.UUID, step cacao.Step
 		return err
 	}
 
-	if executionEntry.Status != report.Ongoing {
+	if executionEntry.Status != cache_report.Ongoing {
 		return errors.New("trying to report on the execution of a step for an already reported completed or failed execution")
 	}
 
@@ -169,15 +169,15 @@ func (cacheReporter *Cache) ReportStepEnd(executionId uuid.UUID, step cacao.Step
 		return err
 	}
 
-	if executionStepResult.Status != report.Ongoing {
+	if executionStepResult.Status != cache_report.Ongoing {
 		return errors.New("trying to report on the execution of a step that was already reported completed or failed")
 	}
 
 	if stepError != nil {
 		executionStepResult.Error = stepError
-		executionStepResult.Status = report.ServerSideError
+		executionStepResult.Status = cache_report.ServerSideError
 	} else {
-		executionStepResult.Status = report.SuccessfullyExecuted
+		executionStepResult.Status = cache_report.SuccessfullyExecuted
 	}
 	executionStepResult.Ended = cacheReporter.timeUtil.Now()
 	executionStepResult.Variables = returnVars
@@ -192,10 +192,10 @@ func (cacheReporter *Cache) GetExecutionsIds() []string {
 	return executions
 }
 
-func (cacheReporter *Cache) GetExecutionReport(executionKey uuid.UUID) (report.ExecutionEntry, error) {
+func (cacheReporter *Cache) GetExecutionReport(executionKey uuid.UUID) (cache_report.ExecutionEntry, error) {
 	executionEntry, err := cacheReporter.getExecution(executionKey)
 	if err != nil {
-		return report.ExecutionEntry{}, err
+		return cache_report.ExecutionEntry{}, err
 	}
 	report := executionEntry
 

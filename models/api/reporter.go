@@ -3,7 +3,7 @@ package api
 import (
 	"errors"
 	"soarca/models/cacao"
-	cache_model "soarca/models/report"
+	cache_model "soarca/models/cache"
 )
 
 type Status uint8

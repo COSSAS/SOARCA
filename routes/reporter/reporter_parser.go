@@ -2,7 +2,7 @@ package reporter
 
 import (
 	api_model "soarca/models/api"
-	cache_model "soarca/models/report"
+	cache_model "soarca/models/cache"
 )
 
 func parseCachePlaybookEntry(cacheEntry cache_model.ExecutionEntry) (api_model.PlaybookExecutionReport, error) {

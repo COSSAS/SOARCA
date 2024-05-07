@@ -20,7 +20,7 @@ import (
 	"soarca/internal/fin/protocol"
 	"soarca/internal/guid"
 	"soarca/internal/reporter"
-	"soarca/internal/reporter/downstream_reporter/cache"
+	cache "soarca/internal/reporter/downstream_reporter/cache"
 	"soarca/logger"
 	"soarca/utils"
 	httpUtil "soarca/utils/http"
