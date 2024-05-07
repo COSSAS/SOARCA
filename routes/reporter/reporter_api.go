@@ -23,7 +23,7 @@ func NewExecutionInformer(informer informer.IExecutionInformer) *executionInform
 // Returns this to the gin context as a list if execution IDs in json format
 //
 //	@Summary	gets all the UUIDs for the executions that can be retireved
-//	@Schemes		[]list
+//	@Schemes
 //	@Description	return all stored executions
 //	@Tags			reporter
 //	@Produce		json
@@ -39,7 +39,7 @@ func (executionInformer *executionInformer) getExecutions(g *gin.Context) {
 // Returns this to the gin context as a PlaybookExecutionReport object at soarca/model/api/reporter
 //
 //	@Summary		gets information about an ongoing playbook execution
-//	@Schemes		soarca/models/api/PlaybookExecutionReport
+//	@Schemes
 //	@Description	return execution information
 //	@Tags			reporter
 //	@Produce		json
