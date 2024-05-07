@@ -43,7 +43,7 @@ func (executionInformer *executionInformer) getExecutions(g *gin.Context) {
 //	@Description	return execution information
 //	@Tags			reporter
 //	@Produce		json
-//	@success		200
+//	@success		200 {object}	api.PlaybookExecutionReport
 //	@error			400
 //	@Router			/report/:id [GET]
 func (executionInformer *executionInformer) getExecutionReport(g *gin.Context) {
