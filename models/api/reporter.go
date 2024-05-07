@@ -39,7 +39,7 @@ type StepExecutionReport struct {
 	Status      string
 	StatusText  string
 	Error       string
-	Variables   cacao.Variables
+	Variables   map[string]cacao.Variable
 	// Make sure we can have a playbookID for playbook actions, and also
 	// the execution ID for the invoked playbook
 }
