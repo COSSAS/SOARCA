@@ -58,7 +58,13 @@ func (executionInformer *executionInformer) getExecutionReport(g *gin.Context) {
 		return
 	}
 
-	g.JSON(http.StatusOK, executionEntry)
+	executionEntryParsed, err := parseCachePlaybookEntry(executionEntry)
+	if err != nil {
+		log.Debug("Could not parse entry to reporter result model")
+		SendErrorResponse(g, http.StatusInternalServerError, "Could not parse execution report", "GET /report/{id}")
+		return
+	}
+	g.JSON(http.StatusOK, executionEntryParsed)
 }
 
 func SendErrorResponse(g *gin.Context, status int, message string, orginal_call string) {

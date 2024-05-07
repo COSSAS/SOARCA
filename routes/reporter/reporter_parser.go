@@ -11,6 +11,12 @@ func parseCachePlaybookEntry(cacheEntry cache_model.ExecutionEntry) (api_model.P
 		return api_model.PlaybookExecutionReport{}, err
 	}
 
+	playbookError := cacheEntry.PlaybookResult
+	playbookErrorStr := ""
+	if playbookError != nil {
+		playbookErrorStr = playbookError.Error()
+	}
+
 	stepResults, err := parseCacheStepEntries(cacheEntry.StepResults)
 	if err != nil {
 		return api_model.PlaybookExecutionReport{}, err
@@ -23,8 +29,8 @@ func parseCachePlaybookEntry(cacheEntry cache_model.ExecutionEntry) (api_model.P
 		Started:         cacheEntry.Started.String(),
 		Ended:           cacheEntry.Ended.String(),
 		Status:          playbookStatus,
-		StatusText:      cacheEntry.PlaybookResult.Error(),
-		Error:           cacheEntry.PlaybookResult.Error(),
+		StatusText:      playbookErrorStr,
+		Error:           playbookErrorStr,
 		StepResults:     stepResults,
 		RequestInterval: 5,
 	}
@@ -40,14 +46,20 @@ func parseCacheStepEntries(cacheStepEntries map[string]cache_model.StepResult) (
 			return map[string]api_model.StepExecutionReport{}, err
 		}
 
+		stepError := stepEntry.Error
+		stepErrorStr := ""
+		if stepError != nil {
+			stepErrorStr = stepError.Error()
+		}
+
 		parsedEntries[stepId] = api_model.StepExecutionReport{
 			ExecutionId: stepEntry.ExecutionId.String(),
 			StepId:      stepEntry.StepId,
 			Started:     stepEntry.Started.String(),
 			Ended:       stepEntry.Ended.String(),
 			Status:      stepStatus,
-			StatusText:  stepEntry.Error.Error(),
-			Error:       stepEntry.Error.Error(),
+			StatusText:  stepErrorStr,
+			Error:       stepErrorStr,
 			Variables:   stepEntry.Variables,
 		}
 	}
