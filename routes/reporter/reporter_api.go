@@ -23,7 +23,7 @@ func NewExecutionInformer(informer informer.IExecutionInformer) *executionInform
 // Returns this to the gin context as a list if execution IDs in json format
 //
 //	@Summary	gets all the UUIDs for the executions that can be retireved
-//	@Schemes		models.report.ExecutionEntry
+//	@Schemes		[]list
 //	@Description	return all stored executions
 //	@Tags			reporter
 //	@Produce		json
@@ -35,6 +35,17 @@ func (executionInformer *executionInformer) getExecutions(g *gin.Context) {
 	g.JSON(http.StatusOK, executions)
 }
 
+// getExecutionReport GET handler for obtaining the information about an execution.
+// Returns this to the gin context as a PlaybookExecutionReport object at soarca/model/api/reporter
+//
+//	@Summary		gets information about an ongoing playbook execution
+//	@Schemes		soarca/models/api/PlaybookExecutionEntry
+//	@Description	return execution information
+//	@Tags			reporter
+//	@Produce		json
+//	@success		200	PlaybookExecutionEntry
+//	@error			400
+//	@Router			/report/:id [GET]
 func (executionInformer *executionInformer) getExecutionReport(g *gin.Context) {
 	id := g.Param("id")
 	log.Trace("Trying to obtain execution for id: ", id)
