@@ -51,6 +51,8 @@ type Controller struct {
 
 var mainController = Controller{}
 
+var mainCache = cache.New(&timeUtil.Time{})
+
 func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	ssh := new(ssh.SshCapability)
 	capabilities := map[string]capability.ICapability{ssh.GetType(): ssh}
@@ -78,7 +80,10 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 		}
 	}
 
+	// NOTE: Enrolling mainCache by default as reporter
 	reporter := reporter.New([]downstreamReporter.IDownStreamReporter{})
+	downstreamReporters := []downstreamReporter.IDownStreamReporter{mainCache}
+	reporter.RegisterReporters(downstreamReporters)
 
 	actionExecutor := action.New(capabilities, reporter)
 	playbookActionExecutor := playbook_action.New(controller, controller, reporter)
@@ -175,8 +180,7 @@ func initializeCore(app *gin.Engine) error {
 
 	// NOTE: Assuming that the cache is the main information mediator for
 	// the reporter API
-	informer := cache.New(&timeUtil.Time{})
-	err = routes.Reporter(app, informer)
+	err = routes.Reporter(app, mainCache)
 	if err != nil {
 		log.Error(err)
 		return err
