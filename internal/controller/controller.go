@@ -83,7 +83,10 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	// NOTE: Enrolling mainCache by default as reporter
 	reporter := reporter.New([]downstreamReporter.IDownStreamReporter{})
 	downstreamReporters := []downstreamReporter.IDownStreamReporter{mainCache}
-	reporter.RegisterReporters(downstreamReporters)
+	err := reporter.RegisterReporters(downstreamReporters)
+	if err != nil {
+		log.Error("could not load main Cache as reporter for decomposer and executors")
+	}
 
 	actionExecutor := action.New(capabilities, reporter)
 	playbookActionExecutor := playbook_action.New(controller, controller, reporter)

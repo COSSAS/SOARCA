@@ -130,7 +130,7 @@ func TestGetExecutionReportInvocation(t *testing.T) {
 	}
 
 	receivedData := api_model.PlaybookExecutionReport{}
-	err = json.Unmarshal([]byte(recorder.Body.String()), &receivedData)
+	err = json.Unmarshal(recorder.Body.Bytes(), &receivedData)
 	if err != nil {
 		t.Log(err)
 		t.Log("Could not parse data to JSON")
