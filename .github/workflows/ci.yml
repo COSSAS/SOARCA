@@ -45,24 +45,23 @@ jobs:
   test:
     name: Run ci-tests
     runs-on: ubuntu-latest
-    container:
-      image: golang:latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: setup Go
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.2' #
       - name: Make repo safe
         run: git config --global --add safe.directory /__w/SOARCA/SOARCA
       - name: Install swaggo
         run:  go install github.com/swaggo/swag/cmd/swag@latest  
         timeout-minutes: 12
-      - name: Start dokcer httpbin containers
-        run: docker compose -f "docker/testing/httpbin-test/docker-compose.yml" up -d
       - name: Run tests
         run: |
-          set -x 
-          apt update
+          sudo apt update
           apt install openssh-server -y
           useradd sshtest
           echo "sshtest:pdKY77qNxpI5MAizirtjCVOcm0KFKIs" | chpasswd
