@@ -2,7 +2,9 @@ package condition
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
+	"soarca/internal/reporter"
 	"soarca/logger"
 	"soarca/models/cacao"
 	"soarca/models/execution"
@@ -16,8 +18,10 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
-func New(comparison comparison.IComparison) *Executor {
-	return &Executor{comparison: comparison}
+func New(comparison comparison.IComparison,
+	reporter reporter.IStepReporter) *Executor {
+	return &Executor{comparison: comparison,
+		reporter: reporter}
 }
 
 type IExecuter interface {
@@ -27,6 +31,7 @@ type IExecuter interface {
 
 type Executor struct {
 	comparison comparison.IComparison
+	reporter   reporter.IStepReporter
 }
 
 func (executor *Executor) Execute(meta execution.Metadata, step cacao.Step, variables cacao.Variables) (string, bool, error) {
@@ -37,22 +42,35 @@ func (executor *Executor) Execute(meta execution.Metadata, step cacao.Step, vari
 		return step.OnFailure, false, err
 	}
 
+	executor.reporter.ReportStepStart(meta.ExecutionId, step, variables)
+
 	result, err := executor.comparison.Evaluate(step.Condition, variables)
+
+	// We are reporting early to not have double reporting
+	executor.reporter.ReportStepEnd(meta.ExecutionId,
+		step,
+		variables,
+		err)
+
 	if err != nil {
 		log.Error(err)
 		return "", false, err
 	}
 
+	log.Debug("the result was: ", fmt.Sprint(result))
+
 	if result {
 		if step.OnTrue != "" {
-			log.Trace("")
+			log.Trace("will return on true step ", step.OnTrue)
 			return step.OnTrue, true, nil
 		}
 	} else {
 		if step.OnFalse != "" {
+			log.Trace("will return on false step ", step.OnFalse)
 			return step.OnFalse, true, nil
 		}
 	}
+	log.Trace("will return on completion step ", step.OnCompletion)
 
 	return step.OnCompletion, false, nil
 }
