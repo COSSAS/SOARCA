@@ -589,7 +589,7 @@ func TestExecuteIfCondition(t *testing.T) {
 	metaStepIf := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: stepIf.ID}
 
 	uuid_mock.On("New").Return(executionId)
-	mock_reporter.On("ReportWorkflow", executionId, playbook).Return()
+	mock_reporter.On("ReportWorkflowStart", executionId, playbook).Return()
 
 	mock_condition_executor.On("Execute",
 		metaStepIf,
@@ -623,7 +623,7 @@ func TestExecuteIfCondition(t *testing.T) {
 	mock_action_executor.On("Execute",
 		metaStepCompletion,
 		stepCompletionDetails).Return(cacao.NewVariables(), nil)
-
+	mock_reporter.On("ReportWorkflowEnd", executionId, playbook, nil).Return()
 	details, err := decomposer.Execute(playbook)
 	uuid_mock.AssertExpectations(t)
 	fmt.Println(err)
