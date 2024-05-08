@@ -54,6 +54,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: '1.22.2' #
+        run: go version
       - name: Make repo safe
         run: git config --global --add safe.directory /__w/SOARCA/SOARCA
       - name: Install swaggo
