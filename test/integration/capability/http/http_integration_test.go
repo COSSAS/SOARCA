@@ -2,12 +2,14 @@ package http_integrations_test
 
 import (
 	"fmt"
+	"testing"
+
 	"soarca/internal/capability/http"
 	"soarca/models/cacao"
 	"soarca/models/execution"
 	httpUtil "soarca/utils/http"
-	"testing"
 
+	"github.com/go-playground/assert/v2"
 	"github.com/google/uuid"
 )
 
@@ -26,15 +28,15 @@ func TestHttpConnection(t *testing.T) {
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
 
-	var variable1 = cacao.Variable{
+	variable1 := cacao.Variable{
 		Type:  "string",
 		Name:  "test_auth",
 		Value: "",
 	}
 
-	var executionId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
-	var playbookId, _ = uuid.Parse("playbook--d09351a2-a075-40c8-8054-0b7c423db83f")
-	var stepId, _ = uuid.Parse("action--81eff59f-d084-4324-9e0a-59e353dbd28f")
+	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	playbookId, _ := uuid.Parse("playbook--d09351a2-a075-40c8-8054-0b7c423db83f")
+	stepId, _ := uuid.Parse("action--81eff59f-d084-4324-9e0a-59e353dbd28f")
 
 	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId.String(), StepId: stepId.String()}
 	// But what to do if there is no target and no AuthInfo?
@@ -74,9 +76,9 @@ func TestHttpOAuth2(t *testing.T) {
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
 
-	var executionId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
-	var playbookId, _ = uuid.Parse("d09351a2-a075-40c8-8054-0b7c423db83f")
-	var stepId, _ = uuid.Parse("81eff59f-d084-4324-9e0a-59e353dbd28f")
+	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	playbookId, _ := uuid.Parse("d09351a2-a075-40c8-8054-0b7c423db83f")
+	stepId, _ := uuid.Parse("81eff59f-d084-4324-9e0a-59e353dbd28f")
 	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId.String(), StepId: stepId.String()}
 	results, err := httpCapability.Execute(
 		metadata,
@@ -100,7 +102,7 @@ func TestHttpBasicAuth(t *testing.T) {
 
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
-			"url": []string{url},
+			"url": {url},
 		},
 		AuthInfoIdentifier: "d0c7e6a0-f7fe-464e-9935-e6b3443f5b91",
 	}
@@ -117,9 +119,9 @@ func TestHttpBasicAuth(t *testing.T) {
 		Command: "GET / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
-	var executionId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
-	var playbookId, _ = uuid.Parse("d09351a2-a075-40c8-8054-0b7c423db83f")
-	var stepId, _ = uuid.Parse("81eff59f-d084-4324-9e0a-59e353dbd28f")
+	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	playbookId, _ := uuid.Parse("d09351a2-a075-40c8-8054-0b7c423db83f")
+	stepId, _ := uuid.Parse("81eff59f-d084-4324-9e0a-59e353dbd28f")
 	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId.String(), StepId: stepId.String()}
 	results, err := httpCapability.Execute(
 		metadata,
@@ -132,4 +134,54 @@ func TestHttpBasicAuth(t *testing.T) {
 		t.Fail()
 	}
 	fmt.Println(results)
+}
+
+func TestInsecureHTTPConnection(t *testing.T) {
+	httpRequest := httpUtil.HttpRequest{}
+
+	target := cacao.AgentTarget{
+		Address: map[cacao.NetAddressType][]string{
+			"url": {"https://localhost/get"},
+		},
+	}
+	command := cacao.Command{
+		Type:    "http-api",
+		Command: "GET / HTTP/1.1",
+		Headers: map[string][]string{"accept": {"application/json"}},
+	}
+	httpOptions := httpUtil.HttpOptions{
+		Command: &command,
+		Target:  &target,
+	}
+	httpRequest.SkipCertificateValidation(true)
+	response, err := httpRequest.Request(httpOptions)
+	assert.Equal(t, err, nil)
+	t.Log(string(response))
+	if len(response) == 0 {
+		t.Error("empty response")
+	}
+	t.Log(string(response))
+}
+
+func TestInsecureHTTPConnectionWithFailure(t *testing.T) {
+	httpRequest := httpUtil.HttpRequest{}
+
+	target := cacao.AgentTarget{
+		Address: map[cacao.NetAddressType][]string{
+			"url": {"https://localhost/get"},
+		},
+	}
+	command := cacao.Command{
+		Type:    "http-api",
+		Command: "GET / HTTP/1.1",
+		Headers: map[string][]string{"accept": {"application/json"}},
+	}
+	httpOptions := httpUtil.HttpOptions{
+		Command: &command,
+		Target:  &target,
+	}
+
+	response, err := httpRequest.Request(httpOptions)
+	assert.NotEqual(t, err, nil)
+	t.Log(string(response))
 }

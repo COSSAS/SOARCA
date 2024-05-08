@@ -34,6 +34,7 @@ type httpBinResponseBody struct {
 }
 
 // Test general http options, we do not check responses body, as these are variable for the general connection tests
+
 func TestHttpGetConnection(t *testing.T) {
 	httpRequest := http.HttpRequest{}
 

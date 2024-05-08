@@ -2,6 +2,7 @@ package http
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -35,7 +36,9 @@ type IHttpRequest interface {
 	Request(httpOptions HttpOptions) ([]byte, error)
 }
 
-type HttpRequest struct{}
+type HttpRequest struct {
+	skipCertificateValidation bool
+}
 
 // https://gist.githubusercontent.com/ahmetozer/ffa4cd0b319aff32ea9ed0068c8b81cf/raw/fc8742e6e087451e954bf0da214794a620356a4d/IPv4-IPv6-domain-regex.go
 const (
@@ -44,6 +47,10 @@ const (
 	domainRegex = `^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$`
 )
 
+func (httpRequest *HttpRequest) SkipCertificateValidation(skip bool) {
+	httpRequest.skipCertificateValidation = skip
+}
+
 func (httpRequest *HttpRequest) Request(httpOptions HttpOptions) ([]byte, error) {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 	request, err := httpOptions.setupRequest()
@@ -51,7 +58,11 @@ func (httpRequest *HttpRequest) Request(httpOptions HttpOptions) ([]byte, error)
 		return []byte{}, err
 	}
 
-	client := &http.Client{}
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: httpRequest.skipCertificateValidation},
+	}
+
+	client := &http.Client{Transport: transport}
 	log.Trace(request)
 	response, err := client.Do(request)
 	if err != nil {
@@ -112,6 +123,8 @@ func (httpRequest *HttpOptions) handleResponse(response *http.Response) ([]byte,
 		return []byte{}, err
 	}
 	sc := response.StatusCode
+	log.Trace(fmt.Sprint(sc))
+	log.Trace(string(responseBytes))
 	if sc < 200 || sc > 299 {
 		return []byte{}, errors.New(string(responseBytes))
 	}

@@ -51,7 +51,10 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	ssh := new(ssh.SshCapability)
 	capabilities := map[string]capability.ICapability{ssh.GetType(): ssh}
 
+	skip, _ := strconv.ParseBool(utils.GetEnv("HTTP_SKIP_CERT_VALIDATION", "false"))
+
 	httpUtil := new(httpUtil.HttpRequest)
+	httpUtil.SkipCertificateValidation(skip)
 	http := http.New(httpUtil)
 	capabilities[http.GetType()] = http
 
