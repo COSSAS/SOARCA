@@ -56,6 +56,11 @@ jobs:
         run: git config --global --add safe.directory /__w/SOARCA/SOARCA
       - name: Install swaggo
         run:  go install github.com/swaggo/swag/cmd/swag@latest   
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Run tests
         run: |
           set -x 
