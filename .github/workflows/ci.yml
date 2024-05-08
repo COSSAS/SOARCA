@@ -54,14 +54,14 @@ jobs:
           fetch-depth: 0
       - name: Make repo safe
         run: git config --global --add safe.directory /__w/SOARCA/SOARCA
-      - name: Get docker binary
-        uses: docker/setup-qemu-action@v3
       - name: Install swaggo
         run:  go install github.com/swaggo/swag/cmd/swag@latest   
       - name: Run tests
         run: |
+          set -x 
           apt update
           apt install openssh-server -y
+          docker version
           useradd sshtest
           echo "sshtest:pdKY77qNxpI5MAizirtjCVOcm0KFKIs" | chpasswd
           service ssh start
