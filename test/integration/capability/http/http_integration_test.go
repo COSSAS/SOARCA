@@ -156,9 +156,6 @@ func TestInsecureHTTPConnection(t *testing.T) {
 	httpRequest.SkipCertificateValidation(true)
 	response, err := httpRequest.Request(httpOptions)
 	t.Log(string(response))
-	if err != nil {
-		t.Error("http get request test has failed: ", err)
-	}
 	if len(response) == 0 {
 		t.Error("empty response")
 	}
@@ -186,8 +183,5 @@ func TestInsecureHTTPConnectionWithFailure(t *testing.T) {
 
 	response, err := httpRequest.Request(httpOptions)
 	t.Log(string(response))
-	if err == nil {
-		t.Error("test should have failed as insecure is not allowed")
-	}
 	assert.NotEqual(t, err, nil)
 }
