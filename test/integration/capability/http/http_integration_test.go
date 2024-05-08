@@ -9,8 +9,6 @@ import (
 	"soarca/models/execution"
 	httpUtil "soarca/utils/http"
 
-	http "soarca/utils/http"
-
 	"github.com/go-playground/assert"
 	"github.com/google/uuid"
 )
@@ -139,7 +137,7 @@ func TestHttpBasicAuth(t *testing.T) {
 }
 
 func TestInsecureHTTPConnection(t *testing.T) {
-	httpRequest := http.HttpRequest{}
+	httpRequest := httpUtil.HttpRequest{}
 
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
@@ -151,7 +149,7 @@ func TestInsecureHTTPConnection(t *testing.T) {
 		Command: "GET / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
-	httpOptions := http.HttpOptions{
+	httpOptions := httpUtil.HttpOptions{
 		Command: &command,
 		Target:  &target,
 	}
@@ -169,7 +167,7 @@ func TestInsecureHTTPConnection(t *testing.T) {
 }
 
 func TestInsecureHTTPConnectionWithFailure(t *testing.T) {
-	httpRequest := http.HttpRequest{}
+	httpRequest := httpUtil.HttpRequest{}
 
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
@@ -181,7 +179,7 @@ func TestInsecureHTTPConnectionWithFailure(t *testing.T) {
 		Command: "GET / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
-	httpOptions := http.HttpOptions{
+	httpOptions := httpUtil.HttpOptions{
 		Command: &command,
 		Target:  &target,
 	}
