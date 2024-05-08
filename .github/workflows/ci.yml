@@ -56,17 +56,15 @@ jobs:
         run: git config --global --add safe.directory /__w/SOARCA/SOARCA
       - name: Install swaggo
         run:  go install github.com/swaggo/swag/cmd/swag@latest  
-      - name: Install docker
-        uses: docker-practice/actions-setup-docker@master
         timeout-minutes: 12
+      - name: Start dokcer httpbin containers
+        run: docker compose -f "docker/testing/httpbin-test/docker-compose.yml" up -d
       - name: Run tests
         run: |
           set -x 
           apt update
           apt install openssh-server -y
-          docker version
           useradd sshtest
           echo "sshtest:pdKY77qNxpI5MAizirtjCVOcm0KFKIs" | chpasswd
           service ssh start
-          docker compose -f docker/testing/httpbin-test/docker-compose.yml up -d
           make ci-test
