@@ -62,6 +62,7 @@ func TestInsecureHTTPConnection(t *testing.T) {
 		t.Error("empty response")
 	}
 	t.Log(string(response))
+	assert.Equal(t, err, nil)
 }
 
 func TestInsecureHTTPConnectionWithFailure(t *testing.T) {
@@ -87,6 +88,7 @@ func TestInsecureHTTPConnectionWithFailure(t *testing.T) {
 	if err == nil {
 		t.Error("test should have failed as insecure is not allowed")
 	}
+	assert.NotEqual(t, err, nil)
 }
 
 func TestHttpGetConnection(t *testing.T) {
