@@ -52,6 +52,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: docker-practice/actions-setup-docker@master
+        timeout-minutes: 12
       - name: Make repo safe
         run: git config --global --add safe.directory /__w/SOARCA/SOARCA
       - name: Install swaggo
@@ -65,4 +67,3 @@ jobs:
           service ssh start
           docker compose -f docker/testing/httpbin-test/docker-compose.yml up -d
           make ci-test
-
