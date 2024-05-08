@@ -63,5 +63,6 @@ jobs:
           useradd sshtest
           echo "sshtest:pdKY77qNxpI5MAizirtjCVOcm0KFKIs" | chpasswd
           service ssh start
+          docker compose -f docker/testing/httpbin-test/docker-compose.yml up -d
           make ci-test
 

@@ -34,6 +34,36 @@ type httpBinResponseBody struct {
 }
 
 // Test general http options, we do not check responses body, as these are variable for the general connection tests
+
+func TestInsecureHTTPConnection(t *testing.T) {
+	httpRequest := http.HttpRequest{}
+
+	target := cacao.AgentTarget{
+		Address: map[cacao.NetAddressType][]string{
+			"url": {"https://localhost/get"},
+		},
+	}
+	command := cacao.Command{
+		Type:    "http-api",
+		Command: "GET / HTTP/1.1",
+		Headers: map[string][]string{"accept": {"application/json"}},
+	}
+	httpOptions := http.HttpOptions{
+		Command: &command,
+		Target:  &target,
+	}
+	httpRequest.SkipCertificateValidation(true)
+	response, err := httpRequest.Request(httpOptions)
+	t.Log(string(response))
+	if err != nil {
+		t.Error("http get request test has failed: ", err)
+	}
+	if len(response) == 0 {
+		t.Error("empty response")
+	}
+	t.Log(string(response))
+}
+
 func TestHttpGetConnection(t *testing.T) {
 	httpRequest := http.HttpRequest{}
 
