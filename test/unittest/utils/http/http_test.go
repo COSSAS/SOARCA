@@ -64,6 +64,31 @@ func TestInsecureHTTPConnection(t *testing.T) {
 	t.Log(string(response))
 }
 
+func TestInsecureHTTPConnectionWithFailure(t *testing.T) {
+	httpRequest := http.HttpRequest{}
+
+	target := cacao.AgentTarget{
+		Address: map[cacao.NetAddressType][]string{
+			"url": {"https://localhost/get"},
+		},
+	}
+	command := cacao.Command{
+		Type:    "http-api",
+		Command: "GET / HTTP/1.1",
+		Headers: map[string][]string{"accept": {"application/json"}},
+	}
+	httpOptions := http.HttpOptions{
+		Command: &command,
+		Target:  &target,
+	}
+
+	response, err := httpRequest.Request(httpOptions)
+	t.Log(string(response))
+	if err == nil {
+		t.Error("test should have failed as insecure is not allowed")
+	}
+}
+
 func TestHttpGetConnection(t *testing.T) {
 	httpRequest := http.HttpRequest{}
 
