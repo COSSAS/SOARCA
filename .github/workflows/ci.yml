@@ -55,12 +55,10 @@ jobs:
       - name: Make repo safe
         run: git config --global --add safe.directory /__w/SOARCA/SOARCA
       - name: Install swaggo
-        run:  go install github.com/swaggo/swag/cmd/swag@latest   
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        run:  go install github.com/swaggo/swag/cmd/swag@latest  
+      - name: Install docker
+        uses: docker-practice/actions-setup-docker@master
+        timeout-minutes: 12
       - name: Run tests
         run: |
           set -x 
