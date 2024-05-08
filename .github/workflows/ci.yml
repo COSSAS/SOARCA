@@ -59,11 +59,14 @@ jobs:
       - name: Install swaggo
         run:  go install github.com/swaggo/swag/cmd/swag@latest  
         timeout-minutes: 12
+      - name: Start docker containers for test
+        run: docker-compose -f "docker-compose.yml" up -d --build
       - name: Run tests
         run: |
           sudo apt update
-          apt install openssh-server -y
-          useradd sshtest
-          echo "sshtest:pdKY77qNxpI5MAizirtjCVOcm0KFKIs" | chpasswd
-          service ssh start
+          sudo apt install openssh-server -y
+          sudo useradd sshtest
+          sudo echo "sshtest:pdKY77qNxpI5MAizirtjCVOcm0KFKIs" | chpasswd
+          sudo service ssh start
           make ci-test
+
