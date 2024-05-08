@@ -6,7 +6,7 @@ import (
 	"soarca/logger"
 	"soarca/models/cacao"
 	"soarca/models/execution"
-	"soarca/utils/stix"
+	"soarca/utils/stix/expression/comparison"
 )
 
 var component = reflect.TypeOf(Executor{}).PkgPath()
@@ -16,8 +16,8 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
-func New(stix stix.IStix) *Executor {
-	return &Executor{stix: stix}
+func New(comparison comparison.IComparison) *Executor {
+	return &Executor{comparison: comparison}
 }
 
 type IExecuter interface {
@@ -26,7 +26,7 @@ type IExecuter interface {
 }
 
 type Executor struct {
-	stix stix.IStix
+	comparison comparison.IComparison
 }
 
 func (executor *Executor) Execute(meta execution.Metadata, step cacao.Step, variables cacao.Variables) (string, bool, error) {
@@ -37,7 +37,7 @@ func (executor *Executor) Execute(meta execution.Metadata, step cacao.Step, vari
 		return step.OnFailure, false, err
 	}
 
-	result, err := executor.stix.Evaluate(step.Condition, variables)
+	result, err := executor.comparison.Evaluate(step.Condition, variables)
 	if err != nil {
 		log.Error(err)
 		return "", false, err

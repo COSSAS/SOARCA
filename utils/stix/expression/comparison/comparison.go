@@ -1,4 +1,4 @@
-package stix
+package comparison
 
 import (
 	"errors"
@@ -29,7 +29,7 @@ const (
 )
 
 var (
-	component = reflect.TypeOf(Stix{}).PkgPath()
+	component = reflect.TypeOf(Comparison{}).PkgPath()
 	log       *logger.Log
 )
 
@@ -37,17 +37,17 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
-type IStix interface {
+type IComparison interface {
 	Evaluate(string, cacao.Variables) (bool, error)
 }
 
-func New() *Stix {
-	return &Stix{}
+func New() *Comparison {
+	return &Comparison{}
 }
 
-type Stix struct{}
+type Comparison struct{}
 
-func (s *Stix) Evaluate(expression string, vars cacao.Variables) (bool, error) {
+func (s *Comparison) Evaluate(expression string, vars cacao.Variables) (bool, error) {
 
 	//"condition": "__variable__:value == '10.0.0.0/8'"
 	//"condition": "__ip__:value/__subnet__:value == '10.0.0.0/8'"
@@ -65,6 +65,8 @@ func (s *Stix) Evaluate(expression string, vars cacao.Variables) (bool, error) {
 	}
 
 	parts[0] = vars.Interpolate(parts[0])
+
+	log.Trace(parts)
 
 	switch usedVariable.Type {
 	case cacao.VariableTypeBool:
