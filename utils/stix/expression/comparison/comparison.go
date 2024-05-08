@@ -48,11 +48,6 @@ func New() *Comparison {
 type Comparison struct{}
 
 func (s *Comparison) Evaluate(expression string, vars cacao.Variables) (bool, error) {
-
-	//"condition": "__variable__:value == '10.0.0.0/8'"
-	//"condition": "__ip__:value/__subnet__:value == '10.0.0.0/8'"
-	//"condition": "__ip__:value = __another_ip__:value"
-	//"expresion_type": "ipv4"
 	parts := strings.Split(expression, " ")
 	if len(parts) != 3 {
 		err := errors.New("comparisons can only contain 3 parts as per STIX specification")
@@ -66,7 +61,7 @@ func (s *Comparison) Evaluate(expression string, vars cacao.Variables) (bool, er
 
 	parts[0] = vars.Interpolate(parts[0])
 
-	log.Trace(parts)
+	log.Trace("the interpolated expression is: ", parts)
 
 	switch usedVariable.Type {
 	case cacao.VariableTypeBool:
