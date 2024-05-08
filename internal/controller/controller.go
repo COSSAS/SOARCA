@@ -23,7 +23,7 @@ import (
 	"soarca/logger"
 	"soarca/utils"
 	httpUtil "soarca/utils/http"
-	"soarca/utils/stix"
+	"soarca/utils/stix/expression/comparison"
 
 	downstreamReporter "soarca/internal/reporter/downstream_reporter"
 
@@ -80,8 +80,8 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 
 	actionExecutor := action.New(capabilities, reporter)
 	playbookActionExecutor := playbook_action.New(controller, controller, reporter)
-	stix := stix.New()
-	conditionExecutor := condition.New(stix)
+	stixComparison := comparison.New()
+	conditionExecutor := condition.New(stixComparison, reporter)
 	guid := new(guid.Guid)
 	decompose := decomposer.New(actionExecutor,
 		playbookActionExecutor,
