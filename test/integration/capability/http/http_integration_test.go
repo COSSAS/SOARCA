@@ -9,7 +9,7 @@ import (
 	"soarca/models/execution"
 	httpUtil "soarca/utils/http"
 
-	"github.com/go-playground/assert"
+	"github.com/go-playground/assert/v2"
 	"github.com/google/uuid"
 )
 
