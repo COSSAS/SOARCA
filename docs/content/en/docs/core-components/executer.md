@@ -202,7 +202,11 @@ The result of the step comparison will be returned to the decomposer. A result c
 ### While condition executor 
 The if-condition executor will process a cacao while-condition step and determine it's output. 
 
-The result of the step comparison will be returned to the decomposer. A result can be either a next step id and/or error status. 
+The result of the step comparison will be returned to the decomposer. A result can be either a next step id and/or error status. Only STIX comparison expressions are implemented at this time. 
+
+{{% alert title="Warning" color="warning" %}}
+Note only [Comparison Expression](http://docs.oasis-open.org/cti/stix/v2.0/cs01/part5-stix-patterning/stix-v2.0-cs01-part5-stix-patterning.html#_Toc496717749) are implemented for all CACAO variable types.
+{{% /alert %}}
 
 ### Parallel step executor
 The parallel executor will execute the parallel step. This wil be done in sequence to simplify implementation. As parallel steps must not be depended on each other sequential execution is possible. Later this will be changed. 
