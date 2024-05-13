@@ -10,6 +10,7 @@ import (
 	"soarca/models/cacao"
 	"soarca/models/execution"
 	"soarca/test/unittest/mocks/mock_executor"
+	mock_condition_executor "soarca/test/unittest/mocks/mock_executor/condition"
 	mock_playbook_action_executor "soarca/test/unittest/mocks/mock_executor/playbook_action"
 	"soarca/test/unittest/mocks/mock_guid"
 	"soarca/test/unittest/mocks/mock_reporter"
@@ -21,6 +22,7 @@ import (
 func TestExecutePlaybook(t *testing.T) {
 	mock_action_executor := new(mock_executor.Mock_Action_Executor)
 	mock_playbook_action_executor := new(mock_playbook_action_executor.Mock_PlaybookActionExecutor)
+	mock_condition_executor := new(mock_condition_executor.Mock_Condition)
 	uuid_mock := new(mock_guid.Mock_Guid)
 	mock_reporter := new(mock_reporter.Mock_Reporter)
 
@@ -37,7 +39,9 @@ func TestExecutePlaybook(t *testing.T) {
 
 	decomposer := decomposer.New(mock_action_executor,
 		mock_playbook_action_executor,
-		uuid_mock, mock_reporter)
+		mock_condition_executor,
+		uuid_mock,
+		mock_reporter)
 
 	step1 := cacao.Step{
 		Type:          "action",
@@ -117,6 +121,7 @@ func TestExecutePlaybook(t *testing.T) {
 func TestExecutePlaybookMultiStep(t *testing.T) {
 	mock_action_executor := new(mock_executor.Mock_Action_Executor)
 	mock_playbook_action_executor := new(mock_playbook_action_executor.Mock_PlaybookActionExecutor)
+	mock_condition_executor := new(mock_condition_executor.Mock_Condition)
 	uuid_mock := new(mock_guid.Mock_Guid)
 	mock_reporter := new(mock_reporter.Mock_Reporter)
 
@@ -144,7 +149,9 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 
 	decomposer := decomposer.New(mock_action_executor,
 		mock_playbook_action_executor,
-		uuid_mock, mock_reporter)
+		mock_condition_executor,
+		uuid_mock,
+		mock_reporter)
 
 	step1 := cacao.Step{
 		Type:          "action",
@@ -262,6 +269,7 @@ Test with an Empty OnCompletion will result in not executing the step.
 func TestExecuteEmptyMultiStep(t *testing.T) {
 	mock_action_executor2 := new(mock_executor.Mock_Action_Executor)
 	mock_playbook_action_executor2 := new(mock_playbook_action_executor.Mock_PlaybookActionExecutor)
+	mock_condition_executor := new(mock_condition_executor.Mock_Condition)
 	uuid_mock2 := new(mock_guid.Mock_Guid)
 	mock_reporter := new(mock_reporter.Mock_Reporter)
 
@@ -288,7 +296,9 @@ func TestExecuteEmptyMultiStep(t *testing.T) {
 
 	decomposer2 := decomposer.New(mock_action_executor2,
 		mock_playbook_action_executor2,
-		uuid_mock2, mock_reporter)
+		mock_condition_executor,
+		uuid_mock2,
+		mock_reporter)
 
 	step1 := cacao.Step{
 		Type:          "ssh",
@@ -332,6 +342,7 @@ Test with an not occuring on completion id will result in not executing the step
 func TestExecuteIllegalMultiStep(t *testing.T) {
 	mock_action_executor2 := new(mock_executor.Mock_Action_Executor)
 	mock_playbook_action_executor2 := new(mock_playbook_action_executor.Mock_PlaybookActionExecutor)
+	mock_condition_executor := new(mock_condition_executor.Mock_Condition)
 	uuid_mock2 := new(mock_guid.Mock_Guid)
 	mock_reporter := new(mock_reporter.Mock_Reporter)
 
@@ -348,7 +359,9 @@ func TestExecuteIllegalMultiStep(t *testing.T) {
 
 	decomposer2 := decomposer.New(mock_action_executor2,
 		mock_playbook_action_executor2,
-		uuid_mock2, mock_reporter)
+		mock_condition_executor,
+		uuid_mock2,
+		mock_reporter)
 
 	step1 := cacao.Step{
 		Type:          "action",
@@ -386,6 +399,7 @@ func TestExecuteIllegalMultiStep(t *testing.T) {
 func TestExecutePlaybookAction(t *testing.T) {
 	mock_action_executor := new(mock_executor.Mock_Action_Executor)
 	mock_playbook_action_executor := new(mock_playbook_action_executor.Mock_PlaybookActionExecutor)
+	mock_condition_executor := new(mock_condition_executor.Mock_Condition)
 	uuid_mock := new(mock_guid.Mock_Guid)
 	mock_reporter := new(mock_reporter.Mock_Reporter)
 	expectedVariables := cacao.Variable{
@@ -396,7 +410,9 @@ func TestExecutePlaybookAction(t *testing.T) {
 
 	decomposer := decomposer.New(mock_action_executor,
 		mock_playbook_action_executor,
-		uuid_mock, mock_reporter)
+		mock_condition_executor,
+		uuid_mock,
+		mock_reporter)
 
 	step1 := cacao.Step{
 		Type:          "playbook-action",
@@ -443,4 +459,178 @@ func TestExecutePlaybookAction(t *testing.T) {
 	value, found := details.Variables.Find("return")
 	assert.Equal(t, found, true)
 	assert.Equal(t, value.Value, "value")
+}
+
+func TestExecuteIfCondition(t *testing.T) {
+
+	mock_action_executor := new(mock_executor.Mock_Action_Executor)
+	mock_playbook_action_executor := new(mock_playbook_action_executor.Mock_PlaybookActionExecutor)
+	mock_condition_executor := new(mock_condition_executor.Mock_Condition)
+	uuid_mock := new(mock_guid.Mock_Guid)
+	mock_reporter := new(mock_reporter.Mock_Reporter)
+	expectedVariables := cacao.Variable{
+		Type:  "string",
+		Name:  "__var1__",
+		Value: "testing",
+	}
+
+	// returned from step
+	expectedVariables2 := cacao.Variable{
+		Type:  "string",
+		Name:  "__var2__",
+		Value: "testing2",
+	}
+
+	expectedCommand := cacao.Command{
+		Type:    "ssh",
+		Command: "ssh ls -la",
+	}
+
+	expectedTarget := cacao.AgentTarget{
+		Name:               "sometarget",
+		AuthInfoIdentifier: "id",
+	}
+
+	expectedAgent := cacao.AgentTarget{
+		Type: "soarca",
+		Name: "soarca-ssh",
+	}
+
+	decomposer := decomposer.New(mock_action_executor,
+		mock_playbook_action_executor,
+		mock_condition_executor,
+		uuid_mock,
+		mock_reporter)
+
+	end := cacao.Step{
+		Type: cacao.StepTypeEnd,
+		ID:   "end--test",
+		Name: "end step",
+	}
+
+	endTrue := cacao.Step{
+		Type: cacao.StepTypeEnd,
+		ID:   "end--true",
+		Name: "end branch true step",
+	}
+
+	stepTrue := cacao.Step{
+		Type:          cacao.StepTypeAction,
+		ID:            "action--step-true",
+		Name:          "ssh-tests",
+		Commands:      []cacao.Command{expectedCommand},
+		Targets:       []string{expectedTarget.ID},
+		StepVariables: cacao.NewVariables(expectedVariables),
+		OnCompletion:  endTrue.ID,
+	}
+
+	endFalse := cacao.Step{
+		Type: cacao.StepTypeEnd,
+		ID:   "end--false",
+		Name: "end branch false step",
+	}
+
+	stepFalse := cacao.Step{
+		Type:          cacao.StepTypeAction,
+		ID:            "action--step-false",
+		Name:          "ssh-tests",
+		Commands:      []cacao.Command{expectedCommand},
+		Targets:       []string{expectedTarget.ID},
+		StepVariables: cacao.NewVariables(expectedVariables),
+		OnCompletion:  endFalse.ID,
+	}
+
+	stepCompletion := cacao.Step{
+		Type:          cacao.StepTypeAction,
+		ID:            "action--step-completion",
+		Name:          "ssh-tests",
+		Commands:      []cacao.Command{expectedCommand},
+		Targets:       []string{expectedTarget.ID},
+		StepVariables: cacao.NewVariables(expectedVariables),
+		OnCompletion:  end.ID,
+	}
+
+	stepIf := cacao.Step{
+		Type:          cacao.StepTypeIfCondition,
+		ID:            "if-condition--test",
+		Name:          "if condition",
+		StepVariables: cacao.NewVariables(expectedVariables),
+		Condition:     "__var1__:value = testing",
+		OnTrue:        stepTrue.ID,
+		OnFalse:       stepFalse.ID,
+		OnCompletion:  stepCompletion.ID,
+	}
+
+	start := cacao.Step{
+		Type:         cacao.StepTypeStart,
+		ID:           "start--test",
+		Name:         "start step",
+		OnCompletion: stepIf.ID,
+	}
+
+	playbook := cacao.Playbook{
+		ID:            "test",
+		Type:          "test",
+		Name:          "playbook-test",
+		WorkflowStart: start.ID,
+		Workflow: map[string]cacao.Step{start.ID: start,
+			stepIf.ID:         stepIf,
+			stepTrue.ID:       stepTrue,
+			stepFalse.ID:      stepFalse,
+			stepCompletion.ID: stepCompletion,
+			end.ID:            end,
+			endTrue.ID:        endTrue,
+			endFalse.ID:       endFalse},
+		AgentDefinitions:  map[string]cacao.AgentTarget{expectedAgent.ID: expectedAgent},
+		TargetDefinitions: map[string]cacao.AgentTarget{expectedTarget.ID: expectedTarget},
+	}
+
+	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	metaStepIf := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: stepIf.ID}
+
+	uuid_mock.On("New").Return(executionId)
+	mock_reporter.On("ReportWorkflowStart", executionId, playbook).Return()
+
+	mock_condition_executor.On("Execute",
+		metaStepIf,
+		stepIf,
+		cacao.NewVariables(expectedVariables)).Return(stepTrue.ID, true, nil)
+
+	stepTrueDetails := action.PlaybookStepMetadata{
+		Step:      stepTrue,
+		Targets:   playbook.TargetDefinitions,
+		Auth:      playbook.AuthenticationInfoDefinitions,
+		Agent:     expectedAgent,
+		Variables: cacao.NewVariables(expectedVariables),
+	}
+
+	metaStepTrue := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: stepTrue.ID}
+
+	mock_action_executor.On("Execute",
+		metaStepTrue,
+		stepTrueDetails).Return(cacao.NewVariables(expectedVariables2), nil)
+
+	stepCompletionDetails := action.PlaybookStepMetadata{
+		Step:      stepCompletion,
+		Targets:   playbook.TargetDefinitions,
+		Auth:      playbook.AuthenticationInfoDefinitions,
+		Agent:     expectedAgent,
+		Variables: cacao.NewVariables(expectedVariables, expectedVariables2),
+	}
+
+	metaStepCompletion := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: stepCompletion.ID}
+
+	mock_action_executor.On("Execute",
+		metaStepCompletion,
+		stepCompletionDetails).Return(cacao.NewVariables(), nil)
+	mock_reporter.On("ReportWorkflowEnd", executionId, playbook, nil).Return()
+	details, err := decomposer.Execute(playbook)
+	uuid_mock.AssertExpectations(t)
+	fmt.Println(err)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, details.ExecutionId, executionId)
+	mock_reporter.AssertExpectations(t)
+	mock_condition_executor.AssertExpectations(t)
+	mock_action_executor.AssertExpectations(t)
+
 }
