@@ -13,6 +13,9 @@ func parseCachePlaybookEntry(cacheEntry cache_model.ExecutionEntry) (api_model.P
 		return api_model.PlaybookExecutionReport{}, err
 	}
 	playbookStatusText, err := api_model.GetCacheStatusText(playbookStatus, api_model.ReportLevelPlaybook)
+	if err != nil {
+		return api_model.PlaybookExecutionReport{}, err
+	}
 	playbookErrorStr := ""
 	if cacheEntry.PlaybookResult != nil {
 		playbookErrorStr = cacheEntry.PlaybookResult.Error()
@@ -43,6 +46,9 @@ func parseCacheStepEntries(cacheStepEntries map[string]cache_model.StepResult) (
 	for stepId, stepEntry := range cacheStepEntries {
 
 		stepStatus, err := api_model.CacheStatusEnum2String(stepEntry.Status)
+		if err != nil {
+			return map[string]api_model.StepExecutionReport{}, err
+		}
 		stepStatusText, err := api_model.GetCacheStatusText(stepStatus, api_model.ReportLevelStep)
 		if err != nil {
 			return map[string]api_model.StepExecutionReport{}, err
