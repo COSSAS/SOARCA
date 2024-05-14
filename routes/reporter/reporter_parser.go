@@ -5,6 +5,8 @@ import (
 	cache_model "soarca/models/cache"
 )
 
+const defaultRequestInterval int = 5
+
 func parseCachePlaybookEntry(cacheEntry cache_model.ExecutionEntry) (api_model.PlaybookExecutionReport, error) {
 	playbookStatus, err := api_model.CacheStatusEnum2String(cacheEntry.Status)
 	if err != nil {
@@ -32,7 +34,7 @@ func parseCachePlaybookEntry(cacheEntry cache_model.ExecutionEntry) (api_model.P
 		StatusText:      playbookErrorStr,
 		Error:           playbookErrorStr,
 		StepResults:     stepResults,
-		RequestInterval: 5,
+		RequestInterval: defaultRequestInterval,
 	}
 	return executionReport, nil
 }
