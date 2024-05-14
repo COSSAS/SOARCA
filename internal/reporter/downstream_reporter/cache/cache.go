@@ -3,7 +3,6 @@ package cache
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"reflect"
 	"soarca/logger"
 	"soarca/models/cacao"
@@ -221,13 +220,4 @@ func (cacheReporter *Cache) copyExecutionEntry(executionKeyStr string) (cache_re
 		return cache_report.ExecutionEntry{}, err
 	}
 	return clone, nil
-}
-
-func (cacheReporter *Cache) PrintCacheEntries() {
-	list := []string{}
-	for _, entry := range cacheReporter.Cache {
-		b, _ := json.Marshal(entry)
-		list = append(list, string(b))
-	}
-	fmt.Println(list)
 }
