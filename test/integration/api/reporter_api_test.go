@@ -81,9 +81,9 @@ func TestGetExecutions(t *testing.T) {
 
 		Workflow: map[string]cacao.Step{step1.ID: step1, end.ID: end},
 	}
-	executionId0, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
-	executionId1, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c1")
-	executionId2, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c2")
+	executionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
+	executionId1 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c1")
+	executionId2 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c2")
 
 	executionIds := []uuid.UUID{
 		executionId0,
@@ -215,9 +215,9 @@ func TestGetExecutionReport(t *testing.T) {
 
 		Workflow: map[string]cacao.Step{step1.ID: step1, end.ID: end},
 	}
-	executionId0, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
-	executionId1, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c1")
-	executionId2, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c2")
+	executionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
+	executionId1 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c1")
+	executionId2 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c2")
 
 	layout := "2006-01-02T15:04:05.000Z"
 	str := "2014-11-12T11:45:26.371Z"

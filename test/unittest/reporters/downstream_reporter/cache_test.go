@@ -74,7 +74,7 @@ func TestReportWorkflowStartFirst(t *testing.T) {
 
 		Workflow: map[string]cacao.Step{step1.ID: step1, end.ID: end},
 	}
-	executionId0, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
+	executionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
 
 	layout := "2006-01-02T15:04:05.000Z"
 	str := "2014-11-12T11:45:26.371Z"
@@ -125,7 +125,7 @@ func TestReportWorkflowStartFirst(t *testing.T) {
 
 func TestReportWorkflowStartFifo(t *testing.T) {
 	mock_time := new(mock_time.MockTime)
-	cacheReporter := cache.New(mock_time, 10)
+	cacheReporter := cache.New(mock_time, 3)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -183,17 +183,10 @@ func TestReportWorkflowStartFifo(t *testing.T) {
 
 		Workflow: map[string]cacao.Step{step1.ID: step1, end.ID: end},
 	}
-	executionId0, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
-	executionId1, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c1")
-	executionId2, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c2")
-	executionId3, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c3")
-	executionId4, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c4")
-	executionId5, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c5")
-	executionId6, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c6")
-	executionId7, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c7")
-	executionId8, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
-	executionId9, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c9")
-	executionId10, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430ca")
+	executionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
+	executionId1 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c1")
+	executionId2 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c2")
+	executionId3 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c3")
 
 	layout := "2006-01-02T15:04:05.000Z"
 	str := "2014-11-12T11:45:26.371Z"
@@ -205,19 +198,12 @@ func TestReportWorkflowStartFifo(t *testing.T) {
 		executionId1,
 		executionId2,
 		executionId3,
-		executionId4,
-		executionId5,
-		executionId6,
-		executionId7,
-		executionId8,
-		executionId9,
-		executionId10,
 	}
 
 	expectedStarted, _ := time.Parse(layout, "2014-11-12T11:45:26.371Z")
 	expectedEnded, _ := time.Parse(layout, "0001-01-01T00:00:00Z")
 	expectedExecutionsFull := []cache_model.ExecutionEntry{}
-	for _, executionId := range executionIds[:10] {
+	for _, executionId := range executionIds[:len(executionIds)-1] {
 		t.Log(executionId)
 		entry := cache_model.ExecutionEntry{
 			ExecutionId:    executionId,
@@ -258,34 +244,6 @@ func TestReportWorkflowStartFifo(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	err = cacheReporter.ReportWorkflowStart(executionId3, playbook)
-	if err != nil {
-		t.Fail()
-	}
-	err = cacheReporter.ReportWorkflowStart(executionId4, playbook)
-	if err != nil {
-		t.Fail()
-	}
-	err = cacheReporter.ReportWorkflowStart(executionId5, playbook)
-	if err != nil {
-		t.Fail()
-	}
-	err = cacheReporter.ReportWorkflowStart(executionId6, playbook)
-	if err != nil {
-		t.Fail()
-	}
-	err = cacheReporter.ReportWorkflowStart(executionId7, playbook)
-	if err != nil {
-		t.Fail()
-	}
-	err = cacheReporter.ReportWorkflowStart(executionId8, playbook)
-	if err != nil {
-		t.Fail()
-	}
-	err = cacheReporter.ReportWorkflowStart(executionId9, playbook)
-	if err != nil {
-		t.Fail()
-	}
 
 	returnedExecutionsFull, _ := cacheReporter.GetExecutions()
 	t.Log("expected")
@@ -294,7 +252,7 @@ func TestReportWorkflowStartFifo(t *testing.T) {
 	t.Log(returnedExecutionsFull)
 	assert.Equal(t, expectedExecutionsFull, returnedExecutionsFull)
 
-	err = cacheReporter.ReportWorkflowStart(executionId10, playbook)
+	err = cacheReporter.ReportWorkflowStart(executionId3, playbook)
 	if err != nil {
 		t.Fail()
 	}
@@ -365,7 +323,7 @@ func TestReportWorkflowEnd(t *testing.T) {
 
 		Workflow: map[string]cacao.Step{step1.ID: step1, end.ID: end},
 	}
-	executionId0, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
+	executionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
 
 	layout := "2006-01-02T15:04:05.000Z"
 	str := "2014-11-12T11:45:26.371Z"
@@ -464,7 +422,7 @@ func TestReportStepStartAndEnd(t *testing.T) {
 
 		Workflow: map[string]cacao.Step{step1.ID: step1, end.ID: end},
 	}
-	executionId0, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
+	executionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
 	layout := "2006-01-02T15:04:05.000Z"
 	str := "2014-11-12T11:45:26.371Z"
 	timeNow, _ := time.Parse(layout, str)
@@ -588,7 +546,7 @@ func TestInvalidStepReportAfterExecutionEnd(t *testing.T) {
 
 		Workflow: map[string]cacao.Step{step1.ID: step1, end.ID: end},
 	}
-	executionId0, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
+	executionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
 	layout := "2006-01-02T15:04:05.000Z"
 	str := "2014-11-12T11:45:26.371Z"
 	timeNow, _ := time.Parse(layout, str)
@@ -677,7 +635,7 @@ func TestInvalidStepReportAfterStepEnd(t *testing.T) {
 
 		Workflow: map[string]cacao.Step{step1.ID: step1, end.ID: end},
 	}
-	executionId0, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
+	executionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
 	layout := "2006-01-02T15:04:05.000Z"
 	str := "2014-11-12T11:45:26.371Z"
 	timeNow, _ := time.Parse(layout, str)
