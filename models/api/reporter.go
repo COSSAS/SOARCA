@@ -8,6 +8,8 @@ import (
 
 type Status uint8
 
+// Reporter model adapted from https://github.com/cyentific-rni/workflow-status/blob/main/README.md
+
 const (
 	SuccessfullyExecuted    = "successfully_executed"
 	Failed                  = "failed"
