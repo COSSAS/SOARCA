@@ -8,7 +8,7 @@ import (
 	api_model "soarca/models/api"
 	cache_model "soarca/models/cache"
 	"soarca/routes/reporter"
-	mock_ds_reporter "soarca/test/unittest/mocks/mock_reporter"
+	mock_cache "soarca/test/unittest/mocks/mock_cache"
 	"testing"
 
 	"github.com/google/uuid"
@@ -18,7 +18,7 @@ import (
 )
 
 func TestGetExecutionsInvocation(t *testing.T) {
-	mock_cache_reporter := &mock_ds_reporter.Mock_Downstream_Reporter{}
+	mock_cache_reporter := &mock_cache.Mock_Cache{}
 	mock_cache_reporter.On("GetExecutions").Return([]cache_model.ExecutionEntry{}, nil)
 
 	app := gin.New()
@@ -41,7 +41,7 @@ func TestGetExecutionsInvocation(t *testing.T) {
 }
 
 func TestGetExecutionReportInvocation(t *testing.T) {
-	mock_cache_reporter := &mock_ds_reporter.Mock_Downstream_Reporter{}
+	mock_cache_reporter := &mock_cache.Mock_Cache{}
 	app := gin.New()
 	gin.SetMode(gin.DebugMode)
 
