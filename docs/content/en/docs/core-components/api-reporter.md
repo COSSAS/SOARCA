@@ -39,7 +39,9 @@ None
 @startjson
 [
     {
-        "executions": ["execution-id", "..."]
+        "executions": [
+            {"execution_id" : "1", "playbook_id" : "a", "started" : "<timestamp>", "..." : "..."}, 
+            "..."]
     }
 ]
 @endjson
@@ -79,7 +81,6 @@ Response data model:
 ##### Step execution data
 |field              |content                |type               | description |
 | ----------------- | --------------------- | ----------------- | ----------- |
-|execution_id       |UUID                   |string             |The id of the execution of the playbook where the step resides
 |step_id            |UUID                   |string             |The id of the step being executed
 |started            |timestamp              |string             |The time at which the execution of the step started
 |ended              |timestamp              |string             |The time at which the execution of the step ended (if so)
