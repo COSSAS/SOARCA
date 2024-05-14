@@ -299,8 +299,8 @@ func TestReportWorkflowStartFifo(t *testing.T) {
 		t.Fail()
 	}
 
-	// returnedExecutionsFifo, _ := cacheReporter.GetExecutions()
-	// assert.Equal(t, expectedExecutionsFifo, returnedExecutionsFifo)
+	returnedExecutionsFifo, _ := cacheReporter.GetExecutions()
+	assert.Equal(t, expectedExecutionsFifo, returnedExecutionsFifo)
 	mock_time.AssertExpectations(t)
 }
 
