@@ -66,7 +66,12 @@ func (executionInformer *executionInformer) getExecutions(g *gin.Context) {
 func (executionInformer *executionInformer) getExecutionReport(g *gin.Context) {
 	id := g.Param("id")
 	log.Trace("Trying to obtain execution for id: ", id)
-	uuid := uuid.MustParse(id)
+	uuid, err := uuid.Parse(id)
+	if err != nil {
+		log.Debug("Could not parse id parameter for request")
+		error.SendErrorResponse(g, http.StatusBadRequest, "Could not parse id parameter for request", "GET /report/{id}", "")
+		return
+	}
 
 	executionEntry, err := executionInformer.informer.GetExecutionReport(uuid)
 	if err != nil {
