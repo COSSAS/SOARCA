@@ -13,10 +13,9 @@ func parseCachePlaybookEntry(cacheEntry cache_model.ExecutionEntry) (api_model.P
 		return api_model.PlaybookExecutionReport{}, err
 	}
 
-	playbookError := cacheEntry.PlaybookResult
 	playbookErrorStr := ""
-	if playbookError != nil {
-		playbookErrorStr = playbookError.Error()
+	if cacheEntry.PlaybookResult != nil {
+		playbookErrorStr = cacheEntry.PlaybookResult.Error()
 	}
 
 	stepResults, err := parseCacheStepEntries(cacheEntry.StepResults)
