@@ -24,8 +24,8 @@ import (
 	"soarca/logger"
 	"soarca/utils"
 	httpUtil "soarca/utils/http"
-	timeUtil "soarca/utils/time"
 	"soarca/utils/stix/expression/comparison"
+	timeUtil "soarca/utils/time"
 
 	downstreamReporter "soarca/internal/reporter/downstream_reporter"
 
@@ -51,7 +51,9 @@ type Controller struct {
 
 var mainController = Controller{}
 
-var mainCache = cache.New(&timeUtil.Time{})
+var mainCache = cache.Cache{}
+
+const defaultCacheSize int = 10
 
 func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	ssh := new(ssh.SshCapability)
@@ -82,7 +84,7 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 
 	// NOTE: Enrolling mainCache by default as reporter
 	reporter := reporter.New([]downstreamReporter.IDownStreamReporter{})
-	downstreamReporters := []downstreamReporter.IDownStreamReporter{mainCache}
+	downstreamReporters := []downstreamReporter.IDownStreamReporter{&mainCache}
 	err := reporter.RegisterReporters(downstreamReporters)
 	if err != nil {
 		log.Error("could not load main Cache as reporter for decomposer and executors")
@@ -139,6 +141,9 @@ func Initialize() error {
 		}
 	}
 
+	cacheSize, _ := strconv.Atoi(utils.GetEnv("MAX_EXECUTIONS", strconv.Itoa(defaultCacheSize)))
+	mainCache = *cache.New(&timeUtil.Time{}, cacheSize)
+
 	errCore := initializeCore(app)
 
 	if errCore != nil {
@@ -183,7 +188,7 @@ func initializeCore(app *gin.Engine) error {
 
 	// NOTE: Assuming that the cache is the main information mediator for
 	// the reporter API
-	err = routes.Reporter(app, mainCache)
+	err = routes.Reporter(app, &mainCache)
 	if err != nil {
 		log.Error(err)
 		return err

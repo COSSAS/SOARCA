@@ -23,7 +23,7 @@ import (
 func TestGetExecutions(t *testing.T) {
 
 	mock_time := new(mock_time.MockTime)
-	cacheReporter := cache.New(mock_time)
+	cacheReporter := cache.New(mock_time, 10)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -157,7 +157,7 @@ func TestGetExecutionReport(t *testing.T) {
 	// Do executions, test retrieval via api
 
 	mock_time := new(mock_time.MockTime)
-	cacheReporter := cache.New(mock_time)
+	cacheReporter := cache.New(mock_time, 10)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",

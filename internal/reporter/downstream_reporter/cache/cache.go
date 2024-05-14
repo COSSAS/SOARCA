@@ -7,9 +7,7 @@ import (
 	"soarca/logger"
 	"soarca/models/cacao"
 	cache_report "soarca/models/cache"
-	"soarca/utils"
 	itime "soarca/utils/time"
-	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -23,7 +21,6 @@ func init() {
 }
 
 const MaxExecutions int = 10
-const MaxSteps int = 10
 
 type Cache struct {
 	Size         int
@@ -32,8 +29,7 @@ type Cache struct {
 	fifoRegister []string                               // Used for O(1) FIFO cache management
 }
 
-func New(timeUtil itime.ITime) *Cache {
-	maxExecutions, _ := strconv.Atoi(utils.GetEnv("MAX_EXECUTIONS", strconv.Itoa(MaxExecutions)))
+func New(timeUtil itime.ITime, maxExecutions int) *Cache {
 	return &Cache{
 		Size:     maxExecutions,
 		Cache:    make(map[string]cache_report.ExecutionEntry),
