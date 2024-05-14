@@ -68,6 +68,8 @@ func TestGetExecutionReportInvocation(t *testing.T) {
 					"value":"testing"
 				 }
 			  },
+			  "CommandsB64" : [],
+			  "IsAutomated" : true,
 			  "Status":0,
 			  "Error":null
 		   }
@@ -115,7 +117,10 @@ func TestGetExecutionReportInvocation(t *testing.T) {
 					"name":"var1",
 					"value":"testing"
 				 }
-			  }
+			  },
+			  "CommandsB64" : [],
+			  "AutomatedExecution" : "true",
+			  "ExecutedBy" : "soarca"
 		   }
 		},
 		"Error":"",
@@ -137,6 +142,10 @@ func TestGetExecutionReportInvocation(t *testing.T) {
 		t.Fail()
 	}
 
+	t.Log("expected response")
+	t.Log(expectedResponseData)
+	t.Log("received response")
+	t.Log(receivedData)
 	assert.Equal(t, expectedResponseData, receivedData)
 	mock_cache_reporter.AssertExpectations(t)
 }

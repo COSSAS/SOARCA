@@ -18,6 +18,7 @@ const (
 	ClientSideError         = "client_side_error"
 	TimeoutError            = "timeout_error"
 	ExceptionConditionError = "exception_condition_error"
+	AwaitUserInput          = "await_user_input"
 )
 
 type PlaybookExecutionReport struct {
@@ -34,14 +35,17 @@ type PlaybookExecutionReport struct {
 }
 
 type StepExecutionReport struct {
-	ExecutionId string
-	StepId      string
-	Started     string
-	Ended       string
-	Status      string
-	StatusText  string
-	Error       string
-	Variables   map[string]cacao.Variable
+	ExecutionId        string
+	StepId             string
+	Started            string
+	Ended              string
+	Status             string
+	StatusText         string
+	ExecutedBy         string
+	CommandsB64        []string
+	Error              string
+	Variables          map[string]cacao.Variable
+	AutomatedExecution string
 	// Make sure we can have a playbookID for playbook actions, and also
 	// the execution ID for the invoked playbook
 }
@@ -62,6 +66,8 @@ func CacheStatusEnum2String(status cache_model.Status) (string, error) {
 		return TimeoutError, nil
 	case cache_model.ExceptionConditionError:
 		return ExceptionConditionError, nil
+	case cache_model.AwaitUserInput:
+		return AwaitUserInput, nil
 	default:
 		return "", errors.New("unable to read execution information status")
 	}

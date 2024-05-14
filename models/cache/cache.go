@@ -17,6 +17,7 @@ const (
 	ClientSideError
 	TimeoutError
 	ExceptionConditionError
+	AwaitUserInput
 )
 
 type ExecutionEntry struct {
@@ -36,7 +37,9 @@ type StepResult struct {
 	Ended       time.Time
 	// Make sure we can have a playbookID for playbook actions, and also
 	// the execution ID for the invoked playbook
-	Variables cacao.Variables
-	Status    Status
-	Error     error
+	CommandsB64 []string
+	Variables   cacao.Variables
+	Status      Status
+	Error       error
+	IsAutomated bool
 }

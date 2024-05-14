@@ -17,6 +17,8 @@ const (
 	StepTypeWhileCondition  = "while-condition"
 	StepTypeSwitchCondition = "switch-condition"
 
+	CommandTypeManual = "manual"
+
 	AuthInfoOAuth2Type    = "oauth2"
 	AuthInfoHTTPBasicType = "http-basic"
 	AuthInfoNotSet        = ""

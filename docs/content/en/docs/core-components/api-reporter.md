@@ -86,8 +86,11 @@ Response data model:
 |ended              |timestamp              |string             |The time at which the execution of the step ended (if so)
 |status             |execution-status-enum  |string             |The current [status](#execution-stataus) of the execution of this step
 |status_text        |explanation            |string             |A natural language explanation of the current status or related info
+|executed_by        |entity-identifier      |string             |The entity executed the workflow step. This can be an organization, a team, a role, a defence component, etc.
+|commands_b64       |list of base64                 |list of string             |A list of Base64 encodings of the commands that were invoked during the execution of a workflow step, including any values stemming from variables. These are the actual commands executed.
 |error              |error                  |string             |Error raised along the execution of the step
 |variables          |cacao variables        |dictionary         |Map of [cacao variables](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256555) handled in the step (both in and out) with current values and definitions
+|automated_execution | boolean              |string            |This property identifies if the workflow step was executed manually or automatically. It is either true or false.
 
 ##### Execution stataus 
 Table from [Cyentific RNI workflow Status](https://github.com/cyentific-rni/workflow-status/blob/main/README.md#21-refined-execution-status-enumeration)

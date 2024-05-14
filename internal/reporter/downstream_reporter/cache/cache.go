@@ -1,6 +1,7 @@
 package cache
 
 import (
+	b64 "encoding/base64"
 	"encoding/json"
 	"errors"
 	"reflect"
@@ -135,14 +136,31 @@ func (cacheReporter *Cache) ReportStepStart(executionId uuid.UUID, step cacao.St
 		log.Warning("a step execution was already reported for this step. overwriting.")
 	}
 
+	// TODO: must test
+	commandsB64 := []string{}
+	isAutomated := true
+	for _, cmd := range step.Commands {
+		if cmd.Type == cacao.CommandTypeManual {
+			isAutomated = false
+		}
+		if cmd.CommandB64 != "" {
+			commandsB64 = append(commandsB64, cmd.CommandB64)
+		} else {
+			cmdB64 := b64.StdEncoding.EncodeToString([]byte(cmd.Command))
+			commandsB64 = append(commandsB64, cmdB64)
+		}
+	}
+
 	newStepEntry := cache_report.StepResult{
 		ExecutionId: executionId,
 		StepId:      step.ID,
 		Started:     cacheReporter.timeUtil.Now(),
 		Ended:       time.Time{},
 		Variables:   variables,
+		CommandsB64: commandsB64,
 		Status:      cache_report.Ongoing,
 		Error:       nil,
+		IsAutomated: isAutomated,
 	}
 	executionEntry.StepResults[step.ID] = newStepEntry
 	return nil

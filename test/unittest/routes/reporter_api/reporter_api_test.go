@@ -212,9 +212,9 @@ func TestGetExecutionReport(t *testing.T) {
 		AuthenticationInfoDefinitions: map[string]cacao.AuthenticationInformation{"id": expectedAuth},
 		AgentDefinitions:              map[string]cacao.AgentTarget{"agent1": expectedAgent},
 		TargetDefinitions:             map[string]cacao.AgentTarget{"target1": expectedTarget},
-
-		Workflow: map[string]cacao.Step{step1.ID: step1, end.ID: end},
+		Workflow:                      map[string]cacao.Step{step1.ID: step1, end.ID: end},
 	}
+
 	executionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
 	executionId1 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c1")
 	executionId2 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c2")
@@ -275,7 +275,10 @@ func TestGetExecutionReport(t *testing.T) {
 					"name":"var1",
 					"value":"testing"
 				 }
-			  }
+			  },
+			  "CommandsB64" : ["c3NoIGxzIC1sYQ=="],
+			  "AutomatedExecution" : "true",
+			  "ExecutedBy" : "soarca"
 		   }
 		},
 		"Error":"",

@@ -53,15 +53,23 @@ func parseCacheStepEntries(cacheStepEntries map[string]cache_model.StepResult) (
 			stepErrorStr = stepError.Error()
 		}
 
+		automatedExecution := "true"
+		if !stepEntry.IsAutomated {
+			automatedExecution = "false"
+		}
+
 		parsedEntries[stepId] = api_model.StepExecutionReport{
-			ExecutionId: stepEntry.ExecutionId.String(),
-			StepId:      stepEntry.StepId,
-			Started:     stepEntry.Started.String(),
-			Ended:       stepEntry.Ended.String(),
-			Status:      stepStatus,
-			StatusText:  stepErrorStr,
-			Error:       stepErrorStr,
-			Variables:   stepEntry.Variables,
+			ExecutionId:        stepEntry.ExecutionId.String(),
+			StepId:             stepEntry.StepId,
+			Started:            stepEntry.Started.String(),
+			Ended:              stepEntry.Ended.String(),
+			Status:             stepStatus,
+			StatusText:         stepErrorStr,
+			ExecutedBy:         "soarca",
+			CommandsB64:        stepEntry.CommandsB64,
+			Error:              stepErrorStr,
+			Variables:          stepEntry.Variables,
+			AutomatedExecution: automatedExecution,
 		}
 	}
 	return parsedEntries, nil
