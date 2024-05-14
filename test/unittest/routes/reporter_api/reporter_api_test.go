@@ -19,7 +19,7 @@ import (
 
 func TestGetExecutionsInvocation(t *testing.T) {
 	mock_cache_reporter := &mock_ds_reporter.Mock_Downstream_Reporter{}
-	mock_cache_reporter.On("GetExecutionsIds").Return([]string{})
+	mock_cache_reporter.On("GetExecutions").Return([]cache_model.ExecutionEntry{}, nil)
 
 	app := gin.New()
 	gin.SetMode(gin.DebugMode)

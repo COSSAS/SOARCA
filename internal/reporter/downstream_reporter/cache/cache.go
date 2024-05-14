@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
@@ -134,8 +135,6 @@ func (cacheReporter *Cache) ReportStepStart(executionId uuid.UUID, step cacao.St
 		return errors.New("trying to report on the execution of a step for an already reported completed or failed execution")
 	}
 
-	fmt.Println(executionEntry)
-
 	_, alreadyThere := executionEntry.StepResults[step.ID]
 	if alreadyThere {
 		log.Warning("a step execution was already reported for this step. overwriting.")
@@ -186,10 +185,18 @@ func (cacheReporter *Cache) ReportStepEnd(executionId uuid.UUID, step cacao.Step
 	return nil
 }
 
-func (cacheReporter *Cache) GetExecutionsIds() []string {
-	executions := make([]string, len(cacheReporter.fifoRegister))
-	_ = copy(executions, cacheReporter.fifoRegister)
-	return executions
+func (cacheReporter *Cache) GetExecutions() ([]cache_report.ExecutionEntry, error) {
+	executions := make([]cache_report.ExecutionEntry, 0)
+	// NOTE: fetched via fifo register key reference as is ordered array,
+	// needed to test and report back ordered executions stored
+	for _, executionEntryKey := range cacheReporter.fifoRegister {
+		entry, err := cacheReporter.copyExecutionEntry(executionEntryKey)
+		if err != nil {
+			return []cache_report.ExecutionEntry{}, err
+		}
+		executions = append(executions, entry)
+	}
+	return executions, nil
 }
 
 func (cacheReporter *Cache) GetExecutionReport(executionKey uuid.UUID) (cache_report.ExecutionEntry, error) {
@@ -200,4 +207,27 @@ func (cacheReporter *Cache) GetExecutionReport(executionKey uuid.UUID) (cache_re
 	report := executionEntry
 
 	return report, nil
+}
+
+func (cacheReporter *Cache) copyExecutionEntry(executionKeyStr string) (cache_report.ExecutionEntry, error) {
+	// NOTE: Deep copy via JSON serialization and de-serialization, longer computation time than custom function
+	// might want to implement custom deep copy in future
+	origJSON, err := json.Marshal(cacheReporter.Cache[executionKeyStr])
+	if err != nil {
+		return cache_report.ExecutionEntry{}, err
+	}
+	clone := cache_report.ExecutionEntry{}
+	if err = json.Unmarshal(origJSON, &clone); err != nil {
+		return cache_report.ExecutionEntry{}, err
+	}
+	return clone, nil
+}
+
+func (cacheReporter *Cache) PrintCacheEntries() {
+	list := []string{}
+	for _, entry := range cacheReporter.Cache {
+		b, _ := json.Marshal(entry)
+		list = append(list, string(b))
+	}
+	fmt.Println(list)
 }

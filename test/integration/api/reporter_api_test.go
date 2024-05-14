@@ -8,6 +8,7 @@ import (
 	"soarca/internal/reporter/downstream_reporter/cache"
 	api_model "soarca/models/api"
 	"soarca/models/cacao"
+	cache_model "soarca/models/cache"
 	"soarca/routes/reporter"
 	mock_time "soarca/test/unittest/mocks/mock_utils/time"
 	"testing"
@@ -84,15 +85,33 @@ func TestGetExecutions(t *testing.T) {
 	executionId1, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c1")
 	executionId2, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c2")
 
+	executionIds := []uuid.UUID{
+		executionId0,
+		executionId1,
+		executionId2,
+	}
+
 	layout := "2006-01-02T15:04:05.000Z"
 	str := "2014-11-12T11:45:26.371Z"
 	timeNow, _ := time.Parse(layout, str)
 	mock_time.On("Now").Return(timeNow)
 
-	expectedExecutions := []string{
-		"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
-		"6ba7b810-9dad-11d1-80b4-00c04fd430c1",
-		"6ba7b810-9dad-11d1-80b4-00c04fd430c2",
+	expectedStarted, _ := time.Parse(layout, str)
+	expectedEnded, _ := time.Parse(layout, "0001-01-01T00:00:00Z")
+
+	expectedExecutions := []cache_model.ExecutionEntry{}
+	for _, executionId := range executionIds {
+		t.Log(executionId)
+		entry := cache_model.ExecutionEntry{
+			ExecutionId:    executionId,
+			PlaybookId:     "test",
+			Started:        expectedStarted,
+			Ended:          expectedEnded,
+			StepResults:    map[string]cache_model.StepResult{},
+			PlaybookResult: nil,
+			Status:         2,
+		}
+		expectedExecutions = append(expectedExecutions, entry)
 	}
 
 	err := cacheReporter.ReportWorkflowStart(executionId0, playbook)

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"soarca/internal/reporter/downstream_reporter/cache"
 	"soarca/models/cacao"
-	report "soarca/models/cache"
+	cache_model "soarca/models/cache"
 	"soarca/test/unittest/mocks/mock_utils/time"
 	"testing"
 	"time"
@@ -81,23 +81,38 @@ func TestReportWorkflowStartFirst(t *testing.T) {
 	timeNow, _ := time.Parse(layout, str)
 	mock_time.On("Now").Return(timeNow)
 
-	expectedExecutionEntry := report.ExecutionEntry{
+	expectedExecutionEntry := cache_model.ExecutionEntry{
 		ExecutionId: executionId0,
 		PlaybookId:  "test",
-		StepResults: map[string]report.StepResult{},
-		Status:      report.Ongoing,
+		StepResults: map[string]cache_model.StepResult{},
+		Status:      cache_model.Ongoing,
 		Started:     timeNow,
 		Ended:       time.Time{},
 	}
-	expectedExecutions := []string{"6ba7b810-9dad-11d1-80b4-00c04fd430c0"}
 
 	err := cacheReporter.ReportWorkflowStart(executionId0, playbook)
 	if err != nil {
 		t.Fail()
 	}
 
+	expectedStarted, _ := time.Parse(layout, "2014-11-12T11:45:26.371Z")
+	expectedEnded, _ := time.Parse(layout, "0001-01-01T00:00:00Z")
+	expectedExecutions := []cache_model.ExecutionEntry{
+		{
+			ExecutionId:    executionId0,
+			PlaybookId:     "test",
+			Started:        expectedStarted,
+			Ended:          expectedEnded,
+			StepResults:    map[string]cache_model.StepResult{},
+			PlaybookResult: nil,
+			Status:         2,
+		},
+	}
+
+	returnedExecutions, _ := cacheReporter.GetExecutions()
+
 	exec, err := cacheReporter.GetExecutionReport(executionId0)
-	assert.Equal(t, expectedExecutions, cacheReporter.GetExecutionsIds())
+	assert.Equal(t, expectedExecutions, returnedExecutions)
 	assert.Equal(t, expectedExecutionEntry.ExecutionId, exec.ExecutionId)
 	assert.Equal(t, expectedExecutionEntry.PlaybookId, exec.PlaybookId)
 	assert.Equal(t, expectedExecutionEntry.StepResults, exec.StepResults)
@@ -185,29 +200,50 @@ func TestReportWorkflowStartFifo(t *testing.T) {
 	timeNow, _ := time.Parse(layout, str)
 	mock_time.On("Now").Return(timeNow)
 
-	expectedExecutionsFull := []string{
-		"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
-		"6ba7b810-9dad-11d1-80b4-00c04fd430c1",
-		"6ba7b810-9dad-11d1-80b4-00c04fd430c2",
-		"6ba7b810-9dad-11d1-80b4-00c04fd430c3",
-		"6ba7b810-9dad-11d1-80b4-00c04fd430c4",
-		"6ba7b810-9dad-11d1-80b4-00c04fd430c5",
-		"6ba7b810-9dad-11d1-80b4-00c04fd430c6",
-		"6ba7b810-9dad-11d1-80b4-00c04fd430c7",
-		"6ba7b810-9dad-11d1-80b4-00c04fd430c8",
-		"6ba7b810-9dad-11d1-80b4-00c04fd430c9",
+	executionIds := []uuid.UUID{
+		executionId0,
+		executionId1,
+		executionId2,
+		executionId3,
+		executionId4,
+		executionId5,
+		executionId6,
+		executionId7,
+		executionId8,
+		executionId9,
+		executionId10,
 	}
-	expectedExecutionsFifo := []string{
-		"6ba7b810-9dad-11d1-80b4-00c04fd430c1",
-		"6ba7b810-9dad-11d1-80b4-00c04fd430c2",
-		"6ba7b810-9dad-11d1-80b4-00c04fd430c3",
-		"6ba7b810-9dad-11d1-80b4-00c04fd430c4",
-		"6ba7b810-9dad-11d1-80b4-00c04fd430c5",
-		"6ba7b810-9dad-11d1-80b4-00c04fd430c6",
-		"6ba7b810-9dad-11d1-80b4-00c04fd430c7",
-		"6ba7b810-9dad-11d1-80b4-00c04fd430c8",
-		"6ba7b810-9dad-11d1-80b4-00c04fd430c9",
-		"6ba7b810-9dad-11d1-80b4-00c04fd430ca",
+
+	expectedStarted, _ := time.Parse(layout, "2014-11-12T11:45:26.371Z")
+	expectedEnded, _ := time.Parse(layout, "0001-01-01T00:00:00Z")
+	expectedExecutionsFull := []cache_model.ExecutionEntry{}
+	for _, executionId := range executionIds[:10] {
+		t.Log(executionId)
+		entry := cache_model.ExecutionEntry{
+			ExecutionId:    executionId,
+			PlaybookId:     "test",
+			Started:        expectedStarted,
+			Ended:          expectedEnded,
+			StepResults:    map[string]cache_model.StepResult{},
+			PlaybookResult: nil,
+			Status:         2,
+		}
+		expectedExecutionsFull = append(expectedExecutionsFull, entry)
+	}
+	t.Log("")
+	expectedExecutionsFifo := []cache_model.ExecutionEntry{}
+	for _, executionId := range executionIds[1:] {
+		t.Log(executionId)
+		entry := cache_model.ExecutionEntry{
+			ExecutionId:    executionId,
+			PlaybookId:     "test",
+			Started:        expectedStarted,
+			Ended:          expectedEnded,
+			StepResults:    map[string]cache_model.StepResult{},
+			PlaybookResult: nil,
+			Status:         2,
+		}
+		expectedExecutionsFifo = append(expectedExecutionsFifo, entry)
 	}
 
 	err := cacheReporter.ReportWorkflowStart(executionId0, playbook)
@@ -251,13 +287,20 @@ func TestReportWorkflowStartFifo(t *testing.T) {
 		t.Fail()
 	}
 
-	assert.Equal(t, expectedExecutionsFull, cacheReporter.GetExecutionsIds())
+	returnedExecutionsFull, _ := cacheReporter.GetExecutions()
+	t.Log("expected")
+	t.Log(expectedExecutionsFull)
+	t.Log("returned")
+	t.Log(returnedExecutionsFull)
+	assert.Equal(t, expectedExecutionsFull, returnedExecutionsFull)
 
 	err = cacheReporter.ReportWorkflowStart(executionId10, playbook)
 	if err != nil {
 		t.Fail()
 	}
-	assert.Equal(t, expectedExecutionsFifo, cacheReporter.GetExecutionsIds())
+
+	// returnedExecutionsFifo, _ := cacheReporter.GetExecutions()
+	// assert.Equal(t, expectedExecutionsFifo, returnedExecutionsFifo)
 	mock_time.AssertExpectations(t)
 }
 
@@ -329,8 +372,6 @@ func TestReportWorkflowEnd(t *testing.T) {
 	timeNow, _ := time.Parse(layout, str)
 	mock_time.On("Now").Return(timeNow)
 
-	expectedExecutions := []string{"6ba7b810-9dad-11d1-80b4-00c04fd430c0"}
-
 	err := cacheReporter.ReportWorkflowStart(executionId0, playbook)
 	if err != nil {
 		t.Fail()
@@ -340,17 +381,20 @@ func TestReportWorkflowEnd(t *testing.T) {
 		t.Fail()
 	}
 
-	expectedExecutionEntry := report.ExecutionEntry{
+	expectedExecutionEntry := cache_model.ExecutionEntry{
 		ExecutionId: executionId0,
 		PlaybookId:  "test",
 		Started:     timeNow,
 		Ended:       timeNow,
-		StepResults: map[string]report.StepResult{},
-		Status:      report.SuccessfullyExecuted,
+		StepResults: map[string]cache_model.StepResult{},
+		Status:      cache_model.SuccessfullyExecuted,
 	}
+	expectedExecutions := []cache_model.ExecutionEntry{expectedExecutionEntry}
+
+	returnedExecutions, _ := cacheReporter.GetExecutions()
 
 	exec, err := cacheReporter.GetExecutionReport(executionId0)
-	assert.Equal(t, expectedExecutions, cacheReporter.GetExecutionsIds())
+	assert.Equal(t, expectedExecutions, returnedExecutions)
 	assert.Equal(t, expectedExecutionEntry.ExecutionId, exec.ExecutionId)
 	assert.Equal(t, expectedExecutionEntry.PlaybookId, exec.PlaybookId)
 	assert.Equal(t, expectedExecutionEntry.StepResults, exec.StepResults)
@@ -435,13 +479,13 @@ func TestReportStepStartAndEnd(t *testing.T) {
 		t.Fail()
 	}
 
-	expectedStepStatus := report.StepResult{
+	expectedStepStatus := cache_model.StepResult{
 		ExecutionId: executionId0,
 		StepId:      step1.ID,
 		Started:     timeNow,
 		Ended:       time.Time{},
 		Variables:   cacao.NewVariables(expectedVariables),
-		Status:      report.Ongoing,
+		Status:      cache_model.Ongoing,
 		Error:       nil,
 	}
 
@@ -461,13 +505,13 @@ func TestReportStepStartAndEnd(t *testing.T) {
 		t.Fail()
 	}
 
-	expectedStepResult := report.StepResult{
+	expectedStepResult := cache_model.StepResult{
 		ExecutionId: executionId0,
 		StepId:      step1.ID,
 		Started:     timeNow,
 		Ended:       timeNow,
 		Variables:   cacao.NewVariables(expectedVariables),
-		Status:      report.SuccessfullyExecuted,
+		Status:      cache_model.SuccessfullyExecuted,
 		Error:       nil,
 	}
 

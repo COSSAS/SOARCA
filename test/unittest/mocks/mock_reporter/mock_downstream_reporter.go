@@ -3,7 +3,7 @@ package mock_reporter
 import (
 	"soarca/models/cacao"
 
-	cache_report "soarca/models/cache"
+	cache_model "soarca/models/cache"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
@@ -31,12 +31,12 @@ func (reporter *Mock_Downstream_Reporter) ReportStepEnd(executionId uuid.UUID, s
 	return args.Error(0)
 }
 
-func (reporter *Mock_Downstream_Reporter) GetExecutionsIds() []string {
+func (reporter *Mock_Downstream_Reporter) GetExecutions() ([]cache_model.ExecutionEntry, error) {
 	args := reporter.Called()
-	return args.Get(0).([]string)
+	return args.Get(0).([]cache_model.ExecutionEntry), args.Error(1)
 }
 
-func (reporter *Mock_Downstream_Reporter) GetExecutionReport(executionKey uuid.UUID) (cache_report.ExecutionEntry, error) {
+func (reporter *Mock_Downstream_Reporter) GetExecutionReport(executionKey uuid.UUID) (cache_model.ExecutionEntry, error) {
 	args := reporter.Called(executionKey)
-	return args.Get(0).(cache_report.ExecutionEntry), args.Error(1)
+	return args.Get(0).(cache_model.ExecutionEntry), args.Error(1)
 }

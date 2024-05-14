@@ -7,6 +7,6 @@ import (
 )
 
 type IExecutionInformer interface {
-	GetExecutionsIds() []string
+	GetExecutions() ([]cache.ExecutionEntry, error)
 	GetExecutionReport(executionKey uuid.UUID) (cache.ExecutionEntry, error)
 }

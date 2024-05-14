@@ -31,7 +31,12 @@ func NewExecutionInformer(informer informer.IExecutionInformer) *executionInform
 //	@error			400
 //	@Router			/report/ [GET]
 func (executionInformer *executionInformer) getExecutions(g *gin.Context) {
-	executions := executionInformer.informer.GetExecutionsIds()
+	executions, err := executionInformer.informer.GetExecutions()
+	if err != nil {
+		log.Debug("Could not get executions from informer")
+		SendErrorResponse(g, http.StatusInternalServerError, "Could not get executions from informer", "GET /report/")
+		return
+	}
 	g.JSON(http.StatusOK, executions)
 }
 
