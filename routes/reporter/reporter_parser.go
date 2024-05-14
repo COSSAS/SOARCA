@@ -12,7 +12,7 @@ func parseCachePlaybookEntry(cacheEntry cache_model.ExecutionEntry) (api_model.P
 	if err != nil {
 		return api_model.PlaybookExecutionReport{}, err
 	}
-
+	playbookStatusText, err := api_model.GetCacheStatusText(playbookStatus, api_model.ReportLevelPlaybook)
 	playbookErrorStr := ""
 	if cacheEntry.PlaybookResult != nil {
 		playbookErrorStr = cacheEntry.PlaybookResult.Error()
@@ -30,7 +30,7 @@ func parseCachePlaybookEntry(cacheEntry cache_model.ExecutionEntry) (api_model.P
 		Started:         cacheEntry.Started.String(),
 		Ended:           cacheEntry.Ended.String(),
 		Status:          playbookStatus,
-		StatusText:      playbookErrorStr,
+		StatusText:      playbookStatusText,
 		Error:           playbookErrorStr,
 		StepResults:     stepResults,
 		RequestInterval: defaultRequestInterval,
@@ -43,6 +43,7 @@ func parseCacheStepEntries(cacheStepEntries map[string]cache_model.StepResult) (
 	for stepId, stepEntry := range cacheStepEntries {
 
 		stepStatus, err := api_model.CacheStatusEnum2String(stepEntry.Status)
+		stepStatusText, err := api_model.GetCacheStatusText(stepStatus, api_model.ReportLevelStep)
 		if err != nil {
 			return map[string]api_model.StepExecutionReport{}, err
 		}
@@ -64,7 +65,7 @@ func parseCacheStepEntries(cacheStepEntries map[string]cache_model.StepResult) (
 			Started:            stepEntry.Started.String(),
 			Ended:              stepEntry.Ended.String(),
 			Status:             stepStatus,
-			StatusText:         stepErrorStr,
+			StatusText:         stepStatusText,
 			ExecutedBy:         "soarca",
 			CommandsB64:        stepEntry.CommandsB64,
 			Error:              stepErrorStr,

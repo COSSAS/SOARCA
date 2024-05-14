@@ -259,7 +259,7 @@ func TestGetExecutionReport(t *testing.T) {
 		"Started":"2014-11-12 11:45:26.371 +0000 UTC",
 		"Ended":"0001-01-01 00:00:00 +0000 UTC",
 		"Status":"ongoing",
-		"StatusText":"",
+		"StatusText":"this playbook is currently being executed",
 		"StepResults":{
 		   "action--test":{
 			  "ExecutionId":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
@@ -267,7 +267,7 @@ func TestGetExecutionReport(t *testing.T) {
 			  "Started":"2014-11-12 11:45:26.371 +0000 UTC",
 			  "Ended":"2014-11-12 11:45:26.371 +0000 UTC",
 			  "Status":"successfully_executed",
-			  "StatusText":"",
+			  "StatusText": "step execution completed successfully",
 			  "Error":"",
 			  "Variables":{
 				 "var1":{

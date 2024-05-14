@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"soarca/models/cacao"
 	cache_model "soarca/models/cache"
 )
@@ -11,6 +12,9 @@ type Status uint8
 // Reporter model adapted from https://github.com/cyentific-rni/workflow-status/blob/main/README.md
 
 const (
+	ReportLevelPlaybook = "playbook"
+	ReportLevelStep     = "step"
+
 	SuccessfullyExecuted    = "successfully_executed"
 	Failed                  = "failed"
 	Ongoing                 = "ongoing"
@@ -19,6 +23,15 @@ const (
 	TimeoutError            = "timeout_error"
 	ExceptionConditionError = "exception_condition_error"
 	AwaitUserInput          = "await_user_input"
+
+	SuccessfullyExecutedText    = "%s execution completed successfully"
+	FailedText                  = "something went wrong in the execution of this %s"
+	OngoingText                 = "this %s is currently being executed"
+	ServerSideErrorText         = "there was a server-side problem with the execution of this %s"
+	ClientSideErrorText         = "something in the data provided for this %s raised an issue"
+	TimeoutErrorText            = "the execution of this %s timed out"
+	ExceptionConditionErrorText = "the execution of this %s raised a playbook exception"
+	AwaitUserInputText          = "waiting for users to provide input for the %s execution"
 )
 
 type PlaybookExecutionReport struct {
@@ -68,6 +81,32 @@ func CacheStatusEnum2String(status cache_model.Status) (string, error) {
 		return ExceptionConditionError, nil
 	case cache_model.AwaitUserInput:
 		return AwaitUserInput, nil
+	default:
+		return "", errors.New("unable to read execution information status")
+	}
+}
+
+func GetCacheStatusText(status string, level string) (string, error) {
+	if level != ReportLevelPlaybook && level != ReportLevelStep {
+		return "", errors.New("invalid reporting level provided. use either 'playbook' or 'step'")
+	}
+	switch status {
+	case SuccessfullyExecuted:
+		return fmt.Sprintf(SuccessfullyExecutedText, level), nil
+	case Failed:
+		return fmt.Sprintf(FailedText, level), nil
+	case Ongoing:
+		return fmt.Sprintf(OngoingText, level), nil
+	case ServerSideError:
+		return fmt.Sprintf(ServerSideErrorText, level), nil
+	case ClientSideError:
+		return fmt.Sprintf(ClientSideErrorText, level), nil
+	case TimeoutError:
+		return fmt.Sprintf(TimeoutErrorText, level), nil
+	case ExceptionConditionError:
+		return fmt.Sprintf(ExceptionConditionErrorText, level), nil
+	case AwaitUserInput:
+		return fmt.Sprintf(AwaitUserInputText, level), nil
 	default:
 		return "", errors.New("unable to read execution information status")
 	}
