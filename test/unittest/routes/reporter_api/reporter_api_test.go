@@ -109,7 +109,7 @@ func TestGetExecutions(t *testing.T) {
 			Ended:       expectedEnded,
 			StepResults: map[string]cache_model.StepResult{},
 			Error:       nil,
-			Status:      2,
+			Status:      cache_model.Ongoing,
 		}
 		expectedExecutions = append(expectedExecutions, entry)
 	}
