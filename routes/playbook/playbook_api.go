@@ -11,6 +11,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// TODOs
+// Add all command types to cacao model
+// Change api parsing model to actual data types and add json bson strings for formatting
+// Refactor reporter parsing in getting info from cache via now using new model
+// Remove copy of cache entries and just pass the objects
+// Remove Error from step cache report
+
 // A PlaybookController implements the playbook API endpoints is dependent on a database.
 type playbookController struct {
 	playbookRepo playbookrepository.IPlaybookRepository
