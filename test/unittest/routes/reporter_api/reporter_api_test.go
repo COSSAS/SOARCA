@@ -103,13 +103,13 @@ func TestGetExecutions(t *testing.T) {
 	for _, executionId := range executionIds {
 		t.Log(executionId)
 		entry := cache_model.ExecutionEntry{
-			ExecutionId:    executionId,
-			PlaybookId:     "test",
-			Started:        expectedStarted,
-			Ended:          expectedEnded,
-			StepResults:    map[string]cache_model.StepResult{},
-			PlaybookResult: nil,
-			Status:         2,
+			ExecutionId: executionId,
+			PlaybookId:  "test",
+			Started:     expectedStarted,
+			Ended:       expectedEnded,
+			StepResults: map[string]cache_model.StepResult{},
+			Error:       nil,
+			Status:      2,
 		}
 		expectedExecutions = append(expectedExecutions, entry)
 	}
@@ -253,36 +253,34 @@ func TestGetExecutionReport(t *testing.T) {
 	reporter.Routes(app, cacheReporter)
 
 	expected := `{
-		"Type":"execution_status",
-		"ExecutionId":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
-		"PlaybookId":"test",
-		"Started":"2014-11-12 11:45:26.371 +0000 UTC",
-		"Ended":"0001-01-01 00:00:00 +0000 UTC",
-		"Status":"ongoing",
-		"StatusText":"this playbook is currently being executed",
-		"StepResults":{
+		"type":"execution_status",
+		"execution_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
+		"playbook_id":"test",
+		"started":"2014-11-12T11:45:26.371Z",
+		"ended":"0001-01-01T00:00:00Z",
+		"status":"ongoing",
+		"status_text":"this playbook is currently being executed",
+		"step_results":{
 		   "action--test":{
-			  "ExecutionId":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
-			  "StepId":"action--test",
-			  "Started":"2014-11-12 11:45:26.371 +0000 UTC",
-			  "Ended":"2014-11-12 11:45:26.371 +0000 UTC",
-			  "Status":"successfully_executed",
-			  "StatusText": "step execution completed successfully",
-			  "Error":"",
-			  "Variables":{
+			  "execution_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
+			  "step_id":"action--test",
+			  "started":"2014-11-12T11:45:26.371Z",
+			  "ended":"2014-11-12T11:45:26.371Z",
+			  "status":"successfully_executed",
+			  "status_text": "step execution completed successfully",
+			  "variables":{
 				 "var1":{
 					"type":"string",
 					"name":"var1",
 					"value":"testing"
 				 }
 			  },
-			  "CommandsB64" : ["c3NoIGxzIC1sYQ=="],
-			  "AutomatedExecution" : "true",
-			  "ExecutedBy" : "soarca"
+			  "commands_b64" : ["c3NoIGxzIC1sYQ=="],
+			  "automated_execution" : true,
+			  "executed_by" : "soarca"
 		   }
 		},
-		"Error":"",
-		"RequestInterval":5
+		"request_interval":5
 	}`
 	expectedData := api_model.PlaybookExecutionReport{}
 	err = json.Unmarshal([]byte(expected), &expectedData)
@@ -291,6 +289,12 @@ func TestGetExecutionReport(t *testing.T) {
 		t.Log("Could not parse data to JSON")
 		t.Fail()
 	}
+	t.Log("expected")
+	b, err := json.MarshalIndent(expectedData, "", "  ")
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Print(string(b))
 
 	request, err := http.NewRequest("GET", fmt.Sprintf("/reporter/%s", executionId0), nil)
 	if err != nil {
@@ -306,6 +310,8 @@ func TestGetExecutionReport(t *testing.T) {
 		t.Log("Could not parse data to JSON")
 		t.Fail()
 	}
+	t.Log("received")
+	t.Log(receivedData)
 
 	assert.Equal(t, expectedData, receivedData)
 

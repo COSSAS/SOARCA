@@ -100,13 +100,13 @@ func TestReportWorkflowStartFirst(t *testing.T) {
 	expectedEnded, _ := time.Parse(layout, "0001-01-01T00:00:00Z")
 	expectedExecutions := []cache_model.ExecutionEntry{
 		{
-			ExecutionId:    executionId0,
-			PlaybookId:     "test",
-			Started:        expectedStarted,
-			Ended:          expectedEnded,
-			StepResults:    map[string]cache_model.StepResult{},
-			PlaybookResult: nil,
-			Status:         2,
+			ExecutionId: executionId0,
+			PlaybookId:  "test",
+			Started:     expectedStarted,
+			Ended:       expectedEnded,
+			StepResults: map[string]cache_model.StepResult{},
+			Error:       nil,
+			Status:      2,
 		},
 	}
 
@@ -207,13 +207,13 @@ func TestReportWorkflowStartFifo(t *testing.T) {
 	for _, executionId := range executionIds[:len(executionIds)-1] {
 		t.Log(executionId)
 		entry := cache_model.ExecutionEntry{
-			ExecutionId:    executionId,
-			PlaybookId:     "test",
-			Started:        expectedStarted,
-			Ended:          expectedEnded,
-			StepResults:    map[string]cache_model.StepResult{},
-			PlaybookResult: nil,
-			Status:         2,
+			ExecutionId: executionId,
+			PlaybookId:  "test",
+			Started:     expectedStarted,
+			Ended:       expectedEnded,
+			StepResults: map[string]cache_model.StepResult{},
+			Error:       nil,
+			Status:      2,
 		}
 		expectedExecutionsFull = append(expectedExecutionsFull, entry)
 	}
@@ -222,13 +222,13 @@ func TestReportWorkflowStartFifo(t *testing.T) {
 	for _, executionId := range executionIds[1:] {
 		t.Log(executionId)
 		entry := cache_model.ExecutionEntry{
-			ExecutionId:    executionId,
-			PlaybookId:     "test",
-			Started:        expectedStarted,
-			Ended:          expectedEnded,
-			StepResults:    map[string]cache_model.StepResult{},
-			PlaybookResult: nil,
-			Status:         2,
+			ExecutionId: executionId,
+			PlaybookId:  "test",
+			Started:     expectedStarted,
+			Ended:       expectedEnded,
+			StepResults: map[string]cache_model.StepResult{},
+			Error:       nil,
+			Status:      2,
 		}
 		expectedExecutionsFifo = append(expectedExecutionsFifo, entry)
 	}

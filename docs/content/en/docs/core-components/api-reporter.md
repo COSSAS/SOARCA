@@ -73,7 +73,6 @@ Response data model:
 |ended              |timestamp              |string             |The time at which the execution of the playbook ended (if so)
 |status             |execution-status-enum  |string             |The current [status](#execution-stataus) of the execution
 |status_text        |explanation            |string             |A natural language explanation of the current status or related info
-|error              |error                  |string     |Error raised along the execution of the playbook at execution level
 |step_results       |step_results           |dictionary         |Map of step-id to related [step execution data](#step-execution-data)
 |request_interval   |seconds                |integer            |Suggests the polling interval for the next request (default suggested is 5 seconds).
 

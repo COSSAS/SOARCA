@@ -95,22 +95,21 @@ func TestGetExecutionReportInvocation(t *testing.T) {
 	app.ServeHTTP(recorder, request)
 
 	expectedResponse := `{
-		"Type":"execution_status",
-		"ExecutionId":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
-		"PlaybookId":"test",
-		"Started":"2014-11-12 11:45:26.371 +0000 UTC",
-		"Ended":"0001-01-01 00:00:00 +0000 UTC",
-		"Status":"ongoing",
-		"StatusText":"this playbook is currently being executed",
-		"StepResults":{
+		"type":"execution_status",
+		"execution_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
+		"playbook_id":"test",
+		"started":"2014-11-12T11:45:26.371Z",
+		"ended":"0001-01-01T00:00:00Z",
+		"status":"ongoing",
+		"status_text":"this playbook is currently being executed",
+		"step_results":{
 		   "action--test":{
-			  "ExecutionId":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
-			  "StepId": "action--test",
-			  "Started": "2014-11-12 11:45:26.371 +0000 UTC",
-			  "Ended": "2014-11-12 11:45:26.371 +0000 UTC",
-			  "Status": "successfully_executed",
-			  "StatusText": "step execution completed successfully",
-			  "Error":"",
+			  "execution_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
+			  "step_id": "action--test",
+			  "started": "2014-11-12T11:45:26.371Z",
+			  "ended": "2014-11-12T11:45:26.371Z",
+			  "status": "successfully_executed",
+			  "status_text": "step execution completed successfully",
 			  "Variables":{
 				 "var1":{
 					"type":"string",
@@ -118,13 +117,12 @@ func TestGetExecutionReportInvocation(t *testing.T) {
 					"value":"testing"
 				 }
 			  },
-			  "CommandsB64" : [],
-			  "AutomatedExecution" : "true",
-			  "ExecutedBy" : "soarca"
+			  "commands_b64" : [],
+			  "automated_execution" : true,
+			  "executed_by" : "soarca"
 		   }
 		},
-		"Error":"",
-		"RequestInterval":5
+		"request_interval":5
 	}`
 	expectedResponseData := api_model.PlaybookExecutionReport{}
 	err = json.Unmarshal([]byte(expectedResponse), &expectedResponseData)

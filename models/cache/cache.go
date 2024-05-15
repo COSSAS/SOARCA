@@ -21,13 +21,13 @@ const (
 )
 
 type ExecutionEntry struct {
-	ExecutionId    uuid.UUID
-	PlaybookId     string
-	Started        time.Time
-	Ended          time.Time
-	StepResults    map[string]StepResult
-	PlaybookResult error
-	Status         Status
+	ExecutionId uuid.UUID
+	PlaybookId  string
+	Started     time.Time
+	Ended       time.Time
+	StepResults map[string]StepResult
+	Error       error
+	Status      Status
 }
 
 type StepResult struct {

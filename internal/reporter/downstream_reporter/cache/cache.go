@@ -110,7 +110,7 @@ func (cacheReporter *Cache) ReportWorkflowEnd(executionId uuid.UUID, playbook ca
 	}
 
 	if workflowError != nil {
-		executionEntry.PlaybookResult = workflowError
+		executionEntry.Error = workflowError
 		executionEntry.Status = cache_report.Failed
 	} else {
 		executionEntry.Status = cache_report.SuccessfullyExecuted

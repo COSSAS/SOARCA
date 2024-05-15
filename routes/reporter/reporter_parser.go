@@ -12,13 +12,13 @@ func parseCachePlaybookEntry(cacheEntry cache_model.ExecutionEntry) (api_model.P
 	if err != nil {
 		return api_model.PlaybookExecutionReport{}, err
 	}
+
 	playbookStatusText, err := api_model.GetCacheStatusText(playbookStatus, api_model.ReportLevelPlaybook)
 	if err != nil {
 		return api_model.PlaybookExecutionReport{}, err
 	}
-	playbookErrorStr := ""
-	if cacheEntry.PlaybookResult != nil {
-		playbookErrorStr = cacheEntry.PlaybookResult.Error()
+	if cacheEntry.Error != nil {
+		playbookStatusText = playbookStatusText + " - error: " + cacheEntry.Error.Error()
 	}
 
 	stepResults, err := parseCacheStepEntries(cacheEntry.StepResults)
@@ -30,11 +30,10 @@ func parseCachePlaybookEntry(cacheEntry cache_model.ExecutionEntry) (api_model.P
 		Type:            "execution_status",
 		ExecutionId:     cacheEntry.ExecutionId.String(),
 		PlaybookId:      cacheEntry.PlaybookId,
-		Started:         cacheEntry.Started.String(),
-		Ended:           cacheEntry.Ended.String(),
+		Started:         cacheEntry.Started,
+		Ended:           cacheEntry.Ended,
 		Status:          playbookStatus,
 		StatusText:      playbookStatusText,
-		Error:           playbookErrorStr,
 		StepResults:     stepResults,
 		RequestInterval: defaultRequestInterval,
 	}
@@ -54,29 +53,21 @@ func parseCacheStepEntries(cacheStepEntries map[string]cache_model.StepResult) (
 			return map[string]api_model.StepExecutionReport{}, err
 		}
 
-		stepError := stepEntry.Error
-		stepErrorStr := ""
-		if stepError != nil {
-			stepErrorStr = stepError.Error()
-		}
-
-		automatedExecution := "true"
-		if !stepEntry.IsAutomated {
-			automatedExecution = "false"
+		if stepEntry.Error != nil {
+			stepStatusText = stepStatusText + " - error: " + stepEntry.Error.Error()
 		}
 
 		parsedEntries[stepId] = api_model.StepExecutionReport{
 			ExecutionId:        stepEntry.ExecutionId.String(),
 			StepId:             stepEntry.StepId,
-			Started:            stepEntry.Started.String(),
-			Ended:              stepEntry.Ended.String(),
+			Started:            stepEntry.Started,
+			Ended:              stepEntry.Ended,
 			Status:             stepStatus,
 			StatusText:         stepStatusText,
 			ExecutedBy:         "soarca",
 			CommandsB64:        stepEntry.CommandsB64,
-			Error:              stepErrorStr,
 			Variables:          stepEntry.Variables,
-			AutomatedExecution: automatedExecution,
+			AutomatedExecution: stepEntry.IsAutomated,
 		}
 	}
 	return parsedEntries, nil
