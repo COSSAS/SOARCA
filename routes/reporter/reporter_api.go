@@ -13,11 +13,6 @@ import (
 	"soarca/logger"
 )
 
-// TODOs
-// Change api parsing model to actual data types and add json bson strings for formatting
-// Refactor reporter parsing in getting info from cache via now using new model
-// Remove copy of cache entries and just pass the objects
-
 var log *logger.Log
 
 type Empty struct{}

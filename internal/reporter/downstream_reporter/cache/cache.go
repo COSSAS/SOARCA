@@ -2,7 +2,6 @@ package cache
 
 import (
 	b64 "encoding/base64"
-	"encoding/json"
 	"errors"
 	"reflect"
 	"soarca/logger"
@@ -203,9 +202,10 @@ func (cacheReporter *Cache) GetExecutions() ([]cache_report.ExecutionEntry, erro
 	// NOTE: fetched via fifo register key reference as is ordered array,
 	// needed to test and report back ordered executions stored
 	for _, executionEntryKey := range cacheReporter.fifoRegister {
-		entry, err := cacheReporter.copyExecutionEntry(executionEntryKey)
-		if err != nil {
-			return []cache_report.ExecutionEntry{}, err
+		// NOTE: cached executions are passed by reference, so they must not be modified
+		entry, present := cacheReporter.Cache[executionEntryKey]
+		if present != true {
+			return []cache_report.ExecutionEntry{}, errors.New("internal error. cache fifo register and cache executions mismatch.")
 		}
 		executions = append(executions, entry)
 	}
@@ -220,18 +220,4 @@ func (cacheReporter *Cache) GetExecutionReport(executionKey uuid.UUID) (cache_re
 	report := executionEntry
 
 	return report, nil
-}
-
-func (cacheReporter *Cache) copyExecutionEntry(executionKeyStr string) (cache_report.ExecutionEntry, error) {
-	// NOTE: Deep copy via JSON serialization and de-serialization, longer computation time than custom function
-	// might want to implement custom deep copy in future
-	origJSON, err := json.Marshal(cacheReporter.Cache[executionKeyStr])
-	if err != nil {
-		return cache_report.ExecutionEntry{}, err
-	}
-	clone := cache_report.ExecutionEntry{}
-	if err = json.Unmarshal(origJSON, &clone); err != nil {
-		return cache_report.ExecutionEntry{}, err
-	}
-	return clone, nil
 }
