@@ -204,7 +204,7 @@ func (cacheReporter *Cache) GetExecutions() ([]cache_report.ExecutionEntry, erro
 	for _, executionEntryKey := range cacheReporter.fifoRegister {
 		// NOTE: cached executions are passed by reference, so they must not be modified
 		entry, present := cacheReporter.Cache[executionEntryKey]
-		if present != true {
+		if !present {
 			return []cache_report.ExecutionEntry{}, errors.New("internal error. cache fifo register and cache executions mismatch.")
 		}
 		executions = append(executions, entry)
