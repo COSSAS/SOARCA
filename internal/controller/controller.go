@@ -20,10 +20,12 @@ import (
 	"soarca/internal/fin/protocol"
 	"soarca/internal/guid"
 	"soarca/internal/reporter"
+	cache "soarca/internal/reporter/downstream_reporter/cache"
 	"soarca/logger"
 	"soarca/utils"
 	httpUtil "soarca/utils/http"
 	"soarca/utils/stix/expression/comparison"
+	timeUtil "soarca/utils/time"
 
 	downstreamReporter "soarca/internal/reporter/downstream_reporter"
 
@@ -31,7 +33,7 @@ import (
 
 	mongo "soarca/database/mongodb"
 	playbookrepository "soarca/database/playbook"
-	routes "soarca/routes"
+	"soarca/routes"
 )
 
 var log *logger.Log
@@ -48,6 +50,10 @@ type Controller struct {
 }
 
 var mainController = Controller{}
+
+var mainCache = cache.Cache{}
+
+const defaultCacheSize int = 10
 
 func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	ssh := new(ssh.SshCapability)
@@ -76,7 +82,13 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 		}
 	}
 
+	// NOTE: Enrolling mainCache by default as reporter
 	reporter := reporter.New([]downstreamReporter.IDownStreamReporter{})
+	downstreamReporters := []downstreamReporter.IDownStreamReporter{&mainCache}
+	err := reporter.RegisterReporters(downstreamReporters)
+	if err != nil {
+		log.Error("could not load main Cache as reporter for decomposer and executors")
+	}
 
 	actionExecutor := action.New(capabilities, reporter)
 	playbookActionExecutor := playbook_action.New(controller, controller, reporter)
@@ -129,6 +141,9 @@ func Initialize() error {
 		}
 	}
 
+	cacheSize, _ := strconv.Atoi(utils.GetEnv("MAX_EXECUTIONS", strconv.Itoa(defaultCacheSize)))
+	mainCache = *cache.New(&timeUtil.Time{}, cacheSize)
+
 	errCore := initializeCore(app)
 
 	if errCore != nil {
@@ -169,6 +184,14 @@ func initializeCore(app *gin.Engine) error {
 			log.Error(err)
 			return err
 		}
+	}
+
+	// NOTE: Assuming that the cache is the main information mediator for
+	// the reporter API
+	err = routes.Reporter(app, &mainCache)
+	if err != nil {
+		log.Error(err)
+		return err
 	}
 
 	routes.Logging(app)

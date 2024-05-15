@@ -1,4 +1,4 @@
-package report
+package cache
 
 import (
 	"soarca/models/cacao"
@@ -17,16 +17,17 @@ const (
 	ClientSideError
 	TimeoutError
 	ExceptionConditionError
+	AwaitUserInput
 )
 
 type ExecutionEntry struct {
-	ExecutionId    uuid.UUID
-	PlaybookId     string
-	Started        time.Time
-	Ended          time.Time
-	StepResults    map[string]StepResult
-	PlaybookResult error
-	Status         Status
+	ExecutionId uuid.UUID
+	PlaybookId  string
+	Started     time.Time
+	Ended       time.Time
+	StepResults map[string]StepResult
+	Error       error
+	Status      Status
 }
 
 type StepResult struct {
@@ -36,7 +37,9 @@ type StepResult struct {
 	Ended       time.Time
 	// Make sure we can have a playbookID for playbook actions, and also
 	// the execution ID for the invoked playbook
-	Variables cacao.Variables
-	Status    Status
-	Error     error
+	CommandsB64 []string
+	Variables   cacao.Variables
+	Status      Status
+	Error       error
+	IsAutomated bool
 }
