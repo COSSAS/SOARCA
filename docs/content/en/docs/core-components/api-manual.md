@@ -1,0 +1,140 @@
+---
+title: Manual API Description
+description: >
+    Descriptions for the SOARCA manual interaction REST API endpoints 
+categories: [API]
+tags: [protocol, http, rest, api]
+weight: 3
+date: 2024-05-14
+---
+
+## Endpoint descriptions
+
+We will use HTTP status codes https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
+
+
+```plantuml
+@startuml
+protocol Reporter {
+    GET     /manual
+    POST    /manual/continue
+}
+@enduml
+```
+
+
+### /manual
+The manual interaction endpoint for SOARCA
+
+#### GET `/manual`
+Get all pending manual actions objects that are currently waiting in SOARCA.
+
+##### Call payload
+None
+
+##### Response
+200/OK with payload:
+
+
+
+|field              |content                |type               | description |
+| ----------------- | --------------------- | ----------------- | ----------- |
+|type               |execution-status       |string             |The type of this content
+|execution_id       |UUID                   |string             |The id of the execution
+|playbook_id        |UUID                   |string             |The id of the CACAO playbook executed by the execution
+|step_id            |UUID                   |string             |The id of the step executed by the execution
+|command            |command                |string             |The command for the agent
+|targets            |cacao agent-target     |dictionary         |Map of [cacao agent-target](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256509) with the target(s) of this command
+|in_args            |cacao variables        |dictionary         |Map of [cacao variables](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256555) handled in the step in args with current values and definitions
+|out_args          |cacao variables        |dictionary         |Map of [cacao variables](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256555) handled in the step out args with current values and definitions
+
+
+
+```plantuml
+@startjson
+[
+    {
+        "type" :        "manual-step-information",
+        "execution_id" : "<execution-id>",
+        "playbook_id" :  "<playbook-id>",
+        "step_id" :  "<step-id>",
+        "command" : "<command here>",
+        "targets" : {
+            "__target1__" : {
+                "type" : "<agent-target-type-ov>",
+                "name" : "<agent name>",
+                "description" : "<some description>",
+                "location" : "<.>",
+                "agent_target_extensions" : {}
+            }
+        },
+        "in_args":    {
+            "<variable-name-1>" : {
+                "type":         "<type>",
+                "name":         "<variable-name>",
+                "description":  "<description>",
+                "value":        "<value>",
+                "constant":     "<true/false>",
+                "external":     "<true/false>"
+            }
+        },
+        "out_args":    {
+            "<variable-name-1>" : {
+                "type":         "<type>",
+                "name":         "<variable-name>",
+                "description":  "<description>",
+                "value":        "<value>",
+                "constant":     "<true/false>",
+                "external":     "<true/false>"
+            }
+        }
+    }
+]
+@endjson
+```
+
+##### Error
+400/BAD REQUEST with payload:
+General error
+
+#### POST `/manual/continue`
+Respond to manual command pending in SOARCA, if out_args are defined they must be filled in and returned in the payload body
+
+##### Call payload
+|field              |content                |type               | description |
+| ----------------- | --------------------- | ----------------- | ----------- |
+|type               |execution-status       |string             |The type of this content
+|execution_id       |UUID                   |string             |The id of the execution
+|playbook_id        |UUID                   |string             |The id of the CACAO playbook executed by the execution
+|step_id            |UUID                   |string             |The id of the step executed by the execution
+|response_status    |enum                   |string             |Can be either `success` or `failed`
+|response_out_args  |cacao variables        |dictionary         |Map of [cacao variables](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256555) handled in the step out args with current values and definitions
+
+
+
+```plantuml
+@startjson
+[
+    {
+        "type" :        "manual-step-response",
+        "execution_id" : "<execution-id>",
+        "playbook_id" :  "<playbook-id>",
+        "step_id" :  "<step-id>",
+        "response_status" : "success | failed",
+        "response_out_args":    {
+            "<variable-name-1>" : {
+                "type":         "<type>",
+                "name":         "<variable-name>",
+                "description":  "<description>",
+                "value":        "<value>",
+                "constant":     "<true/false>",
+                "external":     "<true/false>"
+            }
+        }
+    }
+]
+@endjson
+```
+
+##### Response
+200/OK with payload:
