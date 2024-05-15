@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"soarca/internal/decomposer"
 	"soarca/internal/executors/action"
@@ -14,6 +15,7 @@ import (
 	mock_playbook_action_executor "soarca/test/unittest/mocks/mock_executor/playbook_action"
 	"soarca/test/unittest/mocks/mock_guid"
 	"soarca/test/unittest/mocks/mock_reporter"
+	mock_time "soarca/test/unittest/mocks/mock_utils/time"
 
 	"github.com/go-playground/assert/v2"
 	"github.com/google/uuid"
@@ -25,6 +27,7 @@ func TestExecutePlaybook(t *testing.T) {
 	mock_condition_executor := new(mock_condition_executor.Mock_Condition)
 	uuid_mock := new(mock_guid.Mock_Guid)
 	mock_reporter := new(mock_reporter.Mock_Reporter)
+	mock_time := new(mock_time.MockTime)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -41,7 +44,8 @@ func TestExecutePlaybook(t *testing.T) {
 		mock_playbook_action_executor,
 		mock_condition_executor,
 		uuid_mock,
-		mock_reporter)
+		mock_reporter,
+		mock_time)
 
 	step1 := cacao.Step{
 		Type:          "action",
@@ -53,6 +57,7 @@ func TestExecutePlaybook(t *testing.T) {
 		OnCompletion:  "end--test",
 		Agent:         "agent1",
 		Targets:       []string{"target1"},
+		Delay:         10,
 	}
 
 	end := cacao.Step{
@@ -103,6 +108,7 @@ func TestExecutePlaybook(t *testing.T) {
 	}
 
 	mock_reporter.On("ReportWorkflowStart", executionId, playbook).Return()
+	mock_time.On("Sleep", time.Second*10).Return()
 	mock_reporter.On("ReportWorkflowEnd", executionId, playbook, nil).Return()
 	mock_action_executor.On("Execute", metaStep1, playbookStepMetadata).Return(cacao.NewVariables(cacao.Variable{Name: "return", Value: "value"}), nil)
 
@@ -113,6 +119,7 @@ func TestExecutePlaybook(t *testing.T) {
 	assert.Equal(t, details.ExecutionId, executionId)
 	mock_action_executor.AssertExpectations(t)
 	mock_reporter.AssertExpectations(t)
+	mock_time.AssertExpectations(t)
 	value, found := details.Variables.Find("return")
 	assert.Equal(t, found, true)
 	assert.Equal(t, value.Value, "value")
@@ -124,6 +131,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 	mock_condition_executor := new(mock_condition_executor.Mock_Condition)
 	uuid_mock := new(mock_guid.Mock_Guid)
 	mock_reporter := new(mock_reporter.Mock_Reporter)
+	mock_time := new(mock_time.MockTime)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -151,7 +159,8 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 		mock_playbook_action_executor,
 		mock_condition_executor,
 		uuid_mock,
-		mock_reporter)
+		mock_reporter,
+		mock_time)
 
 	step1 := cacao.Step{
 		Type:          "action",
@@ -237,6 +246,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 	}
 
 	mock_reporter.On("ReportWorkflowStart", executionId, playbook).Return()
+	mock_time.On("Sleep", time.Second*0).Return()
 	mock_reporter.On("ReportWorkflowEnd", executionId, playbook, nil).Return()
 	mock_action_executor.On("Execute", metaStep1, playbookStepMetadata1).Return(cacao.NewVariables(firstResult), nil)
 
@@ -272,6 +282,7 @@ func TestExecuteEmptyMultiStep(t *testing.T) {
 	mock_condition_executor := new(mock_condition_executor.Mock_Condition)
 	uuid_mock2 := new(mock_guid.Mock_Guid)
 	mock_reporter := new(mock_reporter.Mock_Reporter)
+	mock_time := new(mock_time.MockTime)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -298,7 +309,8 @@ func TestExecuteEmptyMultiStep(t *testing.T) {
 		mock_playbook_action_executor2,
 		mock_condition_executor,
 		uuid_mock2,
-		mock_reporter)
+		mock_reporter,
+		mock_time)
 
 	step1 := cacao.Step{
 		Type:          "ssh",
@@ -325,6 +337,7 @@ func TestExecuteEmptyMultiStep(t *testing.T) {
 	uuid_mock2.On("New").Return(id)
 
 	mock_reporter.On("ReportWorkflowStart", id, playbook).Return()
+	mock_time.On("Sleep", time.Second*0).Return()
 	mock_reporter.On("ReportWorkflowEnd", id, playbook, errors.New("empty success step")).Return()
 
 	returnedId, err := decomposer2.Execute(playbook)
@@ -345,6 +358,7 @@ func TestExecuteIllegalMultiStep(t *testing.T) {
 	mock_condition_executor := new(mock_condition_executor.Mock_Condition)
 	uuid_mock2 := new(mock_guid.Mock_Guid)
 	mock_reporter := new(mock_reporter.Mock_Reporter)
+	mock_time := new(mock_time.MockTime)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -361,7 +375,8 @@ func TestExecuteIllegalMultiStep(t *testing.T) {
 		mock_playbook_action_executor2,
 		mock_condition_executor,
 		uuid_mock2,
-		mock_reporter)
+		mock_reporter,
+		mock_time)
 
 	step1 := cacao.Step{
 		Type:          "action",
@@ -385,6 +400,7 @@ func TestExecuteIllegalMultiStep(t *testing.T) {
 	id, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	uuid_mock2.On("New").Return(id)
 	mock_reporter.On("ReportWorkflowStart", id, playbook).Return()
+	mock_time.On("Sleep", time.Second*0).Return()
 	mock_reporter.On("ReportWorkflowEnd", id, playbook, errors.New("empty success step")).Return()
 
 	returnedId, err := decomposer2.Execute(playbook)
@@ -402,6 +418,7 @@ func TestExecutePlaybookAction(t *testing.T) {
 	mock_condition_executor := new(mock_condition_executor.Mock_Condition)
 	uuid_mock := new(mock_guid.Mock_Guid)
 	mock_reporter := new(mock_reporter.Mock_Reporter)
+	mock_time := new(mock_time.MockTime)
 	expectedVariables := cacao.Variable{
 		Type:  "string",
 		Name:  "var1",
@@ -412,7 +429,8 @@ func TestExecutePlaybookAction(t *testing.T) {
 		mock_playbook_action_executor,
 		mock_condition_executor,
 		uuid_mock,
-		mock_reporter)
+		mock_reporter,
+		mock_time)
 
 	step1 := cacao.Step{
 		Type:          "playbook-action",
@@ -442,6 +460,7 @@ func TestExecutePlaybookAction(t *testing.T) {
 
 	uuid_mock.On("New").Return(executionId)
 	mock_reporter.On("ReportWorkflowStart", executionId, playbook).Return()
+	mock_time.On("Sleep", time.Second*0).Return()
 	mock_reporter.On("ReportWorkflowEnd", executionId, playbook, nil).Return()
 
 	mock_playbook_action_executor.On("Execute",
@@ -468,6 +487,7 @@ func TestExecuteIfCondition(t *testing.T) {
 	mock_condition_executor := new(mock_condition_executor.Mock_Condition)
 	uuid_mock := new(mock_guid.Mock_Guid)
 	mock_reporter := new(mock_reporter.Mock_Reporter)
+	mock_time := new(mock_time.MockTime)
 	expectedVariables := cacao.Variable{
 		Type:  "string",
 		Name:  "__var1__",
@@ -500,7 +520,8 @@ func TestExecuteIfCondition(t *testing.T) {
 		mock_playbook_action_executor,
 		mock_condition_executor,
 		uuid_mock,
-		mock_reporter)
+		mock_reporter,
+		mock_time)
 
 	end := cacao.Step{
 		Type: cacao.StepTypeEnd,
@@ -590,6 +611,7 @@ func TestExecuteIfCondition(t *testing.T) {
 
 	uuid_mock.On("New").Return(executionId)
 	mock_reporter.On("ReportWorkflowStart", executionId, playbook).Return()
+	mock_time.On("Sleep", time.Second*0).Return()
 
 	mock_condition_executor.On("Execute",
 		metaStepIf,
@@ -605,6 +627,7 @@ func TestExecuteIfCondition(t *testing.T) {
 	}
 
 	metaStepTrue := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: stepTrue.ID}
+	mock_time.On("Sleep", time.Second*0).Return()
 
 	mock_action_executor.On("Execute",
 		metaStepTrue,
@@ -619,6 +642,7 @@ func TestExecuteIfCondition(t *testing.T) {
 	}
 
 	metaStepCompletion := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: stepCompletion.ID}
+	mock_time.On("Sleep", time.Second*0).Return()
 
 	mock_action_executor.On("Execute",
 		metaStepCompletion,
@@ -632,5 +656,113 @@ func TestExecuteIfCondition(t *testing.T) {
 	mock_reporter.AssertExpectations(t)
 	mock_condition_executor.AssertExpectations(t)
 	mock_action_executor.AssertExpectations(t)
+
+}
+
+func TestDelayStepExecution(t *testing.T) {
+	mock_action_executor := new(mock_executor.Mock_Action_Executor)
+	mock_playbook_action_executor := new(mock_playbook_action_executor.Mock_PlaybookActionExecutor)
+	mock_condition_executor := new(mock_condition_executor.Mock_Condition)
+	uuid_mock := new(mock_guid.Mock_Guid)
+	mock_reporter := new(mock_reporter.Mock_Reporter)
+	mock_time := new(mock_time.MockTime)
+
+	expectedCommand := cacao.Command{
+		Type:    "ssh",
+		Command: "ssh ls -la",
+	}
+
+	expectedVariables := cacao.Variable{
+		Type:  "string",
+		Name:  "var1",
+		Value: "testing",
+	}
+
+	step1 := cacao.Step{
+		Type:          "action",
+		ID:            "action--test",
+		Name:          "ssh-tests",
+		StepVariables: cacao.NewVariables(expectedVariables),
+		Commands:      []cacao.Command{expectedCommand},
+		Cases:         map[string]string{},
+		OnCompletion:  "end--test",
+		Agent:         "agent1",
+		Targets:       []string{"target1"},
+		Delay:         10,
+	}
+
+	decomposer := decomposer.New(mock_action_executor,
+		mock_playbook_action_executor,
+		mock_condition_executor,
+		uuid_mock,
+		mock_reporter,
+		mock_time)
+
+	executionId, _ := uuid.Parse("00000000-0000-0000-0000-000000000000")
+	metaStep1 := execution.Metadata{ExecutionId: executionId, PlaybookId: "", StepId: step1.ID}
+	playbookStepMetadata := action.PlaybookStepMetadata{
+		Step:      step1,
+		Variables: cacao.NewVariables(expectedVariables),
+	}
+
+	mock_time.On("Sleep", time.Second*10).Return()
+	mock_action_executor.On("Execute", metaStep1, playbookStepMetadata).Return(cacao.NewVariables(cacao.Variable{Name: "return", Value: "value"}), nil)
+
+	_, err := decomposer.ExecuteStep(step1, cacao.NewVariables(expectedVariables))
+	assert.Equal(t, err, nil)
+
+}
+
+func TestDelayStepNegativeTimeExecution(t *testing.T) {
+	mock_action_executor := new(mock_executor.Mock_Action_Executor)
+	mock_playbook_action_executor := new(mock_playbook_action_executor.Mock_PlaybookActionExecutor)
+	mock_condition_executor := new(mock_condition_executor.Mock_Condition)
+	uuid_mock := new(mock_guid.Mock_Guid)
+	mock_reporter := new(mock_reporter.Mock_Reporter)
+	mock_time := new(mock_time.MockTime)
+
+	expectedCommand := cacao.Command{
+		Type:    "ssh",
+		Command: "ssh ls -la",
+	}
+
+	expectedVariables := cacao.Variable{
+		Type:  "string",
+		Name:  "var1",
+		Value: "testing",
+	}
+
+	step1 := cacao.Step{
+		Type:          "action",
+		ID:            "action--test",
+		Name:          "ssh-tests",
+		StepVariables: cacao.NewVariables(expectedVariables),
+		Commands:      []cacao.Command{expectedCommand},
+		Cases:         map[string]string{},
+		OnCompletion:  "end--test",
+		Agent:         "agent1",
+		Targets:       []string{"target1"},
+		Delay:         -10,
+	}
+
+	decomposer := decomposer.New(mock_action_executor,
+		mock_playbook_action_executor,
+		mock_condition_executor,
+		uuid_mock,
+		mock_reporter,
+		mock_time)
+
+	executionId, _ := uuid.Parse("00000000-0000-0000-0000-000000000000")
+	metaStep1 := execution.Metadata{ExecutionId: executionId, PlaybookId: "", StepId: step1.ID}
+	playbookStepMetadata := action.PlaybookStepMetadata{
+		Step:      step1,
+		Variables: cacao.NewVariables(expectedVariables),
+	}
+
+	mock_time.On("Sleep", time.Second*-10).Return()
+	mock_action_executor.On("Execute", metaStep1, playbookStepMetadata).Return(cacao.NewVariables(cacao.Variable{Name: "return", Value: "value"}), nil)
+
+	_, err := decomposer.ExecuteStep(step1, cacao.NewVariables(expectedVariables))
+	assert.Equal(t, err, nil)
 
 }
