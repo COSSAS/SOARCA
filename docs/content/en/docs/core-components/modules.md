@@ -16,6 +16,7 @@ The following capability modules are currently defined in SOARCA:
 - http-api
 - openc2-http
 - powershell
+- manual
 
 The capability will be selected based on the agent in the CACAO playbook step. The agent should be of type `soarca` and have a name corresponding to `soarca-[capability name]`. 
 
@@ -262,6 +263,58 @@ The result of the step is stored in the following output variables:
 ```
 
 
+### Manual capability 
+This capability executes [manual Commands](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256491) and provides them through the [SOARCA api](/docs/core-components/api-manual).
+
+
+<!-- The manual capability will allow an operator to interact with a playbook. It could allow one to perform a manual step that could not be automated, enter a variable to the playbook execution or a combination of these operations.
+
+The main way to interact with the manual step is through SOARCA's [manual api](/docs/core-components/api-manual). The manual step should provide a timeout SOARCA will by default use a timeout of 10 minutes. If a timeout occurs the step is considered as failed. -->
+
+
+
+
+
+#### Success and failure
+
+The manual step is considered successful if a response is made through the [manual api](/docs/core-components/api-manual). The manual command can specify a timeout but if none is specified SOARCA will use a default timeout of 10 minutes. If a timeout occurs the step is considered as failed.
+
+#### Variables
+
+This module does not define specific variables as input, but it requires one to use out_args if an operator want to provide a response to be used later in the playbook.
+
+#### Example
+
+```json
+{
+    "workflow": {
+        "action--7777c6b6-e275-434e-9e0b-d68f72e691c1": {
+            "type": "action",
+            "agent": "soarca--00010001-1000-1000-a000-000100010001",
+            "targets": ["linux--c7e6af1b-9e5a-4055-adeb-26b97e1c4db7"],
+            "commands": [
+                {
+                    "type": "manual",
+                    "command": "Reset the firewall by unplugging it"
+                }
+            ]
+        }
+    },
+    "agent_definitions": {
+        "soarca--00040001-1000-1000-a000-000100010001": {
+            "type": "soarca",
+            "name": "soarca-manual"
+        }
+    },
+    "target_definitions": {
+        "linux--c7e6af1b-9e5a-4055-adeb-26b97e1c4db7": {
+            "type": "linux",
+            "name": "target",
+            "address": { "ipv4": ["10.0.0.1"] }
+        }
+    }
+}
+```
 ---
 
 ## MQTT fin module
