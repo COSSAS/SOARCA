@@ -170,7 +170,7 @@ func (httpOptions *HttpOptions) addAuthTo(request *http.Request) error {
 
 	switch authInfoType {
 	case cacao.AuthInfoHTTPBasicType:
-		request.SetBasicAuth(httpOptions.Auth.Username, httpOptions.Auth.Password)
+		request.SetBasicAuth(httpOptions.Auth.UserId, httpOptions.Auth.Password)
 	case cacao.AuthInfoOAuth2Type:
 		bearer := fmt.Sprintf("Bearer %s", httpOptions.Auth.Token)
 		request.Header.Add("Authorization", bearer)
