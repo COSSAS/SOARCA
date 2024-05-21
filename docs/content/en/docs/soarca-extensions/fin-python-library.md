@@ -8,10 +8,12 @@ weight: 2
 date: 2024-04-10
 ---
 
-For documentation about the fin protocol we refer the reader to de documention page of [SOARCA](https://cossas.github.io/SOARCA/docs/soarca-extensions/fin-protocol/)
+For the documentation about the Fin protocol we refer the reader to de documention page of [SOARCA Fin Protocol](https://cossas.github.io/SOARCA/docs/soarca-extensions/fin-protocol/)
 
 ## Quick Start
-To use the SOARCA Fin library use the following command to install the library using pip:
+ 
+To include the SOARCA Fin library, you can use the following command to install it via pip:
+
 ```bash
 pip install soarca-fin-library
 ```
@@ -19,8 +21,8 @@ pip install soarca-fin-library
 ### Example
 An example on how to use the library is given below. 
 For more examples and the source code, we will refer to the Github page of the [project](https://github.com/COSSAS/SOARCA-FIN-python-library).
-```python
 
+```python
 def capability_pong_callback(command: Command) -> ResultStructure:
     print("Received ping, returning pong!")
 
@@ -92,7 +94,6 @@ if __name__ == "__main__":
 ```
 
 ## Architecture
-### Application Layout
 The main object of the application is the `SoarcaFin` object, which is responsible for configuring and creating and controlling the capabilities.
 The SoarcaFin creates `MQTTClient`s for each capability registered, plus one for registering, unregistering and controlling the fin.
 `MQTTClient`s each have their own connection to the MQTT Broker and own `Parser` and `Executor` objects.
