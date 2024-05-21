@@ -96,9 +96,9 @@ func TestHttpOAuth2(t *testing.T) {
 func TestHttpBasicAuth(t *testing.T) {
 	request := httpUtil.HttpRequest{}
 	httpCapability := http.New(&request)
-	username := "test"
+	user_id := "test"
 	password := "password"
-	url := fmt.Sprintf("https://httpbin.org/basic-auth/%s/%s", username, password)
+	url := fmt.Sprintf("https://httpbin.org/basic-auth/%s/%s", user_id, password)
 
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
@@ -109,7 +109,7 @@ func TestHttpBasicAuth(t *testing.T) {
 
 	auth := cacao.AuthenticationInformation{
 		Type:     cacao.AuthInfoHTTPBasicType,
-		Username: username,
+		UserId:   user_id,
 		Password: password,
 		ID:       "d0c7e6a0-f7fe-464e-9935-e6b3443f5b91",
 	}
