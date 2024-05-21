@@ -86,13 +86,18 @@ MONGODB_URI: "mongodb://localhost:27017"
 DATABASE_NAME: "soarca"
 DB_USERNAME: "root"
 DB_PASSWORD: "rootpassword"
-WORKFLOW_API_LOG_LEVEL: trace
+PLAYBOOK_API_LOG_LEVEL: trace
 DATABASE: "false"
+MAX_REPORTERS: "5"
 
 LOG_GLOBAL_LEVEL: "info"
 LOG_MODE: "development"
 LOG_FILE_PATH: ""
 LOG_FORMAT: "json"
+
+ENABLE_FINS: false
+MQTT_BROKER: "localhost"
+MQTT_PORT: 1883
 {{< /tab >}}
 {{< /tabpane >}}
 
