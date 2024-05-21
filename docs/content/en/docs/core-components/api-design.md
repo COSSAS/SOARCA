@@ -69,7 +69,7 @@ When the caller does not have valid authentication 401/unauthorized will be retu
 @startjson
 {
             "type": "playbook",
-            "spec_version": "1.1",
+            "spec_version": "cacao-2.0",
             "id": "playbook--91220064-3c6f-4b58-99e9-196e64f9bde7",
             "name": "coa flow",
             "description": "This playbook will trigger a specific coa",
@@ -446,7 +446,7 @@ Get all running playbooks
 {
             "playbooks": [
                 {"type": "playbook",
-                "spec_version": "1.1",
+                "spec_version": "cacao-2.0",
                 "id": "playbook--91220064-3c6f-4b58-99e9-196e64f9bde7",
                 "name": "SOARCA Main Flow",
                 "description": "This playbook will run for each trigger event in SOARCA",
