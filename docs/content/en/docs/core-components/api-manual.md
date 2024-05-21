@@ -5,7 +5,7 @@ description: >
 categories: [API]
 tags: [protocol, http, rest, api]
 weight: 3
-date: 2024-05-14
+date: 2024-05-21
 ---
 
 ## Endpoint descriptions
@@ -43,7 +43,9 @@ None
 |execution_id       |UUID                   |string             |The id of the execution
 |playbook_id        |UUID                   |string             |The id of the CACAO playbook executed by the execution
 |step_id            |UUID                   |string             |The id of the step executed by the execution
-|command            |command                |string             |The command for the agent
+|description        |description of the step|string             |The description from the workflow step
+|command            |command                |string             |The command for the agent either command 
+|command_is_base64  |true \| false          |bool               |Indicate the command is in base 64
 |targets            |cacao agent-target     |dictionary         |Map of [cacao agent-target](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256509) with the target(s) of this command
 |in_args            |cacao variables        |dictionary         |Map of [cacao variables](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256555) handled in the step in args with current values and definitions
 |out_args          |cacao variables        |dictionary         |Map of [cacao variables](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256555) handled in the step out args with current values and definitions
@@ -59,6 +61,7 @@ None
         "playbook_id" :  "<playbook-id>",
         "step_id" :  "<step-id>",
         "command" : "<command here>",
+        "command_is_base64" : "false",
         "targets" : {
             "__target1__" : {
                 "type" : "<agent-target-type-ov>",
