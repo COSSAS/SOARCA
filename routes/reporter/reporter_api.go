@@ -39,9 +39,9 @@ func NewExecutionInformer(informer informer.IExecutionInformer) *executionInform
 //	@Description	return all stored executions
 //	@Tags			reporter
 //	@Produce		json
-//	@success		200	{array}	string
-//	@error			400
-//	@Router			/report/ [GET]
+//	@success		200	{array}		api.PlaybookExecutionReport
+//	@failure		400	{object}	api.Error
+//	@Router			/reporter [GET]
 func (executionInformer *executionInformer) getExecutions(g *gin.Context) {
 	executions, err := executionInformer.informer.GetExecutions()
 	if err != nil {
@@ -55,14 +55,15 @@ func (executionInformer *executionInformer) getExecutions(g *gin.Context) {
 // getExecutionReport GET handler for obtaining the information about an execution.
 // Returns this to the gin context as a PlaybookExecutionReport object at soarca/model/api/reporter
 //
-//	@Summary		gets information about an ongoing playbook execution
+//	@Summary	gets information about an ongoing playbook execution
 //	@Schemes
 //	@Description	return execution information
 //	@Tags			reporter
 //	@Produce		json
-//	@success		200 {object}	api.PlaybookExecutionReport
-//	@error			400
-//	@Router			/report/:id [GET]
+//	@Param			id	path		string	true	"execution identifier"
+//	@success		200	{object}	api.PlaybookExecutionReport
+//	@failure		400	{object}	api.Error
+//	@Router			/reporter/{id} [GET]
 func (executionInformer *executionInformer) getExecutionReport(g *gin.Context) {
 	id := g.Param("id")
 	log.Trace("Trying to obtain execution for id: ", id)
