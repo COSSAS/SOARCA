@@ -187,7 +187,7 @@ enable = false
   desc = "Development takes place here!"
 [[params.links.developer]]
   name = "Slack"
-  url = "https://cossas.slack.com/archives/C06L65375TN"
+  url = "https://join.slack.com/t/cossas/shared_invite/zt-2i4zxg0oh-dhhL4zTSX5olysngrPxDkg"
   icon = "fab fa-slack"
   desc = "Chat with other project developers"
 # [[params.links.developer]]

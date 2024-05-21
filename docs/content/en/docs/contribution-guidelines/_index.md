@@ -24,7 +24,7 @@ If there's something you'd like to see in SOARCA (or if you've found something t
 
 
 {{% alert title="Security issues" color="warning" %}}
-For security issues, we kindly request that you refrain from reporting them using the issue tracker. Instead, please contact us directly: [slack](https://cossas.slack.com/archives/C06L65375TN)
+For security issues, we kindly request that you refrain from reporting them using the issue tracker. Instead, please contact us directly: [slack](https://join.slack.com/t/cossas/shared_invite/zt-2i4zxg0oh-dhhL4zTSX5olysngrPxDkg)
 {{% /alert %}}
 
 
@@ -58,7 +58,7 @@ The project has opted to select the [go style guide](https://google.github.io/st
 
 Feel free to engage with the community for discussions and assistance via one of the following channels:
 
-- [slack](https://cossas.slack.com/archives/C06L65375TN)
+- [slack](https://join.slack.com/t/cossas/shared_invite/zt-2i4zxg0oh-dhhL4zTSX5olysngrPxDkg)
 - [GitHub discussions](https://github.com/COSSAS/SOARCA/discussions)
 
 ## Contributing to these docs
