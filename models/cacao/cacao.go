@@ -55,13 +55,14 @@ type (
 	Workflow   map[string]Step
 )
 
+// CACAO Variable
 type Variable struct {
-	Type        string `bson:"type" json:"type" validate:"required"`
-	Name        string `bson:"name,omitempty" json:"name,omitempty"`
-	Description string `bson:"description,omitempty" json:"description,omitempty"`
-	Value       string `bson:"value,omitempty" json:"value,omitempty"`
-	Constant    bool   `bson:"constant,omitempty" json:"constant,omitempty"`
-	External    bool   `bson:"external,omitempty" json:"external,omitempty"`
+	Type        string `bson:"type" json:"type" validate:"required" example:"string"`                    // Type of the variable should be OASIS  variable-type-ov
+	Name        string `bson:"name,omitempty" json:"name,omitempty" example:"__example_string__"`        // The name of the variable in the style __variable_name__
+	Description string `bson:"description,omitempty" json:"description,omitempty" example:"some string"` // A description of the variable
+	Value       string `bson:"value,omitempty" json:"value,omitempty" example:"this is a value"`         // The value of the that the variable will evaluate to
+	Constant    bool   `bson:"constant,omitempty" json:"constant,omitempty" example:"false"`             // Indicate if it's a constant
+	External    bool   `bson:"external,omitempty" json:"external,omitempty" example:"false"`             // Indicate if it's external
 }
 
 const (
@@ -85,34 +86,34 @@ const (
 type Variables map[string]Variable
 
 type Playbook struct {
-	ID                            string                               `bson:"_id" json:"id" validate:"required"`
-	Type                          string                               `bson:"type" json:"type" validate:"required"`
-	SpecVersion                   string                               `bson:"spec_version" json:"spec_version" validate:"required"`
-	Name                          string                               `bson:"name" json:"name" validate:"required"`
-	Description                   string                               `bson:"description,omitempty" json:"description,omitempty"`
-	PlaybookTypes                 []string                             `bson:"playbook_types,omitempty" json:"playbook_types,omitempty"`
-	CreatedBy                     string                               `bson:"created_by" json:"created_by"  validate:"required"`
-	Created                       time.Time                            `bson:"created" json:"created"  validate:"required"`
-	Modified                      time.Time                            `bson:"modified" json:"modified" validate:"required"`
-	ValidFrom                     time.Time                            `bson:"valid_from,omitempty" json:"valid_from,omitempty"`
-	ValidUntil                    time.Time                            `bson:"valid_until,omitempty" json:"valid_until,omitempty" validate:"omitempty,gtecsfield=ValidFrom"`
-	DerivedFrom                   []string                             `bson:"derived_from,omitempty" json:"derived_from,omitempty"`
-	Priority                      int                                  `bson:"priority,omitempty" json:"priority,omitempty"`
-	Severity                      int                                  `bson:"severity,omitempty" json:"severity,omitempty"`
-	Impact                        int                                  `bson:"impact,omitempty" json:"impact,omitempty"`
-	Labels                        []string                             `bson:"labels,omitempty" json:"labels,omitempty"`
-	ExternalReferences            []ExternalReferences                 `bson:"external_references,omitempty" json:"external_references,omitempty"`
-	Markings                      []string                             `bson:"markings,omitempty" json:"markings,omitempty"`
-	WorkflowStart                 string                               `bson:"workflow_start" json:"workflow_start" validate:"required"`
-	WorkflowException             string                               `bson:"workflow_exception,omitempty" json:"workflow_exception,omitempty"`
-	Workflow                      Workflow                             `bson:"workflow" json:"workflow" validate:"required"`
-	DataMarkingDefinitions        map[string]DataMarking               `bson:"data_marking_definitions,omitempty" json:"data_marking_definitions,omitempty"`
-	AuthenticationInfoDefinitions map[string]AuthenticationInformation `bson:"authentication_info_definitions,omitempty" json:"authentication_info_definitions,omitempty"`
-	AgentDefinitions              map[string]AgentTarget               `bson:"agent_definitions,omitempty" json:"agent_definitions,omitempty"`
-	TargetDefinitions             map[string]AgentTarget               `bson:"target_definitions,omitempty" json:"target_definitions,omitempty"`
-	ExtensionDefinitions          map[string]ExtensionDefinition       `bson:"extension_definitions,omitempty" json:"extension_definitions,omitempty"`
-	PlaybookVariables             Variables                            `bson:"playbook_variables,omitempty" json:"playbook_variables,omitempty"`
-	PlaybookExtensions            Extensions                           `bson:"playbook_extensions,omitempty" json:"playbook_extensions,omitempty"`
+	ID                            string                               `bson:"_id" json:"id" validate:"required" example:"playbook--77c4c428-6304-4950-93ff-83c5fd4cb67a"`                                      // Used by SOARCA so refer to the object while loading it from the database
+	Type                          string                               `bson:"type" json:"type" validate:"required" example:"playbook"`                                                                         // Must be playbook
+	SpecVersion                   string                               `bson:"spec_version" json:"spec_version" validate:"required" example:"cacao-2.0"`                                                        // Indicate the specification version cacao-2.0 is the only supported version at this time
+	Name                          string                               `bson:"name" json:"name" validate:"required" example:"Investigation playbook"`                                                           // An indicative name of the playbook
+	Description                   string                               `bson:"description,omitempty" json:"description,omitempty" example:"This is an example investigation playbook"`                          // A descriptive text to indicate what your playbook does
+	PlaybookTypes                 []string                             `bson:"playbook_types,omitempty" json:"playbook_types,omitempty" example:"investigation"`                                                // Should be of the CACAO playbook-type-ov
+	CreatedBy                     string                               `bson:"created_by" json:"created_by"  validate:"required" example:"identity--96abab60-238a-44ff-8962-5806aa60cbce"`                      // UUID referring to identity
+	Created                       time.Time                            `bson:"created" json:"created"  validate:"required" example:"2024-01-01T09:00:00.000Z"`                                                  // Timestamp of the creation of the playbook
+	Modified                      time.Time                            `bson:"modified" json:"modified" validate:"required" example:"2024-01-01T09:00:00.000Z"`                                                 // Timestamp of the last modification of the playbook
+	ValidFrom                     time.Time                            `bson:"valid_from,omitempty" json:"valid_from,omitempty" example:"2024-01-01T09:00:00.000Z"`                                             // Timestamp from when the playbook is valid
+	ValidUntil                    time.Time                            `bson:"valid_until,omitempty" json:"valid_until,omitempty" validate:"omitempty,gtecsfield=ValidFrom" example:"2124-01-01T09:00:00.000Z"` // Timestamp until when the playbook is valid
+	DerivedFrom                   []string                             `bson:"derived_from,omitempty" json:"derived_from,omitempty" example:"[\"playbook--77c4c428-6304-4950-93ff-83c5224cb67a\"]"`             // Playbook id that this playbook is derived from
+	Priority                      int                                  `bson:"priority,omitempty" json:"priority,omitempty" example:"100"`                                                                      // A priority number ranging 0 - 100
+	Severity                      int                                  `bson:"severity,omitempty" json:"severity,omitempty" example:"100"`                                                                      // A priority number ranging 0 - 100
+	Impact                        int                                  `bson:"impact,omitempty" json:"impact,omitempty" example:"100"`                                                                          // A priority number ranging 0 - 100
+	Labels                        []string                             `bson:"labels,omitempty" json:"labels,omitempty"`                                                                                        // List of labels to label playbook
+	ExternalReferences            []ExternalReferences                 `bson:"external_references,omitempty" json:"external_references,omitempty"`                                                              // List of external reference objects
+	Markings                      []string                             `bson:"markings,omitempty" json:"markings,omitempty" example:"[marking-statement--6424867b-0440-4885-bd0b-604d51786d06]"`                // List of datamarking identifiers
+	WorkflowStart                 string                               `bson:"workflow_start" json:"workflow_start" validate:"required" example:"start--07bea005-4a36-4a77-bd1f-79a6e4682a13"`                  // Start step of the playbook MUST be of step type START
+	WorkflowException             string                               `bson:"workflow_exception,omitempty" json:"workflow_exception,omitempty" example:"end--37bea005-4a36-4a77-bd1f-79a6e4682a13"`            // Step that marks the actions that need to be taken when an exception occurs
+	Workflow                      Workflow                             `bson:"workflow" json:"workflow" validate:"required"`                                                                                    // Map of workflow steps keyed by the step id
+	DataMarkingDefinitions        map[string]DataMarking               `bson:"data_marking_definitions,omitempty" json:"data_marking_definitions,omitempty"`                                                    // Map of datamarking definitions
+	AuthenticationInfoDefinitions map[string]AuthenticationInformation `bson:"authentication_info_definitions,omitempty" json:"authentication_info_definitions,omitempty"`                                      // Map of authentication information objects
+	AgentDefinitions              map[string]AgentTarget               `bson:"agent_definitions,omitempty" json:"agent_definitions,omitempty"`                                                                  // Map of agent definitions used by the workflow steps
+	TargetDefinitions             map[string]AgentTarget               `bson:"target_definitions,omitempty" json:"target_definitions,omitempty"`                                                                // Map of target definitions used by the workflow steps
+	ExtensionDefinitions          map[string]ExtensionDefinition       `bson:"extension_definitions,omitempty" json:"extension_definitions,omitempty"`                                                          // Map of extension definitions used by the workflow steps
+	PlaybookVariables             Variables                            `bson:"playbook_variables,omitempty" json:"playbook_variables,omitempty"`                                                                // Map of variables that are global to the playbook
+	PlaybookExtensions            Extensions                           `bson:"playbook_extensions,omitempty" json:"playbook_extensions,omitempty"`                                                              // Map of extensions used by the playbook
 }
 
 type CivicLocation struct {
