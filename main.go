@@ -32,6 +32,9 @@ const banner = `
 
 `
 
+// @title           SOARCA API
+// @version         1.0.0
+// @host      		localhost:8080
 func main() {
 	fmt.Print(banner)
 	log.Info("Version: ", Version)
