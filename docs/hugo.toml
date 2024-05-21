@@ -111,7 +111,7 @@ version = "0.0"
 url_latest_version = "https://cossas.github.io/SOARCA/docs/"
 
 # Repository configuration (URLs for in-page links to opening issues and suggesting changes)
-github_repo = "https://github.com/COSSAS/SOARCA/issues"
+github_repo = "https://github.com/COSSAS/SOARCA/"
 # An optional link to a related project repo. For example, the sibling repository where your product code lives.
 github_project_repo = "https://github.com/COSSAS/SOARCA/"
 
