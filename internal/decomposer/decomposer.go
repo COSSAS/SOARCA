@@ -13,6 +13,9 @@ import (
 	"soarca/logger"
 	"soarca/models/cacao"
 	"soarca/models/execution"
+	"soarca/utils/time"
+
+	t "time"
 
 	"github.com/google/uuid"
 )
@@ -42,13 +45,15 @@ func New(actionExecutor action.IExecuter,
 	playbookActionExecutor executors.IPlaybookExecuter,
 	condition condition.IExecuter,
 	guid guid.IGuid,
-	reporter reporter.IWorkflowReporter) *Decomposer {
+	reporter reporter.IWorkflowReporter,
+	time time.ITime) *Decomposer {
 
 	return &Decomposer{actionExecutor: actionExecutor,
 		playbookActionExecutor: playbookActionExecutor,
 		conditionExecutor:      condition,
 		guid:                   guid,
 		reporter:               reporter,
+		time:                   time,
 	}
 }
 
@@ -60,6 +65,7 @@ type Decomposer struct {
 	conditionExecutor      condition.IExecuter
 	guid                   guid.IGuid
 	reporter               reporter.IWorkflowReporter
+	time                   time.ITime
 }
 
 // Execute a Playbook
@@ -139,6 +145,9 @@ func (decomposer *Decomposer) ExecuteBranch(stepId string, scopeVariables cacao.
 // Execute a single Step within a Workflow
 func (decomposer *Decomposer) ExecuteStep(step cacao.Step, scopeVariables cacao.Variables) (cacao.Variables, error) {
 	log.Debug("Executing step type ", step.Type)
+
+	log.Trace("Delay is set to: ", step.Delay)
+	decomposer.time.Sleep(t.Duration(step.Delay) * t.Second)
 
 	// Combine parent scope and Step variables
 	variables := cacao.NewVariables()

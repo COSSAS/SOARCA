@@ -95,11 +95,13 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	stixComparison := comparison.New()
 	conditionExecutor := condition.New(stixComparison, reporter)
 	guid := new(guid.Guid)
+	soarcaTime := new(timeUtil.Time)
 	decompose := decomposer.New(actionExecutor,
 		playbookActionExecutor,
 		conditionExecutor,
 		guid,
-		reporter)
+		reporter,
+		soarcaTime)
 	return decompose
 }
 
