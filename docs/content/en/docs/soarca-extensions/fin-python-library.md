@@ -102,7 +102,9 @@ The `Executor` runs in their own thread and handles the actual execution of the 
 The `Executor` polls a thread-safe queue for new messages and performs IO operations, such as sending messages to the MQTT broker and calling capability callbacks.
 
 ### Setup SOARCA Capabilities
-To register a fin to SOARCA, first create a `SoarcaFin` object and pass the `fin_id` in the constructor.
+
+
+To register a fin to SOARCA, first create a `SoarcaFin` object and pass the `fin_id` in the constructor. The SOARCA `fin_id` must be in the format of: `sourca-fin-<capability>-<uuid4>`.
 Call `set_config_MQTT_server()` to set the required configurations for the fin to connect to the MQTT broker.
 For each capability to be registered, call `create_fin_capability()`. The capability callback funtion should return an object of type `ResultStructure`.
 When all capabilities are initialized, call `start_fin()` for the SOARCA Fin to connect to the MQTT broker and register itself to SOARCA.
