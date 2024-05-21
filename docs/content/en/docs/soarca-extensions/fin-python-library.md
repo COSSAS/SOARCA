@@ -20,7 +20,7 @@ pip install soarca-fin-library
 
 ### Example
 An example on how to use the library is given below. 
-For more examples and the source code, we will refer to the Github page of the [project](https://github.com/COSSAS/SOARCA-FIN-python-library).
+For more examples and the source code, we will refer to the Github page of the [SOARCA-Fin-python-library](https://github.com/COSSAS/SOARCA-FIN-python-library).
 
 ```python
 def capability_pong_callback(command: Command) -> ResultStructure:
