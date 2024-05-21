@@ -93,7 +93,7 @@ func (plabookCtrl *playbookController) submitPlaybook(g *gin.Context) {
 		if err.Error() == "duplicate" {
 			SendErrorResponse(g, http.StatusConflict, "Provided duplicate playbook, already in database", "POST /playbook")
 		} else {
-			SendErrorResponse(g, http.StatusInternalServerError, "Internal server error, could not create playbook. Is the playbook correct?", "POST /playbook")
+			SendErrorResponse(g, http.StatusBadRequest, "Could not create playbook. Is the playbook correct?", "POST /playbook")
 		}
 		return
 	}
