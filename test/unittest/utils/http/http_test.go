@@ -214,9 +214,9 @@ func TestHttpBearerToken(t *testing.T) {
 }
 
 func TestHttpBasicAuth(t *testing.T) {
-	username := "test"
+	user_id := "test"
 	password := "password"
-	url := fmt.Sprintf("https://httpbin.org/basic-auth/%s/%s", username, password)
+	url := fmt.Sprintf("https://httpbin.org/basic-auth/%s/%s", user_id, password)
 	httpRequest := http.HttpRequest{}
 
 	target := cacao.AgentTarget{
@@ -228,7 +228,7 @@ func TestHttpBasicAuth(t *testing.T) {
 
 	auth := cacao.AuthenticationInformation{
 		Type:     cacao.AuthInfoHTTPBasicType,
-		Username: username,
+		UserId:   user_id,
 		Password: password,
 		ID:       "d0c7e6a0-f7fe-464e-9935-e6b3443f5b91",
 	}
@@ -258,7 +258,7 @@ func TestHttpBasicAuth(t *testing.T) {
 	}
 
 	assert.Equal(t, authResponse.Authenticated, true)
-	assert.Equal(t, authResponse.User, username)
+	assert.Equal(t, authResponse.User, user_id)
 }
 
 func TestHttpPostWithContentConnection(t *testing.T) {
