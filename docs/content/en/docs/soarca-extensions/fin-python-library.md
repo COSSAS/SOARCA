@@ -95,7 +95,7 @@ if __name__ == "__main__":
 
 ## Architecture
 The main object of the application is the `SoarcaFin` object, which is responsible for configuring and creating and controlling the capabilities.
-The SoarcaFin creates `MQTTClient`s for each capability registered, plus one for registering, unregistering and controlling the fin.
+The SoarcaFin creates `MQTTClient`s for each capability registered, plus one for registering, unregistering and controlling the fi itself.
 `MQTTClient`s each have their own connection to the MQTT Broker and own `Parser` and `Executor` objects.
 The `Parser` object parsers the raw MQTT messages and tries to convert them to one of the objects in `src/models`.
 The `Executor` runs in their own thread and handles the actual execution of the messages.
@@ -109,7 +109,7 @@ Call `set_config_MQTT_server()` to set the required configurations for the fin t
 For each capability to be registered, call `create_fin_capability()`. The capability callback funtion should return an object of type `ResultStructure`.
 When all capabilities are initialized, call `start_fin()` for the SOARCA Fin to connect to the MQTT broker and register itself to SOARCA.
 
-An example is given in this project in the file `examples/pong_example.py`
+An example is given in this project in the file [`examples/pong_example.py`]
 
 ### Class Overview
 ```plantuml
