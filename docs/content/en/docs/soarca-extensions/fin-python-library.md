@@ -8,7 +8,7 @@ weight: 2
 date: 2024-04-10
 ---
 
-For the documentation about the Fin protocol we refer the reader to de documention page of [SOARCA Fin Protocol](https://cossas.github.io/SOARCA/docs/soarca-extensions/fin-protocol/)
+For the documentation about the Fin protocol we refer to documention page of [SOARCA Fin Protocol](https://cossas.github.io/SOARCA/docs/soarca-extensions/fin-protocol/).
 
 ## Quick Start
  
@@ -20,7 +20,7 @@ pip install soarca-fin-library
 
 ### Example
 An example on how to use the library is given below. 
-For more examples and the source code, we will refer to the Github page of the [SOARCA-Fin-python-library](https://github.com/COSSAS/SOARCA-FIN-python-library).
+For more examples and the source code, we will refer to the Github page of the [SOARCA-Fin-python-library](https://github.com/COSSAS/SOARCA-FIN-python-library), where we provide `/examples` folder.
 
 ```python
 def capability_pong_callback(command: Command) -> ResultStructure:
