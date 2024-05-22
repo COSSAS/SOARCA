@@ -89,8 +89,13 @@ if __name__ == "__main__":
     MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
     USERNAME = os.getenv("MQTT_USERNAME", "soarca")
     PASSWD = os.getenv("MQTT_PASSWD", "password")
-
     main(MQTT_BROKER, MQTT_PORT, USERNAME, PASSWD)
+```
+
+Example env file:
+
+```bash
+export $(cat .env | grep -v "#" | xargs)
 ```
 
 ## Architecture
