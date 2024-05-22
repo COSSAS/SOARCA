@@ -92,8 +92,16 @@ if __name__ == "__main__":
     main(MQTT_BROKER, MQTT_PORT, USERNAME, PASSWD)
 ```
 
-Example env file:
+Below we have provided an example env file. Note that this changes according to your setup.
 
+```
+MQTT_BROKER = "localhost"
+MQTT_PORT = "1883"
+MQTT_USERNAME = "soarca"
+MQTT_PASSWD = "password"
+```
+
+Env file can be exported by running:
 ```bash
 export $(cat .env | grep -v "#" | xargs)
 ```
