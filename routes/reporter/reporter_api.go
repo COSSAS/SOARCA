@@ -46,7 +46,7 @@ func (executionInformer *executionInformer) getExecutions(g *gin.Context) {
 	executions, err := executionInformer.informer.GetExecutions()
 	if err != nil {
 		log.Debug("Could not get executions from informer")
-		error.SendErrorResponse(g, http.StatusInternalServerError, "Could not get executions from informer", "GET /report/", "")
+		error.SendErrorResponse(g, http.StatusInternalServerError, "Could not get executions from informer", "GET /reporter/", "")
 		return
 	}
 	g.JSON(http.StatusOK, executions)
@@ -70,21 +70,23 @@ func (executionInformer *executionInformer) getExecutionReport(g *gin.Context) {
 	uuid, err := uuid.Parse(id)
 	if err != nil {
 		log.Debug("Could not parse id parameter for request")
-		error.SendErrorResponse(g, http.StatusBadRequest, "Could not parse id parameter for request", "GET /report/{id}", "")
+		error.SendErrorResponse(g, http.StatusBadRequest, "Could not parse id parameter for request", "GET /reporter/"+id, err.Error())
 		return
 	}
 
 	executionEntry, err := executionInformer.informer.GetExecutionReport(uuid)
 	if err != nil {
 		log.Debug("Could not find execution for given id")
-		error.SendErrorResponse(g, http.StatusBadRequest, "Could not find execution for given ID", "GET /report/{id}", "")
+		log.Error(err)
+		error.SendErrorResponse(g, http.StatusBadRequest, "Could not find execution for given ID", "GET /reporter/"+id, "")
 		return
 	}
 
 	executionEntryParsed, err := parseCachePlaybookEntry(executionEntry)
 	if err != nil {
 		log.Debug("Could not parse entry to reporter result model")
-		error.SendErrorResponse(g, http.StatusInternalServerError, "Could not parse execution report", "GET /report/{id}", "")
+		log.Error(err)
+		error.SendErrorResponse(g, http.StatusInternalServerError, "Could not parse execution report", "GET /reporter/"+id, "")
 		return
 	}
 	g.JSON(http.StatusOK, executionEntryParsed)
