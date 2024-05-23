@@ -23,6 +23,22 @@ An example on how to use the library is given below.
 For more examples and the source code, we will refer to the Github page of the [SOARCA-Fin-python-library](https://github.com/COSSAS/SOARCA-FIN-python-library), where we provide `/examples` folder.
 
 ```python
+import os
+from dotenv import load_dotenv
+
+from soarca_fin_python_library.soarca_fin import SoarcaFin
+from soarca_fin_python_library.models.agent_structure import AgentStructure
+from soarca_fin_python_library.models.external_reference import ExternalReference
+from soarca_fin_python_library.models.step_structure import StepStructure
+from soarca_fin_python_library.models.capability_structure import CapabilityStructure
+from soarca_fin_python_library.enums.workflow_step_enum import WorkFlowStepEnum
+from soarca_fin_python_library.models.command import Command
+from soarca_fin_python_library.models.result_structure import ResultStructure
+
+from soarca_fin_python_library.models.variable import Variable
+from soarca_fin_python_library.enums.variable_type_enum import VariableTypeEnum
+
+
 def capability_pong_callback(command: Command) -> ResultStructure:
     print("Received ping, returning pong!")
 
@@ -89,7 +105,9 @@ if __name__ == "__main__":
     MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
     USERNAME = os.getenv("MQTT_USERNAME", "soarca")
     PASSWD = os.getenv("MQTT_PASSWD", "password")
+
     main(MQTT_BROKER, MQTT_PORT, USERNAME, PASSWD)
+
 ```
 
 Below we have provided an example env file. Note that this changes according to your setup.
