@@ -2,9 +2,10 @@ package reporter
 
 import (
 	"net/http"
+	"reflect"
+
 	"soarca/internal/controller/informer"
 
-	"reflect"
 	"soarca/routes/error"
 
 	"github.com/gin-gonic/gin"
@@ -41,7 +42,7 @@ func NewExecutionInformer(informer informer.IExecutionInformer) *executionInform
 //	@Produce		json
 //	@success		200	{array}	string
 //	@error			400
-//	@Router			/report/ [GET]
+//	@Router			/reporter/ [GET]
 func (executionInformer *executionInformer) getExecutions(g *gin.Context) {
 	executions, err := executionInformer.informer.GetExecutions()
 	if err != nil {
@@ -62,7 +63,7 @@ func (executionInformer *executionInformer) getExecutions(g *gin.Context) {
 //	@Produce		json
 //	@success		200 {object}	api.PlaybookExecutionReport
 //	@error			400
-//	@Router			/report/:id [GET]
+//	@Router			/reporter/:id [GET]
 func (executionInformer *executionInformer) getExecutionReport(g *gin.Context) {
 	id := g.Param("id")
 	log.Trace("Trying to obtain execution for id: ", id)
