@@ -5,6 +5,8 @@ import (
 
 	"soarca/internal/controller"
 	"soarca/logger"
+	"soarca/swaggerdocs"
+	"soarca/utils"
 
 	"github.com/joho/godotenv"
 )
@@ -18,6 +20,7 @@ func init() {
 var (
 	Version   string
 	Buildtime string
+	Host      string
 )
 
 const banner = `
@@ -34,7 +37,6 @@ const banner = `
 
 // @title           SOARCA API
 // @version         1.0.0
-// @host      		localhost:8080
 func main() {
 	fmt.Print(banner)
 	log.Info("Version: ", Version)
@@ -44,6 +46,8 @@ func main() {
 	if errenv != nil {
 		log.Warning("Failed to read env variable, but will continue")
 	}
+	Host = "localhost:" + utils.GetEnv("PORT", "8080")
+	swaggerdocs.SwaggerInfo.Host = Host
 
 	errinit := controller.Initialize()
 	if errinit != nil {

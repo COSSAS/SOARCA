@@ -28,8 +28,8 @@ func NewPlaybookController(controller database.IController) *playbookController 
 //	@Description	return all stored playbooks default limit:100
 //	@Tags			playbook
 //	@Produce		json
-//	@success		200	{array}	cacao.Playbook
-//	@error			400
+//	@success		200	{array}		cacao.Playbook
+//	@failure		400	{object}	api.Error
 //	@Router			/playbook/ [GET]
 func (plabookCtrl *playbookController) getAllPlaybooks(g *gin.Context) {
 	log.Trace("Trying to obtain all playbook IDs")
@@ -52,8 +52,8 @@ func (plabookCtrl *playbookController) getAllPlaybooks(g *gin.Context) {
 //	@Description	get playbook meta information for playbook
 //	@Tags			playbook
 //	@Produce		json
-//	@success		200	{array}	api.PlaybookMeta
-//	@error			400
+//	@success		200	{array}		api.PlaybookMeta
+//	@failure		400	{object}	api.Error
 //	@Router			/playbook/meta [GET]
 func (plabookCtrl *playbookController) getAllPlaybookMetas(g *gin.Context) {
 	log.Trace("Trying to obtain all playbook IDs")
@@ -78,7 +78,7 @@ func (plabookCtrl *playbookController) getAllPlaybookMetas(g *gin.Context) {
 //	@Accept			json
 //	@Param			data	body		cacao.Playbook	true	"playbook"
 //	@Success		200		{object}	cacao.Playbook
-//	@error			400
+//	@failure		400		{object}	api.Error
 //	@Router			/playbook/ [POST]
 func (plabookCtrl *playbookController) submitPlaybook(g *gin.Context) {
 	jsonData, err := io.ReadAll(g.Request.Body)
@@ -110,7 +110,7 @@ func (plabookCtrl *playbookController) submitPlaybook(g *gin.Context) {
 //	@Accept			json
 //	@Param			id	path		string	true	"playbook ID"
 //	@Success		200	{object}	cacao.Playbook
-//	@error			400
+//	@failure		400	{object}	api.Error
 //	@Router			/playbook/{id} [GET]
 func (plabookCtrl *playbookController) getPlaybookByID(g *gin.Context) {
 	id := g.Param("id")
@@ -136,7 +136,7 @@ func (plabookCtrl *playbookController) getPlaybookByID(g *gin.Context) {
 //	@Param			id		path		string			true	"playbook Id"
 //	@Param			data	body		cacao.Playbook	true	"playbook"
 //	@Success		200		{object}	cacao.Playbook
-//	@error			400
+//	@failure		400		{object}	api.Error
 //	@Router			/playbook/{id} [PUT]
 func (plabookCtrl *playbookController) updatePlaybookByID(g *gin.Context) {
 	id := g.Param("id")
@@ -167,7 +167,7 @@ func (plabookCtrl *playbookController) updatePlaybookByID(g *gin.Context) {
 //	@Accept			json
 //	@Param			id	path	string	true	"playbook ID"
 //	@Success		200
-//	@error			400
+//	@failure		400	{object}	api.Error
 //	@Router			/playbook/{id} [DELETE]
 func (plabookCtrl *playbookController) deleteByPlaybookID(g *gin.Context) {
 	id := g.Param("id")
