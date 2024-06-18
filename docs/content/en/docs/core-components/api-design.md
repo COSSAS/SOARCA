@@ -417,11 +417,39 @@ None
 @startjson
 {
     "version": "1.0.0",
-    "components": [
+    "runtime": "docker/windows/linux/macos/other",
+    "mode" : "development/production",
+    "time" : "2020-03-04T15:56:00.123456Z",
+    "uptime": {
+        "since": "2020-03-04T15:56:00.123456Z",
+        "milis": "uptime in miliseconds"
+    }
+}
+@endjson
+```
+
+##### Error
+5XX/Internal error, 500/503/504 message.
+
+----
+
+#### GET `/status/fins` | not implemented
+Call this endpoint to see if SOARCA Fins are up and ready. This call has no payload body.
+
+##### Call payload
+None
+
+##### Response
+200/OK
+
+```plantuml
+@startjson
+{
+    "fins": [
         {
-            "name": "Component name",
+            "name": "Fin name",
             "status": "ready/running/failed/stopped/...",
-            "message": "Some message",
+            "id": "The fin UUID",
             "version": "semver verison: 1.0.0"
         }
     ]
@@ -432,65 +460,11 @@ None
 ##### Error
 5XX/Internal error, 500/503/504 message.
 
----
-
-#### GET /status/playbook
-Get all running playbooks 
-##### Call payload
-
-##### Response
-200/OK
-
-```plantuml
-@startjson
-{
-            "playbooks": [
-                {"type": "playbook",
-                "spec_version": "cacao-2.0",
-                "id": "playbook--91220064-3c6f-4b58-99e9-196e64f9bde7",
-                "name": "SOARCA Main Flow",
-                "description": "This playbook will run for each trigger event in SOARCA",
-                "playbook_types": ["notification"],
-                "created_by": "identity--06d8f218-f4e9-4f9f-9108-501de03d419f",
-                "created": "2020-03-04T15:56:00.123456Z",
-                "modified": "2020-03-04T15:56:00.123456Z",
-                "revoked": false,
-                "valid_from": "2020-03-04T15:56:00.123456Z",
-                "valid_until": "2020-07-31T23:59:59.999999Z",
-                "derived_from": [],
-                "priority": 1,
-                "severity": 1,
-                "impact": 1}
-            ]
-
-}
-@endjson
-```
-
-##### Error
-400/BAD REQUEST general error on error.
-
----- 
-
-#### GET `/status/playbook/xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx (playbook-id)`
-Get playbook details of running a playbook. It will return CACAO playbook JSON
-
-##### Call payload
-None
-
-##### Response
-200/OK
-
-See [cacao playbook JSON](#cacao-playbook-json)
-Empty payload if no playbooks are running
-
-##### Error
-400/BAD REQUEST general error on error.
 
 ----
 
-#### GET `/status/playbook/{playbook-id}`
-Get course of action list for coa awaiting action.
+#### GET `/status/reporters` | not implemented
+Call this endpoint to see which SOARCA reportes are used. This call has no payload body.
 
 ##### Call payload
 None
@@ -501,24 +475,23 @@ None
 ```plantuml
 @startjson
 {
-            "actions": [
-                {
-                    "playbook_id": "playbook--91220064-3c6f-4b58-99e9-196e64f9bde7",
-                    "status": "running/finished/failed/stopped/paused"
-                }
-            ]
-
+    "reporters": [
+        {
+            "name": "Reporter name"
+        }
+    ]
 }
 @endjson
 ```
 
 ##### Error
-400/BAD REQUEST general error on error.
+5XX/Internal error, 500/503/504 message.
 
----
+----
 
-#### GET /status/history
-Get all playbook ids and statuses that have been run excluded those that are running or paused.
+
+#### GET `/status/ping`
+See if SOARCA is up this will only return if all SOARCA services are ready
 
 ##### Call payload
 None
@@ -526,23 +499,7 @@ None
 ##### Response
 200/OK
 
-```plantuml
-@startjson
-{
-            "actions": [
-                {
-                    "playbook_id": "playbook--91220064-3c6f-4b58-99e9-196e64f9bde7",
-                    "status": "running/finished/failed/stopped/paused"
-                }
-            ]
-
-}
-@endjson
-```
-
-##### Error
-400/BAD REQUEST general error on error.
-
+`pong`
 
 ## Usage example flow
 
