@@ -8,8 +8,6 @@ import (
 	"time"
 )
 
-type Status uint8
-
 // Reporter model adapted from https://github.com/cyentific-rni/workflow-status/blob/main/README.md
 
 const (
