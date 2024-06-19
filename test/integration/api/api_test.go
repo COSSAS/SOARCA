@@ -2,6 +2,7 @@ package api_test
 
 import (
 	"bytes"
+	"io"
 	"net/http"
 	"soarca/internal/controller"
 	"testing"
@@ -87,5 +88,37 @@ func TestCorsHeaderFromNonAllowedOrigin(t *testing.T) {
 	}
 	t.Log(response2)
 	assert.Equal(t, http.StatusForbidden, response2.StatusCode)
+
+}
+
+func TestPingPong(t *testing.T) {
+	// Start SOARCA in separate threat
+	t.Setenv("PORT", "8082")
+	go initializeSoarca(t)
+
+	// Wait for the server to be online
+	time.Sleep(400 * time.Millisecond)
+
+	client := http.Client{}
+	buffer := bytes.NewBufferString("")
+	request, err := http.NewRequest("GET", "http://localhost:8082/status/ping", buffer)
+	if err != nil {
+		t.Fail()
+	}
+
+	// request.Header.Add("Origin", "http://example.com")
+	response, err := client.Do(request)
+	t.Log(response)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+	defer response.Body.Close()
+	body, err := io.ReadAll(response.Body)
+	assert.Equal(t, nil, err)
+
+	assert.Equal(t, "pong", string(body))
 
 }
