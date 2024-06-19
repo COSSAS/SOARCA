@@ -6,6 +6,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// /Status/ping GET handler for handling status api calls
+// Returns the status model object for SOARCA
+//
+//	@Summary	ping to see if SOARCA is up returns pong
+//	@Schemes
+//	@Description	return SOARCA status
+//	@Tags			ping pong
+//	@Produce		plain
+//	@success		200	string	pong
+//	@Router			/status/ping [GET]
 func Pong(g *gin.Context) {
 	g.Data(http.StatusOK, "text/plain", []byte("pong"))
 }

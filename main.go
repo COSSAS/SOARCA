@@ -36,8 +36,8 @@ const banner = `
 
 `
 
-// @title           SOARCA API
-// @version         1.0.0
+//	@title		SOARCA API
+//	@version	1.0.0
 func main() {
 	fmt.Print(banner)
 	log.Info("Version: ", Version)
