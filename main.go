@@ -5,6 +5,7 @@ import (
 
 	"soarca/internal/controller"
 	"soarca/logger"
+	"soarca/routes/status"
 	"soarca/swaggerdocs"
 	"soarca/utils"
 
@@ -35,8 +36,8 @@ const banner = `
 
 `
 
-// @title           SOARCA API
-// @version         1.0.0
+//	@title		SOARCA API
+//	@version	1.0.0
 func main() {
 	fmt.Print(banner)
 	log.Info("Version: ", Version)
@@ -49,6 +50,8 @@ func main() {
 	Host = "localhost:" + utils.GetEnv("PORT", "8080")
 	swaggerdocs.SwaggerInfo.Host = Host
 
+	// Version is only available here
+	status.SetVersion(Version)
 	errinit := controller.Initialize()
 	if errinit != nil {
 		log.Fatal("Something Went wrong with setting-up the app, msg: ", errinit)

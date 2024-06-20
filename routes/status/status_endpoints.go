@@ -1,34 +1,32 @@
-package coa
+package status
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-func Helloworld(g *gin.Context) {
-	g.JSON(http.StatusOK, "helloworld from /status")
-}
-
-func id_tester(g *gin.Context) {
-	// Get the value of the 'id' parameter from the URL
-	id := g.Param("id")
-	fmt.Println(id)
+// /Status/ping GET handler for handling status api calls
+// Returns the status model object for SOARCA
+//
+//	@Summary	ping to see if SOARCA is up returns pong
+//	@Schemes
+//	@Description	return SOARCA status
+//	@Tags			ping pong
+//	@Produce		plain
+//	@success		200	string	pong
+//	@Router			/status/ping [GET]
+func Pong(g *gin.Context) {
+	g.Data(http.StatusOK, "text/plain", []byte("pong"))
 }
 
 // GET     /status
-// GET     /status/playbook
-// GET     /status/playbook/id
-// GET     /status/coa/id
-// GET     /status/history
+// GET     /status/ping
 func Routes(route *gin.Engine) {
-	coa := route.Group("/status")
+	router := route.Group("/status")
 	{
-		coa.GET("/", Helloworld)
-		coa.GET("/playbook/:id", id_tester)
-		coa.GET("/coa/:id", id_tester)
-		coa.GET("/history", Helloworld)
-		// workflow.POST()
+		router.GET("/", Api)
+		router.GET("/ping", Pong)
+
 	}
 }
