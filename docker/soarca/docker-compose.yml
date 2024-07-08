@@ -1,7 +1,7 @@
 version: '3.7'
 services:
   mongodb_container:
-    image: mongo:latest
+    image: docker.io/mongo:latest
     container_name: mongo_soarca_stack
     environment:
       MONGO_INITDB_ROOT_USERNAME: "root"
@@ -14,7 +14,7 @@ services:
         target: /data/db
 
   mosquitto:
-    image: eclipse-mosquitto
+    image: docker.io/eclipse-mosquitto
     container_name: mosquitto
     volumes:
       - type: volume
@@ -39,7 +39,7 @@ services:
         mode: host
 
   soarca:
-    image: cossas/soarca:latest
+    image: docker.io/cossas/soarca:latest
     container_name: soarca_server
     environment:
       PORT: 8080
