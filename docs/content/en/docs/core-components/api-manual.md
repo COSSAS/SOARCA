@@ -193,7 +193,7 @@ Respond to manual command pending in SOARCA, if out_args are defined they must b
 
 ```plantuml
 @startjson
-[
+
     {
         "type" :        "manual-step-response",
         "execution_id" : "<execution-id>",
@@ -211,9 +211,13 @@ Respond to manual command pending in SOARCA, if out_args are defined they must b
             }
         }
     }
-]
+
 @endjson
 ```
 
 ##### Response
 200/OK with payload:
+
+##### Error
+400/BAD REQUEST with payload:
+General error
