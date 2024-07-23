@@ -34,7 +34,8 @@ type ExecutionDetails struct {
 }
 
 type IDecomposer interface {
-	Execute(playbook cacao.Playbook, details chan ExecutionDetails) (*ExecutionDetails, error)
+	ExecuteAsync(playbook cacao.Playbook, detailsch chan ExecutionDetails)
+	Execute(playbook cacao.Playbook) (*ExecutionDetails, error)
 }
 
 func init() {
@@ -69,17 +70,34 @@ type Decomposer struct {
 }
 
 // Execute a Playbook
-func (decomposer *Decomposer) Execute(playbook cacao.Playbook, execution_details_ch chan ExecutionDetails) (*ExecutionDetails, error) {
-
+func (decomposer *Decomposer) ExecuteAsync(playbook cacao.Playbook, detailsch chan ExecutionDetails) {
 	executionId := decomposer.guid.New()
 	log.Debugf("Starting execution %s for Playbook %s", executionId, playbook.ID)
 
 	details := ExecutionDetails{executionId, playbook.ID, playbook.PlaybookVariables}
 	decomposer.details = details
 
-	if execution_details_ch != nil {
-		execution_details_ch <- details
+	if detailsch != nil {
+		detailsch <- details
 	}
+
+	decomposer.execute(playbook)
+
+}
+
+func (decomposer *Decomposer) Execute(playbook cacao.Playbook) (*ExecutionDetails, error) {
+
+	executionId := decomposer.guid.New()
+	log.Debugf("Starting execution %s for Playbook %s", executionId, playbook.ID)
+	decomposer.details = ExecutionDetails{executionId, playbook.ID, playbook.PlaybookVariables}
+
+	err := decomposer.execute(playbook)
+
+	return &decomposer.details, err
+
+}
+
+func (decomposer *Decomposer) execute(playbook cacao.Playbook) error {
 
 	decomposer.playbook = playbook
 
@@ -95,7 +113,8 @@ func (decomposer *Decomposer) Execute(playbook cacao.Playbook, execution_details
 	decomposer.details.Variables = outputVariables
 	// Reporting workflow end
 	decomposer.reporter.ReportWorkflowEnd(decomposer.details.ExecutionId, playbook, err)
-	return &decomposer.details, err
+
+	return err
 }
 
 // Execute a Workflow branch of a Playbook

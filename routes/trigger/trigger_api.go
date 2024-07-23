@@ -60,9 +60,7 @@ func (trigger *TriggerApi) Execute(context *gin.Context) {
 		return
 	}
 
-	go func() {
-		_, _ = decomposer.Execute(*playbook, trigger.Executionsch)
-	}()
+	go decomposer.ExecuteAsync(*playbook, trigger.Executionsch)
 
 	// Hard coding the timer to return execution id
 	timer := time.NewTimer(time.Duration(3) * time.Second)
