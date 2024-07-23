@@ -79,6 +79,7 @@ func TestExecutePlaybook(t *testing.T) {
 		Variables:  cacao.NewVariables(returnedVariables)}
 
 	playbook2 := cacao.Playbook{ID: playbookId, PlaybookVariables: cacao.NewVariables(expectedVariables)}
+
 	var nilch chan string
 	mockDecomposer.On("Execute", playbook2, nilch).Return(&details, nil)
 

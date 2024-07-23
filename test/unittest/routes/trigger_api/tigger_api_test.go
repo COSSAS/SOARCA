@@ -45,7 +45,10 @@ func TestTriggerExecutionOfPlaybook(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
+
+	expected_return_string := `{"execution_id":"mock_uuid_string_defined_in_mock_decomposer","payload":"playbook--61a6c41e-6efc-4516-a242-dfbc5c89d562"}`
 	app.ServeHTTP(recorder, request)
+	assert.Equal(t, expected_return_string, recorder.Body.String())
 	assert.Equal(t, 200, recorder.Code)
 	mock_decomposer.AssertExpectations(t)
 }
