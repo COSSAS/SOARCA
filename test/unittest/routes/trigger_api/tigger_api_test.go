@@ -17,6 +17,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/assert/v2"
+	"github.com/google/uuid"
 )
 
 func TestTriggerExecutionOfPlaybook(t *testing.T) {
@@ -39,14 +40,15 @@ func TestTriggerExecutionOfPlaybook(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	trigger.Routes(app, trigger_api)
 
-	mock_decomposer.On("Execute", *playbook, trigger_api.Executionsch).Return(&decomposer.ExecutionDetails{}, nil)
+	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	mock_decomposer.On("Execute", *playbook, trigger_api.Executionsch).Return(&decomposer.ExecutionDetails{}, nil, executionId)
 
 	request, err := http.NewRequest("POST", "/trigger/playbook", bytes.NewBuffer(byteValue))
 	if err != nil {
 		t.Fail()
 	}
 
-	expected_return_string := `{"execution_id":"mock_uuid_string_defined_in_mock_decomposer","payload":"playbook--61a6c41e-6efc-4516-a242-dfbc5c89d562"}`
+	expected_return_string := `{"execution_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c8","payload":"playbook--61a6c41e-6efc-4516-a242-dfbc5c89d562"}`
 	app.ServeHTTP(recorder, request)
 	assert.Equal(t, expected_return_string, recorder.Body.String())
 	assert.Equal(t, 200, recorder.Code)

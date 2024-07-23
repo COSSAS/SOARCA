@@ -34,7 +34,7 @@ type ExecutionDetails struct {
 }
 
 type IDecomposer interface {
-	Execute(playbook cacao.Playbook, details chan string) (*ExecutionDetails, error)
+	Execute(playbook cacao.Playbook, details chan ExecutionDetails) (*ExecutionDetails, error)
 }
 
 func init() {
@@ -69,7 +69,7 @@ type Decomposer struct {
 }
 
 // Execute a Playbook
-func (decomposer *Decomposer) Execute(playbook cacao.Playbook, detailsch chan string) (*ExecutionDetails, error) {
+func (decomposer *Decomposer) Execute(playbook cacao.Playbook, execution_details_ch chan ExecutionDetails) (*ExecutionDetails, error) {
 
 	executionId := decomposer.guid.New()
 	log.Debugf("Starting execution %s for Playbook %s", executionId, playbook.ID)
@@ -77,10 +77,8 @@ func (decomposer *Decomposer) Execute(playbook cacao.Playbook, detailsch chan st
 	details := ExecutionDetails{executionId, playbook.ID, playbook.PlaybookVariables}
 	decomposer.details = details
 
-	if detailsch != nil {
-		// Ad-hoc format using '///' separator
-		execution_ids := playbook.ID + "///" + executionId.String()
-		detailsch <- execution_ids
+	if execution_details_ch != nil {
+		execution_details_ch <- details
 	}
 
 	decomposer.playbook = playbook

@@ -4,10 +4,10 @@ import (
 	"io"
 	"net/http"
 	"reflect"
-	"strings"
 	"time"
 
 	"soarca/internal/controller/decomposer_controller"
+	"soarca/internal/decomposer"
 	"soarca/logger"
 	"soarca/models/decoder"
 	"soarca/routes/error"
@@ -29,14 +29,14 @@ func init() {
 
 type TriggerApi struct {
 	controller   decomposer_controller.IController
-	Executionsch chan string
+	Executionsch chan decomposer.ExecutionDetails
 }
 
 func New(controller decomposer_controller.IController) *TriggerApi {
 	instance := TriggerApi{}
 	instance.controller = controller
 	// Channel to get back execution details
-	instance.Executionsch = make(chan string)
+	instance.Executionsch = make(chan decomposer.ExecutionDetails)
 	return &instance
 }
 
@@ -75,10 +75,10 @@ func (trigger *TriggerApi) Execute(context *gin.Context) {
 			}
 			context.JSON(http.StatusRequestTimeout, msg)
 			log.Error("async execution timed out for playbook ", playbook.ID)
-		case execution_ids := <-trigger.Executionsch:
+		case exec_details := <-trigger.Executionsch:
 			// Ad-hoc format using '///' separator
-			playbook_id := strings.Split(execution_ids, "///")[0]
-			exec_id := strings.Split(execution_ids, "///")[1]
+			playbook_id := exec_details.PlaybookId
+			exec_id := exec_details.ExecutionId
 			if playbook_id == playbook.ID {
 				msg := gin.H{
 					"execution_id": exec_id,

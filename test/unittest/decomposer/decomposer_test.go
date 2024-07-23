@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"soarca/internal/decomposer"
+	decomposer_model "soarca/internal/decomposer"
 	"soarca/internal/executors/action"
 	"soarca/models/cacao"
 	"soarca/models/execution"
@@ -112,7 +113,7 @@ func TestExecutePlaybook(t *testing.T) {
 	mock_reporter.On("ReportWorkflowEnd", executionId, playbook, nil).Return()
 	mock_action_executor.On("Execute", metaStep1, playbookStepMetadata).Return(cacao.NewVariables(cacao.Variable{Name: "return", Value: "value"}), nil)
 
-	var nilch chan string
+	var nilch chan decomposer_model.ExecutionDetails
 	details, err := decomposer.Execute(playbook, nilch)
 	uuid_mock.AssertExpectations(t)
 	fmt.Println(err)
@@ -261,7 +262,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 
 	mock_action_executor.On("Execute", metaStep2, playbookStepMetadata2).Return(cacao.NewVariables(cacao.Variable{Name: "result", Value: "updated"}), nil)
 
-	var nilch chan string
+	var nilch chan decomposer_model.ExecutionDetails
 	details, err := decomposer.Execute(playbook, nilch)
 	uuid_mock.AssertExpectations(t)
 	fmt.Println(err)
@@ -342,7 +343,7 @@ func TestExecuteEmptyMultiStep(t *testing.T) {
 	mock_time.On("Sleep", time.Second*0).Return()
 	mock_reporter.On("ReportWorkflowEnd", id, playbook, errors.New("empty success step")).Return()
 
-	var nilch chan string
+	var nilch chan decomposer_model.ExecutionDetails
 	returnedId, err := decomposer2.Execute(playbook, nilch)
 	uuid_mock2.AssertExpectations(t)
 	fmt.Println(err)
@@ -406,7 +407,7 @@ func TestExecuteIllegalMultiStep(t *testing.T) {
 	mock_time.On("Sleep", time.Second*0).Return()
 	mock_reporter.On("ReportWorkflowEnd", id, playbook, errors.New("empty success step")).Return()
 
-	var nilch chan string
+	var nilch chan decomposer_model.ExecutionDetails
 	returnedId, err := decomposer2.Execute(playbook, nilch)
 	uuid_mock2.AssertExpectations(t)
 	mock_reporter.AssertExpectations(t)
@@ -472,7 +473,7 @@ func TestExecutePlaybookAction(t *testing.T) {
 		step1,
 		cacao.NewVariables(expectedVariables)).Return(cacao.NewVariables(cacao.Variable{Name: "return", Value: "value"}), nil)
 
-	var nilch chan string
+	var nilch chan decomposer_model.ExecutionDetails
 	details, err := decomposer.Execute(playbook, nilch)
 	uuid_mock.AssertExpectations(t)
 	fmt.Println(err)
@@ -653,7 +654,7 @@ func TestExecuteIfCondition(t *testing.T) {
 		metaStepCompletion,
 		stepCompletionDetails).Return(cacao.NewVariables(), nil)
 	mock_reporter.On("ReportWorkflowEnd", executionId, playbook, nil).Return()
-	var nilch chan string
+	var nilch chan decomposer_model.ExecutionDetails
 	details, err := decomposer.Execute(playbook, nilch)
 	uuid_mock.AssertExpectations(t)
 	fmt.Println(err)
