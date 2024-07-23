@@ -3,22 +3,14 @@ package cache
 import (
 	b64 "encoding/base64"
 	"errors"
-	"reflect"
-	"soarca/logger"
 	"soarca/models/cacao"
 	cache_report "soarca/models/cache"
 	itime "soarca/utils/time"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
 )
-
-var component = reflect.TypeOf(Cache{}).PkgPath()
-var log *logger.Log
-
-func init() {
-	log = logger.Logger(component, logger.Info, "", logger.Json)
-}
 
 const MaxExecutions int = 10
 
@@ -27,6 +19,7 @@ type Cache struct {
 	timeUtil     itime.ITime
 	Cache        map[string]cache_report.ExecutionEntry // Cached up to max
 	fifoRegister []string                               // Used for O(1) FIFO cache management
+	mutex        sync.Mutex
 }
 
 func New(timeUtil itime.ITime, maxExecutions int) *Cache {
@@ -34,35 +27,24 @@ func New(timeUtil itime.ITime, maxExecutions int) *Cache {
 		Size:     maxExecutions,
 		Cache:    make(map[string]cache_report.ExecutionEntry),
 		timeUtil: timeUtil,
+		mutex:    sync.Mutex{},
 	}
 }
 
+// Util for retrieval
 func (cacheReporter *Cache) getExecution(executionKey uuid.UUID) (cache_report.ExecutionEntry, error) {
 	executionKeyStr := executionKey.String()
 	executionEntry, ok := cacheReporter.Cache[executionKeyStr]
 	if !ok {
-		err := errors.New("execution is not in cache")
-		log.Warning("execution is not in cache. consider increasing cache size.")
+		err := errors.New("execution is not in cache. consider increasing cache size")
 		return cache_report.ExecutionEntry{}, err
-		// TODO Retrieve from database
+		// TODO Retrieve from database and push to cache
 	}
 	return executionEntry, nil
 }
-func (cacheReporter *Cache) getExecutionStep(executionKey uuid.UUID, stepKey string) (cache_report.StepResult, error) {
-	executionEntry, err := cacheReporter.getExecution(executionKey)
-	if err != nil {
-		return cache_report.StepResult{}, err
-	}
-	executionStep, ok := executionEntry.StepResults[stepKey]
-	if !ok {
-		err := errors.New("execution step is not in cache")
-		return cache_report.StepResult{}, err
-	}
-	return executionStep, nil
-}
 
 // Adding executions in FIFO logic
-func (cacheReporter *Cache) addExecution(newExecutionEntry cache_report.ExecutionEntry) error {
+func (cacheReporter *Cache) addExecutionFIFO(newExecutionEntry cache_report.ExecutionEntry) error {
 
 	if !(len(cacheReporter.fifoRegister) == len(cacheReporter.Cache)) {
 		return errors.New("cache fifo register and content are desynchronized")
@@ -71,12 +53,13 @@ func (cacheReporter *Cache) addExecution(newExecutionEntry cache_report.Executio
 	newExecutionEntryKey := newExecutionEntry.ExecutionId.String()
 
 	if len(cacheReporter.fifoRegister) >= cacheReporter.Size {
+
 		firstExecution := cacheReporter.fifoRegister[0]
 		cacheReporter.fifoRegister = cacheReporter.fifoRegister[1:]
 		delete(cacheReporter.Cache, firstExecution)
-
 		cacheReporter.fifoRegister = append(cacheReporter.fifoRegister, newExecutionEntryKey)
 		cacheReporter.Cache[newExecutionEntryKey] = newExecutionEntry
+
 		return nil
 	}
 
@@ -85,7 +68,43 @@ func (cacheReporter *Cache) addExecution(newExecutionEntry cache_report.Executio
 	return nil
 }
 
+func (cacheReporter *Cache) GetExecutions() ([]cache_report.ExecutionEntry, error) {
+	cacheReporter.mutex.Lock()
+	defer cacheReporter.mutex.Unlock()
+
+	executions := make([]cache_report.ExecutionEntry, 0)
+	// NOTE: fetched via fifo register key reference as is ordered array,
+	// needed to test and report back ordered executions stored
+	for _, executionEntryKey := range cacheReporter.fifoRegister {
+		// NOTE: cached executions are passed by reference, so they must not be modified
+		entry, ok := cacheReporter.Cache[executionEntryKey]
+		if !ok {
+			return []cache_report.ExecutionEntry{}, errors.New("internal error. cache fifo register and cache executions mismatch")
+		}
+		executions = append(executions, entry)
+	}
+	return executions, nil
+}
+
+func (cacheReporter *Cache) GetExecutionReport(executionKey uuid.UUID) (cache_report.ExecutionEntry, error) {
+	cacheReporter.mutex.Lock()
+	defer cacheReporter.mutex.Unlock()
+
+	executionEntry, err := cacheReporter.getExecution(executionKey)
+	if err != nil {
+		return cache_report.ExecutionEntry{}, err
+	}
+	report := executionEntry
+
+	return report, nil
+}
+
+// ############################### Reporting
+
 func (cacheReporter *Cache) ReportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook) error {
+	cacheReporter.mutex.Lock()
+	defer cacheReporter.mutex.Unlock()
+
 	newExecutionEntry := cache_report.ExecutionEntry{
 		ExecutionId: executionId,
 		PlaybookId:  playbook.ID,
@@ -94,7 +113,7 @@ func (cacheReporter *Cache) ReportWorkflowStart(executionId uuid.UUID, playbook 
 		StepResults: map[string]cache_report.StepResult{},
 		Status:      cache_report.Ongoing,
 	}
-	err := cacheReporter.addExecution(newExecutionEntry)
+	err := cacheReporter.addExecutionFIFO(newExecutionEntry)
 	if err != nil {
 		return err
 	}
@@ -102,6 +121,8 @@ func (cacheReporter *Cache) ReportWorkflowStart(executionId uuid.UUID, playbook 
 }
 
 func (cacheReporter *Cache) ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook, workflowError error) error {
+	cacheReporter.mutex.Lock()
+	defer cacheReporter.mutex.Unlock()
 
 	executionEntry, err := cacheReporter.getExecution(executionId)
 	if err != nil {
@@ -121,6 +142,9 @@ func (cacheReporter *Cache) ReportWorkflowEnd(executionId uuid.UUID, playbook ca
 }
 
 func (cacheReporter *Cache) ReportStepStart(executionId uuid.UUID, step cacao.Step, variables cacao.Variables) error {
+	cacheReporter.mutex.Lock()
+	defer cacheReporter.mutex.Unlock()
+
 	executionEntry, err := cacheReporter.getExecution(executionId)
 	if err != nil {
 		return err
@@ -132,10 +156,9 @@ func (cacheReporter *Cache) ReportStepStart(executionId uuid.UUID, step cacao.St
 
 	_, alreadyThere := executionEntry.StepResults[step.ID]
 	if alreadyThere {
-		log.Warning("a step execution was already reported for this step. overwriting.")
+		return errors.New("a step execution start was already reported for this step. ignoring")
 	}
 
-	// TODO: must test
 	commandsB64 := []string{}
 	isAutomated := true
 	for _, cmd := range step.Commands {
@@ -162,10 +185,15 @@ func (cacheReporter *Cache) ReportStepStart(executionId uuid.UUID, step cacao.St
 		IsAutomated: isAutomated,
 	}
 	executionEntry.StepResults[step.ID] = newStepEntry
+	// New code
+	cacheReporter.Cache[executionId.String()] = executionEntry
 	return nil
 }
 
 func (cacheReporter *Cache) ReportStepEnd(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, stepError error) error {
+	cacheReporter.mutex.Lock()
+	defer cacheReporter.mutex.Unlock()
+
 	executionEntry, err := cacheReporter.getExecution(executionId)
 	if err != nil {
 		return err
@@ -175,9 +203,9 @@ func (cacheReporter *Cache) ReportStepEnd(executionId uuid.UUID, step cacao.Step
 		return errors.New("trying to report on the execution of a step for an already reported completed or failed execution")
 	}
 
-	executionStepResult, err := cacheReporter.getExecutionStep(executionId, step.ID)
-	if err != nil {
-		return err
+	executionStepResult, ok := executionEntry.StepResults[step.ID]
+	if !ok {
+		return errors.New("cannot report step end. step was not found in execution")
 	}
 
 	if executionStepResult.Status != cache_report.Ongoing {
@@ -193,31 +221,7 @@ func (cacheReporter *Cache) ReportStepEnd(executionId uuid.UUID, step cacao.Step
 	executionStepResult.Ended = cacheReporter.timeUtil.Now()
 	executionStepResult.Variables = returnVars
 	executionEntry.StepResults[step.ID] = executionStepResult
-
+	// New code
+	cacheReporter.Cache[executionId.String()] = executionEntry
 	return nil
-}
-
-func (cacheReporter *Cache) GetExecutions() ([]cache_report.ExecutionEntry, error) {
-	executions := make([]cache_report.ExecutionEntry, 0)
-	// NOTE: fetched via fifo register key reference as is ordered array,
-	// needed to test and report back ordered executions stored
-	for _, executionEntryKey := range cacheReporter.fifoRegister {
-		// NOTE: cached executions are passed by reference, so they must not be modified
-		entry, present := cacheReporter.Cache[executionEntryKey]
-		if !present {
-			return []cache_report.ExecutionEntry{}, errors.New("internal error. cache fifo register and cache executions mismatch.")
-		}
-		executions = append(executions, entry)
-	}
-	return executions, nil
-}
-
-func (cacheReporter *Cache) GetExecutionReport(executionKey uuid.UUID) (cache_report.ExecutionEntry, error) {
-	executionEntry, err := cacheReporter.getExecution(executionKey)
-	if err != nil {
-		return cache_report.ExecutionEntry{}, err
-	}
-	report := executionEntry
-
-	return report, nil
 }
