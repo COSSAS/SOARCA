@@ -55,7 +55,7 @@ func (playbookAction *PlaybookAction) Execute(metadata execution.Metadata,
 
 	playbook.PlaybookVariables.Merge(variables)
 
-	details, err := decomposer.Execute(playbook)
+	details, err := decomposer.Execute(playbook, nil)
 	if err != nil {
 		err = errors.New(fmt.Sprint("execution of playbook failed with error: ", err))
 		log.Error(err)

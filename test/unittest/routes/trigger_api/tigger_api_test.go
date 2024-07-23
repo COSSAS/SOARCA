@@ -19,7 +19,7 @@ import (
 	"github.com/go-playground/assert/v2"
 )
 
-func TestExecutionOfPlaybook(t *testing.T) {
+func TestTriggerExecutionOfPlaybook(t *testing.T) {
 	jsonFile, err := os.Open("../playbook.json")
 	if err != nil {
 		fmt.Println(err)
@@ -34,11 +34,12 @@ func TestExecutionOfPlaybook(t *testing.T) {
 	mock_controller := new(mock_decomposer_controller.Mock_Controller)
 	mock_controller.On("NewDecomposer").Return(mock_decomposer)
 	playbook := cacao.Decode(byteValue)
-	mock_decomposer.On("Execute", *playbook).Return(&decomposer.ExecutionDetails{}, nil)
 
-	recorder := httptest.NewRecorder()
 	trigger_api := trigger.New(mock_controller)
+	recorder := httptest.NewRecorder()
 	trigger.Routes(app, trigger_api)
+
+	mock_decomposer.On("Execute", *playbook, trigger_api.Executionsch).Return(&decomposer.ExecutionDetails{}, nil)
 
 	request, err := http.NewRequest("POST", "/trigger/playbook", bytes.NewBuffer(byteValue))
 	if err != nil {

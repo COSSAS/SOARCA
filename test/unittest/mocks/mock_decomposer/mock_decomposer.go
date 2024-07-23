@@ -11,7 +11,11 @@ type Mock_Decomposer struct {
 	mock.Mock
 }
 
-func (mock *Mock_Decomposer) Execute(playbook cacao.Playbook) (*decomposer.ExecutionDetails, error) {
-	args := mock.Called(playbook)
+func (mock *Mock_Decomposer) Execute(playbook cacao.Playbook, detailsch chan string) (*decomposer.ExecutionDetails, error) {
+	args := mock.Called(playbook, detailsch)
+	if detailsch != nil {
+		execution_ids := playbook.ID + "///" + "mock_uuid"
+		detailsch <- execution_ids
+	}
 	return args.Get(0).(*decomposer.ExecutionDetails), args.Error(1)
 }

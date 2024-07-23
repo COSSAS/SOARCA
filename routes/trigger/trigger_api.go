@@ -4,6 +4,8 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+	"strings"
+	"time"
 
 	"soarca/internal/controller/decomposer_controller"
 	"soarca/logger"
@@ -26,12 +28,15 @@ func init() {
 }
 
 type TriggerApi struct {
-	controller decomposer_controller.IController
+	controller   decomposer_controller.IController
+	Executionsch chan string
 }
 
 func New(controller decomposer_controller.IController) *TriggerApi {
 	instance := TriggerApi{}
 	instance.controller = controller
+	// Channel to get back execution details
+	instance.Executionsch = make(chan string)
 	return &instance
 }
 
@@ -54,17 +59,45 @@ func (trigger *TriggerApi) Execute(context *gin.Context) {
 			"POST /trigger/playbook", "")
 		return
 	}
-	executionDetail, errDecomposer := decomposer.Execute(*playbook)
-	if errDecomposer != nil {
-		error.SendErrorResponse(context, http.StatusBadRequest,
-			"Failed to decode playbook",
-			"POST /trigger/playbook",
-			executionDetail.ExecutionId.String())
-	} else {
-		msg := gin.H{
-			"execution_id": executionDetail.ExecutionId.String(),
-			"payload":      executionDetail.PlaybookId,
+
+	go decomposer.Execute(*playbook, trigger.Executionsch)
+
+	// Hard coding the timer to return execution id
+	timer := time.NewTimer(time.Duration(3) * time.Second)
+	for {
+		select {
+		case <-timer.C:
+			msg := gin.H{
+				"execution_id": nil,
+				"payload":      playbook.ID,
+			}
+			context.JSON(http.StatusRequestTimeout, msg)
+			log.Error("async execution timed out for playbook ", playbook.ID)
+		case execution_ids := <-trigger.Executionsch:
+			// Ad-hoc format using '///' separator
+			playbook_id := strings.Split(execution_ids, "///")[0]
+			exec_id := strings.Split(execution_ids, "///")[1]
+			if playbook_id == playbook.ID {
+				msg := gin.H{
+					"execution_id": exec_id,
+					"payload":      playbook_id,
+				}
+				context.JSON(http.StatusOK, msg)
+				return
+			}
 		}
-		context.JSON(http.StatusOK, msg)
 	}
+	// executionDetail, errDecomposer := decomposer.Execute(*playbook)
+	// if errDecomposer != nil {
+	// 	error.SendErrorResponse(context, http.StatusBadRequest,
+	// 		"Failed to decode playbook",
+	// 		"POST /trigger/playbook",
+	// 		executionDetail.ExecutionId.String())
+	// } else {
+	// 	msg := gin.H{
+	// 		"execution_id": executionDetail.ExecutionId.String(),
+	// 		"payload":      executionDetail.PlaybookId,
+	// 	}
+	// 	context.JSON(http.StatusOK, msg)
+	// }
 }
