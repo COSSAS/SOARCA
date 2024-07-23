@@ -74,7 +74,6 @@ func (trigger *TriggerApi) Execute(context *gin.Context) {
 			context.JSON(http.StatusRequestTimeout, msg)
 			log.Error("async execution timed out for playbook ", playbook.ID)
 		case exec_details := <-trigger.Executionsch:
-			// Ad-hoc format using '///' separator
 			playbook_id := exec_details.PlaybookId
 			exec_id := exec_details.ExecutionId
 			if playbook_id == playbook.ID {
