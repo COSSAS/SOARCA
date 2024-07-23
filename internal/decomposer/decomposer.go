@@ -81,7 +81,7 @@ func (decomposer *Decomposer) ExecuteAsync(playbook cacao.Playbook, detailsch ch
 		detailsch <- details
 	}
 
-	decomposer.execute(playbook)
+	_ = decomposer.execute(playbook)
 
 }
 
