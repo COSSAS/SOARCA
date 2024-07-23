@@ -79,10 +79,12 @@ func TestExecutePlaybook(t *testing.T) {
 		Variables:  cacao.NewVariables(returnedVariables)}
 
 	playbook2 := cacao.Playbook{ID: playbookId, PlaybookVariables: cacao.NewVariables(expectedVariables)}
+
 	mockDecomposer.On("Execute", playbook2).Return(&details, nil)
 
 	results, err := executerObject.Execute(metadata, step, cacao.NewVariables(addedVariables))
 
+	mockDecomposer.AssertExpectations(t)
 	mock_reporter.AssertExpectations(t)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, results, cacao.NewVariables(returnedVariables))

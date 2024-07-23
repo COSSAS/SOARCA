@@ -4,8 +4,10 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+	"time"
 
 	"soarca/internal/controller/decomposer_controller"
+	"soarca/internal/decomposer"
 	"soarca/logger"
 	"soarca/models/decoder"
 	"soarca/routes/error"
@@ -26,12 +28,15 @@ func init() {
 }
 
 type TriggerApi struct {
-	controller decomposer_controller.IController
+	controller   decomposer_controller.IController
+	Executionsch chan decomposer.ExecutionDetails
 }
 
 func New(controller decomposer_controller.IController) *TriggerApi {
 	instance := TriggerApi{}
 	instance.controller = controller
+	// Channel to get back execution details
+	instance.Executionsch = make(chan decomposer.ExecutionDetails)
 	return &instance
 }
 
@@ -54,17 +59,31 @@ func (trigger *TriggerApi) Execute(context *gin.Context) {
 			"POST /trigger/playbook", "")
 		return
 	}
-	executionDetail, errDecomposer := decomposer.Execute(*playbook)
-	if errDecomposer != nil {
-		error.SendErrorResponse(context, http.StatusBadRequest,
-			"Failed to decode playbook",
-			"POST /trigger/playbook",
-			executionDetail.ExecutionId.String())
-	} else {
-		msg := gin.H{
-			"execution_id": executionDetail.ExecutionId.String(),
-			"payload":      executionDetail.PlaybookId,
+
+	go decomposer.ExecuteAsync(*playbook, trigger.Executionsch)
+
+	// Hard coding the timer to return execution id
+	timer := time.NewTimer(time.Duration(3) * time.Second)
+	for {
+		select {
+		case <-timer.C:
+			msg := gin.H{
+				"execution_id": nil,
+				"payload":      playbook.ID,
+			}
+			context.JSON(http.StatusRequestTimeout, msg)
+			log.Error("async execution timed out for playbook ", playbook.ID)
+		case exec_details := <-trigger.Executionsch:
+			playbook_id := exec_details.PlaybookId
+			exec_id := exec_details.ExecutionId
+			if playbook_id == playbook.ID {
+				msg := gin.H{
+					"execution_id": exec_id,
+					"payload":      playbook_id,
+				}
+				context.JSON(http.StatusOK, msg)
+				return
+			}
 		}
-		context.JSON(http.StatusOK, msg)
 	}
 }
