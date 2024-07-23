@@ -89,17 +89,4 @@ func (trigger *TriggerApi) Execute(context *gin.Context) {
 			}
 		}
 	}
-	// executionDetail, errDecomposer := decomposer.Execute(*playbook)
-	// if errDecomposer != nil {
-	// 	error.SendErrorResponse(context, http.StatusBadRequest,
-	// 		"Failed to decode playbook",
-	// 		"POST /trigger/playbook",
-	// 		executionDetail.ExecutionId.String())
-	// } else {
-	// 	msg := gin.H{
-	// 		"execution_id": executionDetail.ExecutionId.String(),
-	// 		"payload":      executionDetail.PlaybookId,
-	// 	}
-	// 	context.JSON(http.StatusOK, msg)
-	// }
 }
