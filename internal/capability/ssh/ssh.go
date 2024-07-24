@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"soarca/models/cacao"
 	"soarca/models/execution"
+	"soarca/utils/mapper"
 	"strings"
 	"time"
 
@@ -28,6 +29,10 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
+func New() *SshCapability {
+	return &SshCapability{}
+}
+
 func (sshCapability *SshCapability) GetType() string {
 	return sshCapabilityName
 }
@@ -36,7 +41,9 @@ func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
 	command cacao.Command,
 	authentication cacao.AuthenticationInformation,
 	target cacao.AgentTarget,
-	variables cacao.Variables) (cacao.Variables, error) {
+	variables cacao.Variables,
+	inputVariableKeys []string,
+	outputVariablesKeys []string) (cacao.Variables, error) {
 	log.Trace(metadata.ExecutionId)
 
 	host := CombinePortAndAddress(target.Address, target.Port)
@@ -99,11 +106,14 @@ func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
 		log.Error(err)
 		return cacao.NewVariables(), err
 	}
+
 	results := cacao.NewVariables(cacao.Variable{Type: cacao.VariableTypeString,
 		Name:  sshResultVariableName,
 		Value: string(response)})
-	log.Trace("Finished ssh execution will return the variables: ", results)
-	return results, err
+	log.Trace("Finished https execution, will return the variables: ", results)
+
+	return mapper.Variables(variables, outputVariablesKeys, results, []string{sshResultVariableName})
+
 }
 
 func CombinePortAndAddress(addresses map[cacao.NetAddressType][]string, port string) string {
