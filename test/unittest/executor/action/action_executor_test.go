@@ -82,7 +82,9 @@ func TestExecuteStep(t *testing.T) {
 		expectedCommand,
 		expectedAuth,
 		expectedTarget,
-		cacao.NewVariables(expectedVariables)).
+		cacao.NewVariables(expectedVariables),
+		step.InArgs,
+		step.OutArgs).
 		Return(cacao.NewVariables(expectedVariables),
 			nil)
 
@@ -132,12 +134,25 @@ func TestExecuteActionStep(t *testing.T) {
 		Name: "ssh",
 	}
 
+	step := cacao.Step{
+		Type:          cacao.StepTypeAction,
+		Name:          "action test",
+		ID:            stepId,
+		Description:   "",
+		StepVariables: cacao.NewVariables(expectedVariables),
+		Commands:      []cacao.Command{expectedCommand},
+		Agent:         "mock-ssh",
+		Targets:       []string{"target1"},
+	}
+
 	mock_ssh.On("Execute",
 		metadata,
 		expectedCommand,
 		expectedAuth,
 		expectedTarget,
-		cacao.NewVariables(expectedVariables)).
+		cacao.NewVariables(expectedVariables),
+		step.InArgs,
+		step.OutArgs).
 		Return(cacao.NewVariables(expectedVariables),
 			nil)
 
@@ -146,6 +161,7 @@ func TestExecuteActionStep(t *testing.T) {
 		expectedAuth,
 		expectedTarget,
 		cacao.NewVariables(expectedVariables),
+		step,
 		agent)
 
 	assert.Equal(t, err, nil)
@@ -189,12 +205,22 @@ func TestNonExistingCapabilityStep(t *testing.T) {
 		Type: "ssh",
 		Name: "non-existing",
 	}
-
+	step := cacao.Step{
+		Type:          cacao.StepTypeAction,
+		Name:          "action test",
+		ID:            stepId,
+		Description:   "",
+		StepVariables: cacao.NewVariables(expectedVariables),
+		Commands:      []cacao.Command{expectedCommand},
+		Agent:         "mock-ssh",
+		Targets:       []string{"target1"},
+	}
 	_, err := executerObject.ExecuteActionStep(metadata,
 		expectedCommand,
 		expectedAuth,
 		expectedTarget,
 		cacao.NewVariables(expectedVariables),
+		step,
 		agent)
 
 	assert.Equal(t, err, errors.New("capability: non-existing is not available in soarca"))
@@ -346,14 +372,30 @@ func TestVariableInterpolation(t *testing.T) {
 		expectedAuth,
 		expectedTarget,
 		cacao.NewVariables(var1, var2, var3, varUser, varPassword, varOauth, varPrivateKey, varToken, varUserId, varheader1, varheader2)).
+		[]string{"__in_one__", "__in_two__"},
+		[]string{"__out_one__", "__out_two__"}).
 		Return(cacao.NewVariables(var1),
 			nil)
+
+	step := cacao.Step{
+		Type:          cacao.StepTypeAction,
+		Name:          "action test",
+		ID:            stepId,
+		Description:   "",
+		StepVariables: cacao.NewVariables(var1, var2, var3, varUser, varPassword, varOauth, varPrivateKey, varToken, varUserId),
+		Commands:      []cacao.Command{expectedCommand},
+		Agent:         "mock-ssh",
+		Targets:       []string{"target1"},
+		InArgs:        []string{"__in_one__", "__in_two__"},
+		OutArgs:       []string{"__out_one__", "__out_two__"},
+	}
 
 	_, err := executerObject.ExecuteActionStep(metadata,
 		inputCommand,
 		inputAuth,
 		inputTarget,
 		cacao.NewVariables(var1, var2, var3, varUser, varPassword, varOauth, varPrivateKey, varToken, varUserId, varheader1, varheader2),
+		step,
 		agent)
 
 	assert.Equal(t, err, nil)
@@ -384,6 +426,8 @@ func TestVariableInterpolation(t *testing.T) {
 		expectedAuth,
 		expectedTarget,
 		cacao.NewVariables(varHttpContent, varheader1, varheader2)).
+		[]string{"__in_one__", "__in_two__"},
+		[]string{"__out_one__", "__out_two__"}).
 		Return(cacao.NewVariables(var1),
 			nil)
 
@@ -392,6 +436,7 @@ func TestVariableInterpolation(t *testing.T) {
 		expectedAuth,
 		expectedTarget,
 		cacao.NewVariables(varHttpContent, varheader1, varheader2),
+		step,
 		agent)
 
 	assert.Equal(t, err, nil)
