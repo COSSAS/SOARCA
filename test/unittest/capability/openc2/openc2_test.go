@@ -47,6 +47,11 @@ func TestOpenC2Request(t *testing.T) {
 		Value: "",
 	}
 
+	outArg := cacao.Variable{
+		Type: cacao.VariableTypeString,
+		Name: "__soarca_openc2_http_result__",
+	}
+
 	metadata := execution.Metadata{
 		ExecutionId: executionId,
 		PlaybookId:  playbookId.String(),
@@ -65,12 +70,17 @@ func TestOpenC2Request(t *testing.T) {
 
 	mockHttp.On("Request", httpOptions).Return(payloadBytes, nil)
 
+	inArgs := []string{"test request building"}
+	outArgs := []string{"__soarca_openc2_http_result__"}
+
 	results, err := openc2.Execute(
 		metadata,
 		command,
 		auth,
 		target,
-		cacao.NewVariables(cacaoVariable))
+		cacao.NewVariables(cacaoVariable, outArg),
+		inArgs,
+		outArgs)
 	if err != nil {
 		t.Log(err)
 		t.Fail()
