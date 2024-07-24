@@ -7,6 +7,7 @@ import (
 	"soarca/models/cacao"
 	"soarca/models/execution"
 	"soarca/utils/http"
+	"soarca/utils/mapper"
 )
 
 type OpenC2Capability struct {
@@ -16,6 +17,7 @@ type OpenC2Capability struct {
 type Empty struct{}
 
 const (
+	maxResultVariables       = 1
 	openc2ResultVariableName = "__soarca_openc2_http_result__"
 	openc2CapabilityName     = "soarca-openc2-http"
 )
@@ -43,7 +45,8 @@ func (OpenC2Capability *OpenC2Capability) Execute(
 	authentication cacao.AuthenticationInformation,
 	target cacao.AgentTarget,
 	variables cacao.Variables,
-) (cacao.Variables, error) {
+	inputVariableKeys []string,
+	outputVariablesKeys []string) (cacao.Variables, error) {
 	log.Trace(metadata.ExecutionId)
 
 	httpOptions := http.HttpOptions{
@@ -61,5 +64,6 @@ func (OpenC2Capability *OpenC2Capability) Execute(
 		Name:  openc2ResultVariableName,
 		Value: string(response)})
 	log.Trace("Finished openc2 execution, will return the variables: ", results)
-	return results, nil
+
+	return mapper.Variables(variables, outputVariablesKeys, results, []string{openc2ResultVariableName})
 }
