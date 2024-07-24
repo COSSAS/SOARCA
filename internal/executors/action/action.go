@@ -68,12 +68,8 @@ func (executor *Executor) Execute(meta execution.Metadata, metadata PlaybookStep
 				auth,
 				target,
 				metadata.Variables,
+				metadata.Step,
 				metadata.Agent)
-
-			if len(metadata.Step.OutArgs) > 0 {
-				// If OutArgs is set, only update execution args that are explicitly referenced
-				outputVariables = outputVariables.Select(metadata.Step.OutArgs)
-			}
 
 			returnVariables.Merge(outputVariables)
 
@@ -87,6 +83,10 @@ func (executor *Executor) Execute(meta execution.Metadata, metadata PlaybookStep
 		}
 	}
 	executor.reporter.ReportStepEnd(meta.ExecutionId, metadata.Step, returnVariables, nil)
+	if len(metadata.Step.OutArgs) > 0 {
+		// If OutArgs is set, only update execution args that are explicitly referenced
+		returnVariables = returnVariables.Select(metadata.Step.OutArgs)
+	}
 	return returnVariables, nil
 }
 
@@ -95,6 +95,7 @@ func (executor *Executor) ExecuteActionStep(metadata execution.Metadata,
 	authentication cacao.AuthenticationInformation,
 	target cacao.AgentTarget,
 	variables cacao.Variables,
+	step cacao.Step,
 	agent cacao.AgentTarget) (cacao.Variables, error) {
 
 	if capability, ok := executor.capabilities[agent.Name]; ok {
@@ -125,7 +126,14 @@ func (executor *Executor) ExecuteActionStep(metadata execution.Metadata,
 		authentication.OauthHeader = variables.Interpolate(authentication.OauthHeader)
 		authentication.PrivateKey = variables.Interpolate(authentication.PrivateKey)
 
-		returnVariables, err := capability.Execute(metadata, command, authentication, target, variables)
+		returnVariables, err := capability.Execute(metadata,
+			command,
+			authentication,
+			target,
+			variables,
+			step.InArgs,
+			step.OutArgs)
+
 		return returnVariables, err
 	} else {
 		empty := cacao.NewVariables()
