@@ -33,7 +33,7 @@ In every other circumstance the step is considered to have failed.
 
 #### Variables
 
-This module does not define specific variables as input, but variable interpolation is supported in the command and target definitions. It has the following output variables:
+This module does not define specific variables as input, but variable interpolation is supported in the command and target definitions. It has `one` output variable of type string (see the `__soarca_ssh_result__`). If you want to use the output variable in your next step you will need to define a variable in your playbook as `step or playbook variabel` that is of the same type. Also you need to specify an `out_args` key see `__your_step_output_variable__` in the example. Note you can only use `one out_arg key` for this capability.
 
 ```json
 {
@@ -44,12 +44,19 @@ This module does not define specific variables as input, but variable interpolat
 }
 ```
 
-#### Example
+#### Example with step variable
 
 ```json
 {
     "workflow": {
         "action--7777c6b6-e275-434e-9e0b-d68f72e691c1": {
+            "step_variables": {
+                "__your_step_output_variable__": {
+                "type": "string",
+                "constant": false,
+                "external": false
+                }
+            },
             "type": "action",
             "agent": "soarca--00010001-1000-1000-a000-000100010001",
             "targets": ["linux--c7e6af1b-9e5a-4055-adeb-26b97e1c4db7"],
@@ -58,6 +65,9 @@ This module does not define specific variables as input, but variable interpolat
                     "type": "ssh",
                     "command": "ls -la"
                 }
+            ],
+            "out_args": [
+                "__your_step_output_variable__"
             ]
         }
     },
@@ -93,8 +103,7 @@ The command is considered to have successfully completed if a successful HTTP re
 #### Variables
 
 This capability supports variable interpolation in the command, port, authentication info, and target definitions.
-
-The result of the step is stored in the following output variables:
+It has `one` output variable of type string (see the `__soarca_http_api_result__`). If you want to use the output variable in your next step you will need to define a variable in your playbook as `step or playbook variabel` that is of the same type. Also you need to specify an `out_args` key see `__your_step_output_variable__` in the example. Note you can only use `one out_arg key` for this capability.
 
 ```json
 {
@@ -105,11 +114,18 @@ The result of the step is stored in the following output variables:
 }
 ```
 
-#### Example
+#### Example with playbook variable
 
 ```json
 {
     "workflow": {
+        "playbook_variables": {
+            "__your_step_output_variable__": {
+            "type": "string",
+            "constant": false,
+            "external": false
+            }
+        },
         "action--8baa7c78-751b-4de9-81d4-775806cee0fb": {
             "type": "action",
             "agent": "soarca--00020001-1000-1000-a000-000100010001",
@@ -120,6 +136,9 @@ The result of the step is stored in the following output variables:
                     "command": "GET /overview HTTP/1.1",
                     "port": "8080"
                 }
+            ],
+            "out_args": [
+                "__your_step_output_variable__"
             ]
         }
     },
@@ -151,7 +170,7 @@ Any successful HTTP response from an OpenC2 compliant endpoint (with a status co
 
 #### Variables
 
-It supports variable interpolation in the command, headers, and target definitions.
+This capability does not define specific variables as input, but variable interpolation is supported in the command and target definitions. It has `one` output variable of type string (see the `__soarca_openc2_http_result__`). If you want to use the output variable in your next step you will need to define a variable in your playbook as `step or playbook variabel` that is of the same type. Also you need to specify an `out_args` key see `__your_step_output_variable__` in the example. Note you can only use `one out_arg key` for this capability.
 
 The result of the step is stored in the following output variables:
 
@@ -164,12 +183,19 @@ The result of the step is stored in the following output variables:
 }
 ```
 
-#### Example
+#### Example with step variables
 
 ```json
 {
     "workflow": {
         "action--aa1470d8-57cc-4164-ae07-05745bef24f4": {
+            "step_variables": {
+                "__your_step_output_variable__": {
+                "type": "string",
+                "constant": false,
+                "external": false
+                }
+            },
             "type": "action",
             "agent": "soarca--00030001-1000-1000-a000-000100010001",
             "targets": ["http-api--5a274b6d-dc65-41f7-987e-9717a7941876"],
@@ -180,7 +206,10 @@ The result of the step is stored in the following output variables:
                 "headers": {
                     "Content-Type": ["application/openc2+json;version=1.0"]
                 }
-            }]
+            }],
+            "out_args": [
+                "__your_step_output_variable__"
+            ]
         }
     },
     "agent_definitions": {
