@@ -53,7 +53,7 @@ func TestFinExecution(t *testing.T) {
 
 	//mockGuid.On("New").Return(id)
 	mockFinProtocol.On("SendCommand", expectedCommand).Return(expectedVariableMap, nil)
-	result, err := finCapability.Execute(metadata, command, auth, target, inputVariable)
+	result, err := finCapability.Execute(metadata, command, auth, target, inputVariable, []string{}, []string{})
 
 	assert.Equal(t, err, nil)
 	assert.Equal(t, result, expectedVariableMap)
