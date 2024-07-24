@@ -6,6 +6,7 @@ import (
 	"soarca/models/cacao"
 	"soarca/models/execution"
 	"soarca/utils/http"
+	"soarca/utils/mapper"
 )
 
 // Receive HTTP API command data from decomposer/executer
@@ -44,7 +45,9 @@ func (httpCapability *HttpCapability) Execute(
 	command cacao.Command,
 	authentication cacao.AuthenticationInformation,
 	target cacao.AgentTarget,
-	variables cacao.Variables) (cacao.Variables, error) {
+	variables cacao.Variables,
+	inputVariableKeys []string,
+	outputVariablesKeys []string) (cacao.Variables, error) {
 
 	soarca_http_options := http.HttpOptions{
 		Target:  &target,
@@ -57,11 +60,14 @@ func (httpCapability *HttpCapability) Execute(
 		log.Error(err)
 		return cacao.NewVariables(), err
 	}
-	respString := string(responseBytes)
-	variable := cacao.Variable{Type: cacao.VariableTypeString,
-		Name:  httpApiResultVariableName,
-		Value: respString}
 
-	return cacao.NewVariables(variable), nil
+	response := string(responseBytes)
+
+	results := cacao.NewVariables(cacao.Variable{Type: cacao.VariableTypeString,
+		Name:  httpApiResultVariableName,
+		Value: string(response)})
+	log.Trace("Finished https execution, will return the variables: ", results)
+
+	return mapper.Variables(variables, outputVariablesKeys, results, []string{httpApiResultVariableName})
 
 }

@@ -56,12 +56,21 @@ func TestHTTPOptionsCorrectlyGenerated(t *testing.T) {
 	payload_byte := []byte(payload)
 	mock_http_request.On("Request", httpOptions).Return(payload_byte, nil)
 
+	outArg := cacao.Variable{
+		Type: cacao.VariableTypeString,
+		Name: "__soarca_http_api_result__",
+	}
+	inArgs := []string{variable1.Name}
+	outArgs := []string{outArg.Name}
+
 	results, err := httpCapability.Execute(
 		metadata,
 		command,
 		oauth2_info,
 		target,
-		cacao.NewVariables(variable1))
+		cacao.NewVariables(variable1, outArg),
+		inArgs,
+		outArgs)
 	if err != nil {
 		t.Log(err)
 		t.Fail()
@@ -107,12 +116,21 @@ func TestHTTPOptionsEmptyAuth(t *testing.T) {
 	payload_byte := []byte(payload)
 	mock_http_request.On("Request", httpOptions).Return(payload_byte, nil)
 
+	outArg := cacao.Variable{
+		Type: cacao.VariableTypeString,
+		Name: "__soarca_http_api_result__",
+	}
+	inArgs := []string{variable1.Name}
+	outArgs := []string{outArg.Name}
+
 	results, err := httpCapability.Execute(
 		metadata,
 		command,
 		*empty_auth,
 		target,
-		cacao.NewVariables(variable1))
+		cacao.NewVariables(variable1, outArg),
+		inArgs,
+		outArgs)
 	if err != nil {
 		t.Log(err)
 		t.Fail()
@@ -158,12 +176,21 @@ func TestHTTPOptionsEmptyCommand(t *testing.T) {
 	expected_error := errors.New("command pointer is empty")
 	mock_http_request.On("Request", httpOptions).Return([]byte{}, expected_error)
 
+	outArg := cacao.Variable{
+		Type: cacao.VariableTypeString,
+		Name: "__soarca_http_api_result__",
+	}
+	inArgs := []string{variable1.Name}
+	outArgs := []string{outArg.Name}
+
 	results, err := httpCapability.Execute(
 		metadata,
 		*empty_command,
 		oauth2_info,
 		target,
-		cacao.NewVariables(variable1))
+		cacao.NewVariables(variable1, outArg),
+		inArgs,
+		outArgs)
 	if err == nil {
 		t.Log(err)
 		t.Fail()

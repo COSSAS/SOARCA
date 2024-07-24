@@ -38,13 +38,22 @@ func TestHttpConnection(t *testing.T) {
 	playbookId, _ := uuid.Parse("playbook--d09351a2-a075-40c8-8054-0b7c423db83f")
 	stepId, _ := uuid.Parse("action--81eff59f-d084-4324-9e0a-59e353dbd28f")
 
+	outArg := cacao.Variable{
+		Type: cacao.VariableTypeString,
+		Name: "__soarca_http_api_result__",
+	}
+	inArgs := []string{variable1.Name}
+	outArgs := []string{outArg.Name}
+
 	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId.String(), StepId: stepId.String()}
 	// But what to do if there is no target and no AuthInfo?
 	results, err := httpCapability.Execute(
 		metadata, expectedCommand,
 		cacao.AuthenticationInformation{},
 		target,
-		cacao.NewVariables(variable1))
+		cacao.NewVariables(variable1, outArg),
+		inArgs,
+		outArgs)
 	if err != nil {
 		fmt.Println(err)
 		t.Fail()
@@ -76,6 +85,13 @@ func TestHttpOAuth2(t *testing.T) {
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
 
+	outArg := cacao.Variable{
+		Type: cacao.VariableTypeString,
+		Name: "__soarca_http_api_result__",
+	}
+	inArgs := []string{}
+	outArgs := []string{outArg.Name}
+
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	playbookId, _ := uuid.Parse("d09351a2-a075-40c8-8054-0b7c423db83f")
 	stepId, _ := uuid.Parse("81eff59f-d084-4324-9e0a-59e353dbd28f")
@@ -85,7 +101,9 @@ func TestHttpOAuth2(t *testing.T) {
 		command,
 		auth,
 		target,
-		cacao.NewVariables())
+		cacao.NewVariables(outArg),
+		inArgs,
+		outArgs)
 	if err != nil {
 		fmt.Println(err)
 		t.Fail()
@@ -119,6 +137,14 @@ func TestHttpBasicAuth(t *testing.T) {
 		Command: "GET / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
+
+	outArg := cacao.Variable{
+		Type: cacao.VariableTypeString,
+		Name: "__soarca_http_api_result__",
+	}
+	inArgs := []string{}
+	outArgs := []string{outArg.Name}
+
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	playbookId, _ := uuid.Parse("d09351a2-a075-40c8-8054-0b7c423db83f")
 	stepId, _ := uuid.Parse("81eff59f-d084-4324-9e0a-59e353dbd28f")
@@ -128,7 +154,9 @@ func TestHttpBasicAuth(t *testing.T) {
 		command,
 		auth,
 		target,
-		cacao.NewVariables())
+		cacao.NewVariables(outArg),
+		inArgs,
+		outArgs)
 	if err != nil {
 		fmt.Println(err)
 		t.Fail()
