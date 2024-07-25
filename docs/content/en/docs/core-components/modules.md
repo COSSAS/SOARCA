@@ -33,7 +33,7 @@ In every other circumstance the step is considered to have failed.
 
 #### Variables
 
-This module does not define specific variables as input, but variable interpolation is supported in the command and target definitions. It has `one` output variable of type string (see the `__soarca_ssh_result__`). If you want to use the output variable in your next step you will need to define a variable in your playbook as `step or playbook variabel` that is of the same type. Also you need to specify an `out_args` key see `__your_step_output_variable__` in the example. Note you can only use `one out_arg key` for this capability.
+This module does not define specific variables as input, but variable interpolation is supported in the command and target definitions. It has `one` output variable of type string (see the `__soarca_ssh_result__`). If you want to use the output variable in your next step you will need to define a variable in your playbook as `step or playbook variable` that is of the same type. Also you need to specify an `out_args` key see `__your_step_output_variable__` in the example. Note you can only use `one out_arg key` for this capability.
 
 ```json
 {
@@ -103,7 +103,7 @@ The command is considered to have successfully completed if a successful HTTP re
 #### Variables
 
 This capability supports variable interpolation in the command, port, authentication info, and target definitions.
-It has `one` output variable of type string (see the `__soarca_http_api_result__`). If you want to use the output variable in your next step you will need to define a variable in your playbook as `step or playbook variabel` that is of the same type. Also you need to specify an `out_args` key see `__your_step_output_variable__` in the example. Note you can only use `one out_arg key` for this capability.
+It has `one` output variable of type string (see the `__soarca_http_api_result__`). If you want to use the output variable in your next step you will need to define a variable in your playbook as `step or playbook variable` that is of the same type. Also you need to specify an `out_args` key see `__your_step_output_variable__` in the example. Note you can only use `one out_arg key` for this capability.
 
 ```json
 {
@@ -170,7 +170,7 @@ Any successful HTTP response from an OpenC2 compliant endpoint (with a status co
 
 #### Variables
 
-This capability does not define specific variables as input, but variable interpolation is supported in the command and target definitions. It has `one` output variable of type string (see the `__soarca_openc2_http_result__`). If you want to use the output variable in your next step you will need to define a variable in your playbook as `step or playbook variabel` that is of the same type. Also you need to specify an `out_args` key see `__your_step_output_variable__` in the example. Note you can only use `one out_arg key` for this capability.
+This capability does not define specific variables as input, but variable interpolation is supported in the command and target definitions. It has `one` output variable of type string (see the `__soarca_openc2_http_result__`). If you want to use the output variable in your next step you will need to define a variable in your playbook as `step or playbook variable` that is of the same type. Also you need to specify an `out_args` key see `__your_step_output_variable__` in the example. Note you can only use `one out_arg key` for this capability.
 
 The result of the step is stored in the following output variables:
 
