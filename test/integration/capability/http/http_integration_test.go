@@ -29,7 +29,7 @@ func TestHttpConnection(t *testing.T) {
 	}
 
 	variable1 := cacao.Variable{
-		Type:  "string",
+		Type:  cacao.VariableTypeString,
 		Name:  "test_auth",
 		Value: "",
 	}
