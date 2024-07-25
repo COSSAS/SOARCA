@@ -173,7 +173,7 @@ func (decomposer *Decomposer) ExecuteStep(step cacao.Step, scopeVariables cacao.
 	log.Debug("Executing step type ", step.Type)
 
 	log.Trace("Delay is set to: ", step.Delay)
-	decomposer.time.Sleep(t.Duration(step.Delay) * t.Second)
+	decomposer.time.Sleep(t.Duration(step.Delay) * t.Millisecond)
 
 	// Combine parent scope and Step variables
 	variables := cacao.NewVariables()
