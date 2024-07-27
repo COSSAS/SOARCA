@@ -53,6 +53,6 @@ docker: pre-docker-build
 	docker build --no-cache -t soarca:${VERSION}  --build-arg="VERSION=${VERSION}" .
 
 run: docker
-	GIT_VERSION=${VERSION} docker compose up -d
+	GIT_VERSION=${VERSION} docker compose up --build --force-recreate -d
 
 all: build
