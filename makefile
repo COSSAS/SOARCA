@@ -50,7 +50,7 @@ pre-docker-build: swagger
 	GOOS=linux GOARCH=amd64 go build -o bin/${BINARY_NAME}-${VERSION}-linux-amd64 $(GOFLAGS) main.go
 
 docker: pre-docker-build
-	docker build  -t soarca:${VERSION}  --build-arg="VERSION=${VERSION}" .
+	docker build --no-cache -t soarca:${VERSION}  --build-arg="VERSION=${VERSION}" .
 
 run: docker
 	GIT_VERSION=${VERSION} docker compose up -d
