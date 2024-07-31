@@ -20,6 +20,19 @@ const (
 	AwaitUserInput
 )
 
+func (status Status) String() string {
+	return [...]string{
+		"successfully_executed",
+		"failed",
+		"ongoing",
+		"server_side_error",
+		"client_side_error",
+		"timeout_error",
+		"exception_condition_error",
+		"await_user_input",
+	}[status]
+}
+
 type ExecutionEntry struct {
 	ExecutionId uuid.UUID
 	PlaybookId  string

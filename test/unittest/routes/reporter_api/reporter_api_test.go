@@ -99,19 +99,24 @@ func TestGetExecutions(t *testing.T) {
 	expectedStarted, _ := time.Parse(layout, str)
 	expectedEnded, _ := time.Parse(layout, "0001-01-01T00:00:00Z")
 
-	expectedExecutions := []cache_model.ExecutionEntry{}
+	expectedStatus := cache_model.Ongoing.String()
+	expectedStatusText, _ := api_model.GetCacheStatusText(expectedStatus, "playbook")
+
+	expectedExecutionsReport := []api_model.PlaybookExecutionReport{}
 	for _, executionId := range executionIds {
 		t.Log(executionId)
-		entry := cache_model.ExecutionEntry{
-			ExecutionId: executionId,
-			PlaybookId:  "test",
-			Started:     expectedStarted,
-			Ended:       expectedEnded,
-			StepResults: map[string]cache_model.StepResult{},
-			Error:       nil,
-			Status:      cache_model.Ongoing,
+		entry := api_model.PlaybookExecutionReport{
+			Type:            "execution_status",
+			ExecutionId:     executionId.String(),
+			PlaybookId:      "test",
+			Started:         expectedStarted,
+			Ended:           expectedEnded,
+			Status:          expectedStatus,
+			StatusText:      expectedStatusText,
+			StepResults:     map[string]api_model.StepExecutionReport{},
+			RequestInterval: 5,
 		}
-		expectedExecutions = append(expectedExecutions, entry)
+		expectedExecutionsReport = append(expectedExecutionsReport, entry)
 	}
 
 	err := cacheReporter.ReportWorkflowStart(executionId0, playbook)
@@ -140,12 +145,13 @@ func TestGetExecutions(t *testing.T) {
 	}
 
 	app.ServeHTTP(recorder, request)
-	expectedByte, err := json.Marshal(expectedExecutions)
+	expectedByte, err := json.Marshal(expectedExecutionsReport)
 	if err != nil {
 		t.Log("failed to decode expected struct to json")
 		t.Fail()
 	}
 	expectedString := string(expectedByte)
+
 	assert.Equal(t, expectedString, recorder.Body.String())
 	assert.Equal(t, 200, recorder.Code)
 

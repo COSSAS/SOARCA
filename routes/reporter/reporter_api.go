@@ -3,6 +3,7 @@ package reporter
 import (
 	"net/http"
 	"soarca/internal/controller/informer"
+	"soarca/models/api"
 
 	"reflect"
 	"soarca/routes/error"
@@ -49,7 +50,20 @@ func (executionInformer *executionInformer) getExecutions(g *gin.Context) {
 		error.SendErrorResponse(g, http.StatusInternalServerError, "Could not get executions from informer", "GET /reporter/", "")
 		return
 	}
-	g.JSON(http.StatusOK, executions)
+
+	executionsParsed := []api.PlaybookExecutionReport{}
+	for _, executionEntry := range executions {
+		executionEntryParsed, err := parseCachePlaybookEntry(executionEntry)
+		if err != nil {
+			log.Debug("Could not parse entry to reporter result model")
+			log.Error(err)
+			error.SendErrorResponse(g, http.StatusInternalServerError, "Could not parse execution report", "GET /reporter/", "")
+			return
+		}
+		executionsParsed = append(executionsParsed, executionEntryParsed)
+	}
+
+	g.JSON(http.StatusOK, executionsParsed)
 }
 
 // getExecutionReport GET handler for obtaining the information about an execution.

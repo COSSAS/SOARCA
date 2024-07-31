@@ -8,10 +8,7 @@ import (
 const defaultRequestInterval int = 5
 
 func parseCachePlaybookEntry(cacheEntry cache_model.ExecutionEntry) (api_model.PlaybookExecutionReport, error) {
-	playbookStatus, err := api_model.CacheStatusEnum2String(cacheEntry.Status)
-	if err != nil {
-		return api_model.PlaybookExecutionReport{}, err
-	}
+	playbookStatus := api_model.CacheStatusEnum2String(cacheEntry.Status)
 
 	playbookStatusText, err := api_model.GetCacheStatusText(playbookStatus, api_model.ReportLevelPlaybook)
 	if err != nil {
@@ -44,10 +41,8 @@ func parseCacheStepEntries(cacheStepEntries map[string]cache_model.StepResult) (
 	parsedEntries := map[string]api_model.StepExecutionReport{}
 	for stepId, stepEntry := range cacheStepEntries {
 
-		stepStatus, err := api_model.CacheStatusEnum2String(stepEntry.Status)
-		if err != nil {
-			return map[string]api_model.StepExecutionReport{}, err
-		}
+		stepStatus := api_model.CacheStatusEnum2String(stepEntry.Status)
+
 		stepStatusText, err := api_model.GetCacheStatusText(stepStatus, api_model.ReportLevelStep)
 		if err != nil {
 			return map[string]api_model.StepExecutionReport{}, err
