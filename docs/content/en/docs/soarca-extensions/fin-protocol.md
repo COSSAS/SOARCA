@@ -421,6 +421,7 @@ These contain command parts that are used in different messages.
         "channel_security": "plaintext"
     }
 }
+@endjson
 ```
 
 #### Variables
