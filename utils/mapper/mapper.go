@@ -5,27 +5,27 @@ import (
 	"soarca/models/cacao"
 )
 
-func Variables(variables cacao.Variables,
+func Variables(variablesInScope cacao.Variables,
 	outArgs []string,
-	data cacao.Variables,
-	dataArgs []string) (cacao.Variables, error) {
+	returnedVariables cacao.Variables,
+	capabilityReturnArgs []string) (cacao.Variables, error) {
 
 	if len(outArgs) == 0 {
 		return cacao.NewVariables(), nil
 	}
 
-	if len(outArgs) != len(dataArgs) {
+	if len(outArgs) != len(capabilityReturnArgs) {
 		return cacao.NewVariables(), errors.New("number of outargs does not match data array length")
 	}
 
 	outputVariables := cacao.NewVariables()
 
 	for i, arg := range outArgs {
-		variable, found := variables.Find(arg)
+		variable, found := variablesInScope.Find(arg)
 		if !found {
 			return cacao.NewVariables(), errors.New("key is not found in variables")
 		}
-		dataVariable, ok := data.Find(dataArgs[i])
+		dataVariable, ok := returnedVariables.Find(capabilityReturnArgs[i])
 		if !ok {
 			return cacao.NewVariables(), errors.New("key is not found in result data")
 		}
