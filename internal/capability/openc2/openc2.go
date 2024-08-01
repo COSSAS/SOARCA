@@ -17,7 +17,6 @@ type OpenC2Capability struct {
 type Empty struct{}
 
 const (
-	maxResultVariables       = 1
 	openc2ResultVariableName = "__soarca_openc2_http_result__"
 	openc2CapabilityName     = "soarca-openc2-http"
 )
