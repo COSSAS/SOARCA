@@ -60,29 +60,11 @@ type StepExecutionReport struct {
 	// the execution ID for the invoked playbook
 }
 
-func CacheStatusEnum2String(status cache_model.Status) (string, error) {
-	switch status {
-	case cache_model.SuccessfullyExecuted:
-		return SuccessfullyExecuted, nil
-	case cache_model.Failed:
-		return Failed, nil
-	case cache_model.Ongoing:
-		return Ongoing, nil
-	case cache_model.ServerSideError:
-		return ServerSideError, nil
-	case cache_model.ClientSideError:
-		return ClientSideError, nil
-	case cache_model.TimeoutError:
-		return TimeoutError, nil
-	case cache_model.ExceptionConditionError:
-		return ExceptionConditionError, nil
-	case cache_model.AwaitUserInput:
-		return AwaitUserInput, nil
-	default:
-		return "", errors.New("unable to read execution information status")
-	}
+func CacheStatusEnum2String(status cache_model.Status) string {
+	return status.String()
 }
 
+// Level must be either "step" or "playbook"
 func GetCacheStatusText(status string, level string) (string, error) {
 	if level != ReportLevelPlaybook && level != ReportLevelStep {
 		return "", errors.New("invalid reporting level provided. use either 'playbook' or 'step'")
