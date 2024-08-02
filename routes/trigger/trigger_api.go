@@ -1,6 +1,7 @@
 package trigger
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 	"reflect"
@@ -10,6 +11,7 @@ import (
 	"soarca/internal/controller/decomposer_controller"
 	"soarca/internal/decomposer"
 	"soarca/logger"
+	"soarca/models/cacao"
 	"soarca/models/decoder"
 	"soarca/routes/error"
 
@@ -43,6 +45,19 @@ func New(controller decomposer_controller.IController, database database.IContro
 	return &instance
 }
 
+func MergeVariablesInPlaybook(playbook *cacao.Playbook, body []byte) {
+
+	variables := cacao.NewVariables()
+	err := json.Unmarshal(body, &variables)
+	if err != nil {
+		log.Trace(err)
+		return
+	}
+
+	playbook.PlaybookVariables.Merge(variables)
+
+}
+
 // trigger
 //
 //	@Summary	trigger a playbook by id that is stored in SOARCA
@@ -51,12 +66,12 @@ func New(controller decomposer_controller.IController, database database.IContro
 //	@Tags			trigger
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		string	true	"playbook ID"
-//	@Success		200			{object}	api.Execution
-//	@failure		400			{object}	api.Error
+//	@Param			id		path		string			true	"playbook ID"
+//	@Param			data	body		cacao.Variables	true	"playbook"
+//	@Success		200		{object}	api.Execution
+//	@failure		400		{object}	api.Error
 //	@Router			/trigger/playbook/{id} [POST]
 func (trigger *TriggerApi) ExecuteById(context *gin.Context) {
-
 	id := context.Param("id")
 
 	db := trigger.database.GetDatabaseInstance()
@@ -68,23 +83,16 @@ func (trigger *TriggerApi) ExecuteById(context *gin.Context) {
 			"POST /trigger/playbook/"+id, err.Error())
 		return
 	}
-
-	// create new decomposer when execute is called
-	decomposer := trigger.controller.NewDecomposer()
-	executionDetail, errDecomposer := decomposer.Execute(playbook)
-	if errDecomposer != nil {
-		error.SendErrorResponse(context, http.StatusBadRequest,
-			"Failed to decode playbook",
-			"POST /trigger/playbook/"+id,
-			executionDetail.ExecutionId.String())
-	} else {
-		msg := gin.H{
-			"execution_id": executionDetail.ExecutionId.String(),
-			"payload":      executionDetail.PlaybookId,
+	if context.Request.Body != nil {
+		jsonData, err := io.ReadAll(context.Request.Body)
+		if err != nil {
+			log.Trace("Playbook trigger has failed to decode request body")
+			error.SendErrorResponse(context, http.StatusBadRequest, "Failed to decode request body", "POST /tirgger/playbook/"+id, "")
 		}
-		context.JSON(http.StatusOK, msg)
+		MergeVariablesInPlaybook(&playbook, jsonData)
 	}
 
+	trigger.execute(&playbook, context)
 }
 
 // trigger
@@ -100,7 +108,7 @@ func (trigger *TriggerApi) ExecuteById(context *gin.Context) {
 //	@failure		400			{object}	api.Error
 //	@Router			/trigger/playbook [POST]
 func (trigger *TriggerApi) Execute(context *gin.Context) {
-	decomposer := trigger.controller.NewDecomposer()
+
 	jsonData, errIo := io.ReadAll(context.Request.Body)
 	if errIo != nil {
 		log.Error("failed")
@@ -117,10 +125,13 @@ func (trigger *TriggerApi) Execute(context *gin.Context) {
 			"POST /trigger/playbook", "")
 		return
 	}
+	trigger.execute(playbook, context)
 
+}
+
+func (trigger *TriggerApi) execute(playbook *cacao.Playbook, context *gin.Context) {
+	decomposer := trigger.controller.NewDecomposer()
 	go decomposer.ExecuteAsync(*playbook, trigger.Executionsch)
-
-	// Hard coding the timer to return execution id
 	timer := time.NewTimer(time.Duration(3) * time.Second)
 	for {
 		select {
