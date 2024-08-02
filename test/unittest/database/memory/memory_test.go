@@ -239,7 +239,7 @@ func TestGetAllPlaybookMetas(t *testing.T) {
 		// assert.Equal(t, playbook, workflow)
 	}
 
-	playbooks, err := mem.GetPlaybooksMetas()
+	playbooks, err := mem.GetPlaybookMetas()
 	assert.Equal(t, err, nil)
 	assert.Equal(t, len(playbooks), 10)
 
