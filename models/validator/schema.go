@@ -4,11 +4,11 @@ import (
 	"embed"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/fs"
 	"reflect"
 	"soarca/logger"
 	"soarca/models/cacao"
+	"soarca/utils"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
@@ -22,8 +22,7 @@ var component = reflect.TypeOf(Empty{}).PkgPath()
 var log *logger.Log
 
 const (
-	oca_cacao_schemas        string = "./schemas/playbook.json"
-	oca_cacao_schemas_remote string = "https://raw.githubusercontent.com/opencybersecurityalliance/cacao-roaster/main/lib/cacao-json-schemas/schemas/playbook.json"
+	oca_cacao_schemas string = "./schemas/playbook.json"
 )
 
 //go:embed schemas/*
@@ -64,7 +63,6 @@ func validateWithLocalSchema(playbookToValidate map[string]interface{}) error {
 
 		if isFile {
 			content, _ := fs.ReadFile(schemas, path)
-			fmt.Println(path)
 			data, err := jsonschema.UnmarshalJSON(strings.NewReader(string(content)))
 			if err != nil {
 				return err
@@ -89,10 +87,10 @@ func validateWithLocalSchema(playbookToValidate map[string]interface{}) error {
 	return err
 }
 
-func validateWithRemoteSchema(data map[string]interface{}) error {
+func validateWithRemoteSchema(data map[string]interface{}, url string) error {
 	compiler := jsonschema.NewCompiler()
 
-	sch, err := compiler.Compile(oca_cacao_schemas_remote)
+	sch, err := compiler.Compile(url)
 	if err != nil {
 		return err
 	}
@@ -115,7 +113,12 @@ func IsValidCacaoJson(data []byte) error {
 	case cacao.CACAO_VERSION_1:
 		return errors.New("you submitted a cacao v1 playbook. at the moment, soarca only supports cacao v2 playbooks")
 	case cacao.CACAO_VERSION_2:
-		return validateWithLocalSchema(rawJson)
+		schemaUrl := utils.GetEnv("VALIDATION_SCHEMA_URL", "")
+		if schemaUrl != "" {
+			return validateWithRemoteSchema(rawJson, schemaUrl)
+		} else {
+			return validateWithLocalSchema(rawJson)
+		}
 	default:
 		return errors.New("unsupported cacao version")
 	}

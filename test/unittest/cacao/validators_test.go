@@ -28,7 +28,7 @@ func TestNotValidCacaoJsonInvalidAgentTargetType(t *testing.T) {
 	}
 
 	t.Log(errValid)
-	expected := "value must be \"http-api\""
+	expected := "value must be 'http-api'"
 	assert.Equal(t, strings.Contains(fmt.Sprint(errValid), expected), true)
 
 }
