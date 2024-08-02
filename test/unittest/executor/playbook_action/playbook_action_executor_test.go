@@ -64,6 +64,7 @@ func TestExecutePlaybook(t *testing.T) {
 		ID:          stepId,
 		Description: "",
 		PlaybookID:  playbookId,
+		OutArgs:     []string{"var1", "var2"},
 	}
 
 	database.On("GetDatabaseInstance").Return(playbookRepoMock)
