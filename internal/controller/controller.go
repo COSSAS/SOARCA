@@ -31,6 +31,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"soarca/database/memory"
 	mongo "soarca/database/mongodb"
 	playbookrepository "soarca/database/playbook"
 	"soarca/routes"
@@ -106,22 +107,31 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 }
 
 func (controller *Controller) setupDatabase() error {
-	mongo.LoadComponent()
+	initMongoDatabase, _ := strconv.ParseBool(utils.GetEnv("DATABASE", "false"))
 
-	log.Info("SOARCA API Trying to start")
-	mongo_uri := os.Getenv("MONGODB_URI")
-	db_username := os.Getenv("DB_USERNAME")
-	db_password := os.Getenv("DB_PASSWORD")
+	if initMongoDatabase {
 
-	if mongo_uri == "" || db_username == "" || db_password == "" {
-		log.Error("you must set 'MONGODB_URI' or 'DB_USERNAME' or 'DB_PASSWORD' in the environment variable")
-		return errors.New("could not obtain required environment settings")
+		mongo.LoadComponent()
+
+		log.Info("SOARCA API Trying to start")
+		mongo_uri := os.Getenv("MONGODB_URI")
+		db_username := os.Getenv("DB_USERNAME")
+		db_password := os.Getenv("DB_PASSWORD")
+
+		if mongo_uri == "" || db_username == "" || db_password == "" {
+			log.Error("you must set 'MONGODB_URI' or 'DB_USERNAME' or 'DB_PASSWORD' in the environment variable")
+			return errors.New("could not obtain required environment settings")
+		}
+		err := mongo.SetupMongodb(mongo_uri, db_username, db_password)
+		if err != nil {
+			return err
+		}
+		controller.playbookRepo = playbookrepository.SetupPlaybookRepository(mongo.GetCacaoRepo(), mongo.DefaultLimitOpts())
+	} else {
+		// Use in memory database
+		controller.playbookRepo = memory.New()
+
 	}
-	err := mongo.SetupMongodb(mongo_uri, db_username, db_password)
-	if err != nil {
-		return err
-	}
-	controller.playbookRepo = playbookrepository.SetupPlaybookRepository(mongo.GetCacaoRepo(), mongo.DefaultLimitOpts())
 
 	return nil
 }
@@ -168,24 +178,23 @@ func initializeCore(app *gin.Engine) error {
 	origins := strings.Split(strings.ReplaceAll(utils.GetEnv("SOARCA_ALLOWED_ORIGINS", "*"), " ", ""), ",")
 
 	routes.Cors(app, origins)
-	err := routes.Api(app, &mainController)
+
+	err := mainController.setupDatabase()
 	if err != nil {
 		log.Error(err)
 		return err
 	}
 
-	initDatabase := utils.GetEnv("DATABASE", "false")
-	if initDatabase == "true" {
-		err = mainController.setupDatabase()
-		if err != nil {
-			log.Error(err)
-			return err
-		}
-		err = routes.Database(app, &mainController)
-		if err != nil {
-			log.Error(err)
-			return err
-		}
+	err = routes.Api(app, &mainController, &mainController)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	err = routes.Database(app, &mainController)
+	if err != nil {
+		log.Error(err)
+		return err
 	}
 
 	// NOTE: Assuming that the cache is the main information mediator for
