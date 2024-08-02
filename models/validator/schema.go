@@ -24,7 +24,6 @@ var log *logger.Log
 const (
 	oca_cacao_schemas        string = "./schemas/playbook.json"
 	oca_cacao_schemas_remote string = "https://raw.githubusercontent.com/opencybersecurityalliance/cacao-roaster/main/lib/cacao-json-schemas/schemas/playbook.json"
-	embed_lacation           string = "schemas"
 )
 
 //go:embed schemas/*
@@ -81,7 +80,7 @@ func validateWithLocalSchema(playbookToValidate map[string]interface{}) error {
 		return err
 	}
 
-	sch, err := compiler.Compile("./schemas/playbook.json")
+	sch, err := compiler.Compile(oca_cacao_schemas)
 	if err != nil {
 		return err
 	}
