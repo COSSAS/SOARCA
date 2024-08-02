@@ -40,11 +40,12 @@ func Reporter(app *gin.Engine, informer informer.IExecutionInformer) error {
 
 func Api(app *gin.Engine,
 	controller decomposer_controller.IController,
+	database database.IController,
 ) error {
 	log.Trace("Trying to setup all Routes")
 	// gin.SetMode(gin.ReleaseMode)
 
-	trigger_api := trigger.New(controller)
+	trigger_api := trigger.New(controller, database)
 	coa_routes.Routes(app)
 	status.Routes(app)
 	operator.Routes(app)
