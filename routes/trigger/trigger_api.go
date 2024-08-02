@@ -54,8 +54,11 @@ func MergeVariablesInPlaybook(playbook *cacao.Playbook, body []byte) {
 		return
 	}
 
-	playbook.PlaybookVariables.Merge(variables)
-
+	if playbook.PlaybookVariables == nil {
+		playbook.PlaybookVariables = variables
+	} else {
+		playbook.PlaybookVariables.Merge(variables)
+	}
 }
 
 // trigger
