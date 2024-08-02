@@ -236,6 +236,7 @@ The message is used to send a command from SOARCA. It has the following payload.
         "variables": {
             "__<var1>__": {
                 "type": "<cacao.variable-type-ov>",
+                "name": "__<var1>__",
                 "description": "<string>",
                 "value": "<string>",
                 "constant": "<bool>",
@@ -243,6 +244,7 @@ The message is used to send a command from SOARCA. It has the following payload.
             },
             "__<var2>__": {
                 "type": "<cacao.variable-type-ov>",
+                "name": "__<var2>__",
                 "description": "<string>",
                 "value": "<string>",
                 "constant": "<bool>",
@@ -295,6 +297,7 @@ The message is used to send a response from the Fin to SOARCA. It has the follow
         "variables": {
             "__<var1>__": {
                 "type": "<cacao.variable-type-ov>",
+                "name": "__<var1>__",
                 "description": "<string>",
                 "value": "<string>",
                 "constant": "<bool>",
@@ -302,6 +305,7 @@ The message is used to send a response from the Fin to SOARCA. It has the follow
             },
             "__<var2>__": {
                 "type": "<cacao.variable-type-ov>",
+                "name": "__<var2>__",
                 "description": "<string>",
                 "value": "<string>",
                 "constant": "<bool>",
@@ -417,6 +421,7 @@ These contain command parts that are used in different messages.
         "channel_security": "plaintext"
     }
 }
+@endjson
 ```
 
 #### Variables
