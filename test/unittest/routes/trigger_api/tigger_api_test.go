@@ -2,6 +2,7 @@ package trigger_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -77,13 +78,62 @@ func TestExecutionOfPlaybookById(t *testing.T) {
 	playbook := cacao.Decode(byteValue)
 	mock_database.On("Read", "1").Return(*playbook, nil)
 	mock_controller.On("NewDecomposer").Return(mock_decomposer)
-	mock_decomposer.On("Execute", *playbook).Return(&decomposer.ExecutionDetails{}, nil)
+	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+
+	recorder := httptest.NewRecorder()
+	trigger_api := trigger.New(mock_controller, mock_database_controller)
+	trigger.Routes(app, trigger_api)
+	mock_decomposer.On("ExecuteAsync", *playbook, trigger_api.Executionsch).Return(&decomposer.ExecutionDetails{}, nil, executionId)
+
+	request, err := http.NewRequest("POST", "/trigger/playbook/1", nil)
+	if err != nil {
+		t.Fail()
+	}
+	app.ServeHTTP(recorder, request)
+	assert.Equal(t, 200, recorder.Code)
+	mock_decomposer.AssertExpectations(t)
+}
+
+func TestExecutionOfPlaybookByIdWithPayload(t *testing.T) {
+	jsonFile, err := os.Open("../playbook.json")
+	if err != nil {
+		fmt.Println(err)
+		t.Fail()
+	}
+	defer jsonFile.Close()
+	byteValue, _ := io.ReadAll(jsonFile)
+
+	gin.SetMode(gin.DebugMode)
+	app := gin.New()
+	mock_decomposer := new(mock_decomposer.Mock_Decomposer)
+	mock_controller := new(mock_decomposer_controller.Mock_Controller)
+	mock_database := new(mock_playbook_database.MockPlaybook)
+	mock_database_controller := new(mock_database_controller.Mock_Controller)
+	mock_database_controller.On("GetDatabaseInstance").Return(mock_database)
+	playbook := cacao.Decode(byteValue)
+	mock_database.On("Read", "1").Return(*playbook, nil)
+	mock_controller.On("NewDecomposer").Return(mock_decomposer)
+	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+
+	var1 := cacao.Variable{
+		Name: "var1",
+		Type: cacao.VariableTypeString,
+	}
+	variables := cacao.NewVariables(var1)
+
+	json, err := json.Marshal(variables)
+	assert.Equal(t, err, nil)
 
 	recorder := httptest.NewRecorder()
 	trigger_api := trigger.New(mock_controller, mock_database_controller)
 	trigger.Routes(app, trigger_api)
 
-	request, err := http.NewRequest("POST", "/trigger/playbook/1", nil)
+	mergerPlaybook := cacao.Decode(byteValue)
+	mergerPlaybook.PlaybookVariables = variables
+
+	mock_decomposer.On("ExecuteAsync", *mergerPlaybook, trigger_api.Executionsch).Return(&decomposer.ExecutionDetails{}, nil, executionId)
+
+	request, err := http.NewRequest("POST", "/trigger/playbook/1", bytes.NewReader(json))
 	if err != nil {
 		t.Fail()
 	}
