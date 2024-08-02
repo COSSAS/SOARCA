@@ -3,6 +3,8 @@ package cache
 import (
 	b64 "encoding/base64"
 	"errors"
+	"fmt"
+	"slices"
 	"soarca/models/cacao"
 	cache_report "soarca/models/cache"
 	itime "soarca/utils/time"
@@ -31,10 +33,35 @@ func New(timeUtil itime.ITime, maxExecutions int) *Cache {
 	}
 }
 
-// Util for retrieval
+// ############################### Atomic cache access operations (mutex-protection)
+
+func (cacheReporter *Cache) getAllExecutions() ([]cache_report.ExecutionEntry, error) {
+	executions := make([]cache_report.ExecutionEntry, 0)
+	// NOTE: fetched via fifo register key reference as is ordered array,
+	// this is needed to test and report back ordered executions stored
+
+	// Lock
+	cacheReporter.mutex.Lock()
+	for _, executionEntryKey := range cacheReporter.fifoRegister {
+		// NOTE: cached executions are passed by reference, so they must not be modified
+		entry, ok := cacheReporter.Cache[executionEntryKey]
+		if !ok {
+			return []cache_report.ExecutionEntry{}, errors.New("internal error. cache fifo register and cache executions mismatch")
+		}
+		executions = append(executions, entry)
+	}
+	cacheReporter.mutex.Unlock()
+	// Unlocked
+
+	return executions, nil
+}
+
 func (cacheReporter *Cache) getExecution(executionKey uuid.UUID) (cache_report.ExecutionEntry, error) {
+
 	executionKeyStr := executionKey.String()
+	// No need for mutex as is one-line access
 	executionEntry, ok := cacheReporter.Cache[executionKeyStr]
+
 	if !ok {
 		err := errors.New("execution is not in cache. consider increasing cache size")
 		return cache_report.ExecutionEntry{}, err
@@ -52,6 +79,13 @@ func (cacheReporter *Cache) addExecutionFIFO(newExecutionEntry cache_report.Exec
 
 	newExecutionEntryKey := newExecutionEntry.ExecutionId.String()
 
+	// Lock
+	cacheReporter.mutex.Lock()
+	defer cacheReporter.mutex.Unlock()
+
+	if _, ok := cacheReporter.Cache[newExecutionEntryKey]; ok {
+		return errors.New("there is already an execution in the cache with the same execution id")
+	}
 	if len(cacheReporter.fifoRegister) >= cacheReporter.Size {
 
 		firstExecution := cacheReporter.fifoRegister[0]
@@ -61,66 +95,21 @@ func (cacheReporter *Cache) addExecutionFIFO(newExecutionEntry cache_report.Exec
 		cacheReporter.Cache[newExecutionEntryKey] = newExecutionEntry
 
 		return nil
+		// Unlocked
 	}
-
 	cacheReporter.fifoRegister = append(cacheReporter.fifoRegister, newExecutionEntryKey)
 	cacheReporter.Cache[newExecutionEntryKey] = newExecutionEntry
+
 	return nil
+	// Unlocked
 }
 
-func (cacheReporter *Cache) GetExecutions() ([]cache_report.ExecutionEntry, error) {
-	cacheReporter.mutex.Lock()
-	defer cacheReporter.mutex.Unlock()
+func (cacheReporter *Cache) upateEndExecutionWorkflow(executionId uuid.UUID, workflowError error) error {
+	// The cache should stay locked for the whole modification period
+	// in order to prevent e.g. the execution data being popped-out due to FIFO
+	// while its status or some of its steps are being updated
 
-	executions := make([]cache_report.ExecutionEntry, 0)
-	// NOTE: fetched via fifo register key reference as is ordered array,
-	// needed to test and report back ordered executions stored
-	for _, executionEntryKey := range cacheReporter.fifoRegister {
-		// NOTE: cached executions are passed by reference, so they must not be modified
-		entry, ok := cacheReporter.Cache[executionEntryKey]
-		if !ok {
-			return []cache_report.ExecutionEntry{}, errors.New("internal error. cache fifo register and cache executions mismatch")
-		}
-		executions = append(executions, entry)
-	}
-	return executions, nil
-}
-
-func (cacheReporter *Cache) GetExecutionReport(executionKey uuid.UUID) (cache_report.ExecutionEntry, error) {
-	cacheReporter.mutex.Lock()
-	defer cacheReporter.mutex.Unlock()
-
-	executionEntry, err := cacheReporter.getExecution(executionKey)
-	if err != nil {
-		return cache_report.ExecutionEntry{}, err
-	}
-	report := executionEntry
-
-	return report, nil
-}
-
-// ############################### Reporting
-
-func (cacheReporter *Cache) ReportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook) error {
-	cacheReporter.mutex.Lock()
-	defer cacheReporter.mutex.Unlock()
-
-	newExecutionEntry := cache_report.ExecutionEntry{
-		ExecutionId: executionId,
-		PlaybookId:  playbook.ID,
-		Started:     cacheReporter.timeUtil.Now(),
-		Ended:       time.Time{},
-		StepResults: map[string]cache_report.StepResult{},
-		Status:      cache_report.Ongoing,
-	}
-	err := cacheReporter.addExecutionFIFO(newExecutionEntry)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (cacheReporter *Cache) ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook, workflowError error) error {
+	// Lock
 	cacheReporter.mutex.Lock()
 	defer cacheReporter.mutex.Unlock()
 
@@ -139,9 +128,11 @@ func (cacheReporter *Cache) ReportWorkflowEnd(executionId uuid.UUID, playbook ca
 	cacheReporter.Cache[executionId.String()] = executionEntry
 
 	return nil
+	// Unlocked
 }
 
-func (cacheReporter *Cache) ReportStepStart(executionId uuid.UUID, step cacao.Step, variables cacao.Variables) error {
+func (cacheReporter *Cache) addStartExecutionStep(executionId uuid.UUID, newStepData cache_report.StepResult) error {
+	// Locked
 	cacheReporter.mutex.Lock()
 	defer cacheReporter.mutex.Unlock()
 
@@ -151,13 +142,111 @@ func (cacheReporter *Cache) ReportStepStart(executionId uuid.UUID, step cacao.St
 	}
 
 	if executionEntry.Status != cache_report.Ongoing {
-		return errors.New("trying to report on the execution of a step for an already reported completed or failed execution")
+		return errors.New("trying to report on the execution of a step for an already reportedly terminated playbook execution")
 	}
-
-	_, alreadyThere := executionEntry.StepResults[step.ID]
+	_, alreadyThere := executionEntry.StepResults[newStepData.StepId]
 	if alreadyThere {
+		// TODO: must fix: all steps should start empty values but already present. Check should be
+		// done on Step.Started > 0 time
+		//
+		// Should divide between instanciation of step, and modification of step,
+		// with respective checks step status
 		return errors.New("a step execution start was already reported for this step. ignoring")
 	}
+
+	executionEntry.StepResults[newStepData.StepId] = newStepData
+	// New code
+	cacheReporter.Cache[executionId.String()] = executionEntry
+
+	return nil
+	// Unlocked
+}
+
+func (cacheReporter *Cache) upateEndExecutionStep(executionId uuid.UUID, stepId string, returnVars cacao.Variables, stepError error, acceptedStepStati []cache_report.Status) error {
+	// Locked
+	cacheReporter.mutex.Lock()
+	defer cacheReporter.mutex.Unlock()
+
+	executionEntry, err := cacheReporter.getExecution(executionId)
+	if err != nil {
+		return err
+	}
+
+	if executionEntry.Status != cache_report.Ongoing {
+		return errors.New("trying to report on the execution of a step for an already reportedly terminated playbook execution")
+		// Unlocked
+	}
+	executionStepResult, ok := executionEntry.StepResults[stepId]
+	if !ok {
+		// TODO: must fix: all steps should start empty values but already present. Check should be
+		// done on Step.Started > 0 time
+		return errors.New("trying to update a step which was not (yet?) recorded in the cache")
+		// Unlocked
+	}
+
+	if !slices.Contains(acceptedStepStati, executionStepResult.Status) {
+		return fmt.Errorf("step status precondition not met for step update [step status: %s]", executionStepResult.Status.String())
+	}
+
+	if stepError != nil {
+		executionStepResult.Error = stepError
+		executionStepResult.Status = cache_report.ServerSideError
+	} else {
+		executionStepResult.Status = cache_report.SuccessfullyExecuted
+	}
+	executionStepResult.Ended = cacheReporter.timeUtil.Now()
+	executionStepResult.Variables = returnVars
+	executionEntry.StepResults[stepId] = executionStepResult
+	cacheReporter.Cache[executionId.String()] = executionEntry
+
+	return nil
+	// Unlocked
+}
+
+// ############################### Informer interface
+
+func (cacheReporter *Cache) GetExecutions() ([]cache_report.ExecutionEntry, error) {
+	executions, err := cacheReporter.getAllExecutions()
+	return executions, err
+}
+
+func (cacheReporter *Cache) GetExecutionReport(executionKey uuid.UUID) (cache_report.ExecutionEntry, error) {
+
+	executionEntry, err := cacheReporter.getExecution(executionKey)
+	if err != nil {
+		return cache_report.ExecutionEntry{}, err
+	}
+	report := executionEntry
+
+	return report, nil
+}
+
+// ############################### Reporting interface
+
+func (cacheReporter *Cache) ReportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook) error {
+
+	newExecutionEntry := cache_report.ExecutionEntry{
+		ExecutionId: executionId,
+		PlaybookId:  playbook.ID,
+		Started:     cacheReporter.timeUtil.Now(),
+		Ended:       time.Time{},
+		StepResults: map[string]cache_report.StepResult{},
+		Status:      cache_report.Ongoing,
+	}
+	err := cacheReporter.addExecutionFIFO(newExecutionEntry)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (cacheReporter *Cache) ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook, workflowError error) error {
+
+	err := cacheReporter.upateEndExecutionWorkflow(executionId, workflowError)
+	return err
+}
+
+func (cacheReporter *Cache) ReportStepStart(executionId uuid.UUID, step cacao.Step, variables cacao.Variables) error {
 
 	commandsB64 := []string{}
 	isAutomated := true
@@ -173,7 +262,7 @@ func (cacheReporter *Cache) ReportStepStart(executionId uuid.UUID, step cacao.St
 		}
 	}
 
-	newStepEntry := cache_report.StepResult{
+	newStep := cache_report.StepResult{
 		ExecutionId: executionId,
 		StepId:      step.ID,
 		Started:     cacheReporter.timeUtil.Now(),
@@ -184,44 +273,21 @@ func (cacheReporter *Cache) ReportStepStart(executionId uuid.UUID, step cacao.St
 		Error:       nil,
 		IsAutomated: isAutomated,
 	}
-	executionEntry.StepResults[step.ID] = newStepEntry
-	// New code
-	cacheReporter.Cache[executionId.String()] = executionEntry
-	return nil
+
+	err := cacheReporter.addStartExecutionStep(executionId, newStep)
+
+	return err
 }
 
 func (cacheReporter *Cache) ReportStepEnd(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, stepError error) error {
-	cacheReporter.mutex.Lock()
-	defer cacheReporter.mutex.Unlock()
 
-	executionEntry, err := cacheReporter.getExecution(executionId)
-	if err != nil {
-		return err
-	}
+	// stepId, err := uuid.Parse(step.ID)
+	// if err != nil {
+	// 	return fmt.Errorf("could not parse to uuid the step id: %s", step.ID)
+	// }
 
-	if executionEntry.Status != cache_report.Ongoing {
-		return errors.New("trying to report on the execution of a step for an already reported completed or failed execution")
-	}
+	acceptedStepStati := []cache_report.Status{cache_report.Ongoing}
+	err := cacheReporter.upateEndExecutionStep(executionId, step.ID, returnVars, stepError, acceptedStepStati)
 
-	executionStepResult, ok := executionEntry.StepResults[step.ID]
-	if !ok {
-		return errors.New("cannot report step end. step was not found in execution")
-	}
-
-	if executionStepResult.Status != cache_report.Ongoing {
-		return errors.New("trying to report on the execution of a step that was already reported completed or failed")
-	}
-
-	if stepError != nil {
-		executionStepResult.Error = stepError
-		executionStepResult.Status = cache_report.ServerSideError
-	} else {
-		executionStepResult.Status = cache_report.SuccessfullyExecuted
-	}
-	executionStepResult.Ended = cacheReporter.timeUtil.Now()
-	executionStepResult.Variables = returnVars
-	executionEntry.StepResults[step.ID] = executionStepResult
-	// New code
-	cacheReporter.Cache[executionId.String()] = executionEntry
-	return nil
+	return err
 }
