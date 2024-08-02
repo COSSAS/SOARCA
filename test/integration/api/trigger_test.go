@@ -11,7 +11,7 @@ import (
 
 func TestTest(t *testing.T) {
 	// Start SOARCA in separate threat
-	t.Setenv("PORT", "8084")
+	t.Setenv("PORT", "8085")
 	go initializeSoarca(t)
 
 	// Wait for the server to be online
@@ -19,7 +19,7 @@ func TestTest(t *testing.T) {
 
 	client := http.Client{}
 	buffer := bytes.NewBufferString("")
-	request, err := http.NewRequest("POST", "http://localhost:8084/trigger/", buffer)
+	request, err := http.NewRequest("POST", "http://localhost:8085/trigger/", buffer)
 	if err != nil {
 		t.Fail()
 	}
