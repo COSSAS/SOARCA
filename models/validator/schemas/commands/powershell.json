@@ -1,0 +1,32 @@
+{
+    "$id": "commands",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "powershell",
+    "description": "The powershell command represents a command that is intended to be processed via a powershell processor. In addition to the inherited properties, this section defines the following additional properties that are valid for this type. Either the 'command' property or the 'command_b64' property MUST be present.",
+    "type": "object",
+    "allOf": [
+        {
+            "$ref": "./command-data.json"
+        },
+        {
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "The value of this property MUST be 'powershell'.",
+                    "enum": [
+                        "powershell"
+                    ]
+                },
+                "command": {
+                    "type": "string",
+                    "description": "A simple string-based powershell command. A command that has quoted values or other characters including spacing or carriage returns that are significant and thus need to be escaped SHOULD use the 'command_b64' property instead. \n\nThe value of this property if present MUST be a valid powershell command."
+                },
+                "command_b64": {
+                    "type": "string",
+                    "contentEncoding": "base64",
+                    "description": "A complex command that can not be encoded as a simple string and thus MUST be base64 encoded (see section 4 of [RFC 4648]). \n\nThe value of this property if present MUST be a valid powershell command or powershell script."
+                }
+            }
+        }
+    ]
+}

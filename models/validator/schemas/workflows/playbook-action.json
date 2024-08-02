@@ -1,0 +1,50 @@
+{
+    "$id": "workflows",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "playbook-action",
+    "description": "The playbook action step workflow step executes a referenced playbook using the agents and targets defined in the referenced playbook. In addition to the inherited properties, this section defines the following additional properties that are valid for this type.",
+    "type": "object",
+    "allOf": [
+        {
+            "$ref": "workflow-step.json"
+        },
+        {
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "The value of this property MUST be 'playbook-action'.",
+                    "enum": [
+                        "playbook-action"
+                    ]
+                },
+                "playbook_id": {
+                    "$ref": "../data-types/identifier.json",
+                    "description": "The referenced playbook to execute. The playbook ID SHOULD be defined such that it is locally relevant to the system that will execute the playbook."
+                },
+                "playbook_version": {
+                    "$ref": "../data-types/timestamp.json",
+                    "description": "The version of the CACAO playbook that this step references. \n\nThe value of this property MUST be the modified 'timestamp' from the CACAO playbook that this step references. If this property is not defined then the latest version that is known or available is considered valid."
+                },
+                "in_args": {
+                    "type": "array",
+                    "description": "The list of variable names from the local 'step_variables' dictionary (see section 4.1) or passed into this step from the global 'playbook_variables' dictionary (see section 3.1) that are used in this playbook. See section 10.18 for more information about variables.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "minItems": 1
+                },
+                "out_args": {
+                    "type": "array",
+                    "description": "The list of variable names from the local step_variables dictionary (see section 4.1) or global 'playbook_variables' dictionary (see section 3.1) that are to be returned from this playbook after execution and stored in the same variable dictionary. See section 10.18 for more information about variables.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "minItems": 1
+                }
+            }
+        }
+    ],
+    "required": [
+        "playbook_id"
+    ]
+}

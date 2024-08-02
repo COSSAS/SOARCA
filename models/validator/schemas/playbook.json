@@ -1,0 +1,460 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "playbook",
+    "description": "CACAO playbooks are made up of six parts playbook metadata, the workflow logic, a list of object definitions used in the workflow logic (agents and targets), a list of extensions, a list of data markings, and a list of any digital signatures. Playbooks MAY refer to other playbooks in the workflow, similar to how programs refer to function calls or modules that comprise the program. The definition and normative requirements for all data types listed in the property table below and other property tables in this document can be found in Section 10.",
+    "type": "object",
+    "properties": {
+        "type": {
+            "type": "string",
+            "description": "The value of this property MUST be 'playbook'.",
+            "enum": [
+                "playbook"
+            ]
+        },
+        "spec_version": {
+            "type": "string",
+            "description": "The version of the specification used to represent this playbook. The value of this property MUST be 'cacao-2.0' to represent the version of this specification.",
+            "enum": [
+                "cacao-2.0"
+            ]
+        },
+        "id": {
+            "$ref": "data-types/identifier.json",
+            "description": "A value that uniquely identifies the playbook. All playbooks with the same id are considered different versions of the same playbook and the version of the playbook is identified by its modified property."
+        },
+        "name": {
+            "type": "string",
+            "description": "A name for this playbook. Playbook names often follow a naming convention that is unique within an organization, community, or trust group and as such this name SHOULD be unique."
+        },
+        "description": {
+            "type": "string",
+            "description": "More details, context, and possibly an explanation about what this playbook does and tries to accomplish. Producers SHOULD populate this property."
+        },
+        "playbook_types": {
+            "type": "array",
+            "description": "A list of playbook types that specifies the operational roles that this playbook addresses. This property SHOULD be populated. \n\nThe values for this property SHOULD come from the 'playbook-type-ov' vocabulary (see section 3.1.1).",
+            "items": {
+                "$ref": "#/$defs/playbook-type-ov"
+            }
+        },
+        "playbook_activities": {
+            "type": "array",
+            "description": "A list of activities pertaining to the playbook. This property SHOULD be populated. If the playbook_types property is populated and comes from the playbook-type-ov then this property MUST have at least one assigned activity. \n\nThis property allows an author to define more detailed descriptions for the various activities that a playbook performs. This property provides a much richer and verbose method to describe all aspects of a playbook than just the playbook_types property. \n\nThe values for this property SHOULD come from the 'playbook-activity-type-ov' vocabulary (see section 3.1.2). \n\nEach listed activity MUST be reflected in a CACAO workflow step object and that object MUST be included in the workflow property.",
+            "items": {
+                "$ref": "#/$defs/playbook-activity-type-ov"
+            },
+            "minItems": 1
+        },
+        "playbook_processing_summary": {
+            "$ref": "data-types/playbook-processing-summary.json",
+            "description": "This property contains a summarized list of processing features that are defined within this playbook. This property enables the content of a playbook to be assessed without requiring the entire content to be parsed or understood. See section 10.14."
+        },
+        "created_by": {
+            "$ref": "data-types/identifier.json",
+            "description": "An ID that represents the entity that created this playbook. The ID MUST represent a STIX 2.1+ identity object."
+        },
+        "created": {
+            "$ref": "data-types/timestamp.json",
+            "description": "The time at which this playbook was originally created. The creator can use any time it deems most appropriate as the time the playbook was created, but it MUST be given to the nearest millisecond (exactly three digits after the decimal place in seconds). The created property MUST NOT be changed when creating a new version of the object."
+        },
+        "modified": {
+            "$ref": "data-types/timestamp.json",
+            "description": "The time that this particular version of the playbook was last modified. The creator can use any time it deems most appropriate as the time that this version of the playbook was modified, but it MUST be given to the nearest millisecond (exactly three digits after the decimal place in seconds). The modified property MUST be later than or equal to the value of the created property. If created and modified properties are the same, then this is the first version of the playbook."
+        },
+        "revoked": {
+            "type": "boolean",
+            "description": "A boolean that identifies if the playbook creator deems that this playbook is no longer valid. The default value is 'false'."
+        },
+        "valid_from": {
+            "$ref": "data-types/timestamp.json",
+            "description": "The time from which this playbook is considered valid and the workflow steps that it contains can be executed. More detailed information about time frames MAY be applied in the workflow. \n\nIf omitted, the playbook is valid at all times or until the timestamp defined by valid_until. \n\nIf the revoked property is 'true' then this property MUST be ignored."
+        },
+        "valid_until": {
+            "$ref": "data-types/timestamp.json",
+            "description": "The time at which this playbook should no longer be considered a valid playbook to be executed. \n\nIf the valid_until property is omitted, then there is no constraint on the latest time for which the playbook is valid. \n\nThis property MUST be greater than the timestamp in the valid_from property if the valid_from property is defined. \n\nIf the revoked property is true then this property MUST be ignored."
+        },
+        "derived_from": {
+            "type": "array",
+            "description": "The ID of one or more CACAO playbooks that this playbook was derived from. The ID MUST represent a CACAO playbook object.",
+            "items": {
+                "$ref": "data-types/identifier.json"
+            },
+            "minItems": 1
+        },
+        "related_to": {
+            "type": "array",
+            "description": "The ID of one or more related STIX or CACAO objects that this playbook is related to. \n\nThe ID SHOULD represent a CACAO playbook object, but MAY represent any STIX v2.1 CTI object or a TC approved extension.",
+            "items": {
+                "$ref": "data-types/identifier.json"
+            },
+            "minItems": 1
+        },
+        "priority": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "A number (𝕎 - whole number) that represents the priority of this playbook relative to other defined playbooks. \n\nPriority in the context of CACAO is a subjective assessment; thus, producers of playbooks, sharing organizations, and marketplaces MAY define rules on how priority should be assessed and assigned. This specification does not address how this assessment is determined. This property is primarily to allow such usage without requiring the addition of a custom property for such practices. \n\nIf specified, the value of this property MUST be between 0 and 100. \n\nWhen left blank this means unspecified. A value of 0 means specifically undefined. Values range from 1, the highest priority, to a value of 100, the lowest. \n\nThe values of 1-100 in this property are inverted from severity and impact based on how the concept of priority is used today. For example, in a SOC a P1 ticket is a higher priority than a P4 ticket."
+        },
+        "severity": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "A number (𝕎 - whole number) that represents the seriousness of the conditions that this playbook addresses. This is highly dependent on whether the playbook is a response to an incident (in which case the severity could be mapped to an incident category defined in some solution), a response to a threat (in which case the severity would likely be mapped to the severity of the threat faced or captured by threat intelligence), or a response to something else. \n\nMarketplaces and sharing organizations MAY define additional rules for how this property should be assigned. This specification does not address how this assessment is determined. \n\nIf specified, the value of this property MUST be between 0 and 100. \n\nWhen left blank this means unspecified. A value of 0 means specifically undefined. Values range from 1, the lowest severity, to a value of 100, the highest."
+        },
+        "impact": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "A number (𝕎 - whole number) from 0 to 100 that represents the potential impact (as determined subjectively by the producer) the execution of the playbook might have on the organization and its infrastructure. \n\nIf specified, the value of this property MUST be between 0 and 100. When left blank this means unspecified. A value of 0 means specifically undefined or benign. Impact values range from 1, the lowest impact, to a value of 100, the highest. \n\nMarketplaces and sharing organizations MAY define additional rules for how this property should be assigned. This specification does not address how this assessment is determined. \n\nNOTE: The value of this property is not related to what triggered the playbook in the first place, such as a threat or an incident. \n\nExecuting a playbook with a higher impact score may increase the likelihood of an effect on the organization. For example, a purely investigative playbook that is non-invasive could have a low impact value of 1. In contrast, a playbook that performs firewall changes, IPS changes, moves laptops to a quarantine VLAN etc., would have a higher impact value."
+        },
+        "industry_sectors": {
+            "type": "array",
+            "description": "A list of industry sectors that this playbook may be related or applicable to. \n\nAny industry sectors that are used in other parts of this playbook MUST also be included in this property. Any industry sectors that are used in other referenced playbooks MAY also be included in this property. \n\nThe values for this property SHOULD come from the 'industry-sector-ov' vocabulary.",
+            "items": {
+                "$ref": "#/$defs/industry-sector-ov"
+            },
+            "minItems": 1
+        },
+        "labels": {
+            "type": "array",
+            "description": "A set of terms, labels, or tags associated with this playbook. The values may be user, organization, or trust-group defined and their meaning is outside the scope of this specification.",
+            "items": {
+                "type": "string"
+            },
+            "minItems": 1
+        },
+        "external_references": {
+            "type": "array",
+            "description": "A list of external references for this playbook or content found in this playbook. \n\nAny external references that are used in other parts of this playbook MUST also be included in this property. Any external references that are used in other referenced playbooks MAY also be included in this property.",
+            "items": {
+                "$ref": "data-types/external-reference.json"
+            },
+            "minItems": 1
+        },
+        "markings": {
+            "type": "array",
+            "description": "A list of data marking objects that apply to this playbook. In some cases, though uncommon, data markings themselves may be marked with sharing or handling guidance. In this case, this property MUST NOT contain any references to the same data marking object (i.e., it cannot contain any circular references). \n\nEach ID MUST represent a CACAO data marking object.",
+            "items": {
+                "$ref": "data-types/identifier.json"
+            },
+            "minItems": 1
+        },
+        "playbook_variables": {
+            "type": "object",
+            "description": "This property contains the global variables (see section 10.18.1 for information about variable scope) that can be used within the playbook, workflow steps (including conditional steps), commands, agents, and targets defined within the playbook. See section 10.18 for information about referencing variables. \n\nThe key for each entry in the dictionary MUST be a 'string' that uniquely identifies the variable. The value for each key MUST be a CACAO 'variable' data type (see section 10.18).",
+            "patternProperties": {
+                "^__[a-zA-Z_][a-zA-Z0-9_-]{0,199}__$": {
+                    "$ref": "data-types/variable.json"
+                }
+            }
+        },
+        "workflow_start": {
+            "$ref": "data-types/identifier.json",
+            "description": "The first workflow step included in the workflow property that MUST be executed when starting the workflow. \n\nThe ID MUST represent a CACAO workflow start step object and that object MUST be included in the workflow property. This property is an implementation helper so that the entire workflow does not need to be parsed to find the start step."
+        },
+        "workflow_exception": {
+            "$ref": "data-types/identifier.json",
+            "description": "The workflow step invoked whenever a playbook execution exception condition occurs. \n\nIf defined, the ID MUST represent a CACAO workflow step object and that object MUST be included in the workflow property."
+        },
+        "workflow": {
+            "description": "The workflow property contains the processing logic for the playbook as workflow steps. All playbooks MUST contain at least the following three steps: a start step, an action/playbook-action step, and an end step. \n\nThe key for each entry in the dictionary MUST be an 'identifier' that uniquely identifies the workflow step (see section 10.10 for more information on identifiers). The value for each key MUST be a CACAO workflow step object (see section 4).",
+            "type": "object",
+            "patternProperties": {
+                "^action--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "workflows/action.json"
+                },
+                "^end--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "workflows/end.json"
+                },
+                "^if-condition--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "workflows/if-condition.json"
+                },
+                "^parallel--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "workflows/parallel.json"
+                },
+                "^playbook-action--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "workflows/playbook-action.json"
+                },
+                "^start--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "workflows/start.json"
+                },
+                "^switch-condition--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "workflows/switch-condition.json"
+                },
+                "^while-condition--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "workflows/while-condition.json"
+                }
+            }
+        },
+        "playbook_extensions": {
+            "minProperties": 1,
+            "type": "object",
+            "patternProperties": {
+                "^extension-definition--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "type": "object"
+                }
+            },
+            "description": "This property declares the extensions that are in use on this playbook (at the metadata level, see section 3.1) and contains the properties and values that are to be used by the extensions. \n\nThe key for each entry in the dictionary MUST be an 'identifier' (see section 10.10 for more information on identifiers) that uniquely identifies the extension. The value for each key is a JSON object that contains the structure as defined in the extension definition's schema property. The actual property extension definition is located in the extension_definitions property."
+        },
+        "authentication_info_definitions": {
+            "minProperties": 1,
+            "type": "object",
+            "patternProperties": {
+                "^http-basic--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "authentication-info/http-basic.json"
+                },
+                "^oauth2--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "authentication-info/oauth2.json"
+                },
+                "^user-auth--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "authentication-info/user-auth.json"
+                },
+                "^[a-z]([-a-z]*[a-z])?--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "authentication-info/authentication-info.json"
+                }
+            },
+            "description": "A dictionary of authentication information that can be referenced from agents and targets in workflow steps found in the workflow property. \n\nThe authentication information can be used by agents and targets when performing interactions that require authentication. \n\nThe key for each entry in the dictionary MUST be an 'identifier' that uniquely identifies the authentication information (see section 10.10 for more information on identifiers). The value for each key MUST be a CACAO 'authentication-info' object (see section 6). \n\nAny authentication information that is used in other parts of this playbook MUST also be included in this property."
+        },
+        "agent_definitions": {
+            "minProperties": 1,
+            "type": "object",
+            "patternProperties": {
+                "^group--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "agent-target/group.json"
+                },
+                "^http-api--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "agent-target/http-api.json"
+                },
+                "^individual--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "agent-target/individual.json"
+                },
+                "^linux--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "agent-target/linux.json"
+                },
+                "^location--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "agent-target/location.json"
+                },
+                "^net-address--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "agent-target/net-address.json"
+                },
+                "^organization--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "agent-target/organization.json"
+                },
+                "^sector--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "agent-target/sector.json"
+                },
+                "^security-category--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "agent-target/security-category.json"
+                },
+                "^ssh--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "agent-target/ssh.json"
+                },
+                "^[a-z]([-a-z]*[a-z])?--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "agent-target/agent-target.json"
+                }
+            },
+            "description": "A dictionary of agents that can be referenced from workflow steps found in the workflow property. \n\nThe key for each entry in the dictionary MUST be an 'identifier' that uniquely identifies the agent (see section 10.10 for more information on identifiers). The value for each key MUST be a CACAO 'agent-target' object (see section 7). \n\nAny agents that are used in other parts of this playbook MUST also be included in this property."
+        },
+        "target_definitions": {
+            "minProperties": 1,
+            "type": "object",
+            "patternProperties": {
+                "^group--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "agent-target/group.json"
+                },
+                "^http-api--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "agent-target/http-api.json"
+                },
+                "^individual--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "agent-target/individual.json"
+                },
+                "^linux--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "agent-target/linux.json"
+                },
+                "^location--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "agent-target/location.json"
+                },
+                "^net-address--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "agent-target/net-address.json"
+                },
+                "^organization--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "agent-target/organization.json"
+                },
+                "^sector--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "agent-target/sector.json"
+                },
+                "^security-category--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "agent-target/security-category.json"
+                },
+                "^ssh--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "agent-target/ssh.json"
+                },
+                "^[a-z]([-a-z]*[a-z])?--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "agent-target/agent-target.json"
+                }
+            },
+            "description": "A dictionary of targets that can be referenced from workflow steps found in the workflow property. \n\nThe key for each entry in the dictionary MUST be an 'identifier' that uniquely identifies the target (see section 10.10 for more information on identifiers). The value for each key MUST be a CACAO 'agent-target' object (see section 7). \n\nAny targets that are used in other parts of this playbook MUST also be included in this property."
+        },
+        "extension_definitions": {
+            "type": "object",
+            "patternProperties": {
+                "^extension-definition--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "extension-definition/extension-definition.json"
+                }
+            },
+            "description": "A dictionary of extension definitions that are referenced from workflow steps found in the workflow property. \n\nThe key for each entry in the dictionary MUST be an 'identifier' that uniquely identifies the extension (see section 10.10 for more information on identifiers). The value for each key MUST be a CACAO extension object (see section 7). \n\nAny extensions that are used in other parts of this playbook MUST also be included in this property."
+        },
+        "data_marking_definitions": {
+            "type": "object",
+            "description": "A dictionary of data marking definitions that can be referenced from the playbook found in the markings property. \n\nThe key for each entry in the dictionary MUST be an 'identifier' that uniquely identifies the data marking (see section 10.10 for more information on identifiers). The value for each key MUST be a CACAO data marking object (see section 9). \n\nAny data markings that are used in other parts of this playbook MUST also be included in this property.",
+            "patternProperties": {
+                "^marking-tlp--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "data-markings/marking-tlp.json"
+                },
+                "^marking-iep--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "data-markings/marking-iep.json"
+                },
+                "^marking-statement--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "$ref": "data-markings/marking-statement.json"
+                }
+            }
+        },
+        "signatures": {
+            "type": "array",
+            "description": "A list of digital signatures for this playbook. Adding a signature to a playbook does not represent a version change of the playbook. See sections 2.5, 10.15, and Appendix A for more information and a detailed example.",
+            "items": {
+                "$ref": "data-types/signature.json"
+            },
+            "minItems": 1
+        }
+    },
+    "required": [
+        "type",
+        "spec_version",
+        "id",
+        "name",
+        "created_by",
+        "created",
+        "modified",
+        "workflow_start",
+        "workflow"
+    ],
+    "$defs": {
+        "playbook-type-ov": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "string",
+                    "enum": [
+                        "attack",
+                        "detection",
+                        "engagement",
+                        "investigation",
+                        "mitigation",
+                        "notification",
+                        "prevention",
+                        "remediation"
+                    ]
+                }
+            ]
+        },
+        "playbook-activity-type-ov": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "string",
+                    "enum": [
+                        "compose-content",
+                        "deliver-content",
+                        "identify-audience",
+                        "identify-channel",
+                        "scan-system",
+                        "match-indicator",
+                        "analyze-collected-data",
+                        "identify-indicators",
+                        "scan-vulnerabilities",
+                        "configure-systems",
+                        "restrict-access",
+                        "disconnect-system",
+                        "eliminate-risk",
+                        "revert-system",
+                        "restore-data",
+                        "restore-capabilities",
+                        "map-network",
+                        "identify-steps",
+                        "step-sequence",
+                        "prepare-engagement",
+                        "execute-operation",
+                        "analyze-engagement-results"
+                    ]
+                }
+            ]
+        },
+        "industry-sector-ov": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "string",
+                    "enum": [
+                        "aerospace",
+                        "aviation",
+                        "agriculture",
+                        "automotive",
+                        "biotechnology",
+                        "chemical",
+                        "commercial",
+                        "consulting",
+                        "construction",
+                        "cosmetics",
+                        "critical-infrastructure",
+                        "dams",
+                        "defense",
+                        "education",
+                        "emergency-services",
+                        "energy",
+                        "non-renewable-energy",
+                        "renewable-energy",
+                        "media",
+                        "financial",
+                        "food",
+                        "gambling",
+                        "government",
+                        "local-government",
+                        "national-government",
+                        "regional-government",
+                        "public-services",
+                        "healthcare",
+                        "information-communications-technology",
+                        "electronics-hardware",
+                        "software",
+                        "telecommunications",
+                        "legal-services",
+                        "lodging",
+                        "manufacturing",
+                        "maritime",
+                        "metals",
+                        "mining",
+                        "non-profit",
+                        "humanitarian-aid",
+                        "human-rights",
+                        "nuclear",
+                        "petroleum",
+                        "pharmaceuticals",
+                        "research",
+                        "transportation",
+                        "logistics-shipping",
+                        "utilities",
+                        "video-game",
+                        "water"
+                    ]
+                }
+            ]
+        }
+    }
+}

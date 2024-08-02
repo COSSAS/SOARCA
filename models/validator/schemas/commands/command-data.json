@@ -1,0 +1,99 @@
+{
+    "$id": "commands",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "command-data",
+    "description": "The CACAO command object ('command-data') contains detailed information about the commands that are to be executed automatically or manually as part of an action step (see section 4.5). Each command listed in an action step may be of a different command type, however, all commands listed in a single step MUST be processed or executed by all of the agents defined in that step. \n\nCommands can make use of variables just like other parts of the playbook. \n\nEach command object contains base properties that are common across all commands. These common properties are defined in the following table.",
+    "type": "object",
+    "allOf": [
+        {
+            "properties": {
+                "type": {
+                    "$ref": "#/$defs/command-type-ov",
+                    "description": "The type of command being used. The value of this property SHOULD come from the 'command-type-ov' vocabulary."
+                },
+                "description": {
+                    "type": "string",
+                    "description": "A description of this command."
+                },
+                "version": {
+                    "type": "string",
+                    "description": "The version of the command type being used. If no version is specified then the most current version of the command type SHOULD be used."
+                },
+                "playbook_activity": {
+                    "$ref": "#/$defs/playbook-activity-type-ov",
+                    "description": "A meta data description of the playbook activity that the command provides that enables summarization at the playbook level of all activities defined within the playbook. This property SHOULD be populated. \n\nThe value for this property SHOULD come from the 'playbook-activity-type-ov' vocabulary."
+                },
+                "external_references": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./../data-types/external-reference.json"
+                    },
+                    "description": "A list of external references for this command."
+                }
+            }
+        }
+    ],
+    "required": [
+        "type"
+    ],
+    "$defs": {
+        "command-type-ov": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "string",
+                    "enum": [
+                        "manual",
+                        "bash",
+                        "caldera-cmd",
+                        "elastic",
+                        "http-api",
+                        "jupyter",
+                        "kestrel",
+                        "openc2-http",
+                        "powershell",
+                        "sigma",
+                        "ssh",
+                        "yara"
+                    ]
+                }
+            ]
+        },
+        "playbook-activity-type-ov": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "string",
+                    "enum": [
+                        "compose-content",
+                        "deliver-content",
+                        "identify-audience",
+                        "identify-channel",
+                        "scan-system",
+                        "match-indicator",
+                        "analyze-collected-data",
+                        "identify-indicators",
+                        "scan-vulnerabilities",
+                        "configure-systems",
+                        "restrict-access",
+                        "disconnect-system",
+                        "eliminate-risk",
+                        "revert-system",
+                        "restore-data",
+                        "restore-capabilities",
+                        "map-network",
+                        "identify-steps",
+                        "step-sequence",
+                        "prepare-engagement",
+                        "execute-operation",
+                        "analyze-engagement-results"
+                    ]
+                }
+            ]
+        }
+    }
+}

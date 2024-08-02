@@ -1,0 +1,31 @@
+{
+    "$id": "commands",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "jupyter",
+    "description": "The jupyter notebook command represents a command that is intended to be processed via a jupyter notebook processor. In addition to the inherited properties, this section defines the following additional property that is valid for this type.",
+    "type": "object",
+    "allOf": [
+        {
+            "$ref": "./command-data.json"
+        },
+        {
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "The value of this property MUST be 'jupyter'.",
+                    "enum": [
+                        "jupyter"
+                    ]
+                },
+                "command_b64": {
+                    "type": "string",
+                    "contentEncoding": "base64",
+                    "description": "A base64 encoded (see section 4 of [RFC 4648]) sigma command. \n\nThe value of this 'command_b64' property MUST be a valid sigma command."
+                }
+            }
+        }
+    ],
+    "required": [
+        "command_b64"
+    ]
+}

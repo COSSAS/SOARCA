@@ -1,0 +1,94 @@
+{
+    "$id": "agent-target",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "sector",
+    "description": "This type defines a sector object and is used for commands that need to be processed or executed by a sector. This object inherits the common agent properties. In addition to the inherited properties, this section defines the following additional property that is valid for this type.",
+    "type": "object",
+    "allOf": [
+        {
+            "$ref": "agent-target.json"
+        },
+        {
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "The value of this property MUST be 'sector'.",
+                    "enum": [
+                        "sector"
+                    ]
+                },
+                "sector": {
+                    "$ref": "#/$defs/industry-sector-ov",
+                    "description": "The values this property SHOULD come from the 'industry-sector-ov' vocabulary, see section 7.7.1."
+                }
+            }
+        }
+    ],
+    "required": [
+        "sector"
+    ],
+    "$defs": {
+        "industry-sector-ov": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "string",
+                    "enum": [
+                        "aerospace",
+                        "aviation",
+                        "agriculture",
+                        "automotive",
+                        "biotechnology",
+                        "chemical",
+                        "commercial",
+                        "consulting",
+                        "construction",
+                        "cosmetics",
+                        "critical-infrastructure",
+                        "dams",
+                        "defense",
+                        "education",
+                        "emergency-services",
+                        "energy",
+                        "non-renewable-energy",
+                        "renewable-energy",
+                        "media",
+                        "financial",
+                        "food",
+                        "gambling",
+                        "government",
+                        "local-government",
+                        "national-government",
+                        "regional-government",
+                        "public-services",
+                        "healthcare",
+                        "information-communications-technology",
+                        "electronics-hardware",
+                        "software",
+                        "telecommunications",
+                        "legal-services",
+                        "lodging",
+                        "manufacturing",
+                        "maritime",
+                        "metals",
+                        "mining",
+                        "non-profit",
+                        "humanitarian-aid",
+                        "human-rights",
+                        "nuclear",
+                        "petroleum",
+                        "pharmaceuticals",
+                        "research",
+                        "transportation",
+                        "logistics-shipping",
+                        "utilities",
+                        "video-game",
+                        "water"
+                    ]
+                }
+            ]
+        }
+    }
+}

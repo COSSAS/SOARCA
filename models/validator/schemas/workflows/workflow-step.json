@@ -1,0 +1,132 @@
+{
+    "$id": "workflows",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "workflow-step",
+    "description": "Workflows contain a series of steps that are stored in a dictionary (see the workflow property in section 3.1), where the key is the step ID and the value is a workflow step. These workflow steps along with the associated commands form the building blocks for playbooks and are used to control the commands that need to be executed. Workflows steps are processed either sequentially, in parallel, or both depending on the type of steps required by the playbook. In addition to simple processing, workflow steps MAY also contain conditional and/or temporal operations to control the execution of the playbook. \n\nConditional processing means executing steps or commands after some sort of condition is met. Temporal processing means executing steps or commands either during a certain time window or after some period of time has passed. \n\nThis section defines the various workflow steps and how they may be used to define a playbook. \n\nEach workflow step contains base properties that are common across all steps. These common properties are defined in the following table. The determination of a step being successful,failing, or completing is implementation specific and is out of scope for this specification, but details MAY be included in the description property.",
+    "type": "object",
+    "properties": {
+        "type": {
+            "$ref": "#/$defs/workflow-step-type-enum",
+            "description": "The type of workflow step being used. The value for this property MUST come from the 'workflow-step-type-enum' enumeration."
+        },
+        "name": {
+            "type": "string",
+            "description": "A name for this step that is meant to be displayed in a user interface or captured in a log message."
+        },
+        "description": {
+            "type": "string",
+            "description": "More details, context, and possibly an explanation about what this step does and tries to accomplish."
+        },
+        "external_references": {
+            "type": "array",
+            "description": "A list of external references for this step.",
+            "items": {
+                "$ref": "../data-types/external-reference.json"
+            },
+            "minItems": 1
+        },
+        "delay": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "A number (𝕎 - whole number) that represents the amount of time in milliseconds that this step SHOULD wait before it starts processing. \n\nIf specified, the value for this property MUST be greater than or equal to 0. \n\nIf this property is omitted, then the workflow step executes immediately without delay."
+        },
+        "timeout": {
+            "type": "integer",
+            "description": "A number (𝕎 - whole number) that represents the amount of time in milliseconds that this step MUST wait before considering the step has failed. \n\nWhen a timeout has occurred for a step, the on_failure step pointer is invoked (if defined) and the information included in that call states that an ACTION_TIMEOUT occurred including the id of the step that timed out. \n\nIf specified, the value of this property MUST be greater than or equal to 0. \n\nIf this property is omitted, the system executing this workflow step SHOULD consider implementing a maximum allowed timeout to ensure that no individual workflow step can block a playbook execution indefinitely."
+        },
+        "step_variables": {
+            "type": "object",
+            "description": "This property contains the variables that can be used within this workflow step or within commands, agents, and targets referenced by this workflow step. See section 10.18.2 for information about referencing variables. \n\nThe key for each entry in the dictionary MUST be a string that uniquely identifies the variable. The value for each key MUST be a CACAO 'variable' data type (see section 10.18.3).",
+            "patternProperties": {
+                "^__[a-zA-Z_][a-zA-Z0-9_-]{0,199}__$": {
+                    "$ref": "../data-types/variable.json"
+                }
+            }
+        },
+        "owner": {
+            "$ref": "../data-types/identifier.json",
+            "description": "An ID that represents the entity that is assigned as the owner or responsible party for this step. \n\nThe value of this property MUST represent a STIX 2.1+ Identity object."
+        },
+        "on_completion": {
+            "$ref": "../data-types/identifier.json",
+            "description": "The ID of the next step to be processed upon completion of the defined commands. \n\nThe value of this property MUST represent a CACAO workflow step object. \n\nIf this property is defined, then on_success and on_failure MUST NOT be defined."
+        },
+        "on_success": {
+            "$ref": "../data-types/identifier.json",
+            "description": "The ID of the next step to be processed if this step completes successfully. \n\nThe value of this property MUST represent a CACAO workflow step object. \n\nIf this property is defined, then on_completion MUST NOT be defined. This property MUST NOT be used on the 'start' or 'end' steps."
+        },
+        "on_failure": {
+            "$ref": "../data-types/identifier.json",
+            "description": "The ID of the next step to be processed if this step fails to complete successfully. \n\nThe value of this property MUST represent a CACAO workflow step object. \n\nIf omitted and a failure occurs, then the playbook's exception handler found in the workflow_exception property at the Playbook level will be invoked. \n\nIf this property is defined, then on_completion MUST NOT be defined. This property MUST NOT be used on the 'start' or 'end' steps."
+        },
+        "step_extensions": {
+            "minProperties": 1,
+            "type": "object",
+            "patternProperties": {
+                "^extension-definition--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "type": "object"
+                }
+            },
+            "description": "This property declares the extensions that are in use on this step and contains any of the properties and values that are to be used by that extension. \n\nThe key for each entry in the dictionary MUST be an 'identifier' (see section 10.10 for more information on identifiers) that uniquely identifies the extension. The value for each key is a JSON object that contains the structure as defined in the extension definition's schema property. The actual step extension definition is located in the 'extension_definitions' property found at the Playbook level."
+        }
+    },
+    "required": [
+        "type"
+    ],
+    "anyOf": [
+        {
+            "if": {
+                "properties": {
+                    "type": {
+                        "const": "end"
+                    }
+                }
+            },
+            "then": {
+                "not": {
+                    "required": [
+                        "on_completion",
+                        "on_failure",
+                        "on_success"
+                    ]
+                }
+            }
+        },
+        {
+            "required": [
+                "on_completion"
+            ],
+            "not": {
+                "required": [
+                    "on_failure",
+                    "on_success"
+                ]
+            }
+        },
+        {
+            "required": [
+                "on_success"
+            ],
+            "not": {
+                "required": [
+                    "on_completion"
+                ]
+            }
+        }
+    ],
+    "$defs": {
+        "workflow-step-type-enum": {
+            "type": "string",
+            "enum": [
+                "start",
+                "end",
+                "action",
+                "playbook-action",
+                "parallel",
+                "if-condition",
+                "while-condition",
+                "switch-condition"
+            ]
+        }
+    }
+}

@@ -1,0 +1,53 @@
+{
+    "$id": "data-types",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "playbook-processing-summary",
+    "description": "The 'playbook-processing-summary' data type represents the major processing features and functionality of a playbook and contains a summarized list of the processing features that can be implemented for a specific playbook and is defined at the playbook metadata level. This is done to help implementations identify the concepts and features used within a specific playbook without having to parse the entire playbook.",
+    "type": "object",
+    "properties": {
+        "manual_playbook": {
+            "type": "boolean",
+            "description": "This type of playbook contains only manual commands and simple text-based descriptions or tasks."
+        },
+        "external_playbooks": {
+            "type": "boolean",
+            "description": "See section 4.6."
+        },
+        "parallel_processing": {
+            "type": "boolean",
+            "description": "See section 4.7."
+        },
+        "if_logic": {
+            "type": "boolean",
+            "description": "See section 4.8."
+        },
+        "while_logic": {
+            "type": "boolean",
+            "description": "See section 4.9."
+        },
+        "switch_logic": {
+            "type": "boolean",
+            "description": "See section 4.10."
+        },
+        "temporal_logic": {
+            "type": "boolean",
+            "description": "See section 4.1 'delay' and 'timeout' properties."
+        },
+        "data_markings": {
+            "type": "boolean",
+            "description": "See section 2.4 and section 9."
+        },
+        "digital_signatures": {
+            "type": "boolean",
+            "description": "See section 10.15."
+        },
+        "countersigned_signatures": {
+            "type": "boolean",
+            "description": "See section 10.15."
+        },
+        "extensions": {
+            "type": "boolean",
+            "description": "See section 8."
+        }
+    }
+}

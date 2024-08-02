@@ -1,0 +1,34 @@
+{
+    "$id": "workflows",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "parallel",
+    "description": "The parallel step workflow step defines how to create steps that are processed in parallel. This workflow step allows playbook authors to define two or more steps that can be executed at the same time. For example, a playbook that responds to an incident may require both the network team and the desktop team to investigate and respond to a threat at the same time. Another example is a response to a cyber attack on an operational technology (OT) environment that requires releasing air / steam / water pressure simultaneously. In addition to the inherited properties, this section defines the following additional property that is valid for this type. Implementations MUST wait for all steps referenced in the 'next_steps' property to complete before moving on. \n\nThe steps referenced from this object are intended to be processed in parallel, however, if an implementation cannot support executing steps in parallel, then the steps MAY be executed in sequential order if the desired outcome is the same.",
+    "type": "object",
+    "allOf": [
+        {
+            "$ref": "workflow-step.json"
+        },
+        {
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "The value of this property MUST be 'parallel'.",
+                    "enum": [
+                        "parallel"
+                    ]
+                },
+                "next_steps": {
+                    "type": "array",
+                    "description": "A list of two or more workflow steps to be processed in parallel. The 'next_steps' MUST contain at least two values. If there is only one value, then the parallel step MUST NOT be used. \n\nEach entry in the next_steps property forms a branch of steps that are to be executed, even if there is only one workflow step in the branch. Each branch MUST reference a unique end step when that branch has completed processing. This allows implementations to know when to return to the original parallel step that started that branch to look for any 'on_completion', 'on_success', or 'on_failure' actions. \n\nThe definition of parallel execution and how many parallel steps that are possible to execute is implementation dependent and is not part of this specification. \n\nIf any of the steps referenced in next_steps generate an error of any kind (exception or timeout) then implementers SHOULD consider defining rollback error handling for the playbook and include those steps in the playbook itself. \n\nEach ID MUST represent a CACAO workflow step object.",
+                    "items": {
+                        "$ref": "../data-types/identifier.json"
+                    },
+                    "minItems": 2
+                }
+            }
+        }
+    ],
+    "required": [
+        "next_steps"
+    ]
+}

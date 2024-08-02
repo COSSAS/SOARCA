@@ -1,0 +1,74 @@
+{
+    "$id": "agent-target",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "security-category",
+    "description": "This type defines a security (infrastructure) category object and is used for commands that need to be processed or executed by a piece of security infrastructure. In addition to the inherited properties, this section defines the following additional property that is valid for this type.",
+    "type": "object",
+    "allOf": [
+        {
+            "$ref": "agent-target.json"
+        },
+        {
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "The value of this property MUST be 'security-category'.",
+                    "enum": [
+                        "security-category"
+                    ]
+                },
+                "category": {
+                    "type": "array",
+                    "description": "One or more identified categories of security infrastructure types that this agent represents. A product instantiation may include one or more security infrastructure types as hints to assist in describing the agent features most likely required by a playbook step or playbook. \n\nThe values for this property SHOULD come from the 'security-category-type-ov' vocabulary.",
+                    "items": {
+                        "$ref": "#/$defs/security-category-type-ov"
+                    },
+                    "minItems": 1
+                }
+            }
+        }
+    ],
+    "required": [
+        "category"
+    ],
+    "$defs": {
+        "security-category-type-ov": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "string",
+                    "enum": [
+                        "aaa",
+                        "analytics",
+                        "caldera",
+                        "content-gateway",
+                        "desktop",
+                        "endpoint",
+                        "firewall",
+                        "handset",
+                        "ids",
+                        "ips",
+                        "kali",
+                        "manx",
+                        "orchestrator",
+                        "os-linux",
+                        "os-mac",
+                        "os-windows",
+                        "redcanary-atomicred",
+                        "ragdoll",
+                        "router",
+                        "sandcat",
+                        "server",
+                        "siem",
+                        "switch",
+                        "ticketing",
+                        "tip",
+                        "wireless"
+                    ]
+                }
+            ]
+        }
+    }
+}

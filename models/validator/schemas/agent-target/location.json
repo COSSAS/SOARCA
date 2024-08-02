@@ -1,0 +1,31 @@
+{
+    "$id": "agent-target",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "location",
+    "description": "This type defines a location object and is used for commands that need to be processed or executed by or at a location. This object inherits the common agent properties. In addition to the inherited properties, this section defines the following additional property that is valid for this type.",
+    "type": "object",
+    "allOf": [
+        {
+            "$ref": "agent-target.json"
+        },
+        {
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "The value of this property MUST be 'location'.",
+                    "enum": [
+                        "location"
+                    ]
+                },
+                "logical": {
+                    "type": "array",
+                    "description": "An optional list of logical location names as defined by the playbook creator (e.g., wiring closet, network segment, room number, etc.).",
+                    "items": {
+                        "type": "string"
+                    },
+                    "minItems": 1
+                }
+            }
+        }
+    ]
+}

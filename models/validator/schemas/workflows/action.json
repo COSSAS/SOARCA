@@ -1,0 +1,62 @@
+{
+    "$id": "workflows",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "action",
+    "description": "The action step workflow step contains the actual commands to be executed by an agent against a set of targets. These commands are intended to be processed sequentially. In addition to the inherited properties, this section defines five more specific properties that are valid for this type.",
+    "allOf": [
+        {
+            "$ref": "workflow-step.json"
+        },
+        {
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "The value of this property MUST be 'action'.",
+                    "enum": [
+                        "action"
+                    ]
+                },
+                "commands": {
+                    "type": "array",
+                    "description": "A list of commands that are to be executed as part of this step. If more than one command is listed, the commands MUST be processed in the order in which they are listed (see section 5). All commands in a given step MUST be applicable to all the agents and all the targets defined in that step.",
+                    "items": {
+                        "$ref": "../commands/command-data.json"
+                    },
+                    "minItems": 1
+                },
+                "agent": {
+                    "$ref": "../data-types/identifier.json",
+                    "description": "This property contains an ID reference to a CACAO 'agent-target' object that is stored at the playbook level in the 'agent_definitions' property. This agent MUST execute the commands defined in this step. As stated in section 7, agents are the entities that execute commands on or against targets. \n\nThe ID MUST reference a CACAO agent-target object (see section 7)."
+                },
+                "targets": {
+                    "type": "array",
+                    "description": "This property contains a list of ID references to CACAO 'agent-target' objects that are stored at the playbook level in the target_definitions property. \n\nEach ID MUST reference a CACAO 'agent-target' object (see section 7). If defined, this list MUST have at least one identifier.",
+                    "items": {
+                        "$ref": "../data-types/identifier.json"
+                    },
+                    "minItems": 1
+                },
+                "in_args": {
+                    "type": "array",
+                    "description": "The list of variable names from the local 'step_variables' dictionary (see section 4.1) or passed into this step from the global 'playbook_variables' dictionary (see section 3.1) that are used in either an agent or one of the target(s) associated with this step. See section 10.18 for more information about variables.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "minItems": 1
+                },
+                "out_args": {
+                    "type": "array",
+                    "description": "The list of variable names from the local 'step_variables' dictionary (see section 4.1) or global 'playbook_variables' dictionary (see section 3.1) that are to be returned to this step after execution of the commands by the agent(s). Implementations SHOULD strongly discourage the use of overloading of variable names, meaning using the same variable name at the step level that is also in use at the playbook level. This is to avoid issues with implementations. However, if the variable name is reused at the step level, then only that instance of the variable SHOULD be updated. See section 10.18 for more information about variables.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "minItems": 1
+                }
+            }
+        }
+    ],
+    "required": [
+        "commands",
+        "agent"
+    ]
+}

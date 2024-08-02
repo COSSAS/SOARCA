@@ -1,0 +1,95 @@
+{
+    "$id": "data-markings",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "marking-iep",
+    "description": "The IEP marking object defines the representation of a FIRST IEP marking statement. For more information about the properties from the IEP specification, please refer to that document [IEP].",
+    "type": "object",
+    "allOf": [
+        {
+            "$ref": "data-marking.json"
+        },
+        {
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "The value of this property MUST be 'marking-iep'.",
+                    "enum": [
+                        "marking-iep"
+                    ]
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The name of the IEP policy."
+                },
+                "description": {
+                    "type": "string",
+                    "description": "See IEP Specification [IEP]."
+                },
+                "tlp": {
+                    "type": "string",
+                    "description": "TLPv1. See IEP Specification [IEP]."
+                },
+                "iep_version": {
+                    "type": "integer",
+                    "description": "See IEP Specification [IEP]."
+                },
+                "start_date": {
+                    "$ref": "../data-types/timestamp.json",
+                    "description": "See IEP Specification [IEP]."
+                },
+                "end_date": {
+                    "anyOf": [
+                        {
+                            "type": "null"
+                        },
+                        {
+                            "$ref": "../data-types/timestamp.json"
+                        }
+                    ],
+                    "description": "See IEP Specification [IEP]."
+                },
+                "encrypt_in_transit": {
+                    "type": "string",
+                    "description": "See IEP Specification [IEP]."
+                },
+                "permitted_actions": {
+                    "type": "string",
+                    "description": "See IEP Specification [IEP]."
+                },
+                "affected_party_notifications": {
+                    "type": "string",
+                    "description": "See IEP Specification [IEP]."
+                },
+                "attribution": {
+                    "type": "string",
+                    "description": "See IEP Specification [IEP]."
+                },
+                "unmodified_resale": {
+                    "type": "string",
+                    "description": "See IEP Specification [IEP]."
+                },
+                "external_references": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "See IEP Specification [IEP]."
+                }
+            }
+        }
+    ],
+    "required": [
+        "name",
+        "description",
+        "tlp",
+        "iep_version",
+        "start_date",
+        "end_date",
+        "encrypt_in_transit",
+        "permitted_actions",
+        "affected_party_notifications",
+        "attribution",
+        "unmodified_resale",
+        "external_references"
+    ]
+}

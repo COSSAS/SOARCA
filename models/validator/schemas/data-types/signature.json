@@ -1,0 +1,160 @@
+{
+    "$id": "data-types",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "signature",
+    "description": "The 'signature' data type captures the actual digital signature and meta-data about the signature and uses the JSON object type [RFC8259] for serialization. See section Appendix A for a detailed example. \n\n* One of the following properties MUST be populated, 'public_key' (preferred), 'public_cert_chain', 'cert_url', or 'thumbprint'.",
+    "type": "object",
+    "properties": {
+        "type": {
+            "type": "string",
+            "description": "The value of this property MUST be 'jss'.",
+            "enum": [
+                "jss"
+            ]
+        },
+        "id": {
+            "$ref": "identifier.json",
+            "description": "A value that uniquely identifies the signature. All signatures with the same ID are considered different versions of the same signature and the version of the signature is identified by its 'modified' property."
+        },
+        "created_by": {
+            "$ref": "identifier.json",
+            "description": "An ID that represents the entity that created this signature. The ID MUST represent a STIX 2.1+ identity object."
+        },
+        "created": {
+            "$ref": "timestamp.json",
+            "description": "The time at which this signature was originally created. The creator can use any time it deems most appropriate as the time the signature was created, but it MUST be precise to the nearest millisecond (exactly three digits after the decimal place in seconds). The created property MUST NOT be changed when creating a new version of the signature."
+        },
+        "modified": {
+            "$ref": "timestamp.json",
+            "description": "The time that this particular version of the signature was last modified. The creator can use any time it deems most appropriate as the time that this version of the signature was modified, but it MUST be precise to the nearest millisecond (exactly three digits after the decimal place in seconds). The modified property MUST be later than or equal to the value of the created property. If the created and 'modified' properties are the same, then this is the first version of the signature."
+        },
+        "revoked": {
+            "type": "boolean",
+            "description": "A boolean that identifies if the signature creator deems that this signature is no longer valid. The default value is 'false'.",
+            "default": false
+        },
+        "signee": {
+            "type": "string",
+            "description": "An unstructured string value for the name of the entity or organization that produced this signature."
+        },
+        "valid_from": {
+            "$ref": "timestamp.json",
+            "description": "The time from which this signature is considered valid. \n\nIf omitted, the signature is valid at all times or until the timestamp defined by 'valid_until'. If the revoked property is 'true' then this property MUST be ignored."
+        },
+        "valid_until": {
+            "$ref": "timestamp.json",
+            "description": "The time at which this signature should no longer be considered valid. \n\nIf the 'valid_until' property is omitted, then there is no constraint on the latest time for which the signature is valid. \n\nThis property MUST be greater than the timestamp in the 'valid_from' property if the 'valid_from' property is defined. If the 'revoked' property is true then this property MUST be ignored."
+        },
+        "related_to": {
+            "$ref": "identifier.json",
+            "description": "A value that can identify the original playbook object that was signed with this signature. The value of this property MUST be a CACAO playbook id. If the signature is detached from the original playbook object then this property MUST be populated."
+        },
+        "related_version": {
+            "$ref": "timestamp.json",
+            "description": "A value that can identify the version of the original playbook object that was signed with this signature. The value of this property MUST be the modified 'timestamp' from the CACAO playbook that this signature is for."
+        },
+        "hash_algorithm": {
+            "type": "string",
+            "description": "This property identifies the hashing algorithm, as defined by IANA, that was used to hash the JCS version of the full playbook object (Playbook Object + X.jss Signature) and is a case-sensitive ASCII string. As of this writing, implementations SHOULD use 'sha-256' or 'sha-512' but MAY use any current and widely accepted hashing algorithm that is defined in the IANA registry. \n\nThe actual signing process, defined in the 'algorithm' property, sometimes uses an internal hashing algorithm inside the signing process itself, this property MAY identify the same hashing algorithm as the signing process or MAY identify a different hashing algorithm."
+        },
+        "algorithm": {
+            "$ref": "#/$defs/signature-algorithm-type-ov",
+            "description": "This property identifies the algorithm that was used to sign the playbook and is a case-sensitive ASCII string. \n\nThe value for this property SHOULD come from the 'signature-algorithm-type-ov' vocabulary and SHOULD be a current and widely accepted quantum safe algorithm, but MAY be any currently accepted safe algorithm. \n\nAt the time of this writing quantum safe algorithms could come from those defined in XMSS [RFC 8391] section 5.3 or LMS [RFC 8554] section 5.1 and other algorithms could come from those defined in JWA [RFC 7518] section 3.1 or [RFC 8037] section 3.1. \n\nWhile JWA [RFC7518] section 3.1 defines the following symmetric algorithms: 'HS256', 'HS384', and 'HS512' these algorithms SHOULD NOT be used, as CACAO playbooks are intended to be shared across system and organizational boundaries. If one of these three symmetric algorithms or some other symmetric algorithm is used, then the sharing and transmission of those keys is out of scope for this specification."
+        },
+        "public_key": {
+            "type": "string",
+            "description": "This property contains a PEM encoded public key without the header and footer for the algorithm selected in the 'algorithm' property."
+        },
+        "public_cert_chain": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "minItems": 1,
+            "description": "This property contains a public key certificate for the algorithm selected in the algorithm property and MUST follow the requirements defined in section 4.7 of [RFC7517] as quoted here. This property 'contains a chain (X.509 certificate chain) of one or more PKIX certificates [RFC5280]. The certificate chain is represented as a JSON array of certificate value strings. Each string in the array is a base64-encoded (Section 4 of [RFC4648] -- not base64URL.encoded) DER [ITU.X690.1994] PKIX certificate value. The PKIX certificate containing the key value MUST be the first certificate. This MAY be followed by additional certificates, with each subsequent certificate being the one used to certify the previous one. The key in the first certificate MUST match the public key.' This property is called 'x5c' in section 4.7 of [RFC7517]."
+        },
+        "cert_url": {
+            "type": "string",
+            "description": "This property contains a URI [RFC3986] that refers to a resource for an X.509 public key certificate or certificate chain [RFC5280] for the algorithm selected in the 'algorithm' property and MUST follow the requirements defined in section 4.6 of [RFC7517] as quoted here. 'The identified resource MUST provide a representation of the certificate or certificate chain that conforms to RFC 5280 [RFC5280] in PEM-encoded form, with each certificate delimited as specified in section 7.1 of RFC 4945 [RFC4945]. The key in the first certificate MUST match the public key. The protocol used to acquire the resource MUST provide integrity protection; an HTTP GET request to retrieve the certificate MUST use TLS [RFC2818] [RFC5246]; the identity of the server MUST be validated, as per section 6 of RFC 6125 [RFC6125].' This property is called 'x5u' in section 4.6 of [RFC7517]."
+        },
+        "thumbprint": {
+            "type": "string",
+            "description": "This property contains a fingerprint of a public key or public key certificate for the algorithm selected in the 'algorithm' property and MUST follow the requirements defined in section 4.9 of [RFC7517] as quoted here. This property 'is a base64URL.encoded SHA-256 thumbprint (a.k.a. digest, X.509 certificate SHA-256 thumbprint) of the DER encoding of an X.509 certificate [RFC5280]. Note that certificate thumbprints are also sometimes known as certificate fingerprints. The key in the certificate MUST match the public key.' This property is called 'x5t#S256' in section 4.9 of [RFC7517]."
+        },
+        "value": {
+            "type": "string",
+            "description": "A base64URL.encoded signature that was created using the signature algorithm defined in the 'algorithm' property and a key. In pseudo code it is defined as: \n\nbase64URL.encode(sign(algorithm, key, hash(jcs(<JSONObject with Signature Object>))))."
+        },
+        "signature": {
+            "$ref": "signature.json",
+            "description": "This property enables a signature to be countersigned, meaning a signature can be signed by another signature."
+        }
+    },
+    "required": [
+        "type",
+        "id",
+        "created",
+        "modified",
+        "signee",
+        "related_to",
+        "related_version",
+        "hash_algorithm",
+        "algorithm",
+        "value"
+    ],
+    "oneOf": [
+        {
+            "required": [
+                "public_key"
+            ]
+        },
+        {
+            "required": [
+                "public_cert_chain"
+            ]
+        },
+        {
+            "required": [
+                "cert_url"
+            ]
+        },
+        {
+            "required": [
+                "thumbprint"
+            ]
+        }
+    ],
+    "$defs": {
+        "signature-algorithm-type-ov": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "string",
+                    "enum": [
+                        "RS256",
+                        "RS384",
+                        "RS512",
+                        "ES256",
+                        "ES384",
+                        "ES512",
+                        "PS256",
+                        "PS384",
+                        "PS512",
+                        "Ed25519",
+                        "Ed448",
+                        "XMSS-SHA2_10_256",
+                        "XMSS-SHA2_16_256",
+                        "XMSS-SHA2_20_256",
+                        "LMS_SHA256_M32_H5",
+                        "LMS_SHA256_M32_H10",
+                        "LMS_SHA256_M32_H15",
+                        "LMS_SHA256_M32_H20",
+                        "LMS_SHA256_M32_H25"
+                    ]
+                }
+            ]
+        }
+    }
+}

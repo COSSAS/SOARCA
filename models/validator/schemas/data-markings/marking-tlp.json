@@ -1,0 +1,37 @@
+{
+    "$id": "data-markings",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "marking-tlp",
+    "description": "The TLP marking object defines the representation of a FIRST TLP V2 marking statement.",
+    "type": "object",
+    "allOf": [
+        {
+            "$ref": "data-marking.json"
+        },
+        {
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "The value of this property MUST be 'marking-tlp'.",
+                    "enum": [
+                        "marking-tlp"
+                    ]
+                },
+                "tlpv2_level": {
+                    "type": "string",
+                    "enum": [
+                        "TLP:RED",
+                        "TLP:AMBER",
+                        "TLP:AMBER+STRICT",
+                        "TLP:GREEN",
+                        "TLP:CLEAR"
+                    ],
+                    "description": "The value of this property is the name of the TLP V2 level as defined by FIRST [TLP]. The value MUST be one of the following: 'TLP:RED', 'TLP:AMBER', 'TLP:AMBER+STRICT', 'TLP:GREEN', 'TLP:CLEAR'"
+                }
+            }
+        }
+    ],
+    "required": [
+        "tlpv2_level"
+    ]
+}
