@@ -63,6 +63,6 @@ func (playbookAction *PlaybookAction) Execute(metadata execution.Metadata,
 		return cacao.NewVariables(), err
 	}
 	playbookAction.reporter.ReportStepEnd(metadata.ExecutionId, step, playbook.PlaybookVariables, nil)
-	return details.Variables, nil
+	return details.Variables.Select(step.OutArgs), nil
 
 }
