@@ -1,0 +1,32 @@
+{
+    "$id": "commands",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "caldera-cmd",
+    "description": "The caldera command represents a command that is intended to be processed via an attack orchestration system to attack or simulate an attack against a target. In addition to the inherited properties, this section defines the following additional properties that are valid for this type. Either the 'command' property or the 'command_b64' property MUST be present.",
+    "type": "object",
+    "allOf": [
+        {
+            "$ref": "./command-data.json"
+        },
+        {
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "The value of this property MUST be 'caldera-cmd'.",
+                    "enum": [
+                        "caldera-cmd"
+                    ]
+                },
+                "command": {
+                    "type": "string",
+                    "description": "A simple string-based reference to a caldera command (see example 5.4). \n\nThe value of this property if present MUST be a valid caldera command reference."
+                },
+                "command_b64": {
+                    "type": "string",
+                    "contentEncoding": "base64",
+                    "description": "A complex command that can not be encoded as a simple string and thus MUST be base64 encoded (see section 4 of [RFC 4648]). \n\nThe value of this property MUST be a valid caldera command."
+                }
+            }
+        }
+    ]
+}

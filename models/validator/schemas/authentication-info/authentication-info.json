@@ -1,0 +1,51 @@
+{
+    "$id": "authentication-info",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "authentication-info",
+    "description": "In a CACAO playbook, authentication information is used by agents and targets when they need to authenticate against a resource. Authentication information is stored in a dictionary where the ID is the key and the value is an authentication-info object (see section 10.2). Common properties for an authentication information object are defined in section 6.1. \n\nAuthentication information can use and refer to variables just like other parts of the playbook. For any authentication information property value, the producer may define a variable substitution such that the actual property value is determined at runtime based on the variable assigned to the authentication information. In Example 6.1, authentication information is referenced within an agent, but the authentication information's actual values are based on variables instead of being hard-coded in the data itself. It is generally best practice to always use variables for authentication information. Each authentication information object contains base properties that are common across all objects. \n\nThese properties are defined in the following table. The ID for each object is stored as the key in the 'authentication_info_definitions' dictionary at the Playbook level.",
+    "type": "object",
+    "properties": {
+        "type": {
+            "$ref": "#/$defs/authentication-info-type-ov",
+            "description": "The type of object being used. The value of this property SHOULD come from the 'authentication-info-type-ov' vocabulary."
+        },
+        "name": {
+            "type": "string",
+            "description": "The name that represents this object that is meant to be displayed in a user interface or captured in a log message. This property SHOULD be populated."
+        },
+        "description": {
+            "type": "string",
+            "description": "More details, context, and possibly an explanation about this object."
+        },
+        "authentication_info_extensions": {
+            "minProperties": 1,
+            "type": "object",
+            "patternProperties": {
+                "^extension-definition--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "type": "object"
+                }
+            },
+            "description": "This property declares the extensions that are in use on this authentication information object and contains any of the properties and values that are to be used by that extension. \n\nThe key for each entry in the dictionary MUST be an 'identifier' (see section 9.9 for more information on identifiers) that uniquely identifies the extension. The value for each key is a JSON object that contains the structure as defined in the extension definition's schema property. The actual step extension definition is located in the 'extension_definitions' property found at the Playbook level."
+        }
+    },
+    "required": [
+        "type"
+    ],
+    "$defs": {
+        "authentication-info-type-ov": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "string",
+                    "enum": [
+                        "http-basic",
+                        "oauth2",
+                        "user-auth"
+                    ]
+                }
+            ]
+        }
+    }
+}

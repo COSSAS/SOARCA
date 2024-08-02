@@ -1,0 +1,41 @@
+{
+    "$id": "workflows",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "if-condition",
+    "description": "The if condition step workflow step defines the 'if-then-else' conditional logic that can be used within the workflow of the playbook. In addition to the inherited properties, this section defines the following additional properties that are valid for this type.",
+    "type": "object",
+    "allOf": [
+        {
+            "$ref": "workflow-step.json"
+        },
+        {
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "The value of this property MUST be 'if-condition'.",
+                    "enum": [
+                        "if-condition"
+                    ]
+                },
+                "condition": {
+                    "type": "string",
+                    "description": "A boolean expression as defined in the STIX Patterning Grammar that when it evaluates as true executes the workflow step identified by the 'on_true' property, otherwise it executes the 'on_false' workflow step."
+                },
+                "on_true": {
+                    "type": "string",
+                    "description": "The step ID to be processed if the condition evaluates as true. \n\nThe entry in the 'on_true' property forms a branch of steps that are to be executed, even if there is only one workflow step in the branch. This branch MUST reference a unique end step when that branch has completed processing. This allows implementations to know when to return to the original if condition step that started that branch to look for any 'on_completion', 'on_success', or 'on_failure' actions. \n\nThe ID MUST represent a CACAO workflow step object.",
+                    "$ref": "../data-types/identifier.json"
+                },
+                "on_false": {
+                    "type": "string",
+                    "description": "The step ID to be processed if the condition evaluates as false. \n\nThe entry in the 'on_false' property forms a branch of steps that are to be executed, even if there is only one workflow step in the branch. This branch MUST reference a unique end step when that branch has completed processing. This allows implementations to know when to return to the original if condition step that started that branch to look for any 'on_completion', 'on_success', or 'on_failure' actions. \n\nThe ID MUST represent a CACAO workflow step object.",
+                    "$ref": "../data-types/identifier.json"
+                }
+            }
+        }
+    ],
+    "required": [
+        "condition",
+        "on_true"
+    ]
+}

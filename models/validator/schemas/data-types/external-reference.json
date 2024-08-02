@@ -1,0 +1,36 @@
+{
+    "$id": "data-types",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "external-reference",
+    "description": "The 'external-reference' data type captures the location of information represented outside of a CACAO playbook and uses the JSON object type [RFC8259] for serialization. For example, a playbook could reference external documentation about a specific piece of malware that the playbook is trying to address. In addition to the name properties at least one of the following properties MUST be present: 'description', 'source', 'url', 'external_id', or 'reference_id'.",
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string",
+            "description": "The name of the author or title of the source of this external reference."
+        },
+        "description": {
+            "type": "string",
+            "description": "A detailed description of this external reference."
+        },
+        "source": {
+            "type": "string",
+            "description": "A textual citation of this source. The citation source MAY use a standard citation format like Chicago, MLA, APA, or similar style."
+        },
+        "url": {
+            "type": "string",
+            "description": "A URL [RFC3986] for this external reference."
+        },
+        "external_id": {
+            "type": "string",
+            "description": "An identifier used by the source to reference this content. Some organizations give names or numbers to content that they publish. This property would capture that information to help ensure that a consumer is being referred to the correct content."
+        },
+        "reference_id": {
+            "type": "string",
+            "description": "An identifier that represents the data that this content is referring to. This property is especially useful when referencing content that already exists in a graph dataset or can be referenced via some ID. When referencing STIX content, this would be the STIX-based UUID."
+        }
+    },
+    "required": [
+        "name"
+    ]
+}

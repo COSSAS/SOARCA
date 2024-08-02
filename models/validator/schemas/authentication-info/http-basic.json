@@ -1,0 +1,38 @@
+{
+    "$id": "authentication-info",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "http-basic",
+    "description": "This type defines the HTTP basic authentication information object and is used by agents and targets when performing HTTP basic authentication. This object inherits all of the authentication information common properties (see section 6.1). In addition to the inherited properties, this section defines the following additional properties that are valid for this type. If the 'kms' and 'kms_key_identifier' properties are used the 'user_id' and 'password' properties MUST NOT be populated.",
+    "allOf": [
+        {
+            "$ref": "authentication-info.json"
+        },
+        {
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "The value of this property MUST be 'http-basic'.",
+                    "enum": [
+                        "http-basic"
+                    ]
+                },
+                "user_id": {
+                    "type": "string",
+                    "description": "The user_id property used in HTTP Basic authentication as defined by [RFC7617]."
+                },
+                "password": {
+                    "type": "string",
+                    "description": "The password property used in HTTP Basic authentication as defined by [RFC7617]. This value SHOULD be passed in via a variable."
+                },
+                "kms": {
+                    "type": "boolean",
+                    "description": "If this property is 'true' the key material associated with this authentication information is stored in a key management store and the 'kms_key_identifier' property contains the identifier used to look up the key material associated with the 'kms_key_identifier'. \n\nIf this property is set to true then the value of the 'kms_key_identifier' property MUST be defined and the value of the 'password' property MUST be ignored."
+                },
+                "kms_key_identifier": {
+                    "type": "string",
+                    "description": "This property contains the key identifier for the authentication information value stored in a key management service (KMS) used by the orchestration system executing the playbook. \n\nThe specific KMS used by the orchestration system is out of scope of this specification. \n\nIf this property is defined then the 'kms' property MUST be set to 'true'."
+                }
+            }
+        }
+    ]
+}

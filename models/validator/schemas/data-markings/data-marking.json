@@ -1,0 +1,87 @@
+{
+    "$id": "data-markings",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "data-marking",
+    "description": "CACAO data marking definition objects contain detailed information about a specific data marking. Data markings typically represent handling or sharing requirements and are applied via the markings property in a playbook. \n\nData marking objects MUST NOT be versioned because it would allow for indirect changes to the markings on a playbook. For example, if a statement marking definition is changed from 'Reuse Allowed' to 'Reuse Prohibited', all playbooks marked with that statement marking definition would effectively have an updated marking without being updated themselves. Instead, in this example a new statement marking definition with the new text should be created and the marked objects updated to point to the new data marking object. \n\nPlaybooks may be marked with multiple marking statements. In other words, the same playbook can be marked with both a statement saying 'Copyright 2020' and a statement saying, 'Terms of use are ...' and both statements apply. This specification does not define rules for how multiple markings applied to the same object should be interpreted. \n\nEach data marking object contains base properties that are common across all data markings. These common properties are defined in the following table.",
+    "type": "object",
+    "properties": {
+        "type": {
+            "$ref": "#/$defs/data-marking-type-enum",
+            "description": "The type of data marking being used. \n\nThe value for this property MUST come from the 'data-marking-type-enum' enumeration."
+        },
+        "id": {
+            "$ref": "../data-types/identifier.json",
+            "description": "A value that uniquely identifies the data marking definition."
+        },
+        "name": {
+            "type": "string",
+            "description": "A name used to identify this data marking."
+        },
+        "description": {
+            "type": "string",
+            "description": "More details, context, and possibly an explanation about what this data marking does and tries to accomplish."
+        },
+        "created_by": {
+            "$ref": "../data-types/identifier.json",
+            "description": "An ID that represents the entity that created this data marking. The ID MUST represent a STIX 2.1+ identity object."
+        },
+        "created": {
+            "$ref": "../data-types/timestamp.json",
+            "description": "The time at which this data marking was originally created. The creator can use any time it deems most appropriate as the time the data marking was created, but it MUST be precise to the nearest millisecond (exactly three digits after the decimal place in seconds). The created property MUST NOT be changed."
+        },
+        "revoked": {
+            "type": "boolean",
+            "description": "A boolean that identifies if the creator deems that this data marking is no longer valid. The default value is 'false'. Processing of data that has been previously shared with an associated data marking that is subsequently revoked is unspecified and dependent on the implementation of the consuming software."
+        },
+        "valid_from": {
+            "$ref": "../data-types/timestamp.json",
+            "description": "The time from which this data marking is considered valid. \n\nIf omitted, the data marking is valid at all times or until the timestamp defined by valid_until. \n\nIf the revoked property is 'true' then this property MUST be ignored."
+        },
+        "valid_until": {
+            "$ref": "../data-types/timestamp.json",
+            "description": "The time at which this data marking SHOULD no longer be considered a valid marking definition. \n\nIf the valid_until property is omitted, then there is no constraint on the latest time for which the data marking is valid. \n\nThis property MUST be greater than the timestamp in the valid_from property if the valid_from property is defined. \n\nIf the revoked property is 'true' then this property MUST be ignored."
+        },
+        "labels": {
+            "type": "array",
+            "description": "A set of terms, labels, or tags associated with this data marking. The values may be user, organization, or trust-group defined and their meaning is outside the scope of this specification.",
+            "items": {
+                "type": "string"
+            },
+            "minItems": 1
+        },
+        "external_references": {
+            "type": "array",
+            "description": "An list of external references for this data marking.",
+            "items": {
+                "$ref": "../data-types/external-reference.json"
+            },
+            "minItems": 1
+        },
+        "marking_extensions": {
+            "minProperties": 1,
+            "type": "object",
+            "patternProperties": {
+                "^extension-definition--[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$": {
+                    "type": "object"
+                }
+            },
+            "description": "This property declares the extensions that are in use on this data marking and contains any of the properties and values that are to be used by that extension. \n\nThe key for each entry in the dictionary MUST be an 'identifier' (see section 10.10 for more information on identifiers) that uniquely identifies the extension. The value for each key is a JSON object that contains the structure as defined in the extension definition's schema property. The actual step extension definition is located in the 'extension_definitions' property found at the Playbook level."
+        }
+    },
+    "required": [
+        "type",
+        "id",
+        "created_by",
+        "created"
+    ],
+    "$defs": {
+        "data-marking-type-enum": {
+            "type": "string",
+            "enum": [
+                "marking-statement",
+                "marking-tlp",
+                "marking-iep"
+            ]
+        }
+    }
+}

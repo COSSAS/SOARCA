@@ -1,0 +1,50 @@
+{
+    "$id": "extension-definition",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "extension-definition",
+    "description": "The CACAO extension object allows a playbook producer to define detailed information about the extensions that are in use in a playbook that they created. In a playbook, extensions are stored in a dictionary where the ID is the key and the extension definition object is the value. Workflow steps, agents, data markings and playbooks themselves can use extensions by referencing their IDs. \n\nExtensions can use and refer to all objects that may be used in other parts of a playbook including variables and constants just like other parts of the playbook. While the extension's name and description are optional, they are encouraged and producers SHOULD populate them \n\n Requirements for Extension Properties: \n\nA CACAO playbook MAY have any number of Extensions containing one or more properties. \n\nExtension property names MUST be in ASCII and MUST only contain the characters a-z (lowercase ASCII), 0-9, and underscore (_). \n\nExtension property names MUST have a minimum length of 3 ASCII characters. \n\nExtension property names MUST be no longer than 250 ASCII characters in length. \n\nExtension properties SHOULD only be used when there are no existing properties defined by the CACAO playbook specification that fulfills that need.",
+    "type": "object",
+    "properties": {
+        "type": {
+            "type": "string",
+            "enum": [
+                "extension-definition"
+            ],
+            "description": "The value of this property MUST be 'extension-definition'."
+        },
+        "name": {
+            "type": "string",
+            "description": "A name used to identify this extension for display purposes during execution, development or troubleshooting."
+        },
+        "description": {
+            "type": "string",
+            "description": "More details, context, and possibly an explanation about what this extension does and accomplishes. \n\nWhile the extension's description is optional, it is encouraged that producers SHOULD populate the property. \n\nNOTE: The schema property is the normative definition of the extension, and this property, if present, is for documentation purposes only."
+        },
+        "created_by": {
+            "$ref": "../data-types/identifier.json",
+            "description": "An ID that represents the entity that created this extension. The ID MUST represent a STIX 2.1+ identity object."
+        },
+        "schema": {
+            "type": "string",
+            "description": "The normative definition of the extension, either as a URL or as text explaining the definition. \n\nA URL SHOULD point to a JSON schema or a location that contains information about the schema."
+        },
+        "version": {
+            "type": "string",
+            "description": "The version of this extension. Producers of playbook extensions are encouraged to follow standard semantic versioning procedures where the version number follows the pattern, MAJOR.MINOR.PATCH [SemVer]. This will allow consumers to distinguish between the three different levels of compatibility typically identified by such versioning strings."
+        },
+        "external_references": {
+            "type": "array",
+            "items": {
+                "$ref": "./../data-types/external-reference.json"
+            },
+            "description": "A list of external references for this extension."
+        }
+    },
+    "required": [
+        "type",
+        "name",
+        "created_by",
+        "schema",
+        "version"
+    ]
+}

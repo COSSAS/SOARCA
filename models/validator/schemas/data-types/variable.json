@@ -1,0 +1,65 @@
+{
+    "$id": "data-types",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "variable",
+    "description": "Variables can be defined and then used as the playbook is executed. Variables are stored in a dictionary where the key is the name of the variable and the value is a variable data type. Variables can represent stateful elements that may need to be captured to allow for the successful execution of the playbook. All playbook variables are mutable unless identified as a constant. \n\nIn addition to the rules for all dictionary keys, variable names: \n\nMUST be unique within the contextual scope they are declared. \n\nMUST be prefixed and suffixed with __ (two underscore characters) for both declaration and use. \n\nMUST contain the keyword ':value' when using the variable (e.g., __ipaddress__:value). \n\nMUST include the double underscore '__' for the variable name prefix and suffix (a total of four characters) as part of the 250 ASCII character length limit. \n\nMUST start with a letter after the variable prefix __. \n\nAre case-sensitive (age, Age and AGE are three different variables) but SHOULD be lowercase. \n\nThe scope of a variable is determined by where the variable is declared. A variable may be defined globally for the entire playbook or locally within a workflow step. Variables are scoped to the object they are defined in, and any object that is used or referenced by that object. A specific variable can only be defined once, however, a variable can be assigned and used in the object where it is defined or in any object used or referenced by that object (e.g., a playbook variable can be assigned at the playbook level but also reassigned a different value within a workflow step). \n\nVariables are referenced by using the key name from the dictionary with a suffix (keyword) of ':value'. For example, if you had a variable in the dictionary called '__ip_addresses__', one could reference this and use it in a playbook by using '__ip_addresses__:value'. Variables MAY be passed to and from external playbooks provided that system supports passing of arguments when the system function is invoked or returns its results. \n\nThe 'variable' data type captures variable information and uses the JSON object type [RFC8259] for serialization.",
+    "type": "object",
+    "properties": {
+        "type": {
+            "$ref": "#/$defs/variable-type-ov",
+            "description": "The type of variable being used. The value for this property SHOULD come from the 'variable-type-ov' vocabulary."
+        },
+        "description": {
+            "type": "string",
+            "description": "An detailed description of this variable."
+        },
+        "value": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "description": "The value MUST be defined as one of the following JSON types: a string value, a number or boolean encoded as a JSON string, an empty string \"\", the special JSON NULL value, or a JSON object. \n\nNOTE: An empty string is NOT equivalent to a JSON NULL value. An empty string means the value is known to be empty. A value of NULL means the value is unknown or undefined."
+        },
+        "constant": {
+            "type": "boolean",
+            "description": "This property defines if this variable is immutable. If true, the variable is immutable and MUST NOT be changed. If false, the variable is mutable and can be updated later on in the playbook. The default value is 'false'. If this property is not present then the value is 'false'.",
+            "default": false
+        },
+        "external": {
+            "type": "boolean",
+            "description": "This property only applies to playbook scoped variables. \n\nWhen set to 'true' the variable declaration defines that the variable's initial value is passed into the playbook from a calling context. \n\nWhen set to 'false' or omitted, the variable is defined within the playbook."
+        }
+    },
+    "required": [
+        "type"
+    ],
+    "$defs": {
+        "variable-type-ov": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "string",
+                    "enum": [
+                        "bool",
+                        "dictionary",
+                        "float",
+                        "hexstring",
+                        "integer",
+                        "ipv4-addr",
+                        "ipv6-addr",
+                        "long",
+                        "mac-addr",
+                        "hash",
+                        "md5-hash",
+                        "sha256-hash",
+                        "string",
+                        "uri",
+                        "uuid"
+                    ]
+                }
+            ]
+        }
+    }
+}

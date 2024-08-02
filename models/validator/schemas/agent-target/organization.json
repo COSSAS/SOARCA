@@ -1,0 +1,27 @@
+{
+    "$id": "agent-target",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "organization",
+    "description": "This type defines an organization object and is used for commands that need to be processed or executed by an organization. This object inherits the common agent properties. In addition to the inherited properties, this section defines the following additional property that is valid for this type.",
+    "type": "object",
+    "allOf": [
+        {
+            "$ref": "agent-target.json"
+        },
+        {
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "The value of this property MUST be 'organization'.",
+                    "enum": [
+                        "organization"
+                    ]
+                },
+                "contact": {
+                    "$ref": "../data-types/contact.json",
+                    "description": "Contact information for this agent."
+                }
+            }
+        }
+    ]
+}

@@ -1,0 +1,49 @@
+{
+    "$id": "commands",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "http-api",
+    "description": "The HTTP API command represents a command that is intended to be processed via an HTTP API. In addition to the inherited properties, this section defines the following additional properties that are valid for this type.",
+    "type": "object",
+    "allOf": [
+        {
+            "$ref": "./command-data.json"
+        },
+        {
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "The value of this property MUST be 'http-api'.",
+                    "enum": [
+                        "http-api"
+                    ]
+                },
+                "command": {
+                    "type": "string",
+                    "description": "An HTTP start line that contains three elements, an HTTP method, a request target, and the HTTP version (see https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages). For example: \n\n'GET /api1/getObject?id=1234 HTTP/1.1' \n\n'POST /api1/newObject HTTP/1.1'"
+                },
+                "headers": {
+                    "type": "object",
+                    "description": "This property contains any required HTTP headers. \n\nThe key for each entry in the dictionary MUST be a string that uniquely identifies the header. The value for each key MUST be a 'list' of 'string'.",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "content": {
+                    "type": "string",
+                    "description": "A simple string-based content (payload/body) for a given method (e.g., 'POST' and 'PUT')."
+                },
+                "content_b64": {
+                    "type": "string",
+                    "contentEncoding": "base64",
+                    "description": "A complex or binary content (payload/body) for a given method (e.g., 'POST' and 'PUT') that can not be encoded as a simple string and thus MUST be base64 encoded (see section 4 of [RFC 4648])."
+                }
+            }
+        }
+    ],
+    "required": [
+        "command"
+    ]
+}

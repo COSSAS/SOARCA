@@ -1,0 +1,30 @@
+{
+    "$id": "data-markings",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "marking-statement",
+    "description": "The statement marking object defines the representation of a textual marking statement (e.g., copyright, terms of use, etc.). Statement markings are generally not machine-readable, and this specification does not define any behavior or actions based on their values.",
+    "type": "object",
+    "allOf": [
+        {
+            "$ref": "data-marking.json"
+        },
+        {
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "marking-statement"
+                    ],
+                    "description": "The value of this property MUST be 'marking-statement'."
+                },
+                "statement": {
+                    "type": "string",
+                    "description": "A statement (e.g., copyright, terms of use) applied to the content marked by this marking definition."
+                }
+            }
+        }
+    ],
+    "required": [
+        "statement"
+    ]
+}

@@ -1,0 +1,42 @@
+{
+    "$id": "authentication-info",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "oauth2",
+    "description": "This type defines the Oauth2 authentication information object and is used by agents and targets when performing oauth2 authentication. This object inherits all of the authentication information common properties (see section 6.1). In addition to the inherited properties, this section defines the following additional properties that are valid for this type. If the 'kms' and 'kms_key_identifier' properties are used the 'token' property MUST NOT be populated.",
+    "allOf": [
+        {
+            "$ref": "authentication-info.json"
+        },
+        {
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "The value of this property MUST be 'oauth2'.",
+                    "enum": [
+                        "oauth2"
+                    ]
+                },
+                "oauth_header": {
+                    "type": "string",
+                    "description": "The OAuth header used in OAuth authentication as defined in section 3.5.1 of [RFC5849] and [RFC6750]."
+                },
+                "token": {
+                    "type": "string",
+                    "description": "The bearer token used in HTTP Bearer Token authentication as defined by [RFC6749] and [RFC6750]. This value SHOULD be passed in via a variable."
+                },
+                "kms": {
+                    "type": "boolean",
+                    "description": "If this property is 'true' the key material associated with this authentication information is stored in a key management store and the 'kms_key_identifier' property contains the identifier used to look up the key material associated with the 'kms_key_identifier'. \n\nIf this property is set to 'true' then the value of the 'kms_key_identifier' property MUST be defined and the value of the 'token' property MUST be ignored."
+                },
+                "kms_key_identifier": {
+                    "type": "string",
+                    "description": "This property contains the key identifier for the authentication information value stored in a key management service (KMS) used by the orchestration system executing the playbook. \n\nThe specific KMS used by the orchestration system is out of scope of this specification. \n\nIf this property is defined then the 'kms' property MUST be set to 'true'."
+                }
+            }
+        }
+    ],
+    "required": [
+        "oauth_header",
+        "token"
+    ]
+}

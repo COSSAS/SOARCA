@@ -1,0 +1,44 @@
+{
+    "$id": "workflows",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "end",
+    "description": "The end step workflow step is the ending point of a playbook or branch of step (e.g., a list of steps that are part of a parallel processing branch) and represents an explicit point in the workflow to signify the end of a playbook or branch of steps. While this type inherits all of the common properties of a workflow step it does not define any additional properties. When a playbook or branch of a playbook terminates it MUST call an end step. This workflow step MUST NOT use the 'on_completion', 'on_success', or 'on_failure' properties. While an end step MUST exist for the overall workflow, additional end steps MAY be present for workflow branches.",
+    "type": "object",
+    "allOf": [
+        {
+            "$ref": "workflow-step.json"
+        },
+        {
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "The value of this property MUST be 'end'.",
+                    "enum": [
+                        "end"
+                    ]
+                }
+            }
+        },
+        {
+            "not": {
+                "anyOf": [
+                    {
+                        "required": [
+                            "on_completion"
+                        ]
+                    },
+                    {
+                        "required": [
+                            "on_failure"
+                        ]
+                    },
+                    {
+                        "required": [
+                            "on_success"
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}
