@@ -1,4 +1,4 @@
-package mocks_playbook_test
+package mock_playbook_database
 
 import (
 	"soarca/models/api"

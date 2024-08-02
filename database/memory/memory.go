@@ -11,8 +11,8 @@ type InMemoryDatabase struct {
 	playbooks map[string]cacao.Playbook
 }
 
-func New() InMemoryDatabase {
-	return InMemoryDatabase{playbooks: make(map[string]cacao.Playbook)}
+func New() *InMemoryDatabase {
+	return &InMemoryDatabase{playbooks: make(map[string]cacao.Playbook)}
 }
 
 func (memory *InMemoryDatabase) GetPlaybooks() ([]cacao.Playbook, error) {
@@ -25,7 +25,7 @@ func (memory *InMemoryDatabase) GetPlaybooks() ([]cacao.Playbook, error) {
 	return playbookList, nil
 }
 
-func (memory *InMemoryDatabase) GetPlaybooksMetas() ([]api.PlaybookMeta, error) {
+func (memory *InMemoryDatabase) GetPlaybookMetas() ([]api.PlaybookMeta, error) {
 	size := len(memory.playbooks)
 	playbookList := make([]api.PlaybookMeta, 0, size)
 	for _, playbook := range memory.playbooks {
@@ -54,7 +54,7 @@ func (memory *InMemoryDatabase) Create(json *[]byte) (cacao.Playbook, error) {
 		return cacao.Playbook{}, errors.New("playbook already exists")
 	}
 	memory.playbooks[result.ID] = *result
-	return *result, nil
+	return memory.playbooks[result.ID], nil
 }
 
 func (memory *InMemoryDatabase) Read(id string) (cacao.Playbook, error) {

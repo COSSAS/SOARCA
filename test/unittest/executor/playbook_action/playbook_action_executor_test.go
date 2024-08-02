@@ -8,8 +8,8 @@ import (
 	mock_database_controller "soarca/test/unittest/mocks/mock_controller/database"
 	mock_decomposer_controller "soarca/test/unittest/mocks/mock_controller/decomposer"
 	"soarca/test/unittest/mocks/mock_decomposer"
+	mocks_playbook_test "soarca/test/unittest/mocks/mock_playbook_database"
 	"soarca/test/unittest/mocks/mock_reporter"
-	mocks_playbook_test "soarca/test/unittest/mocks/playbook"
 
 	"soarca/models/cacao"
 	"soarca/models/execution"

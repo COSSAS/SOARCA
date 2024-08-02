@@ -15,7 +15,7 @@ import (
 	"soarca/models/decoder"
 	playbookRouter "soarca/routes/playbook"
 	mock_database_controller "soarca/test/unittest/mocks/mock_controller/database"
-	mock_playbook "soarca/test/unittest/mocks/playbook"
+	mock_playbook "soarca/test/unittest/mocks/mock_playbook_database"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
