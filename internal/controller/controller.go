@@ -114,15 +114,15 @@ func (controller *Controller) setupDatabase() error {
 		mongo.LoadComponent()
 
 		log.Info("SOARCA API Trying to start")
-		mongo_uri := os.Getenv("MONGODB_URI")
-		db_username := os.Getenv("DB_USERNAME")
-		db_password := os.Getenv("DB_PASSWORD")
+		uri := os.Getenv("MONGODB_URI")
+		username := os.Getenv("DB_USERNAME")
+		password := os.Getenv("DB_PASSWORD")
 
-		if mongo_uri == "" || db_username == "" || db_password == "" {
+		if uri == "" || username == "" || password == "" {
 			log.Error("you must set 'MONGODB_URI' or 'DB_USERNAME' or 'DB_PASSWORD' in the environment variable")
 			return errors.New("could not obtain required environment settings")
 		}
-		err := mongo.SetupMongodb(mongo_uri, db_username, db_password)
+		err := mongo.SetupMongodb(uri, username, password)
 		if err != nil {
 			return err
 		}
