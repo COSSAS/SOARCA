@@ -90,7 +90,7 @@ func (trigger *TriggerApi) ExecuteById(context *gin.Context) {
 		jsonData, err := io.ReadAll(context.Request.Body)
 		if err != nil {
 			log.Trace("Playbook trigger has failed to decode request body")
-			error.SendErrorResponse(context, http.StatusBadRequest, "Failed to decode request body", "POST /tirgger/playbook/"+id, "")
+			error.SendErrorResponse(context, http.StatusBadRequest, "Failed to decode request body", "POST /trigger/playbook/"+id, "")
 		}
 		MergeVariablesInPlaybook(&playbook, jsonData)
 	}
