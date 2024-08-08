@@ -72,6 +72,9 @@ func MergeVariablesInPlaybook(playbook *cacao.Playbook, body []byte) (bool, stri
 			if !playbook.PlaybookVariables[k].External {
 				return false, fmt.Sprintf("playbook variable [ %s ] cannot be assigned in playbook because it is not marked as `external` in the plabook", k)
 			}
+			// TODO: Exists, must not overwrite the external field
+			// Impossible to implement currently or it would break execution: new vars values are initialized to external: false, which means on injection
+			// they change the value of the variable currently there
 		}
 	}
 	playbook.PlaybookVariables.Merge(payload_variables)
