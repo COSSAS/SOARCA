@@ -2,6 +2,7 @@ package trigger
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"reflect"
@@ -45,20 +46,36 @@ func New(controller decomposer_controller.IController, database database.IContro
 	return &instance
 }
 
-func MergeVariablesInPlaybook(playbook *cacao.Playbook, body []byte) {
+func MergeVariablesInPlaybook(playbook *cacao.Playbook, body []byte) (bool, string) {
 
-	variables := cacao.NewVariables()
-	err := json.Unmarshal(body, &variables)
+	// TODO: to change in documentation too. The variable must be provided as a valid { key: cacao.Variable} object,
+	// and the check on mathcing playbook variables must happen on the key.
+	// in the current code, we are wrongly assuming that the "name" of the variable, and the "key" in the playbook, match
+	payload_variables := cacao.NewVariables()
+	err := json.Unmarshal(body, &payload_variables)
 	if err != nil {
 		log.Trace(err)
-		return
+		return false, "cannot unmarshal provided variables"
 	}
 
-	if playbook.PlaybookVariables == nil {
-		playbook.PlaybookVariables = variables
-	} else {
-		playbook.PlaybookVariables.Merge(variables)
+	// Check payload-injected variables are valid set for playbook variables
+	for k, payload_var := range payload_variables {
+		// Must exist
+		if _, ok := playbook.PlaybookVariables[k]; !ok {
+			return false, fmt.Sprintf("provided variables is not a valid subset of the variables for the referenced playbook [ playbook id: %s ]", playbook.ID)
+		} else {
+			// Exists, playbook var type must match
+			if payload_var.Type != playbook.PlaybookVariables[k].Type {
+				return false, fmt.Sprintf("mismatch in variables type for [ %s ]: payload var type = %s, playbook var type = %s", k, payload_var.Type, playbook.PlaybookVariables[k].Type)
+			}
+			// Exists, playbook var must be external
+			if !playbook.PlaybookVariables[k].External {
+				return false, fmt.Sprintf("playbook variable [ %s ] cannot be assigned in playbook because it is not marked as `external` in the plabook", k)
+			}
+		}
 	}
+	playbook.PlaybookVariables.Merge(payload_variables)
+	return true, ""
 }
 
 // trigger
@@ -92,7 +109,11 @@ func (trigger *TriggerApi) ExecuteById(context *gin.Context) {
 			log.Trace("Playbook trigger has failed to decode request body")
 			error.SendErrorResponse(context, http.StatusBadRequest, "Failed to decode request body", "POST /trigger/playbook/"+id, "")
 		}
-		MergeVariablesInPlaybook(&playbook, jsonData)
+		ok, str := MergeVariablesInPlaybook(&playbook, jsonData)
+		if !ok {
+			error.SendErrorResponse(context, http.StatusBadRequest, fmt.Sprintf("Cannot execute. reason: %s", str), "POST /trigger/playbook/"+id, "")
+			return
+		}
 	}
 
 	trigger.execute(&playbook, context)
@@ -128,8 +149,8 @@ func (trigger *TriggerApi) Execute(context *gin.Context) {
 			"POST /trigger/playbook", "")
 		return
 	}
-	trigger.execute(playbook, context)
 
+	trigger.execute(playbook, context)
 }
 
 func (trigger *TriggerApi) execute(playbook *cacao.Playbook, context *gin.Context) {

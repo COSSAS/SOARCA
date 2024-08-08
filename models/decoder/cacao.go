@@ -69,12 +69,14 @@ func decode(data []byte) *cacao.Playbook {
 	}
 
 	for key, variable := range playbook.PlaybookVariables {
+		// TODO: change wrong assumption
 		variable.Name = key
 		playbook.PlaybookVariables.InsertOrReplace(variable)
 	}
 
 	for _, step := range playbook.Workflow {
 		for key, variable := range step.StepVariables {
+			// TODO: change wrong assumption
 			variable.Name = key
 			step.StepVariables.InsertOrReplace(variable)
 		}
