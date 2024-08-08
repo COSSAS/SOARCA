@@ -42,17 +42,18 @@ func (cacheReporter *Cache) getAllExecutions() ([]cache_report.ExecutionEntry, e
 
 	// Lock
 	cacheReporter.mutex.Lock()
+	defer cacheReporter.mutex.Unlock()
 	for _, executionEntryKey := range cacheReporter.fifoRegister {
 		// NOTE: cached executions are passed by reference, so they must not be modified
 		entry, ok := cacheReporter.Cache[executionEntryKey]
 		if !ok {
+			// Unlock
 			return []cache_report.ExecutionEntry{}, errors.New("internal error. cache fifo register and cache executions mismatch")
 		}
 		executions = append(executions, entry)
 	}
-	cacheReporter.mutex.Unlock()
-	// Unlocked
 
+	// Unlocked
 	return executions, nil
 }
 
