@@ -293,3 +293,14 @@ func Decode(data []byte) *Playbook {
 
 	return &playbook
 }
+
+func NewPlaybook() *Playbook {
+	playbook := Playbook{}
+	playbook.AgentDefinitions = NewAgentTargets()
+	playbook.TargetDefinitions = NewAgentTargets()
+	playbook.PlaybookVariables = NewVariables()
+	playbook.AuthenticationInfoDefinitions = NewAuthenticationInfoDefinitions()
+	playbook.ExtensionDefinitions = NewExtensionDefinitions()
+	playbook.DataMarkingDefinitions = NewDataMarkings()
+	return &playbook
+}

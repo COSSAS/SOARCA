@@ -191,3 +191,17 @@ func TestVariablesSelect(t *testing.T) {
 		Value: "GO",
 	}))
 }
+
+func TestInsertIntoEmptyMap(t *testing.T) {
+	vars := cacao.NewVariables(cacao.Variable{
+		Name:  "__var0__",
+		Value: "GO",
+	}, cacao.Variable{
+		Name:  "__var1__",
+		Value: "COOL",
+	})
+
+	playbook := cacao.NewPlaybook()
+
+	playbook.PlaybookVariables.Merge(vars)
+}
