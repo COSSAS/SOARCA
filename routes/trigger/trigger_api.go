@@ -48,36 +48,38 @@ func New(controller decomposer_controller.IController, database database.IContro
 
 func MergeVariablesInPlaybook(playbook *cacao.Playbook, body []byte) (bool, string) {
 
-	// TODO: to change in documentation too. The variable must be provided as a valid { key: cacao.Variable} object,
-	// and the check on mathcing playbook variables must happen on the key.
-	// in the current code, we are wrongly assuming that the "name" of the variable, and the "key" in the playbook, match
-	payload_variables := cacao.NewVariables()
-	err := json.Unmarshal(body, &payload_variables)
+	payloadVariables := cacao.NewVariables()
+	err := json.Unmarshal(body, &payloadVariables)
 	if err != nil {
 		log.Trace(err)
 		return false, "cannot unmarshal provided variables"
 	}
 
 	// Check payload-injected variables are valid set for playbook variables
-	for k, payload_var := range payload_variables {
+	for name, variable := range payloadVariables {
 		// Must exist
-		if _, ok := playbook.PlaybookVariables[k]; !ok {
+		if _, ok := playbook.PlaybookVariables[name]; !ok {
 			return false, fmt.Sprintf("provided variables is not a valid subset of the variables for the referenced playbook [ playbook id: %s ]", playbook.ID)
-		} else {
-			// Exists, playbook var type must match
-			if payload_var.Type != playbook.PlaybookVariables[k].Type {
-				return false, fmt.Sprintf("mismatch in variables type for [ %s ]: payload var type = %s, playbook var type = %s", k, payload_var.Type, playbook.PlaybookVariables[k].Type)
-			}
-			// Exists, playbook var must be external
-			if !playbook.PlaybookVariables[k].External {
-				return false, fmt.Sprintf("playbook variable [ %s ] cannot be assigned in playbook because it is not marked as `external` in the plabook", k)
-			}
-			// TODO: Exists, must not overwrite the external field
-			// Impossible to implement currently or it would break execution: new vars values are initialized to external: false, which means on injection
-			// they change the value of the variable currently there
 		}
+		// Exists, playbook var type must match
+		if variable.Type != playbook.PlaybookVariables[name].Type {
+			return false, fmt.Sprintf("mismatch in variables type for [ %s ]: payload var type = %s, playbook var type = %s", name, variable.Type, playbook.PlaybookVariables[name].Type)
+		}
+		// Exists, playbook var must be external
+		if !playbook.PlaybookVariables[name].External {
+			return false, fmt.Sprintf("playbook variable [ %s ] cannot be assigned in playbook because it is not marked as external in the plabook", name)
+		}
+
+		updatedVariable := cacao.Variable{
+			Name:        name,
+			Type:        playbook.PlaybookVariables[name].Type,
+			Description: playbook.PlaybookVariables[name].Description,
+			Value:       variable.Value,
+			Constant:    playbook.PlaybookVariables[name].Constant,
+			External:    playbook.PlaybookVariables[name].External,
+		}
+		playbook.PlaybookVariables[name] = updatedVariable
 	}
-	playbook.PlaybookVariables.Merge(payload_variables)
 	return true, ""
 }
 
@@ -118,7 +120,7 @@ func (trigger *TriggerApi) ExecuteById(context *gin.Context) {
 			return
 		}
 	}
-
+	fmt.Println(playbook)
 	trigger.execute(&playbook, context)
 }
 
