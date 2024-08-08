@@ -73,7 +73,6 @@ func (reporter *Reporter) reportWorkflowStart(executionId uuid.UUID, playbook ca
 }
 func (reporter *Reporter) ReportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook) {
 	log.Trace(fmt.Sprintf("[execution: %s, playbook: %s] reporting workflow start", executionId, playbook.ID))
-	fmt.Printf("[execution: %s, playbook: %s] reporting workflow start", executionId, playbook.ID)
 	go reporter.reportWorkflowStart(executionId, playbook)
 }
 
