@@ -41,9 +41,9 @@ func DecodeValidate(data []byte) *cacao.Playbook {
 }
 
 func decode(data []byte) *cacao.Playbook {
-	var playbook cacao.Playbook
+	playbook := cacao.NewPlaybook()
 
-	if err := json.Unmarshal(data, &playbook); err != nil {
+	if err := json.Unmarshal(data, playbook); err != nil {
 		log.Error(err)
 		return nil
 	}
@@ -80,5 +80,5 @@ func decode(data []byte) *cacao.Playbook {
 		}
 	}
 
-	return &playbook
+	return playbook
 }

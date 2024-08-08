@@ -265,7 +265,7 @@ type DataMarking struct {
 
 // Deprecated
 func Decode(data []byte) *Playbook {
-	var playbook Playbook
+	var playbook = NewPlaybook()
 
 	if err := json.Unmarshal(data, &playbook); err != nil {
 		return nil
@@ -291,7 +291,7 @@ func Decode(data []byte) *Playbook {
 		playbook.AuthenticationInfoDefinitions[key] = auth
 	}
 
-	return &playbook
+	return playbook
 }
 
 func NewPlaybook() *Playbook {
