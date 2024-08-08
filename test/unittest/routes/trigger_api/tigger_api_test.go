@@ -250,7 +250,7 @@ func TestExecutionOfPlaybookByIdWithPayloadInvalidVariables(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not unmarshal response body: %v", err)
 	}
-	expected_message_not_external := "Cannot execute. reason: playbook variable [ __var2_not_external__ ] cannot be assigned in playbook because it is not marked as `external` in the plabook"
+	expected_message_not_external := "Cannot execute. reason: playbook variable [ __var2_not_external__ ] cannot be assigned in playbook because it is not marked as external in the plabook"
 	assert.Equal(t, 400, recorder_not_external.Code)
 	assert.Equal(t, expected_message_not_external, result_not_external["message"].(string))
 
