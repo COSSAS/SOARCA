@@ -2,6 +2,7 @@ package trigger
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -14,7 +15,7 @@ import (
 	"soarca/logger"
 	"soarca/models/cacao"
 	"soarca/models/decoder"
-	"soarca/routes/error"
+	soarca_http_error "soarca/routes/error"
 
 	"github.com/gin-gonic/gin"
 )
@@ -46,28 +47,28 @@ func New(controller decomposer_controller.IController, database database.IContro
 	return &instance
 }
 
-func MergeVariablesInPlaybook(playbook *cacao.Playbook, body []byte) (bool, string) {
+func MergeVariablesInPlaybook(playbook *cacao.Playbook, body []byte) error {
 
 	payloadVariables := cacao.NewVariables()
 	err := json.Unmarshal(body, &payloadVariables)
 	if err != nil {
 		log.Trace(err)
-		return false, "cannot unmarshal provided variables"
+		return errors.New("cannot unmarshal provided variables")
 	}
 
 	// Check payload-injected variables are valid set for playbook variables
 	for name, variable := range payloadVariables {
 		// Must exist
 		if _, ok := playbook.PlaybookVariables[name]; !ok {
-			return false, fmt.Sprintf("provided variables is not a valid subset of the variables for the referenced playbook [ playbook id: %s ]", playbook.ID)
+			return fmt.Errorf("provided variables is not a valid subset of the variables for the referenced playbook [ playbook id: %s ]", playbook.ID)
 		}
 		// Exists, playbook var type must match
 		if variable.Type != playbook.PlaybookVariables[name].Type {
-			return false, fmt.Sprintf("mismatch in variables type for [ %s ]: payload var type = %s, playbook var type = %s", name, variable.Type, playbook.PlaybookVariables[name].Type)
+			return fmt.Errorf("mismatch in variables type for [ %s ]: payload var type = %s, playbook var type = %s", name, variable.Type, playbook.PlaybookVariables[name].Type)
 		}
 		// Exists, playbook var must be external
 		if !playbook.PlaybookVariables[name].External {
-			return false, fmt.Sprintf("playbook variable [ %s ] cannot be assigned in playbook because it is not marked as external in the plabook", name)
+			return fmt.Errorf("playbook variable [ %s ] cannot be assigned in playbook because it is not marked as external in the plabook", name)
 		}
 
 		updatedVariable := cacao.Variable{
@@ -80,7 +81,7 @@ func MergeVariablesInPlaybook(playbook *cacao.Playbook, body []byte) (bool, stri
 		}
 		playbook.PlaybookVariables[name] = updatedVariable
 	}
-	return true, ""
+	return nil
 }
 
 // trigger
@@ -103,7 +104,7 @@ func (trigger *TriggerApi) ExecuteById(context *gin.Context) {
 	playbook, err := db.Read(id)
 	if err != nil {
 		log.Error("failed to load playbook")
-		error.SendErrorResponse(context, http.StatusBadRequest,
+		soarca_http_error.SendErrorResponse(context, http.StatusBadRequest,
 			"Failed to load playbook",
 			"POST /trigger/playbook/"+id, err.Error())
 		return
@@ -112,11 +113,11 @@ func (trigger *TriggerApi) ExecuteById(context *gin.Context) {
 		jsonData, err := io.ReadAll(context.Request.Body)
 		if err != nil {
 			log.Trace("Playbook trigger has failed to decode request body")
-			error.SendErrorResponse(context, http.StatusBadRequest, "Failed to decode request body", "POST /trigger/playbook/"+id, "")
+			soarca_http_error.SendErrorResponse(context, http.StatusBadRequest, "Failed to decode request body", "POST /trigger/playbook/"+id, "")
 		}
-		ok, str := MergeVariablesInPlaybook(&playbook, jsonData)
-		if !ok {
-			error.SendErrorResponse(context, http.StatusBadRequest, fmt.Sprintf("Cannot execute. reason: %s", str), "POST /trigger/playbook/"+id, "")
+		err = MergeVariablesInPlaybook(&playbook, jsonData)
+		if err != nil {
+			soarca_http_error.SendErrorResponse(context, http.StatusBadRequest, fmt.Sprintf("Cannot execute. reason: %s", err), "POST /trigger/playbook/"+id, "")
 			return
 		}
 	}
@@ -141,7 +142,7 @@ func (trigger *TriggerApi) Execute(context *gin.Context) {
 	jsonData, errIo := io.ReadAll(context.Request.Body)
 	if errIo != nil {
 		log.Error("failed")
-		error.SendErrorResponse(context, http.StatusBadRequest,
+		soarca_http_error.SendErrorResponse(context, http.StatusBadRequest,
 			"Failed to marshall json on server side",
 			"POST /trigger/playbook", "")
 		return
@@ -149,7 +150,7 @@ func (trigger *TriggerApi) Execute(context *gin.Context) {
 	// playbook := cacao.Decode(jsonData)
 	playbook := decoder.DecodeValidate(jsonData)
 	if playbook == nil {
-		error.SendErrorResponse(context, http.StatusBadRequest,
+		soarca_http_error.SendErrorResponse(context, http.StatusBadRequest,
 			"Failed to decode playbook",
 			"POST /trigger/playbook", "")
 		return
