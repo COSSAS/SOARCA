@@ -6,11 +6,15 @@ import (
 	ds_reporter "soarca/internal/reporter/downstream_reporter"
 	"soarca/models/cacao"
 	"soarca/test/unittest/mocks/mock_reporter"
+	"sync"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
 	"github.com/google/uuid"
 )
+
+// NOTE: reporter functions call go routines with loops inside, which seems to break testing expectations
+// This SO post seems to propose a valid solution: https://stackoverflow.com/questions/51065482/how-to-test-if-a-goroutine-has-been-called-while-unit-testing-in-golang
 
 func TestRegisterReporter(t *testing.T) {
 	mock_ds_reporter := mock_reporter.Mock_Downstream_Reporter{}
@@ -36,7 +40,8 @@ func TestRegisterTooManyReporters(t *testing.T) {
 }
 
 func TestReportWorkflowStart(t *testing.T) {
-	mock_ds_reporter := mock_reporter.Mock_Downstream_Reporter{}
+	var wg sync.WaitGroup
+	mock_ds_reporter := mock_reporter.Mock_Downstream_Reporter{Wg: &wg}
 	reporter := reporter.New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
 
 	expectedCommand := cacao.Command{
@@ -98,14 +103,17 @@ func TestReportWorkflowStart(t *testing.T) {
 
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
+	wg.Add(1)
 	mock_ds_reporter.On("ReportWorkflowStart", executionId, playbook).Return(nil)
 	reporter.ReportWorkflowStart(executionId, playbook)
 
+	wg.Wait()
 	mock_ds_reporter.AssertExpectations(t)
 }
 
 func TestReportWorkflowEnd(t *testing.T) {
-	mock_ds_reporter := mock_reporter.Mock_Downstream_Reporter{}
+	var wg sync.WaitGroup
+	mock_ds_reporter := mock_reporter.Mock_Downstream_Reporter{Wg: &wg}
 	reporter := reporter.New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
 
 	expectedCommand := cacao.Command{
@@ -167,14 +175,17 @@ func TestReportWorkflowEnd(t *testing.T) {
 
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
+	wg.Add(1)
 	mock_ds_reporter.On("ReportWorkflowEnd", executionId, playbook, nil).Return(nil)
 	reporter.ReportWorkflowEnd(executionId, playbook, nil)
 
+	wg.Wait()
 	mock_ds_reporter.AssertExpectations(t)
 }
 
 func TestReportStepStart(t *testing.T) {
-	mock_ds_reporter := mock_reporter.Mock_Downstream_Reporter{}
+	var wg sync.WaitGroup
+	mock_ds_reporter := mock_reporter.Mock_Downstream_Reporter{Wg: &wg}
 	reporter := reporter.New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
 
 	expectedCommand := cacao.Command{
@@ -202,14 +213,17 @@ func TestReportStepStart(t *testing.T) {
 
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
+	wg.Add(1)
 	mock_ds_reporter.On("ReportStepStart", executionId, step1, cacao.NewVariables(expectedVariables)).Return(nil)
 	reporter.ReportStepStart(executionId, step1, cacao.NewVariables(expectedVariables))
 
+	wg.Wait()
 	mock_ds_reporter.AssertExpectations(t)
 }
 
 func TestReportStepEnd(t *testing.T) {
-	mock_ds_reporter := mock_reporter.Mock_Downstream_Reporter{}
+	var wg sync.WaitGroup
+	mock_ds_reporter := mock_reporter.Mock_Downstream_Reporter{Wg: &wg}
 	reporter := reporter.New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
 
 	expectedCommand := cacao.Command{
@@ -237,15 +251,18 @@ func TestReportStepEnd(t *testing.T) {
 
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
+	wg.Add(1)
 	mock_ds_reporter.On("ReportStepEnd", executionId, step1, cacao.NewVariables(expectedVariables), nil).Return(nil)
 	reporter.ReportStepEnd(executionId, step1, cacao.NewVariables(expectedVariables), nil)
 
+	wg.Wait()
 	mock_ds_reporter.AssertExpectations(t)
 }
 
 func TestMultipleDownstreamReporters(t *testing.T) {
-	mock_ds_reporter1 := mock_reporter.Mock_Downstream_Reporter{}
-	mock_ds_reporter2 := mock_reporter.Mock_Downstream_Reporter{}
+	var wg sync.WaitGroup
+	mock_ds_reporter1 := mock_reporter.Mock_Downstream_Reporter{Wg: &wg}
+	mock_ds_reporter2 := mock_reporter.Mock_Downstream_Reporter{Wg: &wg}
 	reporter := reporter.New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter1, &mock_ds_reporter2})
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -306,15 +323,19 @@ func TestMultipleDownstreamReporters(t *testing.T) {
 
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
+	wg.Add(2)
 	mock_ds_reporter1.On("ReportWorkflowStart", executionId, playbook).Return(nil)
 	mock_ds_reporter2.On("ReportWorkflowStart", executionId, playbook).Return(nil)
 
+	wg.Add(2)
 	mock_ds_reporter1.On("ReportStepStart", executionId, step1, cacao.NewVariables(expectedVariables)).Return(nil)
 	mock_ds_reporter2.On("ReportStepStart", executionId, step1, cacao.NewVariables(expectedVariables)).Return(nil)
 
+	wg.Add(2)
 	mock_ds_reporter1.On("ReportStepEnd", executionId, step1, cacao.NewVariables(expectedVariables), nil).Return(nil)
 	mock_ds_reporter2.On("ReportStepEnd", executionId, step1, cacao.NewVariables(expectedVariables), nil).Return(nil)
 
+	wg.Add(2)
 	mock_ds_reporter1.On("ReportWorkflowEnd", executionId, playbook, nil).Return(nil)
 	mock_ds_reporter2.On("ReportWorkflowEnd", executionId, playbook, nil).Return(nil)
 
@@ -323,6 +344,7 @@ func TestMultipleDownstreamReporters(t *testing.T) {
 	reporter.ReportStepEnd(executionId, step1, cacao.NewVariables(expectedVariables), nil)
 	reporter.ReportWorkflowEnd(executionId, playbook, nil)
 
+	wg.Wait()
 	mock_ds_reporter1.AssertExpectations(t)
 	mock_ds_reporter2.AssertExpectations(t)
 }

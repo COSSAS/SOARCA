@@ -6,7 +6,7 @@ import (
 	"soarca/internal/reporter/downstream_reporter/cache"
 	"soarca/models/cacao"
 	cache_model "soarca/models/cache"
-	"soarca/test/unittest/mocks/mock_utils/time"
+	mock_time "soarca/test/unittest/mocks/mock_utils/time"
 	"testing"
 	"time"
 
@@ -841,7 +841,7 @@ func TestInvalidStepReportAfterExecutionEnd(t *testing.T) {
 		t.Fail()
 	}
 
-	expectedErr := errors.New("trying to report on the execution of a step for an already reported completed or failed execution")
+	expectedErr := errors.New("trying to report on the execution of a step for an already reportedly terminated playbook execution")
 	assert.Equal(t, err, expectedErr)
 	mock_time.AssertExpectations(t)
 }
@@ -930,7 +930,7 @@ func TestInvalidStepReportAfterStepEnd(t *testing.T) {
 		t.Fail()
 	}
 
-	expectedErr := errors.New("trying to report on the execution of a step that was already reported completed or failed")
+	expectedErr := errors.New("step status precondition not met for step update [step status: successfully_executed]")
 	assert.Equal(t, err, expectedErr)
 	mock_time.AssertExpectations(t)
 }
