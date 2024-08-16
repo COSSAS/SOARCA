@@ -217,6 +217,9 @@ func TestPlaybookByIdVariableTypeMismatch(t *testing.T) {
 	mock_controller.On("NewDecomposer").Return(mock_decomposer)
 
 	recorder := httptest.NewRecorder()
+	triggerApi := trigger.New(mock_controller, mock_database_controller)
+
+	trigger.Routes(app, triggerApi)
 
 	var_wrong_type := cacao.Variable{
 		Name: "__var1__",
@@ -268,6 +271,9 @@ func TestPlaybookByIdVariableIsNotExternal(t *testing.T) {
 	mock_controller.On("NewDecomposer").Return(mock_decomposer)
 
 	recorder := httptest.NewRecorder()
+	triggerApi := trigger.New(mock_controller, mock_database_controller)
+
+	trigger.Routes(app, triggerApi)
 
 	varNotExternal := cacao.Variable{
 		Name:  "__var2_not_external__",
