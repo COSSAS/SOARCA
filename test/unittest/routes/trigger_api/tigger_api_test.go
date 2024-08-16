@@ -45,7 +45,7 @@ func TestTriggerExecutionOfPlaybook(t *testing.T) {
 	trigger.Routes(app, trigger_api)
 
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
-	mock_decomposer.On("ExecuteAsync", *playbook, trigger_api.Executionsch).Return(&decomposer.ExecutionDetails{}, nil, executionId)
+	mock_decomposer.On("ExecuteAsync", *playbook, trigger_api.ExecutionsChannel).Return(&decomposer.ExecutionDetails{}, nil, executionId)
 
 	request, err := http.NewRequest("POST", "/trigger/playbook", bytes.NewBuffer(byteValue))
 	if err != nil {
@@ -83,7 +83,7 @@ func TestExecutionOfPlaybookById(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	trigger_api := trigger.New(mock_controller, mock_database_controller)
 	trigger.Routes(app, trigger_api)
-	mock_decomposer.On("ExecuteAsync", *playbook, trigger_api.Executionsch).Return(&decomposer.ExecutionDetails{}, nil, executionId)
+	mock_decomposer.On("ExecuteAsync", *playbook, trigger_api.ExecutionsChannel).Return(&decomposer.ExecutionDetails{}, nil, executionId)
 
 	request, err := http.NewRequest("POST", "/trigger/playbook/1", nil)
 	if err != nil {
@@ -132,7 +132,7 @@ func TestExecutionOfPlaybookByIdWithPayloadValidVariables(t *testing.T) {
 	trigger_api := trigger.New(mock_controller, mock_database_controller)
 	trigger.Routes(app, trigger_api)
 
-	mock_decomposer.On("ExecuteAsync", *playbook, trigger_api.Executionsch).Return(&decomposer.ExecutionDetails{}, nil, executionId)
+	mock_decomposer.On("ExecuteAsync", *playbook, trigger_api.ExecutionsChannel).Return(&decomposer.ExecutionDetails{}, nil, executionId)
 
 	request, err := http.NewRequest("POST", "/trigger/playbook/1", bytes.NewReader(json))
 	if err != nil {

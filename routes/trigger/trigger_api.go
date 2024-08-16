@@ -33,9 +33,9 @@ func init() {
 }
 
 type TriggerApi struct {
-	controller   decomposer_controller.IController
-	database     database.IController
-	Executionsch chan decomposer.ExecutionDetails
+	controller        decomposer_controller.IController
+	database          database.IController
+	ExecutionsChannel chan decomposer.ExecutionDetails
 }
 
 func New(controller decomposer_controller.IController, database database.IController) *TriggerApi {
@@ -43,7 +43,7 @@ func New(controller decomposer_controller.IController, database database.IContro
 	instance.controller = controller
 	instance.database = database
 	// Channel to get back execution details
-	instance.Executionsch = make(chan decomposer.ExecutionDetails)
+	instance.ExecutionsChannel = make(chan decomposer.ExecutionDetails)
 	return &instance
 }
 
@@ -121,7 +121,6 @@ func (trigger *TriggerApi) ExecuteById(context *gin.Context) {
 			return
 		}
 	}
-	fmt.Println(playbook)
 	trigger.execute(&playbook, context)
 }
 
@@ -139,8 +138,8 @@ func (trigger *TriggerApi) ExecuteById(context *gin.Context) {
 //	@Router			/trigger/playbook [POST]
 func (trigger *TriggerApi) Execute(context *gin.Context) {
 
-	jsonData, errIo := io.ReadAll(context.Request.Body)
-	if errIo != nil {
+	jsonData, err := io.ReadAll(context.Request.Body)
+	if err != nil {
 		log.Error("failed")
 		soarca_http_error.SendErrorResponse(context, http.StatusBadRequest,
 			"Failed to marshall json on server side",
@@ -161,7 +160,7 @@ func (trigger *TriggerApi) Execute(context *gin.Context) {
 
 func (trigger *TriggerApi) execute(playbook *cacao.Playbook, context *gin.Context) {
 	decomposer := trigger.controller.NewDecomposer()
-	go decomposer.ExecuteAsync(*playbook, trigger.Executionsch)
+	go decomposer.ExecuteAsync(*playbook, trigger.ExecutionsChannel)
 	timer := time.NewTimer(time.Duration(3) * time.Second)
 	for {
 		select {
@@ -172,13 +171,13 @@ func (trigger *TriggerApi) execute(playbook *cacao.Playbook, context *gin.Contex
 			}
 			context.JSON(http.StatusRequestTimeout, msg)
 			log.Error("async execution timed out for playbook ", playbook.ID)
-		case exec_details := <-trigger.Executionsch:
-			playbook_id := exec_details.PlaybookId
-			exec_id := exec_details.ExecutionId
-			if playbook_id == playbook.ID {
+		case executionsDetail := <-trigger.ExecutionsChannel:
+			playbookId := executionsDetail.PlaybookId
+			executionId := executionsDetail.ExecutionId
+			if playbookId == playbook.ID {
 				msg := gin.H{
-					"execution_id": exec_id,
-					"payload":      playbook_id,
+					"execution_id": executionId,
+					"payload":      playbookId,
 				}
 				context.JSON(http.StatusOK, msg)
 				return
