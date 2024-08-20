@@ -13,9 +13,10 @@ import (
 	"soarca/internal/controller/decomposer_controller"
 	"soarca/internal/decomposer"
 	"soarca/logger"
+	"soarca/models/api"
 	"soarca/models/cacao"
 	"soarca/models/decoder"
-	soarca_http_error "soarca/routes/error"
+	apiError "soarca/routes/error"
 
 	"github.com/gin-gonic/gin"
 )
@@ -104,7 +105,7 @@ func (trigger *TriggerApi) ExecuteById(context *gin.Context) {
 	playbook, err := db.Read(id)
 	if err != nil {
 		log.Error("failed to load playbook")
-		soarca_http_error.SendErrorResponse(context, http.StatusBadRequest,
+		apiError.SendErrorResponse(context, http.StatusBadRequest,
 			"Failed to load playbook",
 			"POST /trigger/playbook/"+id, err.Error())
 		return
@@ -113,11 +114,11 @@ func (trigger *TriggerApi) ExecuteById(context *gin.Context) {
 		jsonData, err := io.ReadAll(context.Request.Body)
 		if err != nil {
 			log.Trace("Playbook trigger has failed to decode request body")
-			soarca_http_error.SendErrorResponse(context, http.StatusBadRequest, "Failed to decode request body", "POST /trigger/playbook/"+id, "")
+			apiError.SendErrorResponse(context, http.StatusBadRequest, "Failed to decode request body", "POST /trigger/playbook/"+id, "")
 		}
 		err = MergeVariablesInPlaybook(&playbook, jsonData)
 		if err != nil {
-			soarca_http_error.SendErrorResponse(context, http.StatusBadRequest, fmt.Sprintf("Cannot execute. reason: %s", err), "POST /trigger/playbook/"+id, "")
+			apiError.SendErrorResponse(context, http.StatusBadRequest, fmt.Sprintf("Cannot execute. reason: %s", err), "POST /trigger/playbook/"+id, "")
 			return
 		}
 	}
@@ -141,7 +142,7 @@ func (trigger *TriggerApi) Execute(context *gin.Context) {
 	jsonData, err := io.ReadAll(context.Request.Body)
 	if err != nil {
 		log.Error("failed")
-		soarca_http_error.SendErrorResponse(context, http.StatusBadRequest,
+		apiError.SendErrorResponse(context, http.StatusBadRequest,
 			"Failed to marshall json on server side",
 			"POST /trigger/playbook", "")
 		return
@@ -149,7 +150,7 @@ func (trigger *TriggerApi) Execute(context *gin.Context) {
 	// playbook := cacao.Decode(jsonData)
 	playbook := decoder.DecodeValidate(jsonData)
 	if playbook == nil {
-		soarca_http_error.SendErrorResponse(context, http.StatusBadRequest,
+		apiError.SendErrorResponse(context, http.StatusBadRequest,
 			"Failed to decode playbook",
 			"POST /trigger/playbook", "")
 		return
@@ -165,21 +166,21 @@ func (trigger *TriggerApi) execute(playbook *cacao.Playbook, context *gin.Contex
 	for {
 		select {
 		case <-timer.C:
-			msg := gin.H{
-				"execution_id": nil,
-				"payload":      playbook.ID,
-			}
-			context.JSON(http.StatusRequestTimeout, msg)
 			log.Error("async execution timed out for playbook ", playbook.ID)
+
+			apiError.SendErrorResponse(context,
+				http.StatusRequestTimeout,
+				"async execution timed out for playbook "+playbook.ID,
+				"POST "+context.Request.URL.Path, "")
+			return
+
 		case executionsDetail := <-trigger.ExecutionsChannel:
 			playbookId := executionsDetail.PlaybookId
 			executionId := executionsDetail.ExecutionId
 			if playbookId == playbook.ID {
-				msg := gin.H{
-					"execution_id": executionId,
-					"payload":      playbookId,
-				}
-				context.JSON(http.StatusOK, msg)
+				context.JSON(http.StatusOK,
+					api.Execution{ExecutionId: executionId,
+						PlaybookId: playbookId})
 				return
 			}
 		}
