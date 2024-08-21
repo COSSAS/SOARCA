@@ -18,6 +18,18 @@
     "labels": [
         "soarca"
     ],
+    "playbook_variables": {
+        "__var1__": {
+            "type": "string",
+            "name": "__var1__",
+            "external": true
+        },
+        "__var2_not_external__": {
+            "type": "string",
+            "name": "__var2_not_external__",
+            "external": false
+        }
+    },
     "authentication_info_definitions": {
         "http-basic--76c26f7f-9a15-40ff-a90a-7b19e23372ae": {
             "type": "http-basic",
