@@ -6,6 +6,7 @@ import (
 	"errors"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"soarca/logger"
 	"soarca/models/cacao"
@@ -53,7 +54,7 @@ func (capability *PowershellCapability) Execute(
 
 	port, err := strconv.Atoi(target.Port)
 	if err != nil {
-		log.Error(err)
+		log.Error("port is not parsable " + err.Error())
 		return cacao.NewVariables(), err
 	}
 
@@ -65,6 +66,7 @@ func (capability *PowershellCapability) Execute(
 	endpoint := winrm.NewEndpoint(address, port, false, false, nil, nil, nil, 0)
 	client, err := winrm.NewClient(endpoint, authentication.Username, authentication.Password)
 	if err != nil {
+		log.Error("failed to create client")
 		log.Error(err)
 		return cacao.NewVariables(), err
 	}
@@ -85,6 +87,10 @@ func (capability *PowershellCapability) Execute(
 
 	result, stdErr, _, err := client.RunPSWithContext(ctx, effectiveCommand)
 	if err != nil {
+		log.Error("failed to complete command")
+		if strings.Contains(err.Error(), "401") {
+			log.Error("authentication failure")
+		}
 		log.Error(err)
 		return cacao.NewVariables(), err
 	}
