@@ -12,6 +12,7 @@ import (
 	finExecutor "soarca/internal/capability/fin"
 	"soarca/internal/capability/http"
 	"soarca/internal/capability/openc2"
+	"soarca/internal/capability/powershell"
 	"soarca/internal/capability/ssh"
 	"soarca/internal/decomposer"
 	"soarca/internal/executors/action"
@@ -69,6 +70,9 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 
 	openc2 := openc2.New(httpUtil)
 	capabilities[openc2.GetType()] = openc2
+
+	poswershell := powershell.New()
+	capabilities[poswershell.GetType()] = poswershell
 
 	enableFins, _ := strconv.ParseBool(utils.GetEnv("ENABLE_FINS", "false"))
 
