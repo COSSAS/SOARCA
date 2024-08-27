@@ -2,6 +2,7 @@ package powershell
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"reflect"
 	"strconv"
@@ -19,8 +20,9 @@ type PowershellCapability struct {
 type Empty struct{}
 
 const (
-	resultVariableName = "__soarca_powershell_result__"
-	capabilityName     = "soarca-powershell"
+	powershellResult = "__soarca_powershell_result__"
+	powershellError  = "__soarca_powershell_error__"
+	capabilityName   = "soarca-powershell"
 )
 
 var (
@@ -69,14 +71,30 @@ func (capability *PowershellCapability) Execute(
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	result, stdErr, _, err := client.RunPSWithContext(ctx, command.Command)
+
+	effectiveCommand := ""
+	if command.CommandB64 != "" {
+		bytes, err := base64.StdEncoding.DecodeString(command.CommandB64)
+		if err != nil {
+			return cacao.NewVariables(), err
+		}
+		effectiveCommand = string(bytes)
+	} else {
+		effectiveCommand = command.Command
+	}
+
+	result, stdErr, _, err := client.RunPSWithContext(ctx, effectiveCommand)
 	if err != nil {
 		log.Error(err)
 		return cacao.NewVariables(), err
 	}
-	pwshResult := cacao.Variable{Type: cacao.VariableTypeString, Name: resultVariableName, Value: result}
-	pwshError := cacao.Variable{Type: cacao.VariableTypeString, Name: "__var__", Value: stdErr}
+	pwshResult := cacao.Variable{Type: cacao.VariableTypeString, Name: powershellResult, Value: result}
+	pwshError := cacao.Variable{Type: cacao.VariableTypeString, Name: powershellError, Value: stdErr}
 	results := cacao.NewVariables(pwshResult, pwshError)
+
+	if stdErr != "" {
+		return results, errors.New("target encountered and error see " + powershellError + " for more detail")
+	}
 
 	return results, nil
 }
