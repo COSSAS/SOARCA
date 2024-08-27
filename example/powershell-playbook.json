@@ -1,0 +1,62 @@
+{
+    "type": "playbook",
+    "spec_version": "cacao-2.0",
+    "id": "playbook--6673b5cb-d9e9-408e-ab50-2fbb9abe91f5",
+    "name": "SOARCA PowerShell playbook",
+    "description": "This playbook demonstrates the powershell capability",
+    "created_by": "identity--691f1eb6-2a1e-495b-8f5e-18f44380c26a",
+    "created": "2024-08-27T09:28:36.611Z",
+    "modified": "2024-08-27T11:26:01.205Z",
+    "revoked": false,
+    "workflow_start": "start--baccd71d-5a22-4999-8cba-ff3d634971fa",
+    "workflow": {
+        "start--baccd71d-5a22-4999-8cba-ff3d634971fa": {
+            "on_completion": "action--010b0420-db3e-4810-ba75-08a10f473214",
+            "type": "start"
+        },
+        "action--010b0420-db3e-4810-ba75-08a10f473214": {
+            "name": "PowerShell example",
+            "on_completion": "end--28cd6cb6-b0e5-4445-8e4b-dfa9e0eab79a",
+            "type": "action",
+            "commands": [
+                {
+                    "type": "powershell",
+                    "command": "pwd"
+                }
+            ],
+            "agent": "soarca--00040001-1000-1000-a000-000100010001",
+            "targets": [
+                "net-address--0115a514-7a79-4c3f-8d87-77d5e52fabab"
+            ]
+        },
+        "end--28cd6cb6-b0e5-4445-8e4b-dfa9e0eab79a": {
+            "type": "end"
+        }
+    },
+    "authentication_info_definitions": {
+        "authentication-info--5a9c4caa-734b-4bd4-bbe1-fef0d426cf5a": {
+            "type": "authentication-info",
+            "name": "Server",
+            "username": "admin",
+            "password": "Password1234!"
+        }
+    },
+    "agent_definitions": {
+        "soarca--00040001-1000-1000-a000-000100010001": {
+            "type": "soarca",
+            "name": "soarca-powershell"
+        }
+    },
+    "target_definitions": {
+        "net-address--0115a514-7a79-4c3f-8d87-77d5e52fabab": {
+            "type": "net-address",
+            "name": "Windows",
+            "address": {
+                "ipv4": [
+                    "192.168.1.2"
+                ]
+            },
+            "port": "5985"
+        }
+    }
+}
