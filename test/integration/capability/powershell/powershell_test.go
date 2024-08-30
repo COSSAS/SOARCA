@@ -21,12 +21,12 @@ func TestPowershellConnection(t *testing.T) {
 	expectedAuthenticationInformation := cacao.AuthenticationInformation{
 		ID:       "some-authid-1",
 		Type:     "user-auth",
-		Username: "admin",
+		Username: "User",
 		Password: "Password899!"}
 
 	expectedTarget := cacao.AgentTarget{
 		Type:               "ssh",
-		Address:            map[cacao.NetAddressType][]string{"ipv4": {"192.168.1.2"}},
+		Address:            map[cacao.NetAddressType][]string{"ipv4": {"127.0.0.1"}},
 		Port:               "5985",
 		AuthInfoIdentifier: "some-authid-1",
 	}
