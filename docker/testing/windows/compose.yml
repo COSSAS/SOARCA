@@ -1,0 +1,7 @@
+services:
+    winrm-server:
+      build:
+        dockerfile: ./Dockerfile
+      ports:
+        - 5985:5985
+    
