@@ -35,6 +35,8 @@ func (status Status) String() string {
 
 type ExecutionEntry struct {
 	ExecutionId uuid.UUID
+	Name        string
+	Description string
 	PlaybookId  string
 	Started     time.Time
 	Ended       time.Time
@@ -46,6 +48,8 @@ type ExecutionEntry struct {
 type StepResult struct {
 	ExecutionId uuid.UUID
 	StepId      string
+	Name        string
+	Description string
 	Started     time.Time
 	Ended       time.Time
 	// Make sure we can have a playbookID for playbook actions, and also
