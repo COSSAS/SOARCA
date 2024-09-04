@@ -109,6 +109,7 @@ func TestGetExecutions(t *testing.T) {
 			Type:            "execution_status",
 			ExecutionId:     executionId.String(),
 			PlaybookId:      "test",
+			Name:            "ssh-test",
 			Started:         expectedStarted,
 			Ended:           expectedEnded,
 			Status:          expectedStatus,
@@ -262,6 +263,7 @@ func TestGetExecutionReport(t *testing.T) {
 		"type":"execution_status",
 		"execution_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
 		"playbook_id":"test",
+		"name":"ssh-test",
 		"started":"2014-11-12T11:45:26.371Z",
 		"ended":"0001-01-01T00:00:00Z",
 		"status":"ongoing",
@@ -270,6 +272,7 @@ func TestGetExecutionReport(t *testing.T) {
 		   "action--test":{
 			  "execution_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
 			  "step_id":"action--test",
+			  "name":"ssh-tests",
 			  "started":"2014-11-12T11:45:26.371Z",
 			  "ended":"2014-11-12T11:45:26.371Z",
 			  "status":"successfully_executed",

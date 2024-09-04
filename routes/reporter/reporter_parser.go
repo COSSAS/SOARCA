@@ -25,6 +25,8 @@ func parseCachePlaybookEntry(cacheEntry cache_model.ExecutionEntry) (api_model.P
 
 	executionReport := api_model.PlaybookExecutionReport{
 		Type:            "execution_status",
+		Name:            cacheEntry.Name,
+		Description:     cacheEntry.Description,
 		ExecutionId:     cacheEntry.ExecutionId.String(),
 		PlaybookId:      cacheEntry.PlaybookId,
 		Started:         cacheEntry.Started,
@@ -55,6 +57,8 @@ func parseCacheStepEntries(cacheStepEntries map[string]cache_model.StepResult) (
 		parsedEntries[stepId] = api_model.StepExecutionReport{
 			ExecutionId:        stepEntry.ExecutionId.String(),
 			StepId:             stepEntry.StepId,
+			Name:               stepEntry.Name,
+			Description:        stepEntry.Description,
 			Started:            stepEntry.Started,
 			Ended:              stepEntry.Ended,
 			Status:             stepStatus,

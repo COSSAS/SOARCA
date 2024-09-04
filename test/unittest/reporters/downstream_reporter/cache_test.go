@@ -34,6 +34,7 @@ func TestReportWorkflowStartFirst(t *testing.T) {
 		Type:          "action",
 		ID:            "action--test",
 		Name:          "ssh-tests",
+		Description:   "test step",
 		StepVariables: cacao.NewVariables(expectedVariables),
 		Commands:      []cacao.Command{expectedCommand},
 		Cases:         map[string]string{},
@@ -67,7 +68,8 @@ func TestReportWorkflowStartFirst(t *testing.T) {
 	playbook := cacao.Playbook{
 		ID:                            "test",
 		Type:                          "test",
-		Name:                          "ssh-test",
+		Name:                          "ssh-test-playbook",
+		Description:                   "Playbook description",
 		WorkflowStart:                 step1.ID,
 		AuthenticationInfoDefinitions: map[string]cacao.AuthenticationInformation{"id": expectedAuth},
 		AgentDefinitions:              map[string]cacao.AgentTarget{"agent1": expectedAgent},
@@ -82,29 +84,49 @@ func TestReportWorkflowStartFirst(t *testing.T) {
 	timeNow, _ := time.Parse(layout, str)
 	mock_time.On("Now").Return(timeNow)
 
-	expectedExecutionEntry := cache_model.ExecutionEntry{
-		ExecutionId: executionId0,
-		PlaybookId:  "test",
-		StepResults: map[string]cache_model.StepResult{},
-		Status:      cache_model.Ongoing,
-		Started:     timeNow,
-		Ended:       time.Time{},
+	err := cacheReporter.ReportWorkflowStart(executionId0, playbook)
+	if err != nil {
+		t.Fail()
 	}
 
-	err := cacheReporter.ReportWorkflowStart(executionId0, playbook)
+	mock_time.On("Now").Return(timeNow)
+
+	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables))
+	if err != nil {
+		t.Fail()
+	}
+
+	mock_time.On("Now").Return(timeNow)
+	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(), nil)
 	if err != nil {
 		t.Fail()
 	}
 
 	expectedStarted, _ := time.Parse(layout, "2014-11-12T11:45:26.371Z")
 	expectedEnded, _ := time.Parse(layout, "0001-01-01T00:00:00Z")
+	expetedStepReport := cache_model.StepResult{
+		ExecutionId: executionId0,
+		StepId:      "action--test",
+		Name:        "ssh-tests",
+		Description: "test step",
+		IsAutomated: true,
+		Started:     timeNow,
+		Ended:       timeNow,
+		CommandsB64: []string{b64.StdEncoding.EncodeToString([]byte(expectedCommand.Command))},
+		Variables:   cacao.NewVariables(),
+		Status:      cache_model.SuccessfullyExecuted,
+		Error:       nil,
+	}
+
 	expectedExecutions := []cache_model.ExecutionEntry{
 		{
 			ExecutionId: executionId0,
 			PlaybookId:  "test",
+			Name:        "ssh-test-playbook",
+			Description: "Playbook description",
 			Started:     expectedStarted,
 			Ended:       expectedEnded,
-			StepResults: map[string]cache_model.StepResult{},
+			StepResults: map[string]cache_model.StepResult{expetedStepReport.StepId: expetedStepReport},
 			Error:       nil,
 			Status:      2,
 		},
@@ -114,12 +136,13 @@ func TestReportWorkflowStartFirst(t *testing.T) {
 
 	exec, err := cacheReporter.GetExecutionReport(executionId0)
 	assert.Equal(t, expectedExecutions, returnedExecutions)
-	assert.Equal(t, expectedExecutionEntry.ExecutionId, exec.ExecutionId)
-	assert.Equal(t, expectedExecutionEntry.PlaybookId, exec.PlaybookId)
-	assert.Equal(t, expectedExecutionEntry.StepResults, exec.StepResults)
-	assert.Equal(t, expectedExecutionEntry.Started, timeNow)
-	assert.Equal(t, expectedExecutionEntry.Ended, time.Time{})
-	assert.Equal(t, expectedExecutionEntry.Status, exec.Status)
+	assert.Equal(t, len(expectedExecutions), 1)
+	assert.Equal(t, expectedExecutions[0].ExecutionId, exec.ExecutionId)
+	assert.Equal(t, expectedExecutions[0].PlaybookId, exec.PlaybookId)
+	assert.Equal(t, expectedExecutions[0].StepResults, exec.StepResults)
+	assert.Equal(t, expectedExecutions[0].Started, timeNow)
+	assert.Equal(t, expectedExecutions[0].Ended, time.Time{})
+	assert.Equal(t, expectedExecutions[0].Status, exec.Status)
 	assert.Equal(t, err, nil)
 	mock_time.AssertExpectations(t)
 }
@@ -143,6 +166,7 @@ func TestReportWorkflowStartFifo(t *testing.T) {
 		Type:          "action",
 		ID:            "action--test",
 		Name:          "ssh-tests",
+		Description:   "step description",
 		StepVariables: cacao.NewVariables(expectedVariables),
 		Commands:      []cacao.Command{expectedCommand},
 		Cases:         map[string]string{},
@@ -176,7 +200,8 @@ func TestReportWorkflowStartFifo(t *testing.T) {
 	playbook := cacao.Playbook{
 		ID:                            "test",
 		Type:                          "test",
-		Name:                          "ssh-test",
+		Name:                          "ssh-test-playbook",
+		Description:                   "Playbook description",
 		WorkflowStart:                 step1.ID,
 		AuthenticationInfoDefinitions: map[string]cacao.AuthenticationInformation{"id": expectedAuth},
 		AgentDefinitions:              map[string]cacao.AgentTarget{"agent1": expectedAgent},
@@ -209,6 +234,8 @@ func TestReportWorkflowStartFifo(t *testing.T) {
 		entry := cache_model.ExecutionEntry{
 			ExecutionId: executionId,
 			PlaybookId:  "test",
+			Name:        "ssh-test-playbook",
+			Description: "Playbook description",
 			Started:     expectedStarted,
 			Ended:       expectedEnded,
 			StepResults: map[string]cache_model.StepResult{},
@@ -224,6 +251,8 @@ func TestReportWorkflowStartFifo(t *testing.T) {
 		entry := cache_model.ExecutionEntry{
 			ExecutionId: executionId,
 			PlaybookId:  "test",
+			Name:        "ssh-test-playbook",
+			Description: "Playbook description",
 			Started:     expectedStarted,
 			Ended:       expectedEnded,
 			StepResults: map[string]cache_model.StepResult{},
@@ -283,6 +312,7 @@ func TestReportWorkflowEnd(t *testing.T) {
 		Type:          "action",
 		ID:            "action--test",
 		Name:          "ssh-tests",
+		Description:   "step 1",
 		StepVariables: cacao.NewVariables(expectedVariables),
 		Commands:      []cacao.Command{expectedCommand},
 		Cases:         map[string]string{},
@@ -316,7 +346,8 @@ func TestReportWorkflowEnd(t *testing.T) {
 	playbook := cacao.Playbook{
 		ID:                            "test",
 		Type:                          "test",
-		Name:                          "ssh-test",
+		Name:                          "ssh-test-playbook",
+		Description:                   "Playbook description",
 		WorkflowStart:                 step1.ID,
 		AuthenticationInfoDefinitions: map[string]cacao.AuthenticationInformation{"id": expectedAuth},
 		AgentDefinitions:              map[string]cacao.AgentTarget{"agent1": expectedAgent},
@@ -343,6 +374,8 @@ func TestReportWorkflowEnd(t *testing.T) {
 	expectedExecutionEntry := cache_model.ExecutionEntry{
 		ExecutionId: executionId0,
 		PlaybookId:  "test",
+		Name:        "ssh-test-playbook",
+		Description: "Playbook description",
 		Started:     timeNow,
 		Ended:       timeNow,
 		StepResults: map[string]cache_model.StepResult{},
