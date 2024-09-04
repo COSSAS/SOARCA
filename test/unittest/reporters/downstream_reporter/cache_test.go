@@ -91,10 +91,16 @@ func TestReportWorkflowStartFirst(t *testing.T) {
 
 	mock_time.On("Now").Return(timeNow)
 
-	cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables))
+	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables))
+	if err != nil {
+		t.Fail()
+	}
 
 	mock_time.On("Now").Return(timeNow)
-	cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(), nil)
+	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(), nil)
+	if err != nil {
+		t.Fail()
+	}
 
 	expectedStarted, _ := time.Parse(layout, "2014-11-12T11:45:26.371Z")
 	expectedEnded, _ := time.Parse(layout, "0001-01-01T00:00:00Z")
