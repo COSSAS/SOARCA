@@ -44,6 +44,12 @@ SOARCA currently supports the following transport mechanisms:
 {{< /cardpane >}}
 </div>
 
+{{% card header="PowerShell WinRM - Native" %}}
+[![PowerShell](/SOARCA/images/logos-external/powershell.svg)](/docs/soarca-extensions/native-capabilities/#powershell-capability)
+{{% /card %}}
+{{< /cardpane >}}
+</div>
+
 
 ## Features of SOARCA
 

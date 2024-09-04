@@ -15,6 +15,7 @@ The following capability modules are currently defined in SOARCA:
 - ssh
 - http-api
 - openc2-http
+- powershell
 
 The capability will be selected based on the agent in the CACAO playbook step. The agent should be of type `soarca` and have a name corresponding to `soarca-[capability name]`. 
 
@@ -197,6 +198,69 @@ The result of the step is stored in the following output variables:
     }
 }
 ```
+
+
+
+### PowerShell capability
+
+This capability implements the [PowerShell Command](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256499), by sending [PowerShell commands](https://learn.microsoft.com/en-us/powershell/scripting/overview?view=powershell-7.4) using the [WinRM transport method](https://learn.microsoft.com/en-us/windows/win32/winrm/portal).
+
+It supports the username, password authentication mechanism.
+
+#### Success and failure
+
+Any successful command will have a `__soarca_powershell_result__`. If an error occurs on the target a `__soarca_powershell_error__` populated will be returned and Error will be set.
+
+#### Variables
+
+It supports variable interpolation in the command, headers, and target definitions.
+
+The result of the step is stored in the following output variables:
+
+```json
+{
+    "__soarca_powershell_result__": {
+        "type": "string",
+        "value": "<raw powershell output>"
+    }, 
+    "__soarca_powershell_error__": {
+        "type": "string",
+        "value": "<raw powershell error output>"
+    },
+}
+```
+
+#### Example
+
+```json
+{
+    "workflow": {
+        "action--aa1470d8-57cc-4164-ae07-05745bef24f4": {
+            "type": "action",
+            "agent": "soarca--00040001-1000-1000-a000-000100010001",
+            "targets": ["net-address--d42d6731-791d-41af-8fa4-7b5699dfe402"],
+            "commands": [{
+                "type": "powershell",
+                "command": "pwd"
+            }]
+        }
+    },
+    "agent_definitions": {
+        "soarca--00040001-1000-1000-a000-000100010001": {
+            "type": "soarca",
+            "name": "soarca-powershell"
+        }
+    },
+    "target_definitions": {
+        "net-address--d42d6731-791d-41af-8fa4-7b5699dfe402": {
+            "type": "net-address",
+            "name": "Windows Server or Client with WinRM enabled",
+            "address": { "ipv4": ["187.0.2.12"] }
+        }
+    }
+}
+```
+
 
 ---
 

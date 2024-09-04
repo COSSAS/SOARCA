@@ -104,6 +104,7 @@ The capability selector will select the implementation which is capable of execu
     * ssh
     * http-api
     * openc2-http
+    * powershell
 * **Coming soon**
     * manual
 * **Future (potentially)**

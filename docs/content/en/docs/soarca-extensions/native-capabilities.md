@@ -28,3 +28,9 @@ CACAO documentation: [HTTP API Command](https://docs.oasis-open.org/cacao/securi
 The SSH capability allows executing commands on systems running an SSH-server.
 
 CACAO documentation: [SSH Command](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256500)
+
+## Powershell capability
+
+The PowerShell capability allows executing commands on systems running an WinRM server.
+
+CACAO documentation: [PowerShell Command](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256499)
