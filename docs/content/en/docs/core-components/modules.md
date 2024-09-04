@@ -203,7 +203,7 @@ The result of the step is stored in the following output variables:
 
 ### PowerShell capability
 
-This capability implements the [PowerShell Command](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256499), by sending [PowerShell commands](https://learn.microsoft.com/en-us/powershell/scripting/overview?view=powershell-7.4)  using the [WinRM transport method](https://learn.microsoft.com/en-us/windows/win32/winrm/portal).
+This capability implements the [PowerShell Command](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256499), by sending [PowerShell commands](https://learn.microsoft.com/en-us/powershell/scripting/overview?view=powershell-7.4) using the [WinRM transport method](https://learn.microsoft.com/en-us/windows/win32/winrm/portal).
 
 It supports the username, password authentication mechanism.
 
