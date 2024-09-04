@@ -229,6 +229,8 @@ func (cacheReporter *Cache) ReportWorkflowStart(executionId uuid.UUID, playbook 
 	newExecutionEntry := cache_report.ExecutionEntry{
 		ExecutionId: executionId,
 		PlaybookId:  playbook.ID,
+		Name:        playbook.Name,
+		Description: playbook.Description,
 		Started:     cacheReporter.timeUtil.Now(),
 		Ended:       time.Time{},
 		StepResults: map[string]cache_report.StepResult{},
@@ -266,6 +268,8 @@ func (cacheReporter *Cache) ReportStepStart(executionId uuid.UUID, step cacao.St
 	newStep := cache_report.StepResult{
 		ExecutionId: executionId,
 		StepId:      step.ID,
+		Name:        step.Name,
+		Description: step.Description,
 		Started:     cacheReporter.timeUtil.Now(),
 		Ended:       time.Time{},
 		Variables:   variables,
