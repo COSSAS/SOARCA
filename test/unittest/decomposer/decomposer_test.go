@@ -353,14 +353,188 @@ func TestExecuteEmptyMultiStep(t *testing.T) {
 
 	mock_reporter.On("ReportWorkflowStart", id, playbook, timeNow).Return()
 	mock_time.On("Sleep", time.Millisecond*0).Return()
-	mock_reporter.On("ReportWorkflowEnd", id, playbook, errors.New("empty success step"), timeNow).Return()
+	mock_reporter.On("ReportWorkflowEnd", id, playbook, errors.New("empty completion step"), timeNow).Return()
 
 	returnedId, err := decomposer2.Execute(playbook)
 	uuid_mock2.AssertExpectations(t)
 	fmt.Println(err)
-	assert.Equal(t, err, errors.New("empty success step"))
+	assert.Equal(t, err, errors.New("empty completion step"))
 	assert.Equal(t, returnedId.ExecutionId, id)
 	mock_action_executor2.AssertExpectations(t)
+	mock_reporter.AssertExpectations(t)
+}
+
+/*
+An error-raising step execution will raise an error for the playbook execution,
+Thus reported as execution failure.
+*/
+func TestFailingStepResultsInFailingPlaybook(t *testing.T) {
+	mock_action_executor := new(mock_executor.Mock_Action_Executor)
+	mock_playbook_action_executor := new(mock_playbook_action_executor.Mock_PlaybookActionExecutor)
+	mock_condition_executor := new(mock_condition_executor.Mock_Condition)
+	uuid_mock := new(mock_guid.Mock_Guid)
+	mock_reporter := new(mock_reporter.Mock_Reporter)
+	mock_time := new(mock_time.MockTime)
+
+	expectedCommand := cacao.Command{
+		Type:    "ssh",
+		Command: "ssh ls -la",
+	}
+
+	expectedCommand2 := cacao.Command{
+		Type:    "ssh",
+		Command: "ssh pwd",
+	}
+
+	expectedCommand3 := cacao.Command{
+		Type:    "ssh",
+		Command: "ssh breakeverything.exe",
+	}
+
+	expectedVariables := cacao.Variable{
+		Type:  "string",
+		Name:  "var1",
+		Value: "testing",
+	}
+
+	expectedVariables2 := cacao.Variable{
+		Type:  "string",
+		Name:  "var2",
+		Value: "testing2",
+	}
+
+	decomposer := decomposer.New(mock_action_executor,
+		mock_playbook_action_executor,
+		mock_condition_executor,
+		uuid_mock,
+		mock_reporter,
+		mock_time)
+
+	step0 := cacao.Step{
+		Type:         "start",
+		ID:           "start--test",
+		OnCompletion: "action--test",
+	}
+
+	step1 := cacao.Step{
+		Type:          "action",
+		ID:            "action--test",
+		Name:          "ssh-tests",
+		StepVariables: cacao.NewVariables(expectedVariables),
+		Commands:      []cacao.Command{expectedCommand},
+		Cases:         map[string]string{},
+		OnCompletion:  "action--test2",
+		Agent:         "agent1",
+		Targets:       []string{"target1"},
+	}
+
+	step2 := cacao.Step{
+		Type:          "action",
+		ID:            "action--test2",
+		Name:          "ssh-tests",
+		StepVariables: cacao.NewVariables(expectedVariables2),
+		Commands:      []cacao.Command{expectedCommand2},
+		Cases:         map[string]string{},
+		Agent:         "agent1",
+		Targets:       []string{"target1"},
+		OnCompletion:  "action--test3",
+	}
+	step3 := cacao.Step{
+		Type:          "action",
+		ID:            "action--test3",
+		Name:          "ssh-tests",
+		StepVariables: cacao.NewVariables(expectedVariables2),
+		Commands:      []cacao.Command{expectedCommand3},
+		Agent:         "agent1",
+		Targets:       []string{"target1"},
+		OnCompletion:  "end--test",
+	}
+	end := cacao.Step{
+		Type: "end",
+		ID:   "end--test",
+		Name: "end step",
+	}
+
+	expectedAuth := cacao.AuthenticationInformation{
+		Name: "user",
+		ID:   "auth1",
+	}
+
+	expectedTarget := cacao.AgentTarget{
+		Name:               "sometarget",
+		AuthInfoIdentifier: "auth1",
+		ID:                 "target1",
+	}
+
+	expectedAgent := cacao.AgentTarget{
+		ID:   "agent1",
+		Type: "soarca",
+		Name: "soarca-ssh",
+	}
+
+	playbook := cacao.Playbook{
+		ID:                            "test",
+		Type:                          "test",
+		Name:                          "ssh-test",
+		WorkflowStart:                 "start--test",
+		AuthenticationInfoDefinitions: map[string]cacao.AuthenticationInformation{"id": expectedAuth},
+		AgentDefinitions:              map[string]cacao.AgentTarget{"agent1": expectedAgent},
+		TargetDefinitions:             map[string]cacao.AgentTarget{"target1": expectedTarget},
+
+		Workflow: map[string]cacao.Step{step0.ID: step0, step1.ID: step1, step2.ID: step2, step3.ID: step3, end.ID: end},
+	}
+
+	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	metaStep1 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step1.ID}
+	metaStep2 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step2.ID}
+	metaStep3 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step3.ID}
+
+	uuid_mock.On("New").Return(executionId)
+
+	firstResult := cacao.Variable{Name: "result", Value: "value"}
+
+	playbookStepMetadata1 := action.PlaybookStepMetadata{
+		Step:      step1,
+		Targets:   playbook.TargetDefinitions,
+		Auth:      playbook.AuthenticationInfoDefinitions,
+		Agent:     expectedAgent,
+		Variables: cacao.NewVariables(expectedVariables),
+	}
+
+	mock_reporter.On("ReportWorkflowStart", executionId, playbook).Return()
+	mock_time.On("Sleep", time.Millisecond*0).Return()
+	mock_action_executor.On("Execute", metaStep1, playbookStepMetadata1).Return(cacao.NewVariables(firstResult), nil)
+
+	playbookStepMetadata2 := action.PlaybookStepMetadata{
+		Step:      step2,
+		Targets:   playbook.TargetDefinitions,
+		Auth:      playbook.AuthenticationInfoDefinitions,
+		Agent:     expectedAgent,
+		Variables: cacao.NewVariables(expectedVariables2, firstResult),
+	}
+	mock_action_executor.On("Execute", metaStep2, playbookStepMetadata2).Return(cacao.NewVariables(cacao.Variable{Name: "all", Value: "good"}), nil)
+
+	playbookStepMetadata3 := action.PlaybookStepMetadata{
+		Step:      step3,
+		Targets:   playbook.TargetDefinitions,
+		Auth:      playbook.AuthenticationInfoDefinitions,
+		Agent:     expectedAgent,
+		Variables: cacao.NewVariables(expectedVariables2, firstResult, cacao.Variable{Name: "all", Value: "good"}),
+	}
+
+	mock_action_executor.On("Execute", metaStep3, playbookStepMetadata3).Return(cacao.NewVariables(), errors.New("everything broke"))
+
+	expectedError := errors.New("playbook execution failed at step [ action--test3 ]. See step log for error information")
+	mock_reporter.On("ReportWorkflowEnd", executionId, playbook, expectedError).Return()
+
+	_, err := decomposer.Execute(playbook)
+	t.Log(err)
+	uuid_mock.AssertExpectations(t)
+	assert.Equal(t, err, expectedError)
+	// Confirms that the expectedError has been raised and reported correctly.
+	// If the Execution had not actually raised the expected error, the
+	// mock_reporter.On("ReportWorkflowEnd", ..., expectedError), would not match
+	mock_action_executor.AssertExpectations(t)
 	mock_reporter.AssertExpectations(t)
 }
 
@@ -421,13 +595,13 @@ func TestExecuteIllegalMultiStep(t *testing.T) {
 	uuid_mock2.On("New").Return(id)
 	mock_reporter.On("ReportWorkflowStart", id, playbook, timeNow).Return()
 	mock_time.On("Sleep", time.Millisecond*0).Return()
-	mock_reporter.On("ReportWorkflowEnd", id, playbook, errors.New("empty success step"), timeNow).Return()
+	mock_reporter.On("ReportWorkflowEnd", id, playbook, errors.New("empty completion step"), timeNow).Return()
 
 	returnedId, err := decomposer2.Execute(playbook)
 	uuid_mock2.AssertExpectations(t)
 	mock_reporter.AssertExpectations(t)
 	fmt.Println(err)
-	assert.Equal(t, err, errors.New("empty success step"))
+	assert.Equal(t, err, errors.New("empty completion step"))
 	assert.Equal(t, returnedId.ExecutionId, id)
 	mock_action_executor2.AssertExpectations(t)
 }
