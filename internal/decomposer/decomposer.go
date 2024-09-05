@@ -158,7 +158,7 @@ func (decomposer *Decomposer) ExecuteBranch(stepId string, scopeVariables cacao.
 		outputVariables, err := decomposer.ExecuteStep(currentStep, scopeVariables)
 
 		if err == nil {
-			stepId = currentStep.OnCompletion
+			stepId = onCompletionStepId
 			returnVariables.Merge(outputVariables)
 			scopeVariables.Merge(outputVariables)
 		} else {
