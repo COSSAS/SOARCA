@@ -5,6 +5,7 @@ DIRECTORY = $(sort $(dir $(wildcard ./test/*/)))
 VERSION = $(shell git describe --tags --dirty)
 BUILDTIME := $(shell  date '+%Y-%m-%dT%T%z')
 
+GOLDFLAGS += -s -w
 GOLDFLAGS += -X main.Version=$(VERSION)
 GOLDFLAGS += -X main.Buildtime=$(BUILDTIME)
 GOFLAGS = -ldflags "$(GOLDFLAGS)"
