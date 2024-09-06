@@ -137,6 +137,7 @@ func (httpRequest *HttpOptions) handleResponse(response *http.Response) ([]byte,
 func verifyAuthInfoMatchesAgentTarget(
 	target *cacao.AgentTarget, authInfo *cacao.AuthenticationInformation,
 ) error {
+	log.Trace("target id: ", target.AuthInfoIdentifier, " auth info object id: ", authInfo.ID)
 	if target.AuthInfoIdentifier == "" || authInfo.ID == "" {
 		return errors.New("target target.AuthInfoIndentifier or authInfo.ID is empty")
 	}
@@ -163,6 +164,7 @@ func (httpOptions *HttpOptions) addAuthTo(request *http.Request) error {
 		return nil
 	}
 	if err := verifyAuthInfoMatchesAgentTarget(httpOptions.Target, httpOptions.Auth); err != nil {
+		log.Error(err)
 		return errors.New("auth info does not match target Id")
 	}
 
