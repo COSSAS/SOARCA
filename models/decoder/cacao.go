@@ -41,9 +41,9 @@ func DecodeValidate(data []byte) *cacao.Playbook {
 }
 
 func SetPlaybookKeysAsId(playbook *cacao.Playbook) {
-	for key, workflow := range playbook.Workflow {
-		workflow.ID = key
-		playbook.Workflow[key] = workflow
+	for key, step := range playbook.Workflow {
+		step.ID = key
+		playbook.Workflow[key] = step
 	}
 
 	for key, target := range playbook.TargetDefinitions {
