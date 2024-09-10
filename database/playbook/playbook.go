@@ -8,6 +8,7 @@ import (
 	validator "soarca/internal/validators"
 	"soarca/models/api"
 	"soarca/models/cacao"
+	"soarca/models/decoder"
 )
 
 type IPlaybookRepository interface {
@@ -63,6 +64,7 @@ func (playbookRepo *PlaybookRepository) GetPlaybooks() ([]cacao.Playbook, error)
 	for _, playbook := range playbooks {
 		// get the cacao playbook id and add to the return list
 		playbook, ok := playbook.(cacao.Playbook)
+		decoder.SetPlaybookKeysAsId(&playbook)
 		if !ok {
 			return nil, errors.New("type assertion failed for cacao.playbook type")
 		}
@@ -78,6 +80,7 @@ func (playbookRepo *PlaybookRepository) Create(jsonData *[]byte) (cacao.Playbook
 		return cacao.Playbook{}, err
 	}
 	playbook, ok := client_data.(cacao.Playbook)
+	decoder.SetPlaybookKeysAsId(&playbook)
 	if !ok {
 		// handle incorrect casting
 		return cacao.Playbook{}, errors.New("failed to cast playbook object")
@@ -93,8 +96,9 @@ func (playbookRepo *PlaybookRepository) Read(id string) (cacao.Playbook, error) 
 	}
 
 	cacaoPlaybook, ok := returnedObject.(cacao.Playbook)
+	decoder.SetPlaybookKeysAsId(&cacaoPlaybook)
 	if !ok {
-		err = errors.New("Could not cast lookup object to cacao.Playbook type")
+		err = errors.New("could not cast lookup object to cacao.Playbook type")
 		return cacao.Playbook{}, err
 	}
 
@@ -108,8 +112,9 @@ func (playbookRepo *PlaybookRepository) Update(id string, jsonData *[]byte) (cac
 		return cacao.Playbook{}, err
 	}
 	cacaoPlaybook, ok := client_data.(cacao.Playbook)
+	decoder.SetPlaybookKeysAsId(&cacaoPlaybook)
 	if !ok {
-		err = errors.New("Could not cast lookup object to cacao.Playbook type")
+		err = errors.New("could not cast lookup object to cacao.Playbook type")
 		return cacao.Playbook{}, err
 	}
 	return cacaoPlaybook, playbookRepo.db.Update(id, client_data)
