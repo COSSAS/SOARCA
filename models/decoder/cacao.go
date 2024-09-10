@@ -40,17 +40,10 @@ func DecodeValidate(data []byte) *cacao.Playbook {
 	return playbook
 }
 
-func decode(data []byte) *cacao.Playbook {
-	playbook := cacao.NewPlaybook()
-
-	if err := json.Unmarshal(data, playbook); err != nil {
-		log.Error(err)
-		return nil
-	}
-
-	for key, workflow := range playbook.Workflow {
-		workflow.ID = key
-		playbook.Workflow[key] = workflow
+func SetPlaybookKeysAsId(playbook *cacao.Playbook) {
+	for key, step := range playbook.Workflow {
+		step.ID = key
+		playbook.Workflow[key] = step
 	}
 
 	for key, target := range playbook.TargetDefinitions {
@@ -79,6 +72,17 @@ func decode(data []byte) *cacao.Playbook {
 			step.StepVariables.InsertOrReplace(variable)
 		}
 	}
+}
+
+func decode(data []byte) *cacao.Playbook {
+	playbook := cacao.NewPlaybook()
+
+	if err := json.Unmarshal(data, playbook); err != nil {
+		log.Error(err)
+		return nil
+	}
+
+	SetPlaybookKeysAsId(playbook)
 
 	return playbook
 }
