@@ -37,6 +37,13 @@ func TestSshConnection(t *testing.T) {
 		Value: "testing",
 	}
 
+	outArg := cacao.Variable{
+		Type: cacao.VariableTypeString,
+		Name: "__soarca_ssh_result__",
+	}
+	inArgs := []string{}
+	outArgs := []string{outArg.Name}
+
 	var executionId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	var playbookId = "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
 	var stepId = "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
@@ -45,7 +52,9 @@ func TestSshConnection(t *testing.T) {
 		expectedCommand,
 		expectedAuthenticationInformation,
 		expectedTarget,
-		cacao.NewVariables(expectedVariables))
+		cacao.NewVariables(expectedVariables, outArg),
+		inArgs,
+		outArgs)
 	if err != nil {
 		fmt.Println(err)
 		t.Fail()

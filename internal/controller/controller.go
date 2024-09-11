@@ -58,7 +58,7 @@ var mainCache = cache.Cache{}
 const defaultCacheSize int = 10
 
 func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
-	ssh := new(ssh.SshCapability)
+	ssh := ssh.New()
 	capabilities := map[string]capability.ICapability{ssh.GetType(): ssh}
 
 	skip, _ := strconv.ParseBool(utils.GetEnv("HTTP_SKIP_CERT_VALIDATION", "false"))

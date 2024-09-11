@@ -33,7 +33,9 @@ func (finCapability *FinCapability) Execute(
 	command cacao.Command,
 	authentication cacao.AuthenticationInformation,
 	target cacao.AgentTarget,
-	variables cacao.Variables) (cacao.Variables, error) {
+	variables cacao.Variables,
+	inputVariableKeys []string,
+	outputVariablesKeys []string) (cacao.Variables, error) {
 
 	finCommand := finModel.NewCommand()
 	finCommand.CommandSubstructure.Command = command.Command
@@ -44,5 +46,6 @@ func (finCapability *FinCapability) Execute(
 	finCommand.CommandSubstructure.Context.StepId = metadata.StepId
 
 	log.Trace("created command ", finCommand)
+
 	return finCapability.finProtocol.SendCommand(finCommand)
 }
