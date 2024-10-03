@@ -107,9 +107,14 @@ func TestExecutePlaybook(t *testing.T) {
 		Variables: cacao.NewVariables(expectedVariables),
 	}
 
-	mock_reporter.On("ReportWorkflowStart", executionId, playbook).Return()
+	layout := "2006-01-02T15:04:05.000Z"
+	str := "2014-11-12T11:45:26.371Z"
+	timeNow, _ := time.Parse(layout, str)
+	mock_time.On("Now").Return(timeNow)
+
+	mock_reporter.On("ReportWorkflowStart", executionId, playbook, timeNow).Return()
 	mock_time.On("Sleep", time.Millisecond*10).Return()
-	mock_reporter.On("ReportWorkflowEnd", executionId, playbook, nil).Return()
+	mock_reporter.On("ReportWorkflowEnd", executionId, playbook, nil, timeNow).Return()
 	mock_action_executor.On("Execute", metaStep1, playbookStepMetadata).Return(cacao.NewVariables(cacao.Variable{Name: "return", Value: "value"}), nil)
 
 	details, err := decomposer.Execute(playbook)
@@ -245,9 +250,14 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 		Variables: cacao.NewVariables(expectedVariables),
 	}
 
-	mock_reporter.On("ReportWorkflowStart", executionId, playbook).Return()
+	layout := "2006-01-02T15:04:05.000Z"
+	str := "2014-11-12T11:45:26.371Z"
+	timeNow, _ := time.Parse(layout, str)
+	mock_time.On("Now").Return(timeNow)
+
+	mock_reporter.On("ReportWorkflowStart", executionId, playbook, timeNow).Return()
 	mock_time.On("Sleep", time.Millisecond*0).Return()
-	mock_reporter.On("ReportWorkflowEnd", executionId, playbook, nil).Return()
+	mock_reporter.On("ReportWorkflowEnd", executionId, playbook, nil, timeNow).Return()
 	mock_action_executor.On("Execute", metaStep1, playbookStepMetadata1).Return(cacao.NewVariables(firstResult), nil)
 
 	playbookStepMetadata2 := action.PlaybookStepMetadata{
@@ -336,9 +346,14 @@ func TestExecuteEmptyMultiStep(t *testing.T) {
 	id, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	uuid_mock2.On("New").Return(id)
 
-	mock_reporter.On("ReportWorkflowStart", id, playbook).Return()
+	layout := "2006-01-02T15:04:05.000Z"
+	str := "2014-11-12T11:45:26.371Z"
+	timeNow, _ := time.Parse(layout, str)
+	mock_time.On("Now").Return(timeNow)
+
+	mock_reporter.On("ReportWorkflowStart", id, playbook, timeNow).Return()
 	mock_time.On("Sleep", time.Millisecond*0).Return()
-	mock_reporter.On("ReportWorkflowEnd", id, playbook, errors.New("empty success step")).Return()
+	mock_reporter.On("ReportWorkflowEnd", id, playbook, errors.New("empty success step"), timeNow).Return()
 
 	returnedId, err := decomposer2.Execute(playbook)
 	uuid_mock2.AssertExpectations(t)
@@ -397,11 +412,16 @@ func TestExecuteIllegalMultiStep(t *testing.T) {
 		Workflow: map[string]cacao.Step{step1.ID: step1},
 	}
 
+	layout := "2006-01-02T15:04:05.000Z"
+	str := "2014-11-12T11:45:26.371Z"
+	timeNow, _ := time.Parse(layout, str)
+	mock_time.On("Now").Return(timeNow)
+
 	id, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	uuid_mock2.On("New").Return(id)
-	mock_reporter.On("ReportWorkflowStart", id, playbook).Return()
+	mock_reporter.On("ReportWorkflowStart", id, playbook, timeNow).Return()
 	mock_time.On("Sleep", time.Millisecond*0).Return()
-	mock_reporter.On("ReportWorkflowEnd", id, playbook, errors.New("empty success step")).Return()
+	mock_reporter.On("ReportWorkflowEnd", id, playbook, errors.New("empty success step"), timeNow).Return()
 
 	returnedId, err := decomposer2.Execute(playbook)
 	uuid_mock2.AssertExpectations(t)
@@ -458,10 +478,15 @@ func TestExecutePlaybookAction(t *testing.T) {
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	metaStep1 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step1.ID}
 
+	layout := "2006-01-02T15:04:05.000Z"
+	str := "2014-11-12T11:45:26.371Z"
+	timeNow, _ := time.Parse(layout, str)
+	mock_time.On("Now").Return(timeNow)
+
 	uuid_mock.On("New").Return(executionId)
-	mock_reporter.On("ReportWorkflowStart", executionId, playbook).Return()
+	mock_reporter.On("ReportWorkflowStart", executionId, playbook, timeNow).Return()
 	mock_time.On("Sleep", time.Millisecond*0).Return()
-	mock_reporter.On("ReportWorkflowEnd", executionId, playbook, nil).Return()
+	mock_reporter.On("ReportWorkflowEnd", executionId, playbook, nil, timeNow).Return()
 
 	mock_playbook_action_executor.On("Execute",
 		metaStep1,
@@ -606,11 +631,16 @@ func TestExecuteIfCondition(t *testing.T) {
 		TargetDefinitions: map[string]cacao.AgentTarget{expectedTarget.ID: expectedTarget},
 	}
 
+	layout := "2006-01-02T15:04:05.000Z"
+	str := "2014-11-12T11:45:26.371Z"
+	timeNow, _ := time.Parse(layout, str)
+	mock_time.On("Now").Return(timeNow)
+
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	metaStepIf := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: stepIf.ID}
 
 	uuid_mock.On("New").Return(executionId)
-	mock_reporter.On("ReportWorkflowStart", executionId, playbook).Return()
+	mock_reporter.On("ReportWorkflowStart", executionId, playbook, timeNow).Return()
 	mock_time.On("Sleep", time.Millisecond*0).Return()
 
 	mock_condition_executor.On("Execute",
@@ -647,7 +677,7 @@ func TestExecuteIfCondition(t *testing.T) {
 	mock_action_executor.On("Execute",
 		metaStepCompletion,
 		stepCompletionDetails).Return(cacao.NewVariables(), nil)
-	mock_reporter.On("ReportWorkflowEnd", executionId, playbook, nil).Return()
+	mock_reporter.On("ReportWorkflowEnd", executionId, playbook, nil, timeNow).Return()
 	details, err := decomposer.Execute(playbook)
 	uuid_mock.AssertExpectations(t)
 	fmt.Println(err)

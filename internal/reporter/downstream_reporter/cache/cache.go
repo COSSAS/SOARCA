@@ -105,7 +105,7 @@ func (cacheReporter *Cache) addExecutionFIFO(newExecutionEntry cache_report.Exec
 	// Unlocked
 }
 
-func (cacheReporter *Cache) upateEndExecutionWorkflow(executionId uuid.UUID, workflowError error) error {
+func (cacheReporter *Cache) upateEndExecutionWorkflow(executionId uuid.UUID, workflowError error, at time.Time) error {
 	// The cache should stay locked for the whole modification period
 	// in order to prevent e.g. the execution data being popped-out due to FIFO
 	// while its status or some of its steps are being updated
@@ -125,7 +125,7 @@ func (cacheReporter *Cache) upateEndExecutionWorkflow(executionId uuid.UUID, wor
 	} else {
 		executionEntry.Status = cache_report.SuccessfullyExecuted
 	}
-	executionEntry.Ended = cacheReporter.timeUtil.Now()
+	executionEntry.Ended = at
 	cacheReporter.Cache[executionId.String()] = executionEntry
 
 	return nil
@@ -163,7 +163,7 @@ func (cacheReporter *Cache) addStartExecutionStep(executionId uuid.UUID, newStep
 	// Unlocked
 }
 
-func (cacheReporter *Cache) upateEndExecutionStep(executionId uuid.UUID, stepId string, returnVars cacao.Variables, stepError error, acceptedStepStati []cache_report.Status) error {
+func (cacheReporter *Cache) upateEndExecutionStep(executionId uuid.UUID, stepId string, returnVars cacao.Variables, stepError error, acceptedStepStati []cache_report.Status, at time.Time) error {
 	// Locked
 	cacheReporter.mutex.Lock()
 	defer cacheReporter.mutex.Unlock()
@@ -173,10 +173,6 @@ func (cacheReporter *Cache) upateEndExecutionStep(executionId uuid.UUID, stepId 
 		return err
 	}
 
-	if executionEntry.Status != cache_report.Ongoing {
-		return errors.New("trying to report on the execution of a step for an already reportedly terminated playbook execution")
-		// Unlocked
-	}
 	executionStepResult, ok := executionEntry.StepResults[stepId]
 	if !ok {
 		// TODO: must fix: all steps should start empty values but already present. Check should be
@@ -195,7 +191,7 @@ func (cacheReporter *Cache) upateEndExecutionStep(executionId uuid.UUID, stepId 
 	} else {
 		executionStepResult.Status = cache_report.SuccessfullyExecuted
 	}
-	executionStepResult.Ended = cacheReporter.timeUtil.Now()
+	executionStepResult.Ended = at
 	executionStepResult.Variables = returnVars
 	executionEntry.StepResults[stepId] = executionStepResult
 	cacheReporter.Cache[executionId.String()] = executionEntry
@@ -224,14 +220,14 @@ func (cacheReporter *Cache) GetExecutionReport(executionKey uuid.UUID) (cache_re
 
 // ############################### Reporting interface
 
-func (cacheReporter *Cache) ReportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook) error {
+func (cacheReporter *Cache) ReportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook, at time.Time) error {
 
 	newExecutionEntry := cache_report.ExecutionEntry{
 		ExecutionId: executionId,
 		PlaybookId:  playbook.ID,
 		Name:        playbook.Name,
 		Description: playbook.Description,
-		Started:     cacheReporter.timeUtil.Now(),
+		Started:     at,
 		Ended:       time.Time{},
 		StepResults: map[string]cache_report.StepResult{},
 		Status:      cache_report.Ongoing,
@@ -243,13 +239,13 @@ func (cacheReporter *Cache) ReportWorkflowStart(executionId uuid.UUID, playbook 
 	return nil
 }
 
-func (cacheReporter *Cache) ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook, workflowError error) error {
+func (cacheReporter *Cache) ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook, workflowError error, at time.Time) error {
 
-	err := cacheReporter.upateEndExecutionWorkflow(executionId, workflowError)
+	err := cacheReporter.upateEndExecutionWorkflow(executionId, workflowError, at)
 	return err
 }
 
-func (cacheReporter *Cache) ReportStepStart(executionId uuid.UUID, step cacao.Step, variables cacao.Variables) error {
+func (cacheReporter *Cache) ReportStepStart(executionId uuid.UUID, step cacao.Step, variables cacao.Variables, at time.Time) error {
 
 	commandsB64 := []string{}
 	isAutomated := true
@@ -270,7 +266,8 @@ func (cacheReporter *Cache) ReportStepStart(executionId uuid.UUID, step cacao.St
 		StepId:      step.ID,
 		Name:        step.Name,
 		Description: step.Description,
-		Started:     cacheReporter.timeUtil.Now(),
+		//Started:     cacheReporter.timeUtil.Now(),
+		Started:     at,
 		Ended:       time.Time{},
 		Variables:   variables,
 		CommandsB64: commandsB64,
@@ -284,7 +281,7 @@ func (cacheReporter *Cache) ReportStepStart(executionId uuid.UUID, step cacao.St
 	return err
 }
 
-func (cacheReporter *Cache) ReportStepEnd(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, stepError error) error {
+func (cacheReporter *Cache) ReportStepEnd(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, stepError error, at time.Time) error {
 
 	// stepId, err := uuid.Parse(step.ID)
 	// if err != nil {
@@ -292,7 +289,7 @@ func (cacheReporter *Cache) ReportStepEnd(executionId uuid.UUID, step cacao.Step
 	// }
 
 	acceptedStepStati := []cache_report.Status{cache_report.Ongoing}
-	err := cacheReporter.upateEndExecutionStep(executionId, step.ID, returnVars, stepError, acceptedStepStati)
+	err := cacheReporter.upateEndExecutionStep(executionId, step.ID, returnVars, stepError, acceptedStepStati, at)
 
 	return err
 }

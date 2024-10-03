@@ -3,6 +3,7 @@ package action_executor_test
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"soarca/internal/capability"
 	"soarca/internal/executors/action"
@@ -10,6 +11,7 @@ import (
 	"soarca/models/execution"
 	"soarca/test/unittest/mocks/mock_capability"
 	"soarca/test/unittest/mocks/mock_reporter"
+	mock_time "soarca/test/unittest/mocks/mock_utils/time"
 
 	"github.com/go-playground/assert/v2"
 	"github.com/google/uuid"
@@ -19,10 +21,11 @@ func TestExecuteStep(t *testing.T) {
 	mock_ssh := new(mock_capability.Mock_Capability)
 	mock_http := new(mock_capability.Mock_Capability)
 	mock_reporter := new(mock_reporter.Mock_Reporter)
+	mock_time := new(mock_time.MockTime)
 
 	capabilities := map[string]capability.ICapability{"mock-ssh": mock_ssh, "http-api": mock_http}
 
-	executerObject := action.New(capabilities, mock_reporter)
+	executerObject := action.New(capabilities, mock_reporter, mock_time)
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	playbookId := "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
 	stepId := "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
@@ -74,9 +77,15 @@ func TestExecuteStep(t *testing.T) {
 		Agent:     agent,
 		Variables: cacao.NewVariables(expectedVariables),
 	}
-	mock_reporter.On("ReportStepStart", executionId, step, cacao.NewVariables(expectedVariables)).Return()
 
-	mock_reporter.On("ReportStepEnd", executionId, step, cacao.NewVariables(expectedVariables), nil).Return()
+	layout := "2006-01-02T15:04:05.000Z"
+	str := "2014-11-12T11:45:26.371Z"
+	timeNow, _ := time.Parse(layout, str)
+	mock_time.On("Now").Return(timeNow)
+
+	mock_reporter.On("ReportStepStart", executionId, step, cacao.NewVariables(expectedVariables), timeNow).Return()
+
+	mock_reporter.On("ReportStepEnd", executionId, step, cacao.NewVariables(expectedVariables), nil, timeNow).Return()
 	mock_ssh.On("Execute",
 		metadata,
 		expectedCommand,
@@ -92,16 +101,18 @@ func TestExecuteStep(t *testing.T) {
 	assert.Equal(t, err, nil)
 	mock_reporter.AssertExpectations(t)
 	mock_ssh.AssertExpectations(t)
+	mock_time.AssertExpectations(t)
 }
 
 func TestExecuteActionStep(t *testing.T) {
 	mock_ssh := new(mock_capability.Mock_Capability)
 	mock_http := new(mock_capability.Mock_Capability)
 	mock_reporter := new(mock_reporter.Mock_Reporter)
+	mock_time := new(mock_time.MockTime)
 
 	capabilities := map[string]capability.ICapability{"ssh": mock_ssh, "http-api": mock_http}
 
-	executerObject := action.New(capabilities, mock_reporter)
+	executerObject := action.New(capabilities, mock_reporter, mock_time)
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	playbookId := "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
 	stepId := "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
@@ -151,15 +162,17 @@ func TestExecuteActionStep(t *testing.T) {
 	assert.Equal(t, err, nil)
 	mock_reporter.AssertExpectations(t)
 	mock_ssh.AssertExpectations(t)
+	mock_time.AssertExpectations(t)
 }
 
 func TestNonExistingCapabilityStep(t *testing.T) {
 	mock_ssh := new(mock_capability.Mock_Capability)
 	mock_http := new(mock_capability.Mock_Capability)
+	mock_time := new(mock_time.MockTime)
 
 	capabilities := map[string]capability.ICapability{"ssh": mock_ssh, "http-api": mock_http}
 
-	executerObject := action.New(capabilities, new(mock_reporter.Mock_Reporter))
+	executerObject := action.New(capabilities, new(mock_reporter.Mock_Reporter), mock_time)
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	playbookId := "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
 	stepId := "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
@@ -199,14 +212,16 @@ func TestNonExistingCapabilityStep(t *testing.T) {
 
 	assert.Equal(t, err, errors.New("capability: non-existing is not available in soarca"))
 	mock_ssh.AssertExpectations(t)
+	mock_time.AssertExpectations(t)
 }
 
 func TestVariableInterpolation(t *testing.T) {
 	mock_capability1 := new(mock_capability.Mock_Capability)
+	mock_time := new(mock_time.MockTime)
 
 	capabilities := map[string]capability.ICapability{"cap1": mock_capability1}
 
-	executerObject := action.New(capabilities, new(mock_reporter.Mock_Reporter))
+	executerObject := action.New(capabilities, new(mock_reporter.Mock_Reporter), mock_time)
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	playbookId := "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
 	stepId := "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
@@ -396,5 +411,6 @@ func TestVariableInterpolation(t *testing.T) {
 
 	assert.Equal(t, err, nil)
 	mock_capability1.AssertExpectations(t)
+	mock_time.AssertExpectations(t)
 
 }

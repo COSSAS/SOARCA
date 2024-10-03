@@ -13,7 +13,7 @@ import (
 	"soarca/logger"
 	"soarca/models/cacao"
 	"soarca/models/execution"
-	"soarca/utils/time"
+	timeUtil "soarca/utils/time"
 
 	t "time"
 
@@ -47,7 +47,7 @@ func New(actionExecutor action.IExecuter,
 	condition condition.IExecuter,
 	guid guid.IGuid,
 	reporter reporter.IWorkflowReporter,
-	time time.ITime) *Decomposer {
+	time timeUtil.ITime) *Decomposer {
 
 	return &Decomposer{actionExecutor: actionExecutor,
 		playbookActionExecutor: playbookActionExecutor,
@@ -66,7 +66,7 @@ type Decomposer struct {
 	conditionExecutor      condition.IExecuter
 	guid                   guid.IGuid
 	reporter               reporter.IWorkflowReporter
-	time                   time.ITime
+	time                   timeUtil.ITime
 }
 
 // Execute a Playbook
@@ -106,13 +106,13 @@ func (decomposer *Decomposer) execute(playbook cacao.Playbook) error {
 	variables.Merge(playbook.PlaybookVariables)
 
 	// Reporting workflow instantiation
-	decomposer.reporter.ReportWorkflowStart(decomposer.details.ExecutionId, playbook)
+	decomposer.reporter.ReportWorkflowStart(decomposer.details.ExecutionId, playbook, decomposer.time.Now())
 
 	outputVariables, err := decomposer.ExecuteBranch(stepId, variables)
 
 	decomposer.details.Variables = outputVariables
 	// Reporting workflow end
-	decomposer.reporter.ReportWorkflowEnd(decomposer.details.ExecutionId, playbook, err)
+	decomposer.reporter.ReportWorkflowEnd(decomposer.details.ExecutionId, playbook, err, decomposer.time.Now())
 
 	return err
 }
