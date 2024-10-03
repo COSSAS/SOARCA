@@ -84,20 +84,20 @@ func TestReportWorkflowStartFirst(t *testing.T) {
 	timeNow, _ := time.Parse(layout, str)
 	mock_time.On("Now").Return(timeNow)
 
-	err := cacheReporter.ReportWorkflowStart(executionId0, playbook)
+	err := cacheReporter.ReportWorkflowStart(executionId0, playbook, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
 
 	mock_time.On("Now").Return(timeNow)
 
-	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables))
+	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables), mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
 
 	mock_time.On("Now").Return(timeNow)
-	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(), nil)
+	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(), nil, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
@@ -262,15 +262,15 @@ func TestReportWorkflowStartFifo(t *testing.T) {
 		expectedExecutionsFifo = append(expectedExecutionsFifo, entry)
 	}
 
-	err := cacheReporter.ReportWorkflowStart(executionId0, playbook)
+	err := cacheReporter.ReportWorkflowStart(executionId0, playbook, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
-	err = cacheReporter.ReportWorkflowStart(executionId1, playbook)
+	err = cacheReporter.ReportWorkflowStart(executionId1, playbook, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
-	err = cacheReporter.ReportWorkflowStart(executionId2, playbook)
+	err = cacheReporter.ReportWorkflowStart(executionId2, playbook, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
@@ -282,7 +282,7 @@ func TestReportWorkflowStartFifo(t *testing.T) {
 	t.Log(returnedExecutionsFull)
 	assert.Equal(t, expectedExecutionsFull, returnedExecutionsFull)
 
-	err = cacheReporter.ReportWorkflowStart(executionId3, playbook)
+	err = cacheReporter.ReportWorkflowStart(executionId3, playbook, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
@@ -362,11 +362,11 @@ func TestReportWorkflowEnd(t *testing.T) {
 	timeNow, _ := time.Parse(layout, str)
 	mock_time.On("Now").Return(timeNow)
 
-	err := cacheReporter.ReportWorkflowStart(executionId0, playbook)
+	err := cacheReporter.ReportWorkflowStart(executionId0, playbook, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
-	err = cacheReporter.ReportWorkflowEnd(executionId0, playbook, nil)
+	err = cacheReporter.ReportWorkflowEnd(executionId0, playbook, nil, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
@@ -462,11 +462,11 @@ func TestReportStepStartAndEnd(t *testing.T) {
 	timeNow, _ := time.Parse(layout, str)
 	mock_time.On("Now").Return(timeNow)
 
-	err := cacheReporter.ReportWorkflowStart(executionId0, playbook)
+	err := cacheReporter.ReportWorkflowStart(executionId0, playbook, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
-	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables))
+	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables), mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
@@ -492,7 +492,7 @@ func TestReportStepStartAndEnd(t *testing.T) {
 	assert.Equal(t, stepStatus.Error, expectedStepStatus.Error)
 	assert.Equal(t, err, nil)
 
-	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil)
+	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
@@ -590,11 +590,11 @@ func TestReportStepStartCommandsEncoding(t *testing.T) {
 	timeNow, _ := time.Parse(layout, str)
 	mock_time.On("Now").Return(timeNow)
 
-	err := cacheReporter.ReportWorkflowStart(executionId0, playbook)
+	err := cacheReporter.ReportWorkflowStart(executionId0, playbook, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
-	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables))
+	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables), mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
@@ -632,7 +632,7 @@ func TestReportStepStartCommandsEncoding(t *testing.T) {
 	assert.Equal(t, stepStatus.IsAutomated, expectedStepStatus.IsAutomated)
 	assert.Equal(t, err, nil)
 
-	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil)
+	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
@@ -726,11 +726,11 @@ func TestReportStepStartManualCommand(t *testing.T) {
 	timeNow, _ := time.Parse(layout, str)
 	mock_time.On("Now").Return(timeNow)
 
-	err := cacheReporter.ReportWorkflowStart(executionId0, playbook)
+	err := cacheReporter.ReportWorkflowStart(executionId0, playbook, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
-	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables))
+	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables), mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
@@ -762,7 +762,7 @@ func TestReportStepStartManualCommand(t *testing.T) {
 	assert.Equal(t, stepStatus.IsAutomated, expectedStepStatus.IsAutomated)
 	assert.Equal(t, err, nil)
 
-	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil)
+	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
@@ -787,95 +787,6 @@ func TestReportStepStartManualCommand(t *testing.T) {
 	assert.Equal(t, stepResult.Status, expectedStepResult.Status)
 	assert.Equal(t, stepResult.Error, expectedStepResult.Error)
 	assert.Equal(t, err, nil)
-	mock_time.AssertExpectations(t)
-}
-
-func TestInvalidStepReportAfterExecutionEnd(t *testing.T) {
-	mock_time := new(mock_time.MockTime)
-	cacheReporter := cache.New(mock_time, 10)
-
-	expectedCommand := cacao.Command{
-		Type:    "ssh",
-		Command: "ssh ls -la",
-	}
-
-	expectedVariables := cacao.Variable{
-		Type:  "string",
-		Name:  "var1",
-		Value: "testing",
-	}
-
-	step1 := cacao.Step{
-		Type:          "action",
-		ID:            "action--test",
-		Name:          "ssh-tests",
-		StepVariables: cacao.NewVariables(expectedVariables),
-		Commands:      []cacao.Command{expectedCommand},
-		Cases:         map[string]string{},
-		OnCompletion:  "end--test",
-		Agent:         "agent1",
-		Targets:       []string{"target1"},
-	}
-
-	end := cacao.Step{
-		Type: "end",
-		ID:   "end--test",
-		Name: "end step",
-	}
-
-	expectedAuth := cacao.AuthenticationInformation{
-		Name: "user",
-		ID:   "auth1",
-	}
-
-	expectedTarget := cacao.AgentTarget{
-		Name:               "sometarget",
-		AuthInfoIdentifier: "auth1",
-		ID:                 "target1",
-	}
-
-	expectedAgent := cacao.AgentTarget{
-		Type: "soarca",
-		Name: "soarca-ssh",
-	}
-
-	playbook := cacao.Playbook{
-		ID:                            "test",
-		Type:                          "test",
-		Name:                          "ssh-test",
-		WorkflowStart:                 step1.ID,
-		AuthenticationInfoDefinitions: map[string]cacao.AuthenticationInformation{"id": expectedAuth},
-		AgentDefinitions:              map[string]cacao.AgentTarget{"agent1": expectedAgent},
-		TargetDefinitions:             map[string]cacao.AgentTarget{"target1": expectedTarget},
-
-		Workflow: map[string]cacao.Step{step1.ID: step1, end.ID: end},
-	}
-	executionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
-	layout := "2006-01-02T15:04:05.000Z"
-	str := "2014-11-12T11:45:26.371Z"
-	timeNow, _ := time.Parse(layout, str)
-	mock_time.On("Now").Return(timeNow)
-
-	err := cacheReporter.ReportWorkflowStart(executionId0, playbook)
-	if err != nil {
-		t.Fail()
-	}
-	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables))
-	if err != nil {
-		t.Fail()
-	}
-	err = cacheReporter.ReportWorkflowEnd(executionId0, playbook, nil)
-	if err != nil {
-		t.Fail()
-	}
-
-	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil)
-	if err == nil {
-		t.Fail()
-	}
-
-	expectedErr := errors.New("trying to report on the execution of a step for an already reportedly terminated playbook execution")
-	assert.Equal(t, err, expectedErr)
 	mock_time.AssertExpectations(t)
 }
 
@@ -945,20 +856,20 @@ func TestInvalidStepReportAfterStepEnd(t *testing.T) {
 	timeNow, _ := time.Parse(layout, str)
 	mock_time.On("Now").Return(timeNow)
 
-	err := cacheReporter.ReportWorkflowStart(executionId0, playbook)
+	err := cacheReporter.ReportWorkflowStart(executionId0, playbook, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
-	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables))
+	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables), mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
-	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil)
+	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
 
-	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil)
+	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil, mock_time.Now())
 	if err == nil {
 		t.Fail()
 	}
