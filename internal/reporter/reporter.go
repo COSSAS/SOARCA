@@ -38,12 +38,6 @@ type IStepReporter interface {
 
 const MaxReporters int = 10
 
-// TODO:
-// - DONE remove sync wait group mechanisms
-// - DONE change reporting interface to pass in-code start and end time
-// - DONE remove constraint of updating step only if workflow still ongoing
-// - update tests
-
 // High-level reporter class with injection of specific reporters
 type Reporter struct {
 	reporters    []downstreamReporter.IDownStreamReporter
