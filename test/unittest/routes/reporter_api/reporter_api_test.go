@@ -120,16 +120,16 @@ func TestGetExecutions(t *testing.T) {
 		expectedExecutionsReport = append(expectedExecutionsReport, entry)
 	}
 
-	err := cacheReporter.ReportWorkflowStart(executionId0, playbook)
+	err := cacheReporter.ReportWorkflowStart(executionId0, playbook, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
 
-	err = cacheReporter.ReportWorkflowStart(executionId1, playbook)
+	err = cacheReporter.ReportWorkflowStart(executionId1, playbook, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
-	err = cacheReporter.ReportWorkflowStart(executionId2, playbook)
+	err = cacheReporter.ReportWorkflowStart(executionId2, playbook, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
@@ -231,24 +231,24 @@ func TestGetExecutionReport(t *testing.T) {
 	timeNow, _ := time.Parse(layout, str)
 	mock_time.On("Now").Return(timeNow)
 
-	err := cacheReporter.ReportWorkflowStart(executionId0, playbook)
+	err := cacheReporter.ReportWorkflowStart(executionId0, playbook, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
-	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables))
+	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables), mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
 
-	err = cacheReporter.ReportWorkflowStart(executionId1, playbook)
+	err = cacheReporter.ReportWorkflowStart(executionId1, playbook, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
-	err = cacheReporter.ReportWorkflowStart(executionId2, playbook)
+	err = cacheReporter.ReportWorkflowStart(executionId2, playbook, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
-	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil)
+	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
