@@ -102,6 +102,14 @@ func (executor *Executor) ExecuteActionStep(metadata execution.Metadata,
 		command.Content = variables.Interpolate(command.Content)
 		command.ContentB64 = variables.Interpolate(command.ContentB64)
 
+		for key, headers := range command.Headers {
+			var slice []string
+			for _, header := range headers {
+				slice = append(slice, variables.Interpolate(header))
+			}
+			command.Headers[key] = slice
+		}
+
 		for key, addresses := range target.Address {
 			var slice []string
 			for _, address := range addresses {

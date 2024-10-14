@@ -315,6 +315,26 @@ func TestVariableInterpolation(t *testing.T) {
 		},
 	}
 
+	varheader1 := cacao.Variable{
+		Type:  "string",
+		Name:  "__header_var1__",
+		Value: "headerinfo one",
+	}
+
+	varheader2 := cacao.Variable{
+		Type:  "string",
+		Name:  "__header_var2__",
+		Value: "headerinfo two",
+	}
+
+	inputHeaders := cacao.Headers{
+		"header1": []string{"__header_var1__:value", "__header_var2__:value"},
+	}
+
+	expectedHeaders := cacao.Headers{
+		"header1": []string{"headerinfo one", "headerinfo two"},
+	}
+
 	agent := cacao.AgentTarget{
 		Type: "ssh",
 		Name: "cap1",
@@ -325,7 +345,7 @@ func TestVariableInterpolation(t *testing.T) {
 		expectedCommand,
 		expectedAuth,
 		expectedTarget,
-		cacao.NewVariables(var1, var2, var3, varUser, varPassword, varOauth, varPrivateKey, varToken, varUserId)).
+		cacao.NewVariables(var1, var2, var3, varUser, varPassword, varOauth, varPrivateKey, varToken, varUserId, varheader1, varheader2)).
 		Return(cacao.NewVariables(var1),
 			nil)
 
@@ -333,7 +353,7 @@ func TestVariableInterpolation(t *testing.T) {
 		inputCommand,
 		inputAuth,
 		inputTarget,
-		cacao.NewVariables(var1, var2, var3, varUser, varPassword, varOauth, varPrivateKey, varToken, varUserId),
+		cacao.NewVariables(var1, var2, var3, varUser, varPassword, varOauth, varPrivateKey, varToken, varUserId, varheader1, varheader2),
 		agent)
 
 	assert.Equal(t, err, nil)
@@ -345,6 +365,7 @@ func TestVariableInterpolation(t *testing.T) {
 		Command:    "GET / HTTP1.1",
 		Content:    "__http-api-content__:value",
 		ContentB64: "__http-api-content__:value",
+		Headers:    inputHeaders,
 	}
 
 	expectedHttpCommand := cacao.Command{
@@ -352,6 +373,7 @@ func TestVariableInterpolation(t *testing.T) {
 		Command:    "GET / HTTP1.1",
 		Content:    "some content of the body",
 		ContentB64: "some content of the body",
+		Headers:    expectedHeaders,
 	}
 
 	metadataHttp := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId, StepId: stepId}
@@ -361,7 +383,7 @@ func TestVariableInterpolation(t *testing.T) {
 		expectedHttpCommand,
 		expectedAuth,
 		expectedTarget,
-		cacao.NewVariables(varHttpContent)).
+		cacao.NewVariables(varHttpContent, varheader1, varheader2)).
 		Return(cacao.NewVariables(var1),
 			nil)
 
@@ -369,7 +391,7 @@ func TestVariableInterpolation(t *testing.T) {
 		httpCommand,
 		expectedAuth,
 		expectedTarget,
-		cacao.NewVariables(varHttpContent),
+		cacao.NewVariables(varHttpContent, varheader1, varheader2),
 		agent)
 
 	assert.Equal(t, err, nil)
