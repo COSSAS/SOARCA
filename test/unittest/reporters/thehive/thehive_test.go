@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"soarca/internal/reporter/downstream_reporter/thehive"
 	"soarca/internal/reporter/downstream_reporter/thehive/connector"
+	"soarca/utils"
 	"testing"
 )
 
 func TestTheHiveConnection(t *testing.T) {
-	thr := thehive.New(connector.New("http://localhost:9000/api/v1", "JqZEDAR2vYbITI7ls45gm6WI+F8yuebZ"))
+	thr := thehive.New(connector.New(utils.GetEnv("THEHIVE_TEST_API_TOKEN", ""), utils.GetEnv("THEHIVE_TEST_API_BASE_URI", "")))
 	str := thr.ConnectorTest()
 	fmt.Println(str)
 	t.Fail()
