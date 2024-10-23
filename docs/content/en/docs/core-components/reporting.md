@@ -57,7 +57,7 @@ class Reporter {
 }
 
 class Cache
-class CatalystReporter
+class TheHiveReporter
 class 3PToolReporter
 
 class Decomposer
@@ -71,7 +71,7 @@ Reporter .up.|> IWorkflowReporter
 Reporter -right-> IDownStreamReporter
 
 Cache .up.|> IDownStreamReporter
-CatalystReporter .up.|> IDownStreamReporter
+TheHiveReporter .up.|> IDownStreamReporter
 3PToolReporter .up.|> IDownStreamReporter
 
 ```
@@ -134,10 +134,10 @@ Reporting towards a 3rd Party tool is implemented in SOARCA by means of two comp
 
 At the current stage, the following 3rd Party tool *DownStreamReporter*s and *Connector*s will be implemented in SOARCA.
 
-### Catalyst
-The *CatalystReporter* reports on the execution of a playbook to an instance of the [Catalyst SOAR](https://catalyst.security-brewery.com) platform. In order to be used, Catalyst's address and api key need to be configured in the environment variables of the SOARCA instance, either in the .env file for a source-code-built SOARCA instance, or in the SOARCA `docker-compose` for Docker builds. SOARCA will negotiate the authorization with the Catalyst instance upon SOARCA initialization.
+### TheHive
+The *TheHiveReporter* reports on the execution of a playbook to an instance of [The Hive](https://strangebee.com/thehive/) platform. In order to be used, The Hive's address and api key need to be configured in the environment variables of the SOARCA instance, either in the .env file for a source-code-built SOARCA instance, or in the SOARCA `docker-compose` for Docker builds. SOARCA will negotiate the authorization with the The Hive instance upon SOARCA initialization.
 
-The *CatalystConnector* receives execution information from the *CatalystReporter*, and performs the actual network calls to report such infromation to the Catalyst instance.
+The *TheHiveConnector* receives execution information from the *TheHiveReporter*, and performs the actual network calls to report such infromation to the The Hive instance.
 
 
 ```plantuml
@@ -151,16 +151,16 @@ interface IDownStreamReporter {
 	ReportStepEnd() error
 }
 
-interface ICatalystConnector {
+interface ITheHiveConnector {
 }
 
 
-class CatalystReporter
-class CatalystConnector
+class TheHiveReporter
+class TheHiveConnector
 
-CatalystReporter .up.|> IDownStreamReporter
-CatalystReporter -right-> ICatalystConnector
-CatalystConnector .up.|> ICatalystConnector
+TheHiveReporter .up.|> IDownStreamReporter
+TheHiveReporter -right-> ITheHiveConnector
+TheHiveConnector .up.|> ITheHiveConnector
 
 ```
 
