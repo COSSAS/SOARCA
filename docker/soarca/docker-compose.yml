@@ -59,6 +59,8 @@ services:
       MQTT_BROKER: "mosquitto"
       MQTT_PORT: 1883
       HTTP_SKIP_CERT_VALIDATION: false
+      THEHIVE_API_TOKEN: your_token
+      THEHIVE_URI: http://localhost:9000
     networks:
       - db-net
       - mqtt-net
