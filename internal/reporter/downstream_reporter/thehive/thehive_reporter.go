@@ -3,29 +3,35 @@ package thehive
 import (
 	"soarca/models/cacao"
 
+	"soarca/internal/reporter/downstream_reporter/thehive/connector"
+
 	"github.com/gofrs/uuid"
 )
 
 type TheHiveReporter struct {
-	connector ITheHiveConnector
+	connector connector.ITheHiveConnector
 }
 
-func New(connector ITheHiveConnector) *TheHiveReporter {
+func New(connector connector.ITheHiveConnector) *TheHiveReporter {
 	return &TheHiveReporter{connector: connector}
 }
 
-func (thehiveReporter *TheHiveReporter) ReportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook) error {
+func (theHiveReporter *TheHiveReporter) ConnectorTest() string {
+	return theHiveReporter.connector.Hello()
+}
+
+func (theHiveReporter *TheHiveReporter) ReportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook) error {
 	return nil
 }
 
-func (thehiveReporter *TheHiveReporter) ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook, err error) error {
+func (theHiveReporter *TheHiveReporter) ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook, err error) error {
 	return nil
 }
 
-func (thehiveReporter *TheHiveReporter) ReportStepStart(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables) error {
+func (theHiveReporter *TheHiveReporter) ReportStepStart(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables) error {
 	return nil
 }
 
-func (thehiveReporter *TheHiveReporter) ReportStepEnd(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, err error) error {
+func (theHiveReporter *TheHiveReporter) ReportStepEnd(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, err error) error {
 	return nil
 }
