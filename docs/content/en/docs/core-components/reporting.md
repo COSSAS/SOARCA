@@ -57,8 +57,8 @@ class Reporter {
 }
 
 class Cache
-class CatalystConnector
-class 3PToolConnector
+class CatalystReporter
+class 3PToolReporter
 
 class Decomposer
 class Executor
@@ -71,8 +71,8 @@ Reporter .up.|> IWorkflowReporter
 Reporter -right-> IDownStreamReporter
 
 Cache .up.|> IDownStreamReporter
-CatalystConnector .up.|> IDownStreamReporter
-3PToolConnector .up.|> IDownStreamReporter
+CatalystReporter .up.|> IDownStreamReporter
+3PToolReporter .up.|> IDownStreamReporter
 
 ```
 
@@ -126,12 +126,43 @@ ReporterApi -down-> IExecutionInformer
 The *Cache* thus reports the execution information downstream both in the database, and in memory. Upon execution information requests from the `/reporter` API, the cache can provide information fetching either from memory, or querying the database.
 
 
-## Connectors 
+## Connectors and 3P tools reporting
 
-A *Connector* is a *DownStreamReporter*s that implements push-based reporting for specific third party tools. At the current stage, the following *Connector* will be implemented in SOARCA
+Reporting towards a 3rd Party tool is implemented in SOARCA by means of two components. 
+1. a 3PTool *DownStreamReporter* that organizes the execution information according to the data formats of the 3rd Party tool, and
+2. a *Connector* module that receives data in 3PTool-specific formats, and handles the connectivity calls towards the 3P tool
 
-### Catalyst Connector
-The *CatalystConnector* reports on the execution of a playbook to an instance of the [Catalyst SOAR](https://catalyst.security-brewery.com) platform. In order to be used, Catalyst's address and api key need to be configured in the environment variables of the SOARCA instance, either in the .env file for a source-code-built SOARCA instance, or in the SOARCA `docker-compose` for Docker builds.
+At the current stage, the following 3rd Party tool *DownStreamReporter*s and *Connector*s will be implemented in SOARCA.
+
+### Catalyst
+The *CatalystReporter* reports on the execution of a playbook to an instance of the [Catalyst SOAR](https://catalyst.security-brewery.com) platform. In order to be used, Catalyst's address and api key need to be configured in the environment variables of the SOARCA instance, either in the .env file for a source-code-built SOARCA instance, or in the SOARCA `docker-compose` for Docker builds. SOARCA will negotiate the authorization with the Catalyst instance upon SOARCA initialization.
+
+The *CatalystConnector* receives execution information from the *CatalystReporter*, and performs the actual network calls to report such infromation to the Catalyst instance.
+
+
+```plantuml
+@startuml
+set separator ::
+
+interface IDownStreamReporter {
+    ReportWorkflowStart() error
+    ReportWorkflowEnd() error
+	ReportStepStart() error
+	ReportStepEnd() error
+}
+
+interface ICatalystConnector {
+}
+
+
+class CatalystReporter
+class CatalystConnector
+
+CatalystReporter .up.|> IDownStreamReporter
+CatalystReporter -right-> ICatalystConnector
+CatalystConnector .up.|> ICatalystConnector
+
+```
 
 
 ## Future plans
