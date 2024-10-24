@@ -1,0 +1,12 @@
+languages:
+  - name: Go
+
+component_depth: 10
+
+dependencychecker:
+  blocklist:
+    - ".*tno.*"
+    - ".*soarca.*"
+
+thirdpartyfindings:
+  enabled: true
