@@ -1,0 +1,10 @@
+languages:
+  - name: Go
+
+dependencychecker:
+  blocklist:
+    - ".*tno.*"
+    - ".*soarca.*"
+
+thirdpartyfindings:
+  enabled: true
