@@ -4,8 +4,19 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"reflect"
+	"soarca/logger"
 	"soarca/models/cacao"
 )
+
+var (
+	component = reflect.TypeOf(TheHiveConnector{}).PkgPath()
+	log       *logger.Log
+)
+
+func init() {
+	log = logger.Logger(component, logger.Info, "", logger.Json)
+}
 
 type ITheHiveConnector interface {
 	Hello() string
@@ -56,14 +67,14 @@ func (theHiveConnector *TheHiveConnector) Hello() string {
 	return ""
 }
 
-func (theHiveConnector *TheHiveConnector) PostNewCase(caseId string, playbookId string, playbookVars cacao.Variables) string {
+func (theHiveConnector *TheHiveConnector) PostNewCase(caseId string, playbook cacao.Playbook) error {
 
 	url := theHiveConnector.baseUrl + "/user/current"
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		fmt.Println("Error:", err)
-		return ""
+		return err
 	}
 
 	token := theHiveConnector.apiKey
@@ -74,7 +85,7 @@ func (theHiveConnector *TheHiveConnector) PostNewCase(caseId string, playbookId 
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println("Error:", err)
-		return ""
+		return err
 	}
 	defer resp.Body.Close()
 
@@ -82,10 +93,10 @@ func (theHiveConnector *TheHiveConnector) PostNewCase(caseId string, playbookId 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Error:", err)
-		return ""
+		return err
 	}
 
 	// Print the response body
 	fmt.Println(string(body))
-	return ""
+	return err
 }
