@@ -5,7 +5,7 @@ import (
 
 	"soarca/internal/reporter/downstream_reporter/thehive/connector"
 
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 )
 
 type TheHiveReporter struct {
@@ -16,13 +16,16 @@ func New(connector connector.ITheHiveConnector) *TheHiveReporter {
 	return &TheHiveReporter{connector: connector}
 }
 
+// TODO: add structures to handle Execution ID to TheHive IDs mapping
+
 func (theHiveReporter *TheHiveReporter) ConnectorTest() string {
 	return theHiveReporter.connector.Hello()
 }
 
 // Creates a new *case* in The Hive with related triggering metadata
 func (theHiveReporter *TheHiveReporter) ReportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook) error {
-	return nil
+	_, err := theHiveReporter.connector.PostNewCase(executionId.String(), playbook)
+	return err
 }
 
 // Marks case closure according to workflow execution. Also reports all variables, and data
