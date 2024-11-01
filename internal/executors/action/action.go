@@ -50,21 +50,18 @@ func (executor *Executor) Execute(meta execution.Metadata, metadata PlaybookStep
 
 	executor.reporter.ReportStepStart(meta.ExecutionId, metadata.Step, metadata.Variables, executor.time.Now())
 
-	var reportVars cacao.Variables
-	var reportErr error
+	returnVariables := cacao.NewVariables()
+	var err error
 	defer func() {
-		executor.reporter.ReportStepEnd(meta.ExecutionId, metadata.Step, reportVars, reportErr, executor.time.Now())
+		executor.reporter.ReportStepEnd(meta.ExecutionId, metadata.Step, returnVariables, err, executor.time.Now())
 	}()
 
 	if metadata.Step.Type != cacao.StepTypeAction {
-		err := errors.New("the provided step type is not compatible with this executor")
+		err = errors.New("the provided step type is not compatible with this executor")
 		log.Error(err)
-		reportVars = cacao.NewVariables()
-		reportErr = err
-		// executor.reporter.ReportStepEnd(meta.ExecutionId, metadata.Step, cacao.NewVariables(), err, executor.time.Now())
 		return cacao.NewVariables(), err
 	}
-	returnVariables := cacao.NewVariables()
+
 	for _, command := range metadata.Step.Commands {
 		// NOTE: This assumes we want to run Command for every Target individually.
 		//       Is that something we want to enforce or leave up to the capability?
@@ -90,9 +87,6 @@ func (executor *Executor) Execute(meta execution.Metadata, metadata PlaybookStep
 
 			if err != nil {
 				log.Error("Error executing Command ", err)
-				// executor.reporter.ReportStepEnd(meta.ExecutionId, metadata.Step, returnVariables, err, executor.time.Now())
-				reportErr = err
-				reportVars = returnVariables
 				return cacao.NewVariables(), err
 			} else {
 				log.Debug("Command executed")
@@ -100,9 +94,6 @@ func (executor *Executor) Execute(meta execution.Metadata, metadata PlaybookStep
 		}
 	}
 
-	// executor.reporter.ReportStepEnd(meta.ExecutionId, metadata.Step, returnVariables, nil, executor.time.Now())
-	reportVars = returnVariables
-	reportErr = nil
 	return returnVariables, nil
 }
 
