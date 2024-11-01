@@ -54,9 +54,17 @@ type SOARCATheHiveMap struct {
 	executionsCaseMaps map[string]ExecutionCaseMap
 }
 type ExecutionCaseMap struct {
-	caseId        string
-	stepsTasksMap map[string]string
+	caseId          string
+	caseDescription string
+	stepsTasksMap   map[string]TaskInfo
 }
+
+type TaskInfo struct {
+	taskId          string
+	taskDescription string
+}
+
+// TODO: Change to using observables instead of updating the tasks descriptions
 
 func (soarcaTheHiveMap *SOARCATheHiveMap) checkExecutionCaseExists(executionId string) error {
 	if _, ok := soarcaTheHiveMap.executionsCaseMaps[executionId]; !ok {
@@ -71,15 +79,18 @@ func (soarcaTheHiveMap *SOARCATheHiveMap) checkExecutionStepTaskExists(execution
 	return nil
 }
 
-func (soarcaTheHiveMap *SOARCATheHiveMap) registerExecutionInCase(executionId string, caseId string) error {
+func (soarcaTheHiveMap *SOARCATheHiveMap) registerExecutionInCase(executionId string, caseId string, description string) error {
 	soarcaTheHiveMap.executionsCaseMaps[executionId] = ExecutionCaseMap{
-		caseId:        caseId,
-		stepsTasksMap: map[string]string{},
+		caseId:          caseId,
+		stepsTasksMap:   map[string]TaskInfo{},
+		caseDescription: description,
 	}
 	return nil
 }
-func (soarcaTheHiveMap *SOARCATheHiveMap) registerStepTaskInCase(executionId string, stepId string, taskId string) error {
-	soarcaTheHiveMap.executionsCaseMaps[executionId].stepsTasksMap[stepId] = taskId
+func (soarcaTheHiveMap *SOARCATheHiveMap) registerStepTaskInCase(executionId string, stepId string, taskId string, description string) error {
+	soarcaTheHiveMap.executionsCaseMaps[executionId].stepsTasksMap[stepId] = TaskInfo{
+		taskId:          taskId,
+		taskDescription: description}
 	return nil
 }
 
@@ -91,6 +102,28 @@ func (soarcaTheHiveMap *SOARCATheHiveMap) retrieveCaseId(executionId string) (st
 	return soarcaTheHiveMap.executionsCaseMaps[executionId].caseId, nil
 }
 
+func (soarcaTheHiveMap *SOARCATheHiveMap) retrieveCaseDescription(executionId string) (string, error) {
+	err := soarcaTheHiveMap.checkExecutionCaseExists(executionId)
+	if err != nil {
+		return "", err
+	}
+	return soarcaTheHiveMap.executionsCaseMaps[executionId].caseDescription, nil
+}
+func (soarcaTheHiveMap *SOARCATheHiveMap) updateCaseDescription(executionId string, newDescription string) error {
+	err := soarcaTheHiveMap.checkExecutionCaseExists(executionId)
+	if err != nil {
+		return err
+	}
+	mapValue := soarcaTheHiveMap.executionsCaseMaps[executionId]
+
+	mapValue.caseDescription = newDescription
+	mapValue.caseId = soarcaTheHiveMap.executionsCaseMaps[executionId].caseId
+	mapValue.stepsTasksMap = soarcaTheHiveMap.executionsCaseMaps[executionId].stepsTasksMap
+
+	soarcaTheHiveMap.executionsCaseMaps[executionId] = mapValue
+	return nil
+}
+
 func (soarcaTheHiveMap *SOARCATheHiveMap) retrieveTaskId(executionId string, stepId string) (string, error) {
 	err := soarcaTheHiveMap.checkExecutionCaseExists(executionId)
 	if err != nil {
@@ -100,7 +133,36 @@ func (soarcaTheHiveMap *SOARCATheHiveMap) retrieveTaskId(executionId string, ste
 	if err != nil {
 		return "", err
 	}
-	return soarcaTheHiveMap.executionsCaseMaps[executionId].stepsTasksMap[stepId], nil
+	return soarcaTheHiveMap.executionsCaseMaps[executionId].stepsTasksMap[stepId].taskId, nil
+}
+
+func (soarcaTheHiveMap *SOARCATheHiveMap) retrieveTaskDescription(executionId string, stepId string) (string, error) {
+	err := soarcaTheHiveMap.checkExecutionCaseExists(executionId)
+	if err != nil {
+		return "", err
+	}
+	err = soarcaTheHiveMap.checkExecutionStepTaskExists(executionId, stepId)
+	if err != nil {
+		return "", err
+	}
+	return soarcaTheHiveMap.executionsCaseMaps[executionId].stepsTasksMap[stepId].taskDescription, nil
+}
+
+func (soarcaTheHiveMap *SOARCATheHiveMap) updateTaskDescription(executionId string, stepId string, newDescription string) error {
+	err := soarcaTheHiveMap.checkExecutionCaseExists(executionId)
+	if err != nil {
+		return err
+	}
+	err = soarcaTheHiveMap.checkExecutionStepTaskExists(executionId, stepId)
+	if err != nil {
+		return err
+	}
+	mapValue := soarcaTheHiveMap.executionsCaseMaps[executionId].stepsTasksMap[stepId]
+	mapValue.taskDescription = newDescription
+	mapValue.taskId = soarcaTheHiveMap.executionsCaseMaps[executionId].stepsTasksMap[stepId].taskId
+
+	soarcaTheHiveMap.executionsCaseMaps[executionId].stepsTasksMap[stepId] = mapValue
+	return nil
 }
 
 // func (soarcaTheHiveMap *SOARCATheHiveMap) clearCase(executionId string) error {
@@ -123,36 +185,58 @@ func (theHiveConnector *TheHiveConnector) PostStepTaskInCase(executionId string,
 	url := theHiveConnector.baseUrl + "/case/" + caseId + "/task"
 	method := "POST"
 
+	taskDescription := step.Description + "\n" + fmt.Sprintf("(SOARCA step: %s )", step.ID)
 	task := schemas.Task{
 		Title:       step.Name,
-		Description: step.Description + "\n" + fmt.Sprintf("(SOARCA step: %s )", step.ID),
+		Description: taskDescription,
 	}
 
 	body, err := theHiveConnector.sendRequest(method, url, task)
 	if err != nil {
 		return "", err
 	}
-	var resp_map map[string]interface{}
-	err = json.Unmarshal(body, &resp_map)
+
+	task_id, err := theHiveConnector.getIdFromRespBody(body)
 	if err != nil {
 		return "", err
 	}
+	theHiveConnector.ids_map.registerStepTaskInCase(executionId, step.ID, task_id, taskDescription)
 
-	return theHiveConnector.getIdFromRespBody(body)
+	return task_id, nil
 }
 
+// TODO: revise this function through
+
 func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(executionId string, playbook cacao.Playbook) (string, error) {
-	log.Tracef("posting new case to thehive. case ID %s, playbook %+v", executionId, playbook)
+	log.Tracef("posting new case to The Hive. execution ID %s, playbook %+v", executionId, playbook)
 
 	url := theHiveConnector.baseUrl + "/case"
 	method := "POST"
 
 	// Add execution ID and playbook ID to tags (first and second tags)
+	caseTags := []string{executionId, playbook.ID}
+	caseTags = append(caseTags, playbook.Labels...)
+
+	caseDescription := playbook.Description + "\n" +
+		"Playbook variables at START of execution: \n" +
+		PrettyJSONString(playbook.PlaybookVariables)
+
+	customFields := []schemas.CustomField{}
+	for name, variable := range playbook.PlaybookVariables {
+		customFields = append(customFields, schemas.CustomField{
+			Name:        name,
+			Type:        variable.Type,
+			Description: variable.Description,
+			Value:       variable.Value,
+		})
+	}
+
 	data := schemas.Case{
-		Title:       playbook.Name,
-		Description: playbook.Description,
-		StartDate:   time.Now().Unix(),
-		Tags:        playbook.Labels,
+		Title:        playbook.Name,
+		Description:  caseDescription,
+		StartDate:    time.Now().Unix(),
+		Tags:         caseTags,
+		CustomFields: customFields,
 	}
 
 	body, err := theHiveConnector.sendRequest(method, url, data)
@@ -160,32 +244,74 @@ func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(executionId strin
 		return "", err
 	}
 
-	case_id, err := theHiveConnector.getIdFromRespBody(body)
+	caseId, err := theHiveConnector.getIdFromRespBody(body)
 	if err != nil {
 		return "", err
 	}
 
-	err = theHiveConnector.ids_map.registerExecutionInCase(executionId, case_id)
+	err = theHiveConnector.ids_map.registerExecutionInCase(executionId, caseId, caseDescription)
 	if err != nil {
 		return "", err
 	}
 
 	// Pre-populate tasks according to playbook steps
 	for _, step := range playbook.Workflow {
-		task_id, err := theHiveConnector.PostStepTaskInCase(case_id, step)
+		task_id, err := theHiveConnector.PostStepTaskInCase(caseId, step)
 		if err != nil {
 			return "", err
 		}
-		err = theHiveConnector.ids_map.registerStepTaskInCase(executionId, step.ID, task_id)
+		err = theHiveConnector.ids_map.registerStepTaskInCase(executionId, step.ID, task_id, step.Description)
 		if err != nil {
 			return "", err
 		}
+	}
+	log.Tracef("case posted with case ID: %s", caseId)
+	return string(body), nil
+}
+
+// TODO: finish and revise this function through
+
+func (theHiveConnector *TheHiveConnector) UpdateEndExecutionCase(executionId string, variables cacao.Variables) (string, error) {
+	caseId, err := theHiveConnector.ids_map.retrieveCaseId(executionId)
+	if err != nil {
+		return "", err
+	}
+	log.Tracef("updating case status to The Hive. execution ID %s, The Hive case ID %s", executionId, caseId)
+
+	url := theHiveConnector.baseUrl + "/case/" + caseId
+	method := "PATCH"
+
+	// Update case description
+	caseDescr, err := theHiveConnector.ids_map.retrieveCaseDescription(executionId)
+	if err != nil {
+		return "", err
+	}
+	updatedCaseDescription := caseDescr + "\n" +
+		"Playbook variables at END of execution: \n" +
+		PrettyJSONString(variables) + "\n"
+	// Save case description to map
+	err = theHiveConnector.ids_map.updateCaseDescription(executionId, updatedCaseDescription)
+	if err != nil {
+		return "", err
+	}
+
+	data := schemas.Case{
+		Description: updatedCaseDescription,
+		EndDate:     time.Now().Unix(),
+	}
+
+	body, err := theHiveConnector.sendRequest(method, url, data)
+	if err != nil {
+		return "", err
 	}
 
 	return string(body), nil
 }
 
+// TODO: revise this function through
+
 func (theHiveConnector *TheHiveConnector) UpdateStartStepTaskInCase(executionId string, step cacao.Step, variables cacao.Variables) (string, error) {
+	log.Tracef("updating task in thehive. case ID %s", executionId)
 	taskId, err := theHiveConnector.ids_map.retrieveTaskId(executionId, step.ID)
 	if err != nil {
 		return "", err
@@ -194,8 +320,78 @@ func (theHiveConnector *TheHiveConnector) UpdateStartStepTaskInCase(executionId 
 	url := theHiveConnector.baseUrl + "/task/" + taskId + "/task"
 	method := "PATCH"
 
+	// Update description with info and save again to ids map
+	taskDescription, err := theHiveConnector.ids_map.retrieveTaskDescription(executionId, step.ID)
+	if err != nil {
+		return "", err
+	}
+	updatedTaskDescription :=
+		taskDescription + "\n" +
+			"Variables at START step execution: \n" + PrettyJSONString(variables) +
+			"Step content: \n" + PrettyJSONString(variables) + "\n"
+
+	theHiveConnector.ids_map.registerStepTaskInCase(executionId, step.ID, taskId, updatedTaskDescription)
+
+	fullyAuto := true
+	for _, command := range step.Commands {
+		if command.Type == cacao.CommandTypeManual {
+			fullyAuto = false
+		}
+	}
+	taskAssignee := ""
+	if fullyAuto {
+		taskAssignee = "SOARCA Automated Execution"
+	}
 	task := schemas.Task{
 		// StartDate: wait for merging of new reporting interface with timings passing,
+		StartDate:   time.Now().Unix(),
+		Status:      schemas.TheHiveStatusInProgress,
+		Description: updatedTaskDescription,
+		Assignee:    taskAssignee,
+	}
+
+	body, err := theHiveConnector.sendRequest(method, url, task)
+	if err != nil {
+		return "", err
+	}
+
+	return theHiveConnector.getIdFromRespBody(body)
+}
+
+// TODO: revise this function through
+
+func (theHiveConnector *TheHiveConnector) UpdateEndStepTaskInCase(executionId string, step cacao.Step, variables cacao.Variables, executionError error) (string, error) {
+	taskId, err := theHiveConnector.ids_map.retrieveTaskId(executionId, step.ID)
+	if err != nil {
+		return "", err
+	}
+
+	url := theHiveConnector.baseUrl + "/task/" + taskId + "/task"
+	method := "PATCH"
+
+	taskDescription, err := theHiveConnector.ids_map.retrieveTaskDescription(executionId, step.ID)
+	if err != nil {
+		return "", err
+	}
+
+	updatedTaskDescription :=
+		taskDescription + "\n" +
+			"Variables at END step execution: \n" + PrettyJSONString(variables)
+
+	theHiveConnector.ids_map.updateTaskDescription(executionId, step.ID, updatedTaskDescription)
+	if err != nil {
+		return "", err
+	}
+
+	taskStatus := schemas.TheHiveStatusCompleted
+	if executionError != nil {
+		taskStatus = "ExecutionError"
+	}
+	task := schemas.Task{
+		// StartDate: wait for merging of new reporting interface with timings passing,
+		EndDate:     time.Now().Unix(),
+		Status:      taskStatus,
+		Description: updatedTaskDescription,
 	}
 
 	body, err := theHiveConnector.sendRequest(method, url, task)
@@ -284,4 +480,13 @@ func (theHiveConnector *TheHiveConnector) Hello() string {
 	}
 
 	return (string(body))
+}
+
+// ############################### Utils
+func PrettyJSONString(object interface{}) string {
+	pretty, err := json.MarshalIndent(object, "", "    ")
+	if err != nil {
+		log.Warning("Error marshalling object to JSON:")
+	}
+	return string(pretty)
 }

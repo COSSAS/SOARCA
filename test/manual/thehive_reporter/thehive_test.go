@@ -129,4 +129,9 @@ func TestTheHiveOpenCase(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
+	err = thr.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables))
+	if err != nil {
+		fmt.Println(err)
+		t.Fail()
+	}
 }
