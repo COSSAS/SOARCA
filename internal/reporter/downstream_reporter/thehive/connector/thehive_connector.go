@@ -115,15 +115,20 @@ func (soarcaTheHiveMap *SOARCATheHiveMap) clearCase(executionId string) error {
 
 // ############################### Functions
 
-func (theHiveConnector *TheHiveConnector) PostStepTaskInCase(caseId string, step cacao.Step) (string, error) {
-	url := theHiveConnector.baseUrl + "/case/{caseId}/task"
+func (theHiveConnector *TheHiveConnector) PostStepTaskInCase(executionId string, step cacao.Step) (string, error) {
+	caseId, err := theHiveConnector.ids_map.retrieveCaseId(executionId)
+	if err != nil {
+		return "", err
+	}
+	url := theHiveConnector.baseUrl + "/case/" + caseId + "/task"
+	method := "POST"
 
 	task := schemas.Task{
 		Title:       step.Name,
 		Description: step.Description + "\n" + fmt.Sprintf("(SOARCA step: %s )", step.ID),
 	}
 
-	body, err := theHiveConnector.sendRequest("POST", url, task)
+	body, err := theHiveConnector.sendRequest(method, url, task)
 	if err != nil {
 		return "", err
 	}
@@ -133,20 +138,14 @@ func (theHiveConnector *TheHiveConnector) PostStepTaskInCase(caseId string, step
 		return "", err
 	}
 
-	_id, ok := resp_map["_id"].(string)
-	if !ok {
-		// Handle the case where the type assertion fails
-		log.Error("type assertion for retrieving TheHive ID failed")
-		return "", errors.New("type assertion for retrieving TheHive ID failed")
-	}
-
-	return _id, nil
+	return theHiveConnector.getIdFromRespBody(body)
 }
 
 func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(executionId string, playbook cacao.Playbook) (string, error) {
 	log.Tracef("posting new case to thehive. case ID %s, playbook %+v", executionId, playbook)
 
 	url := theHiveConnector.baseUrl + "/case"
+	method := "POST"
 
 	// Add execution ID and playbook ID to tags (first and second tags)
 	data := schemas.Case{
@@ -156,22 +155,14 @@ func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(executionId strin
 		Tags:        playbook.Labels,
 	}
 
-	body, err := theHiveConnector.sendRequest("POST", url, data)
+	body, err := theHiveConnector.sendRequest(method, url, data)
 	if err != nil {
 		return "", err
 	}
 
-	// TODO: cleanup
-	var resp_map map[string]interface{}
-	err = json.Unmarshal(body, &resp_map)
+	case_id, err := theHiveConnector.getIdFromRespBody(body)
 	if err != nil {
 		return "", err
-	}
-
-	case_id, ok := resp_map["_id"].(string)
-	if !ok {
-		log.Error("type assertion for retrieving TheHive ID failed")
-		return "", errors.New("type assertion for retrieving TheHive ID failed")
 	}
 
 	err = theHiveConnector.ids_map.registerExecutionInCase(executionId, case_id)
@@ -193,7 +184,45 @@ func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(executionId strin
 	return string(body), nil
 }
 
+func (theHiveConnector *TheHiveConnector) UpdateStartStepTaskInCase(executionId string, step cacao.Step, variables cacao.Variables) (string, error) {
+	taskId, err := theHiveConnector.ids_map.retrieveTaskId(executionId, step.ID)
+	if err != nil {
+		return "", err
+	}
+
+	url := theHiveConnector.baseUrl + "/task/" + taskId + "/task"
+	method := "PATCH"
+
+	task := schemas.Task{
+		// StartDate: wait for merging of new reporting interface with timings passing,
+	}
+
+	body, err := theHiveConnector.sendRequest(method, url, task)
+	if err != nil {
+		return "", err
+	}
+
+	return theHiveConnector.getIdFromRespBody(body)
+}
+
 // ############################### HTTP interaction
+
+func (theHiveConnector *TheHiveConnector) getIdFromRespBody(body []byte) (string, error) {
+	var resp_map map[string]interface{}
+	err := json.Unmarshal(body, &resp_map)
+	if err != nil {
+		return "", err
+	}
+
+	_id, ok := resp_map["_id"].(string)
+	if !ok {
+		// Handle the case where the type assertion fails
+		log.Error("type assertion for retrieving TheHive ID failed")
+		return "", errors.New("type assertion for retrieving TheHive ID failed")
+	}
+
+	return _id, nil
+}
 
 func (theHiveConnector *TheHiveConnector) sendRequest(method string, url string, body interface{}) ([]byte, error) {
 
