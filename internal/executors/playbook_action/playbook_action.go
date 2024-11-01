@@ -39,10 +39,16 @@ func (playbookAction *PlaybookAction) Execute(metadata execution.Metadata,
 
 	playbookAction.reporter.ReportStepStart(metadata.ExecutionId, step, variables, playbookAction.time.Now())
 
+	var reportVars cacao.Variables
+	var reportErr error
+	defer func() {
+		playbookAction.reporter.ReportStepEnd(metadata.ExecutionId, step, reportVars, reportErr, playbookAction.time.Now())
+	}()
+
 	if step.Type != cacao.StepTypePlaybookAction {
 		err := errors.New(fmt.Sprint("step type is not of type ", cacao.StepTypePlaybookAction))
 		log.Error(err)
-		playbookAction.reporter.ReportStepEnd(metadata.ExecutionId, step, cacao.NewVariables(), nil, playbookAction.time.Now())
+		// playbookAction.reporter.ReportStepEnd(metadata.ExecutionId, step, cacao.NewVariables(), nil, playbookAction.time.Now())
 		return cacao.NewVariables(), err
 	}
 
@@ -61,10 +67,14 @@ func (playbookAction *PlaybookAction) Execute(metadata execution.Metadata,
 	if err != nil {
 		err = errors.New(fmt.Sprint("execution of playbook failed with error: ", err))
 		log.Error(err)
-		playbookAction.reporter.ReportStepEnd(metadata.ExecutionId, step, details.Variables, err, playbookAction.time.Now())
+		//playbookAction.reporter.ReportStepEnd(metadata.ExecutionId, step, details.Variables, err, playbookAction.time.Now())
+		reportVars = details.Variables
+		reportErr = err
 		return cacao.NewVariables(), err
 	}
-	playbookAction.reporter.ReportStepEnd(metadata.ExecutionId, step, details.Variables, nil, playbookAction.time.Now())
+	//playbookAction.reporter.ReportStepEnd(metadata.ExecutionId, step, details.Variables, nil, playbookAction.time.Now())
+	reportVars = details.Variables
+	reportErr = nil
 	return details.Variables, nil
 
 }

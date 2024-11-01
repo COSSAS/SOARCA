@@ -50,10 +50,18 @@ func (executor *Executor) Execute(meta execution.Metadata, metadata PlaybookStep
 
 	executor.reporter.ReportStepStart(meta.ExecutionId, metadata.Step, metadata.Variables, executor.time.Now())
 
+	var reportVars cacao.Variables
+	var reportErr error
+	defer func() {
+		executor.reporter.ReportStepEnd(meta.ExecutionId, metadata.Step, reportVars, reportErr, executor.time.Now())
+	}()
+
 	if metadata.Step.Type != cacao.StepTypeAction {
 		err := errors.New("the provided step type is not compatible with this executor")
 		log.Error(err)
-		executor.reporter.ReportStepEnd(meta.ExecutionId, metadata.Step, cacao.NewVariables(), err, executor.time.Now())
+		reportVars = cacao.NewVariables()
+		reportErr = err
+		// executor.reporter.ReportStepEnd(meta.ExecutionId, metadata.Step, cacao.NewVariables(), err, executor.time.Now())
 		return cacao.NewVariables(), err
 	}
 	returnVariables := cacao.NewVariables()
@@ -82,14 +90,19 @@ func (executor *Executor) Execute(meta execution.Metadata, metadata PlaybookStep
 
 			if err != nil {
 				log.Error("Error executing Command ", err)
-				executor.reporter.ReportStepEnd(meta.ExecutionId, metadata.Step, returnVariables, err, executor.time.Now())
+				// executor.reporter.ReportStepEnd(meta.ExecutionId, metadata.Step, returnVariables, err, executor.time.Now())
+				reportErr = err
+				reportVars = returnVariables
 				return cacao.NewVariables(), err
 			} else {
 				log.Debug("Command executed")
 			}
 		}
 	}
-	executor.reporter.ReportStepEnd(meta.ExecutionId, metadata.Step, returnVariables, nil, executor.time.Now())
+
+	// executor.reporter.ReportStepEnd(meta.ExecutionId, metadata.Step, returnVariables, nil, executor.time.Now())
+	reportVars = returnVariables
+	reportErr = nil
 	return returnVariables, nil
 }
 
