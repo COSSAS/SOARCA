@@ -46,17 +46,22 @@ func (executor *Executor) Execute(meta execution.Metadata, step cacao.Step, vari
 
 	executor.reporter.ReportStepStart(meta.ExecutionId, step, variables, executor.time.Now())
 
+	var reportErr error
+	defer func() {
+		executor.reporter.ReportStepEnd(meta.ExecutionId, step, variables, reportErr, executor.time.Now())
+	}()
+
 	result, err := executor.comparison.Evaluate(step.Condition, variables)
 
-	// We are reporting early to not have double reporting
-	executor.reporter.ReportStepEnd(meta.ExecutionId,
-		step,
-		variables,
-		err,
-		executor.time.Now())
+	// executor.reporter.ReportStepEnd(meta.ExecutionId,
+	// 	step,
+	// 	variables,
+	// 	err,
+	// 	executor.time.Now())
 
 	if err != nil {
 		log.Error(err)
+		reportErr = err
 		return "", false, err
 	}
 
