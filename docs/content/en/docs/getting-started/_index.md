@@ -64,13 +64,13 @@ Example playbooks:
 {{< tabpane langEqualsHeader=false  >}}
 {{< tab header="ssh" lang="sh" >}}
 # make sure an ssh server is running on adres 192.168.0.10
-curl -X POST -H "Content-Type: application/json" -d @./example/ssh-playbook.json localhost:8080/trigger/playbook
+curl -X POST -H "Content-Type: application/json" -d @./example-playbooks/ssh-playbook.json localhost:8080/trigger/playbook
 {{< /tab >}}
 {{< tab header="http" lang="sh" >}}
-curl -X POST -H "Content-Type: application/json" -d @./example/http-playbook.json localhost:8080/trigger/playbook
+curl -X POST -H "Content-Type: application/json" -d @./example-playbooks/http-playbook.json localhost:8080/trigger/playbook
 {{< /tab >}}
 {{< tab header="openC2" lang="sh" >}}
-curl -X POST -H "Content-Type: application/json" -d @./example/openc2-playbook.json localhost:8080/trigger/playbook
+curl -X POST -H "Content-Type: application/json" -d @./example-playbooks/openc2-playbook.json localhost:8080/trigger/playbook
 {{< /tab >}}
 {{< /tabpane >}}
 

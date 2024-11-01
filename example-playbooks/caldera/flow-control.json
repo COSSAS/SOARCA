@@ -1,0 +1,121 @@
+{
+  "type": "playbook",
+  "spec_version": "cacao-2.0",
+  "id": "playbook--a92fc24f-4adb-4ac2-8846-31968c23699a",
+  "name": "Caldera example playbook of control flow steps being used alongside Calders steps",
+  "description": "This is a SOARCA TNO Read teaming example playbook.",
+  "created_by": "identity--7f497236-2aa5-431b-b704-d7b26b319163",
+  "created": "2024-11-08T09:44:35.226Z",
+  "modified": "2024-11-08T09:44:53.904Z",
+  "revoked": false,
+  "derived_from": [
+    "playbook--879932d9-fea9-40c1-a5a4-3b3d2eec9835",
+    "playbook--77bbe093-7e90-400c-a7c4-7b3a9396af15"
+  ],
+  "playbook_variables": {
+    "__ifStepVariable__": {
+      "type": "bool",
+      "description": "Variable used by the if-step",
+      "value": "true",
+      "constant": false,
+      "external": false
+    },
+    "__whileStepVariable__": {
+      "type": "integer",
+      "description": "Variable used by the while-step",
+      "value": "0",
+      "constant": false,
+      "external": false
+    },
+    "__switchStepVariable__": {
+      "type": "integer",
+      "description": "Variable used by the switch-step",
+      "value": "0",
+      "constant": false,
+      "external": false
+    }
+  },
+  "workflow_start": "start--025c407e-422e-4deb-8863-b3d4a8890f60",
+  "workflow": {
+    "start--025c407e-422e-4deb-8863-b3d4a8890f60": {
+      "on_completion": "if-condition--f00f0acb-a2ad-4832-b7c2-27d12506c6d7",
+      "type": "start"
+    },
+    "if-condition--f00f0acb-a2ad-4832-b7c2-27d12506c6d7": {
+      "on_completion": "while-condition--8c0872af-a071-48af-9bf9-a8ad7e137289",
+      "type": "if-condition",
+      "condition": "__ifStepVariable__:value",
+      "on_true": "action--623a0a80-a4ac-4989-b1da-5e3660b2e4f1",
+      "on_false": "action--3ad2d927-9480-4d05-bcbb-7d40b4da2266"
+    },
+    "while-condition--8c0872af-a071-48af-9bf9-a8ad7e137289": {
+      "on_completion": "switch-condition--33ba061e-193d-41db-b40b-0e8373997dc9",
+      "type": "while-condition",
+      "condition": "__whileStepVariable__:value <= 10",
+      "on_true": "action--3ad2d927-9480-4d05-bcbb-7d40b4da2266"
+    },
+    "switch-condition--33ba061e-193d-41db-b40b-0e8373997dc9": {
+      "on_completion": "end--48d7d487-3c8a-4651-bbc2-40c519e2b9f7",
+      "type": "switch-condition",
+      "switch": "__switchStepVariable__:value",
+      "cases": {
+        "0": "action--3ad2d927-9480-4d05-bcbb-7d40b4da2266",
+        "default": "action--623a0a80-a4ac-4989-b1da-5e3660b2e4f1"
+      }
+    },
+    "action--623a0a80-a4ac-4989-b1da-5e3660b2e4f1": {
+      "name": "Run some Caldera command",
+      "on_completion": "end--080de9ac-65c7-49f0-acd2-b21e92e34036",
+      "type": "action",
+      "commands": [
+        {
+          "type": "caldera-cmd",
+          "command": "id: 80879fa1-765e-48c2-bcd3-6fa3b4b2e7a7"
+        }
+      ],
+      "agent": "caldera--4801fe91-cd09-4da3-a67d-3d69cd9fec7c",
+      "targets": [
+        "security-category--b1ead715-d565-48f8-a6a4-0d5c4a3e643e"
+      ]
+    },
+    "action--3ad2d927-9480-4d05-bcbb-7d40b4da2266": {
+      "name": "Run another Caldera command",
+      "on_completion": "end--32964690-69a0-4fb3-8124-0ce63c0e09b9",
+      "type": "action",
+      "commands": [
+        {
+          "type": "caldera-cmd",
+          "command": "id: 36eecb80-ede3-442b-8774-956e906aff02"
+        }
+      ],
+      "agent": "caldera--4801fe91-cd09-4da3-a67d-3d69cd9fec7c",
+      "targets": [
+        "security-category--b1ead715-d565-48f8-a6a4-0d5c4a3e643e"
+      ]
+    },
+    "end--080de9ac-65c7-49f0-acd2-b21e92e34036": {
+      "type": "end"
+    },
+    "end--48d7d487-3c8a-4651-bbc2-40c519e2b9f7": {
+      "type": "end"
+    },
+    "end--32964690-69a0-4fb3-8124-0ce63c0e09b9": {
+      "type": "end"
+    }
+  },
+  "agent_definitions": {
+    "caldera--4801fe91-cd09-4da3-a67d-3d69cd9fec7c": {
+      "type": "soarca",
+      "name": "soarca-caldera-cmd"
+    }
+  },
+  "target_definitions": {
+    "security-category--b1ead715-d565-48f8-a6a4-0d5c4a3e643e": {
+      "type": "security-category",
+      "name": "djnsbg",
+      "category": [
+        "caldera"
+      ]
+    }
+  }
+}
