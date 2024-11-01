@@ -61,10 +61,10 @@ func (playbookAction *PlaybookAction) Execute(metadata execution.Metadata,
 	if err != nil {
 		err = errors.New(fmt.Sprint("execution of playbook failed with error: ", err))
 		log.Error(err)
-		playbookAction.reporter.ReportStepEnd(metadata.ExecutionId, step, playbook.PlaybookVariables, err, playbookAction.time.Now())
+		playbookAction.reporter.ReportStepEnd(metadata.ExecutionId, step, details.Variables, err, playbookAction.time.Now())
 		return cacao.NewVariables(), err
 	}
-	playbookAction.reporter.ReportStepEnd(metadata.ExecutionId, step, playbook.PlaybookVariables, nil, playbookAction.time.Now())
+	playbookAction.reporter.ReportStepEnd(metadata.ExecutionId, step, details.Variables, nil, playbookAction.time.Now())
 	return details.Variables, nil
 
 }
