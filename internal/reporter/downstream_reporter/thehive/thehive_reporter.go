@@ -16,15 +16,13 @@ func New(connector connector.ITheHiveConnector) *TheHiveReporter {
 	return &TheHiveReporter{connector: connector}
 }
 
-// TODO: add structures to handle Execution ID to TheHive IDs mapping
-
 func (theHiveReporter *TheHiveReporter) ConnectorTest() string {
 	return theHiveReporter.connector.Hello()
 }
 
 // Creates a new *case* in The Hive with related triggering metadata
 func (theHiveReporter *TheHiveReporter) ReportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook) error {
-	_, err := theHiveReporter.connector.PostNewCase(executionId.String(), playbook)
+	_, err := theHiveReporter.connector.PostNewExecutionCase(executionId.String(), playbook)
 	return err
 }
 
