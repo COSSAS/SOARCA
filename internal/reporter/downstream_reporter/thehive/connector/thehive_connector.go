@@ -103,13 +103,13 @@ func (soarcaTheHiveMap *SOARCATheHiveMap) retrieveTaskId(executionId string, ste
 	return soarcaTheHiveMap.executionsCaseMaps[executionId].stepsTasksMap[stepId], nil
 }
 
-func (soarcaTheHiveMap *SOARCATheHiveMap) clearCase(executionId string) error {
-	err := soarcaTheHiveMap.checkExecutionCaseExists(executionId)
-	if err != nil {
-		return err
-	}
-	return nil
-}
+// func (soarcaTheHiveMap *SOARCATheHiveMap) clearCase(executionId string) error {
+// 	err := soarcaTheHiveMap.checkExecutionCaseExists(executionId)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
 
 // func (soarcaTheHiveMap *SOARCATheHiveMap) clearMap(executionId string) error
 
@@ -170,6 +170,7 @@ func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(executionId strin
 		return "", err
 	}
 
+	// Pre-populate tasks according to playbook steps
 	for _, step := range playbook.Workflow {
 		task_id, err := theHiveConnector.PostStepTaskInCase(case_id, step)
 		if err != nil {
