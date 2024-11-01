@@ -17,4 +17,4 @@ jobs:
     steps:
       - name: Check for branch name
         run: 
-          if [[ $BRANCH_NAME =~ (feature|bugfix|hotfix|dependabot|development|release|master)\/* ]]; then exit 0; else exit 1; fi
+          if [[ $BRANCH_NAME =~ (meta|SOARCA-[[:digit:]]+)-.+ ]]; then exit 0; else exit 1; fi

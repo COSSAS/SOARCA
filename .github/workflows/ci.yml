@@ -2,7 +2,7 @@ name: Ci
 
 on:
   pull_request:
-    branches: [ master, development ]
+    branches: [ master, development, ut-dev ]
 
 jobs:
   build:
@@ -69,4 +69,8 @@ jobs:
           echo "sshtest:pdKY77qNxpI5MAizirtjCVOcm0KFKIs" | sudo chpasswd
           sudo service ssh start
           make ci-test
+      - name: Check test coverage
+        uses: vladopajic/go-test-coverage@v2
+        with:
+          config: ./.testcoverage.yml
 

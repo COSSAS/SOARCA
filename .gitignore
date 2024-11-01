@@ -13,6 +13,8 @@ api/*
 **.env
 test/cacao/flatfile-db-example.json
 .idea
+cover.out
+cover.html
 
 docs/public
 docs/resources/
