@@ -50,35 +50,10 @@ func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
 		log.Trace(host)
 	}
 
-	var config ssh.ClientConfig
-
-	if authentication.Type == "user-auth" {
-		config = ssh.ClientConfig{
-			User: authentication.Username,
-			Auth: []ssh.AuthMethod{
-				ssh.Password(authentication.Password),
-			},
-			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-			Timeout:         time.Duration(time.Second * 20),
-		}
-	} else if authentication.Type == "private-key" {
-		signer, errKey := ssh.ParsePrivateKey([]byte(authentication.PrivateKey))
-		if errKey != nil || authentication.Password == "" {
-			log.Error("no valid authentication information: ", errKey)
-			return cacao.NewVariables(), errKey
-		}
-		config = ssh.ClientConfig{
-			User: authentication.Username,
-			Auth: []ssh.AuthMethod{
-				ssh.PublicKeys(signer),
-			},
-			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-			Timeout:         time.Duration(time.Second * 20),
-		}
-
+	config, err := getConfig(authentication)
+	if err != nil {
+		return cacao.NewVariables(), err
 	}
-
-	var conn *ssh.Client
 
 	conn, err := ssh.Dial("tcp", host, &config)
 	if err != nil {
@@ -104,6 +79,46 @@ func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
 		Value: string(response)})
 	log.Trace("Finished ssh execution will return the variables: ", results)
 	return results, err
+}
+
+func getConfig(authentication cacao.AuthenticationInformation) (ssh.ClientConfig, error) {
+	var config ssh.ClientConfig
+
+	switch authentication.Type {
+	case "user-auth":
+		{
+			return ssh.ClientConfig{
+				User: authentication.Username,
+				Auth: []ssh.AuthMethod{
+					ssh.Password(authentication.Password),
+				},
+				HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+				Timeout:         time.Duration(time.Second * 20),
+			}, nil
+		}
+	case "private-key":
+		{
+			signer, err := ssh.ParsePrivateKey([]byte(authentication.PrivateKey))
+			if err != nil || authentication.Password == "" {
+				log.Error("no valid authentication information: ", err)
+				return config, err
+			}
+			config = ssh.ClientConfig{
+				User: authentication.Username,
+				Auth: []ssh.AuthMethod{
+					ssh.PublicKeys(signer),
+				},
+				HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+				Timeout:         time.Duration(time.Second * 20),
+			}
+			return config, nil
+		}
+	default:
+		{
+			return config, errors.New("non supported authentication type")
+		}
+	}
+
 }
 
 func CombinePortAndAddress(addresses map[cacao.NetAddressType][]string, port string) string {
