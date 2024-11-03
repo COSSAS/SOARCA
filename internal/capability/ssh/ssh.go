@@ -55,6 +55,12 @@ func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
 		return cacao.NewVariables(), err
 	}
 
+	return executeCommand(config, host, command)
+}
+
+func executeCommand(config ssh.ClientConfig,
+	host string,
+	command cacao.Command) (cacao.Variables, error) {
 	conn, err := ssh.Dial("tcp", host, &config)
 	if err != nil {
 		log.Error(err)
@@ -82,41 +88,28 @@ func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
 }
 
 func getConfig(authentication cacao.AuthenticationInformation) (ssh.ClientConfig, error) {
-	var config ssh.ClientConfig
+	config := ssh.ClientConfig{User: authentication.Username,
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		Timeout:         time.Duration(time.Second * 20)}
 
 	switch authentication.Type {
 	case "user-auth":
-		{
-			return ssh.ClientConfig{
-				User: authentication.Username,
-				Auth: []ssh.AuthMethod{
-					ssh.Password(authentication.Password),
-				},
-				HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-				Timeout:         time.Duration(time.Second * 20),
-			}, nil
-		}
+		config.Auth = []ssh.AuthMethod{
+			ssh.Password(authentication.Password)}
+		return config, nil
+
 	case "private-key":
-		{
-			signer, err := ssh.ParsePrivateKey([]byte(authentication.PrivateKey))
-			if err != nil || authentication.Password == "" {
-				log.Error("no valid authentication information: ", err)
-				return config, err
-			}
-			config = ssh.ClientConfig{
-				User: authentication.Username,
-				Auth: []ssh.AuthMethod{
-					ssh.PublicKeys(signer),
-				},
-				HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-				Timeout:         time.Duration(time.Second * 20),
-			}
-			return config, nil
+		signer, err := ssh.ParsePrivateKey([]byte(authentication.PrivateKey))
+		if err != nil || authentication.Password == "" {
+			log.Error("no valid authentication information: ", err)
+			return config, err
 		}
+		config.Auth = []ssh.AuthMethod{
+			ssh.PublicKeys(signer)}
+		return config, nil
+
 	default:
-		{
-			return config, errors.New("non supported authentication type")
-		}
+		return config, errors.New("non supported authentication type")
 	}
 
 }
