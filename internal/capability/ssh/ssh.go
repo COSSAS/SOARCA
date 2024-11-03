@@ -37,7 +37,14 @@ func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
 	authentication cacao.AuthenticationInformation,
 	target cacao.AgentTarget,
 	variables cacao.Variables) (cacao.Variables, error) {
+
 	log.Trace(metadata.ExecutionId)
+	return execute(command, authentication, target)
+}
+
+func execute(command cacao.Command,
+	authentication cacao.AuthenticationInformation,
+	target cacao.AgentTarget) (cacao.Variables, error) {
 
 	host := CombinePortAndAddress(target.Address, target.Port)
 
