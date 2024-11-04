@@ -41,10 +41,12 @@ type TheHiveConnector struct {
 }
 
 func New(theHiveEndpoint string, theHiveApiKey string) *TheHiveConnector {
+	ids_map := SOARCATheHiveMap{}
+	ids_map.executionsCaseMaps = map[string]ExecutionCaseMap{}
 	return &TheHiveConnector{
 		baseUrl: theHiveEndpoint,
 		apiKey:  theHiveApiKey,
-		ids_map: SOARCATheHiveMap{},
+		ids_map: ids_map,
 	}
 }
 
@@ -54,14 +56,8 @@ type SOARCATheHiveMap struct {
 	executionsCaseMaps map[string]ExecutionCaseMap
 }
 type ExecutionCaseMap struct {
-	caseId          string
-	caseDescription string
-	stepsTasksMap   map[string]TaskInfo
-}
-
-type TaskInfo struct {
-	taskId          string
-	taskDescription string
+	caseId        string
+	stepsTasksMap map[string]string
 }
 
 // TODO: Change to using observables instead of updating the tasks descriptions
@@ -79,18 +75,18 @@ func (soarcaTheHiveMap *SOARCATheHiveMap) checkExecutionStepTaskExists(execution
 	return nil
 }
 
-func (soarcaTheHiveMap *SOARCATheHiveMap) registerExecutionInCase(executionId string, caseId string, description string) error {
+func (soarcaTheHiveMap *SOARCATheHiveMap) registerExecutionInCase(executionId string, caseId string) error {
 	soarcaTheHiveMap.executionsCaseMaps[executionId] = ExecutionCaseMap{
-		caseId:          caseId,
-		stepsTasksMap:   map[string]TaskInfo{},
-		caseDescription: description,
+		caseId:        caseId,
+		stepsTasksMap: map[string]string{},
 	}
+	fmt.Printf("registering execution: %s, case id: %s", executionId, caseId)
+	fmt.Printf("execution entry id %s", soarcaTheHiveMap.executionsCaseMaps[executionId].caseId)
+
 	return nil
 }
-func (soarcaTheHiveMap *SOARCATheHiveMap) registerStepTaskInCase(executionId string, stepId string, taskId string, description string) error {
-	soarcaTheHiveMap.executionsCaseMaps[executionId].stepsTasksMap[stepId] = TaskInfo{
-		taskId:          taskId,
-		taskDescription: description}
+func (soarcaTheHiveMap *SOARCATheHiveMap) registerStepTaskInCase(executionId string, stepId string, taskId string) error {
+	soarcaTheHiveMap.executionsCaseMaps[executionId].stepsTasksMap[stepId] = taskId
 	return nil
 }
 
@@ -102,28 +98,6 @@ func (soarcaTheHiveMap *SOARCATheHiveMap) retrieveCaseId(executionId string) (st
 	return soarcaTheHiveMap.executionsCaseMaps[executionId].caseId, nil
 }
 
-func (soarcaTheHiveMap *SOARCATheHiveMap) retrieveCaseDescription(executionId string) (string, error) {
-	err := soarcaTheHiveMap.checkExecutionCaseExists(executionId)
-	if err != nil {
-		return "", err
-	}
-	return soarcaTheHiveMap.executionsCaseMaps[executionId].caseDescription, nil
-}
-func (soarcaTheHiveMap *SOARCATheHiveMap) updateCaseDescription(executionId string, newDescription string) error {
-	err := soarcaTheHiveMap.checkExecutionCaseExists(executionId)
-	if err != nil {
-		return err
-	}
-	mapValue := soarcaTheHiveMap.executionsCaseMaps[executionId]
-
-	mapValue.caseDescription = newDescription
-	mapValue.caseId = soarcaTheHiveMap.executionsCaseMaps[executionId].caseId
-	mapValue.stepsTasksMap = soarcaTheHiveMap.executionsCaseMaps[executionId].stepsTasksMap
-
-	soarcaTheHiveMap.executionsCaseMaps[executionId] = mapValue
-	return nil
-}
-
 func (soarcaTheHiveMap *SOARCATheHiveMap) retrieveTaskId(executionId string, stepId string) (string, error) {
 	err := soarcaTheHiveMap.checkExecutionCaseExists(executionId)
 	if err != nil {
@@ -133,36 +107,7 @@ func (soarcaTheHiveMap *SOARCATheHiveMap) retrieveTaskId(executionId string, ste
 	if err != nil {
 		return "", err
 	}
-	return soarcaTheHiveMap.executionsCaseMaps[executionId].stepsTasksMap[stepId].taskId, nil
-}
-
-func (soarcaTheHiveMap *SOARCATheHiveMap) retrieveTaskDescription(executionId string, stepId string) (string, error) {
-	err := soarcaTheHiveMap.checkExecutionCaseExists(executionId)
-	if err != nil {
-		return "", err
-	}
-	err = soarcaTheHiveMap.checkExecutionStepTaskExists(executionId, stepId)
-	if err != nil {
-		return "", err
-	}
-	return soarcaTheHiveMap.executionsCaseMaps[executionId].stepsTasksMap[stepId].taskDescription, nil
-}
-
-func (soarcaTheHiveMap *SOARCATheHiveMap) updateTaskDescription(executionId string, stepId string, newDescription string) error {
-	err := soarcaTheHiveMap.checkExecutionCaseExists(executionId)
-	if err != nil {
-		return err
-	}
-	err = soarcaTheHiveMap.checkExecutionStepTaskExists(executionId, stepId)
-	if err != nil {
-		return err
-	}
-	mapValue := soarcaTheHiveMap.executionsCaseMaps[executionId].stepsTasksMap[stepId]
-	mapValue.taskDescription = newDescription
-	mapValue.taskId = soarcaTheHiveMap.executionsCaseMaps[executionId].stepsTasksMap[stepId].taskId
-
-	soarcaTheHiveMap.executionsCaseMaps[executionId].stepsTasksMap[stepId] = mapValue
-	return nil
+	return soarcaTheHiveMap.executionsCaseMaps[executionId].stepsTasksMap[stepId], nil
 }
 
 // func (soarcaTheHiveMap *SOARCATheHiveMap) clearCase(executionId string) error {
@@ -200,7 +145,7 @@ func (theHiveConnector *TheHiveConnector) PostStepTaskInCase(executionId string,
 	if err != nil {
 		return "", err
 	}
-	theHiveConnector.ids_map.registerStepTaskInCase(executionId, step.ID, task_id, taskDescription)
+	theHiveConnector.ids_map.registerStepTaskInCase(executionId, step.ID, task_id)
 
 	return task_id, nil
 }
@@ -217,10 +162,6 @@ func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(executionId strin
 	caseTags := []string{executionId, playbook.ID}
 	caseTags = append(caseTags, playbook.Labels...)
 
-	caseDescription := playbook.Description + "\n" +
-		"Playbook variables at START of execution: \n" +
-		PrettyJSONString(playbook.PlaybookVariables)
-
 	customFields := []schemas.CustomField{}
 	for name, variable := range playbook.PlaybookVariables {
 		customFields = append(customFields, schemas.CustomField{
@@ -233,7 +174,7 @@ func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(executionId strin
 
 	data := schemas.Case{
 		Title:        playbook.Name,
-		Description:  caseDescription,
+		Description:  playbook.Description,
 		StartDate:    time.Now().Unix(),
 		Tags:         caseTags,
 		CustomFields: customFields,
@@ -249,18 +190,18 @@ func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(executionId strin
 		return "", err
 	}
 
-	err = theHiveConnector.ids_map.registerExecutionInCase(executionId, caseId, caseDescription)
+	err = theHiveConnector.ids_map.registerExecutionInCase(executionId, caseId)
 	if err != nil {
 		return "", err
 	}
 
 	// Pre-populate tasks according to playbook steps
 	for _, step := range playbook.Workflow {
-		task_id, err := theHiveConnector.PostStepTaskInCase(caseId, step)
+		task_id, err := theHiveConnector.PostStepTaskInCase(executionId, step)
 		if err != nil {
 			return "", err
 		}
-		err = theHiveConnector.ids_map.registerStepTaskInCase(executionId, step.ID, task_id, step.Description)
+		err = theHiveConnector.ids_map.registerStepTaskInCase(executionId, step.ID, task_id)
 		if err != nil {
 			return "", err
 		}
@@ -281,23 +222,8 @@ func (theHiveConnector *TheHiveConnector) UpdateEndExecutionCase(executionId str
 	url := theHiveConnector.baseUrl + "/case/" + caseId
 	method := "PATCH"
 
-	// Update case description
-	caseDescr, err := theHiveConnector.ids_map.retrieveCaseDescription(executionId)
-	if err != nil {
-		return "", err
-	}
-	updatedCaseDescription := caseDescr + "\n" +
-		"Playbook variables at END of execution: \n" +
-		PrettyJSONString(variables) + "\n"
-	// Save case description to map
-	err = theHiveConnector.ids_map.updateCaseDescription(executionId, updatedCaseDescription)
-	if err != nil {
-		return "", err
-	}
-
 	data := schemas.Case{
-		Description: updatedCaseDescription,
-		EndDate:     time.Now().Unix(),
+		EndDate: time.Now().Unix(),
 	}
 
 	body, err := theHiveConnector.sendRequest(method, url, data)
@@ -320,18 +246,6 @@ func (theHiveConnector *TheHiveConnector) UpdateStartStepTaskInCase(executionId 
 	url := theHiveConnector.baseUrl + "/task/" + taskId + "/task"
 	method := "PATCH"
 
-	// Update description with info and save again to ids map
-	taskDescription, err := theHiveConnector.ids_map.retrieveTaskDescription(executionId, step.ID)
-	if err != nil {
-		return "", err
-	}
-	updatedTaskDescription :=
-		taskDescription + "\n" +
-			"Variables at START step execution: \n" + PrettyJSONString(variables) +
-			"Step content: \n" + PrettyJSONString(variables) + "\n"
-
-	theHiveConnector.ids_map.registerStepTaskInCase(executionId, step.ID, taskId, updatedTaskDescription)
-
 	fullyAuto := true
 	for _, command := range step.Commands {
 		if command.Type == cacao.CommandTypeManual {
@@ -344,10 +258,9 @@ func (theHiveConnector *TheHiveConnector) UpdateStartStepTaskInCase(executionId 
 	}
 	task := schemas.Task{
 		// StartDate: wait for merging of new reporting interface with timings passing,
-		StartDate:   time.Now().Unix(),
-		Status:      schemas.TheHiveStatusInProgress,
-		Description: updatedTaskDescription,
-		Assignee:    taskAssignee,
+		StartDate: time.Now().Unix(),
+		Status:    schemas.TheHiveStatusInProgress,
+		Assignee:  taskAssignee,
 	}
 
 	body, err := theHiveConnector.sendRequest(method, url, task)
@@ -369,29 +282,14 @@ func (theHiveConnector *TheHiveConnector) UpdateEndStepTaskInCase(executionId st
 	url := theHiveConnector.baseUrl + "/task/" + taskId + "/task"
 	method := "PATCH"
 
-	taskDescription, err := theHiveConnector.ids_map.retrieveTaskDescription(executionId, step.ID)
-	if err != nil {
-		return "", err
-	}
-
-	updatedTaskDescription :=
-		taskDescription + "\n" +
-			"Variables at END step execution: \n" + PrettyJSONString(variables)
-
-	theHiveConnector.ids_map.updateTaskDescription(executionId, step.ID, updatedTaskDescription)
-	if err != nil {
-		return "", err
-	}
-
 	taskStatus := schemas.TheHiveStatusCompleted
 	if executionError != nil {
 		taskStatus = "ExecutionError"
 	}
 	task := schemas.Task{
 		// StartDate: wait for merging of new reporting interface with timings passing,
-		EndDate:     time.Now().Unix(),
-		Status:      taskStatus,
-		Description: updatedTaskDescription,
+		EndDate: time.Now().Unix(),
+		Status:  taskStatus,
 	}
 
 	body, err := theHiveConnector.sendRequest(method, url, task)
