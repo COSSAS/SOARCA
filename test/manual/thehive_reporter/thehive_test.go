@@ -74,6 +74,13 @@ func TestTheHiveOpenCase(t *testing.T) {
 		Name:  "var1",
 		Value: "testing",
 	}
+	playbookVariables := cacao.NewVariables(
+		cacao.Variable{
+			Type:  "string",
+			Name:  "__playbook_var__",
+			Value: "testing!",
+		},
+	)
 
 	step1 := cacao.Step{
 		Type:          "action",
@@ -116,6 +123,7 @@ func TestTheHiveOpenCase(t *testing.T) {
 		Name:                          "ssh-test-playbook",
 		Description:                   "Playbook description",
 		WorkflowStart:                 step1.ID,
+		PlaybookVariables:             playbookVariables,
 		AuthenticationInfoDefinitions: map[string]cacao.AuthenticationInformation{"id": expectedAuth},
 		AgentDefinitions:              map[string]cacao.AgentTarget{"agent1": expectedAgent},
 		TargetDefinitions:             map[string]cacao.AgentTarget{"target1": expectedTarget},
@@ -129,9 +137,10 @@ func TestTheHiveOpenCase(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
-	// err = thr.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables))
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	t.Fail()
-	// }
+	err = thr.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables))
+	if err != nil {
+		fmt.Println(err)
+		t.Fail()
+	}
+	t.Fail()
 }
