@@ -96,16 +96,14 @@ func (soarcaTheHiveMap *SOARCATheHiveMap) registerExecutionInCase(executionId st
 
 	return nil
 }
-func (soarcaTheHiveMap *SOARCATheHiveMap) registerStepTaskInCase(executionId string, stepId string, taskId string) error {
+func (soarcaTheHiveMap *SOARCATheHiveMap) registerStepTaskInCase(executionId string, stepId string, taskId string) {
 	soarcaTheHiveMap.executionsCaseMaps[executionId].stepsTasksMap[stepId] = taskId
-	return nil
 }
 
-func (soarcaTheHiveMap *SOARCATheHiveMap) registerVariableObservableInCase(executionId string, variableName string, observableId string) error {
+func (soarcaTheHiveMap *SOARCATheHiveMap) registerVariableObservableInCase(executionId string, variableName string, observableId string) {
 	soarcaTheHiveMap.executionsCaseMaps[executionId].variablesObservablesMap[variableName] = observableId
 	fmt.Printf("registering observable: %s, variable name: %s", observableId, variableName)
 	fmt.Printf("observable entry entry %s", soarcaTheHiveMap.executionsCaseMaps[executionId].variablesObservablesMap[variableName])
-	return nil
 }
 
 func (soarcaTheHiveMap *SOARCATheHiveMap) retrieveCaseId(executionId string) (string, error) {
@@ -191,10 +189,11 @@ func (theHiveConnector *TheHiveConnector) PostVariableObservableInCasebyExecutio
 
 	observable := schemas.Observable{
 		DataType: schemas.ObservableTypeOther,
-		Data:     variable.Type + "\n" + variable.Name,
+		Name:     variable.Name,
+		Data:     []string{variable.Type},
 		Message:  variable.Description,
 		TLP:      4,
-		Tags:     []string{"CACAO Variable", executionId, variable.Type, variable.Value},
+		Tags:     []string{"CACAO Variable", executionId, variable.Value},
 	}
 
 	body, err := theHiveConnector.sendRequest(method, url, observable)
@@ -257,6 +256,8 @@ func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(executionId strin
 	for _, variable := range playbook.PlaybookVariables {
 		err := theHiveConnector.PostVariableObservableInCasebyExecutionId(executionId, variable)
 		if err != nil {
+			fmt.Println("error in post variable observable")
+			fmt.Println(err)
 			return "", err
 		}
 	}
@@ -379,17 +380,38 @@ func (theHiveConnector *TheHiveConnector) UpdateEndStepTaskInCase(executionId st
 // ############################### HTTP interaction
 
 func (theHiveConnector *TheHiveConnector) getIdFromRespBody(body []byte) (string, error) {
-	var resp_map map[string]interface{}
-	err := json.Unmarshal(body, &resp_map)
+	fmt.Println("BODY IN GET ID FROM RESP BODY")
+	fmt.Println(string(body))
+
+	// Try to unmarshal as a slice of maps
+	var respArray []map[string]interface{}
+	err := json.Unmarshal(body, &respArray)
+	if err == nil {
+		if len(respArray) == 0 {
+			return "", errors.New("response array is empty")
+		}
+
+		_id, ok := respArray[0]["_id"].(string)
+		if !ok {
+			log.Error("type assertion for retrieving TheHive ID failed")
+			return "", errors.New("type assertion for retrieving TheHive ID failed")
+		}
+
+		return _id, nil
+	}
+
+	// If unmarshalling as a slice fails, try to unmarshal as a single map
+	var respMap map[string]interface{}
+	err = json.Unmarshal(body, &respMap)
 	if err != nil {
+		log.Error("failed to unmarshal as single object:", err)
 		return "", err
 	}
 
-	_id, ok := resp_map["_id"].(string)
+	_id, ok := respMap["_id"].(string)
 	if !ok {
-		// Handle the case where the type assertion fails
-		log.Error("type assertion for retrieving TheHive ID failed")
-		return "", errors.New("type assertion for retrieving TheHive ID failed")
+		log.Error("type assertion for retrieving TheHive ID from map failed")
+		return "", errors.New("type assertion for retrieving TheHive ID from map failed")
 	}
 
 	return _id, nil
@@ -415,7 +437,7 @@ func (theHiveConnector *TheHiveConnector) sendRequest(method string, url string,
 		requestBody = bytes.NewBuffer(jsonData)
 	}
 	log.Debugf("request body: %s", requestBody)
-	//fmt.Printf("request body: %s", requestBody)
+	fmt.Printf("request body: %s", requestBody)
 
 	req, err := http.NewRequest(method, url, requestBody)
 	if err != nil {

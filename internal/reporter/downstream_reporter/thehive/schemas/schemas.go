@@ -52,10 +52,10 @@ type CustomField struct {
 
 type Observable struct {
 	DataType         string   `bson:"dataType" json:"dataType" validate:"required,min=1,max=64"`
-	Data             string   `bson:"data,omitempty" json:"data,omitempty" validate:"max=4096,dive,min=1,max=4096"`
+	Data             []string `bson:"data,omitempty" json:"data,omitempty" validate:"max=4096,dive,min=1,max=4096"`
 	Message          string   `bson:"message,omitempty" json:"message,omitempty" validate:"max=1048576"`
 	StartDate        int64    `bson:"startDate,omitempty" json:"startDate,omitempty"`
-	Attachments      []string `bson:"attachments,omitempty" json:"attachments,omitempty"`
+	Attachment       []string `bson:"attachment,omitempty" json:"attachment,omitempty"`
 	Name             string   `bson:"name" json:"name" validate:"required,min=1,max=128"`
 	ContentType      string   `bson:"contentType" json:"contentType" validate:"required,min=1,max=128"`
 	TLP              int      `bson:"tlp,omitempty" json:"tlp,omitempty" validate:"min=0,max=4"`

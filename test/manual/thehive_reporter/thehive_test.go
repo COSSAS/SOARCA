@@ -134,6 +134,7 @@ func TestTheHiveOpenCase(t *testing.T) {
 
 	err = thr.ReportWorkflowStart(executionId0, playbook)
 	if err != nil {
+		fmt.Println("failing at report workflow start")
 		fmt.Println(err)
 		t.Fail()
 	}
@@ -142,5 +143,4 @@ func TestTheHiveOpenCase(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
-	t.Fail()
 }
