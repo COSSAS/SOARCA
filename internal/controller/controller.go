@@ -183,17 +183,13 @@ func Initialize() error {
 
 	return err
 }
+
 func initializeCore(app *gin.Engine) error {
 	origins := strings.Split(strings.ReplaceAll(utils.GetEnv("SOARCA_ALLOWED_ORIGINS", "*"), " ", ""), ",")
 	authEnabledStr := utils.GetEnv("AUTH_ENABLED", "false")
 	authEnabled, err := strconv.ParseBool(authEnabledStr)
 	if err != nil {
 		log.Error(err)
-		return err
-	}
-	auth, err := gauth.New(gauth.DefaultConfig())
-	if err != nil {
-		log.Error("Failed to parse AUTH_ENABLED:", err)
 		return err
 	}
 
@@ -208,19 +204,11 @@ func initializeCore(app *gin.Engine) error {
 	}
 	routes.Cors(app, origins)
 
-	// Fix: mainController needs to be passed as parameter or properly initialized
-	if mainController == nil {
-		return fmt.Errorf("mainController is not initialized")
-	}
-	
 	err = mainController.setupDatabase()
 	if err != nil {
 		log.Error("Failed to setup database:", err)
 		return err
 	}
-
-	return nil
-}
 
 	err = routes.Api(app, &mainController, &mainController)
 	if err != nil {
