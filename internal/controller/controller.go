@@ -186,13 +186,23 @@ func Initialize() error {
 
 func initializeCore(app *gin.Engine) error {
 	origins := strings.Split(strings.ReplaceAll(utils.GetEnv("SOARCA_ALLOWED_ORIGINS", "*"), " ", ""), ",")
-
+	authEnabledStr := utils.GetEnv("AUTH_ENABLED", "false")
 	authEnabled, err := strconv.ParseBool(authEnabledStr)
-
-	auth, err := gauth.New(gauth.OIDCRedirectConfig())
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+	auth, err := gauth.New(gauth.DefaultConfig())
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+	if authEnabled {
+		routes.Middlewares(app, auth.LoadAuthContext(), auth.Middleware([]string{"admin", "soarca"}))
+	}
 	routes.Cors(app, origins)
 
-	err := mainController.setupDatabase()
+	err = mainController.setupDatabase()
 	if err != nil {
 		log.Error(err)
 		return err
