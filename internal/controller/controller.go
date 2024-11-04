@@ -187,11 +187,7 @@ func Initialize() error {
 func initializeCore(app *gin.Engine) error {
 	origins := strings.Split(strings.ReplaceAll(utils.GetEnv("SOARCA_ALLOWED_ORIGINS", "*"), " ", ""), ",")
 	authEnabledStr := utils.GetEnv("AUTH_ENABLED", "false")
-	authEnabled, err := strconv.ParseBool(authEnabledStr)
-	if err != nil {
-		log.Error(err)
-		return err
-	}
+	authEnabled, _ := strconv.ParseBool(authEnabledStr)
 	auth, err := gauth.New(gauth.DefaultConfig())
 	if err != nil {
 		log.Error(err)
