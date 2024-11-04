@@ -188,6 +188,11 @@ func initializeCore(app *gin.Engine) error {
 	authEnabledStr := utils.GetEnv("AUTH_ENABLED", "false")
 	authEnabled, err := strconv.ParseBool(authEnabledStr)
 	if err != nil {
+		log.Error(err)
+		return err
+	}
+	auth, err := gauth.New(gauth.DefaultConfig())
+	if err != nil {
 		log.Error("Failed to parse AUTH_ENABLED:", err)
 		return err
 	}
