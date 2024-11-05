@@ -4,13 +4,20 @@ const (
 	TheHiveStatusInProgress = "InProgress"
 	TheHiveStatusCompleted  = "Completed"
 	TheHiveStatusWaiting    = "Waiting"
-	TheHiveStatusCancelled  = "Cancelled"
+	TheHiveStatusCancelled  = "Cancel"
+
+	TheHiveCaseStatusTruePositive  = "TruePositive"
+	TheHiveCaseStatusComplete      = "Complete"
+	TheHiveCaseStatusClosed        = "Closed"
+	TheHiveCaseStatusOther         = "Other"
+	TheHiveCaseStatusIndeterminate = "Indeterminate"
+	TheHiveCaseImpacStatustLow     = "Low"
 
 	ObservableTypeOther = "other"
 )
 
 type Task struct {
-	Title       string `bson:"title" json:"title" validate:"required" example:"Task 1"`
+	Title       string `bson:"title,omitempty" json:"title,omitempty" validate:"required" example:"Task 1"`
 	Group       string `bson:"group,omitempty" json:"group,omitempty" example:"Group 1"`
 	Description string `bson:"description,omitempty" json:"description,omitempty" example:"Description of task 1"`
 	Status      string `bson:"status,omitempty" json:"status,omitempty" example:"Open"`
@@ -69,23 +76,34 @@ type Observable struct {
 	ZipPassword      string   `bson:"zipPassword,omitempty" json:"zipPassword,omitempty" validate:"max=512"`
 }
 
+type MessagePost struct {
+	Message string `bson:"message" json:"message" validate:"required,min=1,max=1048576"`
+}
+
+type TaskLog struct {
+	Message            string   `bson:"message" json:"message" validate:"required,min=1,max=1048576"`
+	StartDate          int64    `bson:"startDate,omitempty" json:"startDate,omitempty" example:"1640000000000"`
+	IncludeIntTimeline int64    `bson:"includeIntTimeline,omitempty" json:"includeIntTimeline,omitempty" example:"1640000000000"`
+	Attachments        []string `bson:"attachments,omitempty" json:"attachments,omitempty"`
+}
+
 type ObservableUpdate struct {
 	DataType         string   `bson:"dataType" json:"dataType" validate:"min=1,max=64"`
-	Message          *string  `bson:"message,omitempty" json:"message,omitempty" validate:"max=1048576"`
+	Message          string   `bson:"message,omitempty" json:"message,omitempty" validate:"max=1048576"`
 	TLP              int      `bson:"tlp,omitempty" json:"tlp,omitempty" validate:"min=0,max=4"`
 	PAP              int      `bson:"pap,omitempty" json:"pap,omitempty" validate:"min=0,max=3"`
 	Tags             []string `bson:"tags,omitempty" json:"tags,omitempty" validate:"max=128,dive,min=1,max=128"`
 	IOC              bool     `bson:"ioc,omitempty" json:"ioc,omitempty"`
 	Sighted          bool     `bson:"sighted,omitempty" json:"sighted,omitempty"`
-	SightedAt        *int64   `bson:"sightedAt,omitempty" json:"sightedAt,omitempty"`
+	SightedAt        int64    `bson:"sightedAt,omitempty" json:"sightedAt,omitempty"`
 	IgnoreSimilarity bool     `bson:"ignoreSimilarity,omitempty" json:"ignoreSimilarity,omitempty"`
 	AddTags          []string `bson:"addTags,omitempty" json:"addTags,omitempty" validate:"max=128,dive,min=1,max=128"`
 	RemoveTags       []string `bson:"removeTags,omitempty" json:"removeTags,omitempty" validate:"max=128,dive,min=1,max=128"`
 }
 
 type Case struct {
-	Title             string             `bson:"title" json:"title" validate:"required,min=1,max=512" example:"Example Case"`
-	Description       string             `bson:"description" json:"description" validate:"required,max=1048576"`
+	Title             string             `bson:"title,omitempty" json:"title,omitempty" validate:"required,min=1,max=512" example:"Example Case"`
+	Description       string             `bson:"description,omitempty" json:"description,omitempty" validate:"required,max=1048576"`
 	Severity          int                `bson:"severity,omitempty" json:"severity,omitempty" validate:"min=1,max=4" example:"2"`
 	StartDate         int64              `bson:"startDate,omitempty" json:"startDate,omitempty" example:"1640000000000"`
 	EndDate           int64              `bson:"endDate,omitempty" json:"endDate,omitempty" example:"1640000000000"`
@@ -95,6 +113,7 @@ type Case struct {
 	PAP               int                `bson:"pap,omitempty" json:"pap,omitempty" validate:"min=0,max=3" example:"2"`
 	Status            string             `bson:"status,omitempty" json:"status,omitempty" validate:"min=1,max=64" example:"New"`
 	Summary           string             `bson:"summary,omitempty" json:"summary,omitempty" validate:"max=1048576" example:"Summary of the case"`
+	ImpactStatus      string             `bson:"impactStatus,omitempty" json:"impactStatus,omitempty" validate:"max=128"`
 	Assignee          string             `bson:"assignee,omitempty" json:"assignee,omitempty" validate:"max=128" example:"John Doe"`
 	CustomFields      []CustomField      `bson:"customFields,omitempty" json:"customFields,omitempty" example:"{\"property1\":null,\"property2\":null}"`
 	CaseTemplate      string             `bson:"caseTemplate,omitempty" json:"caseTemplate,omitempty" validate:"max=128" example:"Template1"`

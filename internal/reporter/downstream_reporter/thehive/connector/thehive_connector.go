@@ -30,6 +30,9 @@ type ITheHiveConnector interface {
 	Hello() string
 	PostStepTaskInCase(caseId string, step cacao.Step) error
 	PostNewExecutionCase(executionId string, playbook cacao.Playbook) (string, error)
+	UpdateEndExecutionCase(executionId string, variables cacao.Variables, workflowErr error) (string, error)
+	UpdateStartStepTaskInCase(executionId string, step cacao.Step, variables cacao.Variables) (string, error)
+	UpdateEndStepTaskInCase(executionId string, step cacao.Step, returnVars cacao.Variables, stepErr error) (string, error)
 }
 
 // ############################### TheHiveConnector object
@@ -178,7 +181,84 @@ func (theHiveConnector *TheHiveConnector) PostStepTaskInCase(executionId string,
 	return nil
 }
 
-func (theHiveConnector *TheHiveConnector) PostVariableObservableInCasebyExecutionId(executionId string, variable cacao.Variable) error {
+func (theHiveConnector *TheHiveConnector) PostCommentInTaskLog(executionId string, step cacao.Step, note string) error {
+	taskId, err := theHiveConnector.ids_map.retrieveTaskId(executionId, step.ID)
+	if err != nil {
+		return err
+	}
+	url := theHiveConnector.baseUrl + "/task/" + taskId + "/log"
+	method := "POST"
+
+	message := schemas.TaskLog{Message: note}
+
+	body, err := theHiveConnector.sendRequest(method, url, message)
+	if err != nil {
+		return err
+	}
+	messageId, err := theHiveConnector.getIdFromRespBody(body)
+	if err != nil {
+		return err
+	}
+	log.Tracef("task log created. execution ID %s, Task id %s, message Id: %s", executionId, taskId, messageId)
+	fmt.Printf("task log created. execution ID %s, Task id %s, message Id: %s", executionId, taskId, messageId)
+
+	return nil
+}
+
+func (theHiveConnector *TheHiveConnector) PostStepVariablesAsCommentInTaskLog(executionId string, step cacao.Step, note string) error {
+
+	variablesString := note + "\n"
+	for _, variable := range step.StepVariables {
+		variablesString = variablesString + PrettyJSONString(variable)
+	}
+
+	err := theHiveConnector.PostCommentInTaskLog(executionId, step, variablesString)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (theHiveConnector *TheHiveConnector) PostCommentInCase(executionId string, note string) error {
+	caseId, err := theHiveConnector.ids_map.retrieveCaseId(executionId)
+	if err != nil {
+		return err
+	}
+
+	url := theHiveConnector.baseUrl + "/case/" + caseId + "/comment"
+	method := "POST"
+
+	message := schemas.MessagePost{Message: note}
+
+	body, err := theHiveConnector.sendRequest(method, url, message)
+	if err != nil {
+		return err
+	}
+	messageId, err := theHiveConnector.getIdFromRespBody(body)
+	if err != nil {
+		return err
+	}
+	log.Tracef("Case comment created. execution ID %s, caseId %s, message Id: %s", executionId, caseId, messageId)
+	return nil
+}
+
+func (theHiveConnector *TheHiveConnector) PostVariablesAsCommentInCase(executionId string, variables cacao.Variables, note string) error {
+
+	variablesString := note + "\n"
+	for _, variable := range variables {
+		variablesString = variablesString + PrettyJSONString(variable)
+	}
+
+	err := theHiveConnector.PostCommentInCase(executionId, variablesString)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (theHiveConnector *TheHiveConnector) PostVariableObservableInCase(executionId string, variable cacao.Variable) error {
 	caseId, err := theHiveConnector.ids_map.retrieveCaseId(executionId)
 	if err != nil {
 		return err
@@ -254,7 +334,7 @@ func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(executionId strin
 
 	// Add variables as observables in case
 	for _, variable := range playbook.PlaybookVariables {
-		err := theHiveConnector.PostVariableObservableInCasebyExecutionId(executionId, variable)
+		err := theHiveConnector.PostVariableObservableInCase(executionId, variable)
 		if err != nil {
 			fmt.Println("error in post variable observable")
 			fmt.Println(err)
@@ -262,13 +342,16 @@ func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(executionId strin
 		}
 	}
 
+	err = theHiveConnector.PostVariablesAsCommentInCase(executionId, playbook.PlaybookVariables, "variables at start of execution")
+	if err != nil {
+		log.Warningf("could not report variables in case comment: %s", err)
+	}
+
 	log.Tracef("case posted with case ID: %s", caseId)
 	return string(body), nil
 }
 
-// TODO: finish and revise this function through
-
-func (theHiveConnector *TheHiveConnector) UpdateEndExecutionCase(executionId string, variables cacao.Variables) (string, error) {
+func (theHiveConnector *TheHiveConnector) UpdateEndExecutionCase(executionId string, variables cacao.Variables, workflowErr error) (string, error) {
 	caseId, err := theHiveConnector.ids_map.retrieveCaseId(executionId)
 	if err != nil {
 		return "", err
@@ -278,8 +361,23 @@ func (theHiveConnector *TheHiveConnector) UpdateEndExecutionCase(executionId str
 	url := theHiveConnector.baseUrl + "/case/" + caseId
 	method := "PATCH"
 
+	caseStatus := schemas.TheHiveCaseStatusTruePositive
+	closureComment := fmt.Sprintf("execution [ %s ] ended. caseId [ %s ].", executionId, caseId)
+	if workflowErr != nil {
+		caseStatus = schemas.TheHiveCaseStatusIndeterminate
+		closureComment = closureComment + fmt.Sprintf("execution error: %s", workflowErr)
+		err = theHiveConnector.PostCommentInCase(executionId, closureComment)
+		if err != nil {
+			log.Warningf("could not add task log: %s", err)
+		}
+
+	}
+
 	data := schemas.Case{
 		EndDate: time.Now().Unix(),
+		Status:  caseStatus,
+		//ImpactStatus: schemas.TheHiveCaseImpacStatustLow,
+		Summary: "summary not implemented yet. Look at the tasks :)",
 	}
 
 	body, err := theHiveConnector.sendRequest(method, url, data)
@@ -299,7 +397,7 @@ func (theHiveConnector *TheHiveConnector) UpdateStartStepTaskInCase(executionId 
 		return "", err
 	}
 
-	url := theHiveConnector.baseUrl + "/task/" + taskId + "/task"
+	url := theHiveConnector.baseUrl + "/task/" + taskId
 	method := "PATCH"
 
 	fullyAuto := true
@@ -308,9 +406,11 @@ func (theHiveConnector *TheHiveConnector) UpdateStartStepTaskInCase(executionId 
 			fullyAuto = false
 		}
 	}
-	taskAssignee := ""
+
+	// Must identify valid user in The hive. Cannot be custom string
+	taskAssignee := "soarca@soarca.eu"
 	if fullyAuto {
-		taskAssignee = "SOARCA Automated Execution"
+		taskAssignee = "soarca@soarca.eu"
 	}
 	task := schemas.Task{
 		// StartDate: wait for merging of new reporting interface with timings passing,
@@ -324,10 +424,50 @@ func (theHiveConnector *TheHiveConnector) UpdateStartStepTaskInCase(executionId 
 		return "", err
 	}
 
+	err = theHiveConnector.PostStepVariablesAsCommentInTaskLog(executionId, step, "variables at start of step")
+	if err != nil {
+		log.Warningf("could not report variables in step task log: %s", err)
+	}
+
 	return theHiveConnector.getIdFromRespBody(body)
 }
 
-func (theHiveConnector *TheHiveConnector) UpdateVariableObservableInCaseByExecutionId(executionId string, variable cacao.Variable) (string, error) {
+func (theHiveConnector *TheHiveConnector) UpdateEndStepTaskInCase(executionId string, step cacao.Step, returnVars cacao.Variables, stepErr error) (string, error) {
+	log.Tracef("updating task in thehive. case ID %s", executionId)
+	taskId, err := theHiveConnector.ids_map.retrieveTaskId(executionId, step.ID)
+	if err != nil {
+		return "", err
+	}
+
+	url := theHiveConnector.baseUrl + "/task/" + taskId
+	method := "PATCH"
+
+	taskStatus := schemas.TheHiveStatusCompleted
+	closureComment := fmt.Sprintf("step [ %s ] ended. execution id [ %s ].", step.ID, executionId)
+	if stepErr != nil {
+		taskStatus = schemas.TheHiveStatusCancelled
+		closureComment = closureComment + fmt.Sprintf("execution error: %s", stepErr)
+		err = theHiveConnector.PostCommentInTaskLog(executionId, step, closureComment)
+		if err != nil {
+			log.Warningf("could not add task log: %s", err)
+		}
+	}
+
+	task := schemas.Task{
+		// StartDate: wait for merging of new reporting interface with timings passing,
+		EndDate: time.Now().Unix(),
+		Status:  taskStatus,
+	}
+
+	body, err := theHiveConnector.sendRequest(method, url, task)
+	if err != nil {
+		return "", err
+	}
+
+	return string(body), nil
+}
+
+func (theHiveConnector *TheHiveConnector) UpdateVariableObservableInCase(executionId string, variable cacao.Variable) (string, error) {
 	observableId, err := theHiveConnector.ids_map.retrieveObservableId(executionId, variable.Name)
 	if err != nil {
 		return "", err
@@ -348,41 +488,13 @@ func (theHiveConnector *TheHiveConnector) UpdateVariableObservableInCaseByExecut
 	return theHiveConnector.getIdFromRespBody(body)
 }
 
-// TODO: revise this function through
-
-func (theHiveConnector *TheHiveConnector) UpdateEndStepTaskInCase(executionId string, step cacao.Step, variables cacao.Variables, executionError error) (string, error) {
-	taskId, err := theHiveConnector.ids_map.retrieveTaskId(executionId, step.ID)
-	if err != nil {
-		return "", err
-	}
-
-	url := theHiveConnector.baseUrl + "/task/" + taskId + "/task"
-	method := "PATCH"
-
-	taskStatus := schemas.TheHiveStatusCompleted
-	if executionError != nil {
-		taskStatus = "ExecutionError"
-	}
-	task := schemas.Task{
-		// StartDate: wait for merging of new reporting interface with timings passing,
-		EndDate: time.Now().Unix(),
-		Status:  taskStatus,
-	}
-
-	body, err := theHiveConnector.sendRequest(method, url, task)
-	if err != nil {
-		return "", err
-	}
-
-	return theHiveConnector.getIdFromRespBody(body)
-}
-
 // ############################### HTTP interaction
 
 func (theHiveConnector *TheHiveConnector) getIdFromRespBody(body []byte) (string, error) {
-	fmt.Println("BODY IN GET ID FROM RESP BODY")
-	fmt.Println(string(body))
 
+	if len(body) == 0 {
+		return "", nil
+	}
 	// Try to unmarshal as a slice of maps
 	var respArray []map[string]interface{}
 	err := json.Unmarshal(body, &respArray)
@@ -462,7 +574,7 @@ func (theHiveConnector *TheHiveConnector) sendRequest(method string, url string,
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("received non-2xx status code: %d\nURL: %s", resp.StatusCode, url)
+		return nil, fmt.Errorf("received non-2xx status code: %d\nURL: %s: %s", resp.StatusCode, url, respbody)
 	}
 
 	return respbody, nil
@@ -484,7 +596,8 @@ func (theHiveConnector *TheHiveConnector) Hello() string {
 func PrettyJSONString(object interface{}) string {
 	pretty, err := json.MarshalIndent(object, "", "    ")
 	if err != nil {
-		log.Warning("Error marshalling object to JSON:")
+		log.Warningf("Error marshalling object to JSON: %s", err)
+		return ""
 	}
-	return string(pretty)
+	return string(pretty) + "\n"
 }

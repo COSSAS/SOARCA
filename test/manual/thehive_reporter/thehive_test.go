@@ -143,4 +143,16 @@ func TestTheHiveOpenCase(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
+	err = thr.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil)
+	if err != nil {
+		fmt.Println(err)
+		t.Fail()
+	}
+
+	err = thr.ReportWorkflowEnd(executionId0, playbook, nil)
+	if err != nil {
+		fmt.Println(err)
+		t.Fail()
+	}
+	t.Fail()
 }
