@@ -476,7 +476,7 @@ func (theHiveConnector *TheHiveConnector) UpdateVariableObservableInCase(executi
 	url := theHiveConnector.baseUrl + "/observable/" + observableId
 	method := "PATCH"
 
-	observableUpdate := schemas.ObservableUpdate{
+	observableUpdate := schemas.Observable{
 		AddTags: []string{variable.Value},
 	}
 

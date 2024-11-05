@@ -58,7 +58,7 @@ type CustomField struct {
 }
 
 type Observable struct {
-	DataType         string   `bson:"dataType" json:"dataType" validate:"required,min=1,max=64"`
+	DataType         string   `bson:"dataType,omitempty" json:"dataType,omitempty" validate:"required,min=1,max=64"`
 	Data             []string `bson:"data,omitempty" json:"data,omitempty" validate:"max=4096,dive,min=1,max=4096"`
 	Message          string   `bson:"message,omitempty" json:"message,omitempty" validate:"max=1048576"`
 	StartDate        int64    `bson:"startDate,omitempty" json:"startDate,omitempty"`
@@ -74,6 +74,8 @@ type Observable struct {
 	IgnoreSimilarity bool     `bson:"ignoreSimilarity,omitempty" json:"ignoreSimilarity,omitempty"`
 	IsZip            bool     `bson:"isZip,omitempty" json:"isZip,omitempty"`
 	ZipPassword      string   `bson:"zipPassword,omitempty" json:"zipPassword,omitempty" validate:"max=512"`
+	AddTags          []string `bson:"addTags,omitempty" json:"addTags,omitempty" validate:"max=128,dive,min=1,max=128"`
+	RemoveTags       []string `bson:"removeTags,omitempty" json:"removeTags,omitempty" validate:"max=128,dive,min=1,max=128"`
 }
 
 type MessagePost struct {
@@ -85,20 +87,6 @@ type TaskLog struct {
 	StartDate          int64    `bson:"startDate,omitempty" json:"startDate,omitempty" example:"1640000000000"`
 	IncludeIntTimeline int64    `bson:"includeIntTimeline,omitempty" json:"includeIntTimeline,omitempty" example:"1640000000000"`
 	Attachments        []string `bson:"attachments,omitempty" json:"attachments,omitempty"`
-}
-
-type ObservableUpdate struct {
-	DataType         string   `bson:"dataType" json:"dataType" validate:"min=1,max=64"`
-	Message          string   `bson:"message,omitempty" json:"message,omitempty" validate:"max=1048576"`
-	TLP              int      `bson:"tlp,omitempty" json:"tlp,omitempty" validate:"min=0,max=4"`
-	PAP              int      `bson:"pap,omitempty" json:"pap,omitempty" validate:"min=0,max=3"`
-	Tags             []string `bson:"tags,omitempty" json:"tags,omitempty" validate:"max=128,dive,min=1,max=128"`
-	IOC              bool     `bson:"ioc,omitempty" json:"ioc,omitempty"`
-	Sighted          bool     `bson:"sighted,omitempty" json:"sighted,omitempty"`
-	SightedAt        int64    `bson:"sightedAt,omitempty" json:"sightedAt,omitempty"`
-	IgnoreSimilarity bool     `bson:"ignoreSimilarity,omitempty" json:"ignoreSimilarity,omitempty"`
-	AddTags          []string `bson:"addTags,omitempty" json:"addTags,omitempty" validate:"max=128,dive,min=1,max=128"`
-	RemoveTags       []string `bson:"removeTags,omitempty" json:"removeTags,omitempty" validate:"max=128,dive,min=1,max=128"`
 }
 
 type Case struct {

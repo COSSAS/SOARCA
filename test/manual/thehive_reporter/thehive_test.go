@@ -154,5 +154,4 @@ func TestTheHiveOpenCase(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
-	t.Fail()
 }
