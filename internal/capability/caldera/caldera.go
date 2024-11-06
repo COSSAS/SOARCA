@@ -13,9 +13,9 @@ type calderaCapability struct{}
 type Empty struct{}
 
 const (
-	calderaResult  = "__soarca_caldera_result__"
-	calderaError   = "__soarca_caldera_error__"
-	capabilityName = "soarca-caldera"
+	calderaResult  = "__soarca_caldera__cmd_result__"
+	calderaError   = "__soarca_caldera_cmd_error__"
+	capabilityName = "soarca-caldera-cmd"
 )
 
 var (
