@@ -1,8 +1,7 @@
-package controller_test
+package controller
 
 import (
 	"encoding/json"
-	"soarca/internal/capability/controller"
 	"soarca/models/fin"
 	"soarca/test/unittest/mocks/mock_mqtt"
 	"testing"
@@ -16,7 +15,7 @@ func TestGetRegisteredc(t *testing.T) {
 	mqtt := new(mock_mqtt.Mock_MqttClient)
 	token := mock_mqtt.Mock_MqttToken{}
 	token2 := mock_mqtt.Mock_MqttToken{}
-	capabiltyController := controller.New(mqtt)
+	capabiltyController := New(mqtt)
 	fins := capabiltyController.GetRegisteredCapabilities()
 
 	assert.Equal(t, len(fins), 0)
@@ -68,7 +67,7 @@ func TestGetRegisteredc(t *testing.T) {
 func TestConnectAndSubsribe(t *testing.T) {
 	mqtt := new(mock_mqtt.Mock_MqttClient)
 	token := mock_mqtt.Mock_MqttToken{}
-	capabiltyController := controller.New(mqtt)
+	capabiltyController := New(mqtt)
 
 	token.On("Wait").Return(true)
 	token.On("Error").Return(nil)
