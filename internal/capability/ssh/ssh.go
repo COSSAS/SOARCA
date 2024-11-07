@@ -61,24 +61,16 @@ func execute(command cacao.Command,
 	if err != nil {
 		return cacao.NewVariables(), err
 	}
+	session, err := getSession(config, host)
+	if err != nil {
+		return cacao.NewVariables(), err
+	}
 
-	return executeCommand(config, host, command)
+	return executeCommand(session, command)
 }
 
-func executeCommand(config ssh.ClientConfig,
-	host string,
+func executeCommand(session *ssh.Session,
 	command cacao.Command) (cacao.Variables, error) {
-	conn, err := ssh.Dial("tcp", host, &config)
-	if err != nil {
-		log.Error(err)
-		return cacao.NewVariables(), err
-	}
-	var session *ssh.Session
-	session, err = conn.NewSession()
-	if err != nil {
-		log.Error(err)
-		return cacao.NewVariables(), err
-	}
 
 	response, err := session.Output(StripSshPrepend(command.Command))
 	defer session.Close()
@@ -121,6 +113,21 @@ func getConfig(authentication cacao.AuthenticationInformation) (ssh.ClientConfig
 
 }
 
+func getSession(config ssh.ClientConfig, host string) (*ssh.Session, error) {
+	conn, err := ssh.Dial("tcp", host, &config)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+	var session *ssh.Session
+	session, err = conn.NewSession()
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+	return session, err
+}
+
 func CombinePortAndAddress(addresses map[cacao.NetAddressType][]string, port string) string {
 	if port == "" {
 		port = "22"
@@ -151,13 +158,12 @@ func CheckSshAuthenticationInfo(authentication cacao.AuthenticationInformation) 
 		if strings.TrimSpace(authentication.Password) == "" {
 			return errors.New("password is empty")
 		}
-		return nil
 	} else if authentication.Type == "private-key" {
 		if strings.TrimSpace(authentication.PrivateKey) == "" {
 			return errors.New("private key is not set")
 		}
-		return nil
 	} else {
 		return errors.New("non supported authentication type")
 	}
+	return nil
 }
