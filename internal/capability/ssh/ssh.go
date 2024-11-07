@@ -46,22 +46,18 @@ func execute(command cacao.Command,
 	authentication cacao.AuthenticationInformation,
 	target cacao.AgentTarget) (cacao.Variables, error) {
 
-	host := CombinePortAndAddress(target.Address, target.Port)
+	err := CheckSshAuthenticationInfo(authentication)
 
-	errAuth := CheckSshAuthenticationInfo(authentication)
-
-	if errAuth != nil {
-		log.Error(errAuth)
-		return cacao.NewVariables(), errAuth
-	} else {
-		log.Trace(host)
+	if err != nil {
+		log.Error(err)
+		return cacao.NewVariables(), err
 	}
-
 	config, err := getConfig(authentication)
 	if err != nil {
 		return cacao.NewVariables(), err
 	}
-	session, err := getSession(config, host)
+	session, client, err := getSession(config, target)
+	defer client.Close()
 	if err != nil {
 		return cacao.NewVariables(), err
 	}
@@ -113,19 +109,21 @@ func getConfig(authentication cacao.AuthenticationInformation) (ssh.ClientConfig
 
 }
 
-func getSession(config ssh.ClientConfig, host string) (*ssh.Session, error) {
-	conn, err := ssh.Dial("tcp", host, &config)
+func getSession(config ssh.ClientConfig, target cacao.AgentTarget) (*ssh.Session, *ssh.Client, error) {
+	host := CombinePortAndAddress(target.Address, target.Port)
+	client, err := ssh.Dial("tcp", host, &config)
 	if err != nil {
 		log.Error(err)
-		return nil, err
+		return nil, nil, err
 	}
 	var session *ssh.Session
-	session, err = conn.NewSession()
+	session, err = client.NewSession()
 	if err != nil {
 		log.Error(err)
-		return nil, err
+		client.Close()
+		return nil, nil, err
 	}
-	return session, err
+	return session, client, err
 }
 
 func CombinePortAndAddress(addresses map[cacao.NetAddressType][]string, port string) string {
@@ -139,7 +137,6 @@ func CombinePortAndAddress(addresses map[cacao.NetAddressType][]string, port str
 		}
 	}
 	return ""
-
 }
 
 func StripSshPrepend(command string) string {
