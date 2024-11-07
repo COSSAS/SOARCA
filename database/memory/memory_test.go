@@ -1,4 +1,4 @@
-package memory_test
+package memory
 
 import (
 	"encoding/json"
@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"soarca/database/memory"
 	"soarca/models/cacao"
 	"soarca/models/decoder"
 	"sort"
@@ -15,7 +14,7 @@ import (
 	"github.com/go-playground/assert/v2"
 )
 
-var PB_PATH string = "../../cacao/playbooks/"
+var PB_PATH string = "../../test/playbooks/"
 
 func TestCreate(t *testing.T) {
 	jsonFile, err := os.Open(PB_PATH + "playbook.json")
@@ -33,7 +32,7 @@ func TestCreate(t *testing.T) {
 	}
 
 	var workflow = decoder.DecodeValidate(byteValue)
-	mem := memory.New()
+	mem := New()
 	playbook, err := mem.Create(&byteValue)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, playbook, workflow)
@@ -57,7 +56,7 @@ func TestRead(t *testing.T) {
 
 	var workflow = decoder.DecodeValidate(byteValue)
 
-	mem := memory.New()
+	mem := New()
 	empty, err := mem.Read(workflow.ID)
 	assert.Equal(t, err, errors.New("playbook is not in repository"))
 	assert.Equal(t, empty, cacao.Playbook{})
@@ -87,7 +86,7 @@ func TestUpdate(t *testing.T) {
 
 	var workflow = decoder.DecodeValidate(byteValue)
 
-	mem := memory.New()
+	mem := New()
 	empty, err := mem.Update(workflow.ID, nil)
 	assert.Equal(t, err, errors.New("playbook is not in repository"))
 	assert.Equal(t, empty, cacao.Playbook{})
@@ -129,7 +128,7 @@ func TestDelete(t *testing.T) {
 
 	var workflow = decoder.DecodeValidate(byteValue)
 
-	mem := memory.New()
+	mem := New()
 	err = mem.Delete(workflow.ID)
 	assert.Equal(t, err, nil)
 
@@ -166,7 +165,7 @@ func TestGetAllPlaybooks(t *testing.T) {
 
 	var workflow = decoder.DecodeValidate(byteValue)
 
-	mem := memory.New()
+	mem := New()
 
 	list := []string{
 		"playbook--f47d4081-21ed-4f21-9d05-6b368d73da30",
@@ -214,7 +213,7 @@ func TestGetAllPlaybookMetas(t *testing.T) {
 
 	var workflow = decoder.DecodeValidate(byteValue)
 
-	mem := memory.New()
+	mem := New()
 
 	list := []string{
 		"playbook--f47d4081-21ed-4f21-9d05-6b368d73da30",
