@@ -501,7 +501,12 @@ func TestFailingStepResultsInFailingPlaybook(t *testing.T) {
 		Variables: cacao.NewVariables(expectedVariables),
 	}
 
-	mock_reporter.On("ReportWorkflowStart", executionId, playbook).Return()
+	layout := "2006-01-02T15:04:05.000Z"
+	str := "2014-11-12T11:45:26.371Z"
+	timeNow, _ := time.Parse(layout, str)
+	mock_time.On("Now").Return(timeNow)
+
+	mock_reporter.On("ReportWorkflowStart", executionId, playbook, timeNow).Return()
 	mock_time.On("Sleep", time.Millisecond*0).Return()
 	mock_action_executor.On("Execute", metaStep1, playbookStepMetadata1).Return(cacao.NewVariables(firstResult), nil)
 
@@ -524,8 +529,9 @@ func TestFailingStepResultsInFailingPlaybook(t *testing.T) {
 
 	mock_action_executor.On("Execute", metaStep3, playbookStepMetadata3).Return(cacao.NewVariables(), errors.New("everything broke"))
 
+	mock_time.On("Now").Return(timeNow)
 	expectedError := errors.New("playbook execution failed at step [ action--test3 ]. See step log for error information")
-	mock_reporter.On("ReportWorkflowEnd", executionId, playbook, expectedError).Return()
+	mock_reporter.On("ReportWorkflowEnd", executionId, playbook, expectedError, timeNow).Return()
 
 	_, err := decomposer.Execute(playbook)
 	t.Log(err)
