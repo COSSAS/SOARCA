@@ -138,30 +138,31 @@ func (decomposer *Decomposer) ExecuteBranch(stepId string, scopeVariables cacao.
 			break
 		}
 
-		onSuccessStepId := currentStep.OnSuccess
-		if onSuccessStepId == "" {
-			onSuccessStepId = currentStep.OnCompletion
+		// Note: likely (but not certainly) on_success and on_faliure will be reworked
+		// to become workflow branching properties, with the addition of a success_condition
+		// boolean evaluation at step level.
+		// Effectively, we should thus only check for existance of on_completion, and
+		// report execution errors as such, not as playbook step failures - which will be handled
+		// with upcoming said on_success, on_failure, and success_condition properties
+		onCompletionStepId := currentStep.OnCompletion
+		if onCompletionStepId == "" {
+			onCompletionStepId = currentStep.OnSuccess
 		}
-		if _, ok := playbook.Workflow[onSuccessStepId]; !ok {
-			return cacao.NewVariables(), errors.New("empty success step")
+		if onCompletionStepId == "" {
+			onCompletionStepId = currentStep.OnFailure
 		}
-
-		onFailureStepId := currentStep.OnFailure
-		if onFailureStepId == "" {
-			onFailureStepId = currentStep.OnCompletion
-		}
-		if _, ok := playbook.Workflow[onFailureStepId]; !ok {
-			return cacao.NewVariables(), errors.New("empty failure step")
+		if _, ok := playbook.Workflow[onCompletionStepId]; !ok {
+			return cacao.NewVariables(), errors.New("empty completion step")
 		}
 
 		outputVariables, err := decomposer.ExecuteStep(currentStep, scopeVariables)
 
 		if err == nil {
-			stepId = onSuccessStepId
+			stepId = onCompletionStepId
 			returnVariables.Merge(outputVariables)
 			scopeVariables.Merge(outputVariables)
 		} else {
-			stepId = onFailureStepId
+			return cacao.NewVariables(), fmt.Errorf("playbook execution failed at step [ %s ]. See step log for error information", stepId)
 		}
 	}
 
