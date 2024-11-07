@@ -1,10 +1,9 @@
-package cacao_test
+package decoder
 
 import (
 	"fmt"
 	"io"
 	"os"
-	"soarca/models/decoder"
 	"testing"
 	"time"
 
@@ -41,7 +40,7 @@ func TestCacaoDecode(t *testing.T) {
 		return
 	}
 
-	var workflow = decoder.DecodeValidate(byteValue)
+	var workflow = DecodeValidate(byteValue)
 
 	// fmt.Println(workflow)
 

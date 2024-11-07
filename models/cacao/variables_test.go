@@ -1,26 +1,25 @@
-package cacao_test
+package cacao
 
 import (
-	"soarca/models/cacao"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
 )
 
 func TestNewVariables(t *testing.T) {
-	variable := cacao.Variable{
+	variable := Variable{
 		Type:  "string",
 		Name:  "variable 1",
 		Value: "value 1",
 	}
-	variables := cacao.NewVariables(variable)
-	expected := cacao.Variables{"variable 1": variable}
+	variables := NewVariables(variable)
+	expected := Variables{"variable 1": variable}
 	assert.Equal(t, variables, expected)
 }
 
 func TestVariablesFind(t *testing.T) {
-	variables := make(cacao.Variables)
-	inserted := cacao.Variable{
+	variables := make(Variables)
+	inserted := Variable{
 		Name:  "__var0__",
 		Value: "value",
 	}
@@ -31,8 +30,8 @@ func TestVariablesFind(t *testing.T) {
 }
 
 func TestVariablesInsertNew(t *testing.T) {
-	vars := cacao.NewVariables()
-	inserted := vars.Insert(cacao.Variable{
+	vars := NewVariables()
+	inserted := vars.Insert(Variable{
 		Name:  "__var0__",
 		Value: "value",
 	})
@@ -42,11 +41,11 @@ func TestVariablesInsertNew(t *testing.T) {
 }
 
 func TestVariablesInsertExisting(t *testing.T) {
-	vars := cacao.NewVariables(cacao.Variable{
+	vars := NewVariables(Variable{
 		Name:  "__var0__",
 		Value: "old",
 	})
-	inserted := vars.Insert(cacao.Variable{
+	inserted := vars.Insert(Variable{
 		Name:  "__var0__",
 		Value: "new",
 	})
@@ -56,11 +55,11 @@ func TestVariablesInsertExisting(t *testing.T) {
 }
 
 func TestVariablesInsertOrReplace(t *testing.T) {
-	vars := cacao.NewVariables(cacao.Variable{
+	vars := NewVariables(Variable{
 		Name:  "__var0__",
 		Value: "old",
 	})
-	replaced := vars.InsertOrReplace(cacao.Variable{
+	replaced := vars.InsertOrReplace(Variable{
 		Name:  "__var0__",
 		Value: "new",
 	})
@@ -70,14 +69,14 @@ func TestVariablesInsertOrReplace(t *testing.T) {
 }
 
 func TestVariablesInsertRange(t *testing.T) {
-	vars := cacao.NewVariables(cacao.Variable{
+	vars := NewVariables(Variable{
 		Name:  "__var0__",
 		Value: "old",
 	})
-	otherRange := cacao.NewVariables(cacao.Variable{
+	otherRange := NewVariables(Variable{
 		Name:  "__var0__",
 		Value: "new",
-	}, cacao.Variable{
+	}, Variable{
 		Name:  "__var1__",
 		Value: "new2",
 	})
@@ -88,12 +87,12 @@ func TestVariablesInsertRange(t *testing.T) {
 }
 
 func TestVariablesMerge(t *testing.T) {
-	base := cacao.NewVariables(cacao.Variable{
+	base := NewVariables(Variable{
 		Name:  "__var0__",
 		Value: "OLD",
 	})
 
-	new := cacao.NewVariables(cacao.Variable{
+	new := NewVariables(Variable{
 		Name:  "__var1__",
 		Value: "NEW",
 	})
@@ -107,12 +106,12 @@ func TestVariablesMerge(t *testing.T) {
 }
 
 func TestVariablesMergeWithUpdate(t *testing.T) {
-	base := cacao.NewVariables(cacao.Variable{
+	base := NewVariables(Variable{
 		Name:  "__var0__",
 		Value: "OLD",
 	})
 
-	new := cacao.NewVariables(cacao.Variable{
+	new := NewVariables(Variable{
 		Name:  "__var0__",
 		Value: "NEW",
 	})
@@ -125,7 +124,7 @@ func TestVariablesMergeWithUpdate(t *testing.T) {
 func TestVariablesStringInterpolation(t *testing.T) {
 	original := "__var0__:value is __var0__:value"
 
-	vars := cacao.NewVariables(cacao.Variable{
+	vars := NewVariables(Variable{
 		Name:  "__var0__",
 		Value: "GO",
 	})
@@ -137,7 +136,7 @@ func TestVariablesStringInterpolation(t *testing.T) {
 func TestVariablesStringInterpolationEmptyString(t *testing.T) {
 	original := ""
 
-	vars := cacao.NewVariables(cacao.Variable{
+	vars := NewVariables(Variable{
 		Name:  "__var0__",
 		Value: "GO",
 	})
@@ -149,10 +148,10 @@ func TestVariablesStringInterpolationEmptyString(t *testing.T) {
 func TestVariablesStringInterpolateMultiple(t *testing.T) {
 	original := "__var0__:value is __var1__:value"
 
-	vars := cacao.NewVariables(cacao.Variable{
+	vars := NewVariables(Variable{
 		Name:  "__var0__",
 		Value: "GO",
-	}, cacao.Variable{
+	}, Variable{
 		Name:  "__var1__",
 		Value: "COOL",
 	})
@@ -164,10 +163,10 @@ func TestVariablesStringInterpolateMultiple(t *testing.T) {
 func TestVariablesStringInterpolateMultipleAndUnkown(t *testing.T) {
 	original := "__var0__:value is __var1_unknown__:value"
 
-	vars := cacao.NewVariables(cacao.Variable{
+	vars := NewVariables(Variable{
 		Name:  "__var0__",
 		Value: "GO",
-	}, cacao.Variable{
+	}, Variable{
 		Name:  "__var1__",
 		Value: "COOL",
 	})
@@ -177,31 +176,31 @@ func TestVariablesStringInterpolateMultipleAndUnkown(t *testing.T) {
 }
 
 func TestVariablesSelect(t *testing.T) {
-	vars := cacao.NewVariables(cacao.Variable{
+	vars := NewVariables(Variable{
 		Name:  "__var0__",
 		Value: "GO",
-	}, cacao.Variable{
+	}, Variable{
 		Name:  "__var1__",
 		Value: "COOL",
 	})
 	filteredVars := vars.Select([]string{"__var0__", "__unknown__"})
 
-	assert.Equal(t, filteredVars, cacao.NewVariables(cacao.Variable{
+	assert.Equal(t, filteredVars, NewVariables(Variable{
 		Name:  "__var0__",
 		Value: "GO",
 	}))
 }
 
 func TestInsertIntoEmptyMap(t *testing.T) {
-	vars := cacao.NewVariables(cacao.Variable{
+	vars := NewVariables(Variable{
 		Name:  "__var0__",
 		Value: "GO",
-	}, cacao.Variable{
+	}, Variable{
 		Name:  "__var1__",
 		Value: "COOL",
 	})
 
-	playbook := cacao.NewPlaybook()
+	playbook := NewPlaybook()
 
 	playbook.PlaybookVariables.Merge(vars)
 }
