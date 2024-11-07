@@ -95,12 +95,12 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 		log.Error("could not load main Cache as reporter for decomposer and executors")
 	}
 
-	actionExecutor := action.New(capabilities, reporter)
-	playbookActionExecutor := playbook_action.New(controller, controller, reporter)
-	stixComparison := comparison.New()
-	conditionExecutor := condition.New(stixComparison, reporter)
-	guid := new(guid.Guid)
 	soarcaTime := new(timeUtil.Time)
+	actionExecutor := action.New(capabilities, reporter, soarcaTime)
+	playbookActionExecutor := playbook_action.New(controller, controller, reporter, soarcaTime)
+	stixComparison := comparison.New()
+	conditionExecutor := condition.New(stixComparison, reporter, soarcaTime)
+	guid := new(guid.Guid)
 	decompose := decomposer.New(actionExecutor,
 		playbookActionExecutor,
 		conditionExecutor,

@@ -9,6 +9,7 @@ import (
 	"soarca/logger"
 	"soarca/models/cacao"
 	"soarca/models/execution"
+	timeUtil "soarca/utils/time"
 )
 
 var component = reflect.TypeOf(Executor{}).PkgPath()
@@ -18,10 +19,11 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
-func New(capabilities map[string]capability.ICapability, reporter reporter.IStepReporter) *Executor {
+func New(capabilities map[string]capability.ICapability, reporter reporter.IStepReporter, time timeUtil.ITime) *Executor {
 	var instance = Executor{}
 	instance.capabilities = capabilities
 	instance.reporter = reporter
+	instance.time = time
 	return &instance
 }
 
@@ -41,19 +43,25 @@ type IExecuter interface {
 type Executor struct {
 	capabilities map[string]capability.ICapability
 	reporter     reporter.IStepReporter
+	time         timeUtil.ITime
 }
 
 func (executor *Executor) Execute(meta execution.Metadata, metadata PlaybookStepMetadata) (cacao.Variables, error) {
 
-	executor.reporter.ReportStepStart(meta.ExecutionId, metadata.Step, metadata.Variables)
+	executor.reporter.ReportStepStart(meta.ExecutionId, metadata.Step, metadata.Variables, executor.time.Now())
+
+	returnVariables := cacao.NewVariables()
+	var err error
+	defer func() {
+		executor.reporter.ReportStepEnd(meta.ExecutionId, metadata.Step, returnVariables, err, executor.time.Now())
+	}()
 
 	if metadata.Step.Type != cacao.StepTypeAction {
-		err := errors.New("the provided step type is not compatible with this executor")
+		err = errors.New("the provided step type is not compatible with this executor")
 		log.Error(err)
-		executor.reporter.ReportStepEnd(meta.ExecutionId, metadata.Step, cacao.NewVariables(), err)
 		return cacao.NewVariables(), err
 	}
-	returnVariables := cacao.NewVariables()
+
 	for _, command := range metadata.Step.Commands {
 		// NOTE: This assumes we want to run Command for every Target individually.
 		//       Is that something we want to enforce or leave up to the capability?
@@ -79,14 +87,13 @@ func (executor *Executor) Execute(meta execution.Metadata, metadata PlaybookStep
 
 			if err != nil {
 				log.Error("Error executing Command ", err)
-				executor.reporter.ReportStepEnd(meta.ExecutionId, metadata.Step, returnVariables, err)
 				return cacao.NewVariables(), err
 			} else {
 				log.Debug("Command executed")
 			}
 		}
 	}
-	executor.reporter.ReportStepEnd(meta.ExecutionId, metadata.Step, returnVariables, nil)
+
 	return returnVariables, nil
 }
 

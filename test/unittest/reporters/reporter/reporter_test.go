@@ -6,8 +6,10 @@ import (
 	ds_reporter "soarca/internal/reporter/downstream_reporter"
 	"soarca/models/cacao"
 	"soarca/test/unittest/mocks/mock_reporter"
+	mock_time "soarca/test/unittest/mocks/mock_utils/time"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/go-playground/assert/v2"
 	"github.com/google/uuid"
@@ -43,6 +45,7 @@ func TestReportWorkflowStart(t *testing.T) {
 	var wg sync.WaitGroup
 	mock_ds_reporter := mock_reporter.Mock_Downstream_Reporter{Wg: &wg}
 	reporter := reporter.New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
+	mock_time := new(mock_time.MockTime)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -103,18 +106,25 @@ func TestReportWorkflowStart(t *testing.T) {
 
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
+	layout := "2006-01-02T15:04:05.000Z"
+	str := "2014-11-12T11:45:26.371Z"
+	timeNow, _ := time.Parse(layout, str)
+	mock_time.On("Now").Return(timeNow)
+
 	wg.Add(1)
-	mock_ds_reporter.On("ReportWorkflowStart", executionId, playbook).Return(nil)
-	reporter.ReportWorkflowStart(executionId, playbook)
+	mock_ds_reporter.On("ReportWorkflowStart", executionId, playbook, timeNow).Return(nil)
+	reporter.ReportWorkflowStart(executionId, playbook, mock_time.Now())
 
 	wg.Wait()
 	mock_ds_reporter.AssertExpectations(t)
+	mock_time.AssertExpectations(t)
 }
 
 func TestReportWorkflowEnd(t *testing.T) {
 	var wg sync.WaitGroup
 	mock_ds_reporter := mock_reporter.Mock_Downstream_Reporter{Wg: &wg}
 	reporter := reporter.New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
+	mock_time := new(mock_time.MockTime)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -175,18 +185,25 @@ func TestReportWorkflowEnd(t *testing.T) {
 
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
+	layout := "2006-01-02T15:04:05.000Z"
+	str := "2014-11-12T11:45:26.371Z"
+	timeNow, _ := time.Parse(layout, str)
+	mock_time.On("Now").Return(timeNow)
+
 	wg.Add(1)
-	mock_ds_reporter.On("ReportWorkflowEnd", executionId, playbook, nil).Return(nil)
-	reporter.ReportWorkflowEnd(executionId, playbook, nil)
+	mock_ds_reporter.On("ReportWorkflowEnd", executionId, playbook, nil, timeNow).Return(nil)
+	reporter.ReportWorkflowEnd(executionId, playbook, nil, mock_time.Now())
 
 	wg.Wait()
 	mock_ds_reporter.AssertExpectations(t)
+	mock_time.AssertExpectations(t)
 }
 
 func TestReportStepStart(t *testing.T) {
 	var wg sync.WaitGroup
 	mock_ds_reporter := mock_reporter.Mock_Downstream_Reporter{Wg: &wg}
 	reporter := reporter.New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
+	mock_time := new(mock_time.MockTime)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -213,9 +230,14 @@ func TestReportStepStart(t *testing.T) {
 
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
+	layout := "2006-01-02T15:04:05.000Z"
+	str := "2014-11-12T11:45:26.371Z"
+	timeNow, _ := time.Parse(layout, str)
+	mock_time.On("Now").Return(timeNow)
+
 	wg.Add(1)
-	mock_ds_reporter.On("ReportStepStart", executionId, step1, cacao.NewVariables(expectedVariables)).Return(nil)
-	reporter.ReportStepStart(executionId, step1, cacao.NewVariables(expectedVariables))
+	mock_ds_reporter.On("ReportStepStart", executionId, step1, cacao.NewVariables(expectedVariables), timeNow).Return(nil)
+	reporter.ReportStepStart(executionId, step1, cacao.NewVariables(expectedVariables), mock_time.Now())
 
 	wg.Wait()
 	mock_ds_reporter.AssertExpectations(t)
@@ -225,6 +247,7 @@ func TestReportStepEnd(t *testing.T) {
 	var wg sync.WaitGroup
 	mock_ds_reporter := mock_reporter.Mock_Downstream_Reporter{Wg: &wg}
 	reporter := reporter.New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
+	mock_time := new(mock_time.MockTime)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -251,12 +274,18 @@ func TestReportStepEnd(t *testing.T) {
 
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
+	layout := "2006-01-02T15:04:05.000Z"
+	str := "2014-11-12T11:45:26.371Z"
+	timeNow, _ := time.Parse(layout, str)
+	mock_time.On("Now").Return(timeNow)
+
 	wg.Add(1)
-	mock_ds_reporter.On("ReportStepEnd", executionId, step1, cacao.NewVariables(expectedVariables), nil).Return(nil)
-	reporter.ReportStepEnd(executionId, step1, cacao.NewVariables(expectedVariables), nil)
+	mock_ds_reporter.On("ReportStepEnd", executionId, step1, cacao.NewVariables(expectedVariables), nil, timeNow).Return(nil)
+	reporter.ReportStepEnd(executionId, step1, cacao.NewVariables(expectedVariables), nil, mock_time.Now())
 
 	wg.Wait()
 	mock_ds_reporter.AssertExpectations(t)
+	mock_time.AssertExpectations(t)
 }
 
 func TestMultipleDownstreamReporters(t *testing.T) {
@@ -264,6 +293,8 @@ func TestMultipleDownstreamReporters(t *testing.T) {
 	mock_ds_reporter1 := mock_reporter.Mock_Downstream_Reporter{Wg: &wg}
 	mock_ds_reporter2 := mock_reporter.Mock_Downstream_Reporter{Wg: &wg}
 	reporter := reporter.New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter1, &mock_ds_reporter2})
+	mock_time := new(mock_time.MockTime)
+
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
 		Command: "ssh ls -la",
@@ -323,28 +354,34 @@ func TestMultipleDownstreamReporters(t *testing.T) {
 
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
-	wg.Add(2)
-	mock_ds_reporter1.On("ReportWorkflowStart", executionId, playbook).Return(nil)
-	mock_ds_reporter2.On("ReportWorkflowStart", executionId, playbook).Return(nil)
+	layout := "2006-01-02T15:04:05.000Z"
+	str := "2014-11-12T11:45:26.371Z"
+	timeNow, _ := time.Parse(layout, str)
+	mock_time.On("Now").Return(timeNow)
 
 	wg.Add(2)
-	mock_ds_reporter1.On("ReportStepStart", executionId, step1, cacao.NewVariables(expectedVariables)).Return(nil)
-	mock_ds_reporter2.On("ReportStepStart", executionId, step1, cacao.NewVariables(expectedVariables)).Return(nil)
+	mock_ds_reporter1.On("ReportWorkflowStart", executionId, playbook, timeNow).Return(nil)
+	mock_ds_reporter2.On("ReportWorkflowStart", executionId, playbook, timeNow).Return(nil)
 
 	wg.Add(2)
-	mock_ds_reporter1.On("ReportStepEnd", executionId, step1, cacao.NewVariables(expectedVariables), nil).Return(nil)
-	mock_ds_reporter2.On("ReportStepEnd", executionId, step1, cacao.NewVariables(expectedVariables), nil).Return(nil)
+	mock_ds_reporter1.On("ReportStepStart", executionId, step1, cacao.NewVariables(expectedVariables), timeNow).Return(nil)
+	mock_ds_reporter2.On("ReportStepStart", executionId, step1, cacao.NewVariables(expectedVariables), timeNow).Return(nil)
 
 	wg.Add(2)
-	mock_ds_reporter1.On("ReportWorkflowEnd", executionId, playbook, nil).Return(nil)
-	mock_ds_reporter2.On("ReportWorkflowEnd", executionId, playbook, nil).Return(nil)
+	mock_ds_reporter1.On("ReportStepEnd", executionId, step1, cacao.NewVariables(expectedVariables), nil, timeNow).Return(nil)
+	mock_ds_reporter2.On("ReportStepEnd", executionId, step1, cacao.NewVariables(expectedVariables), nil, timeNow).Return(nil)
 
-	reporter.ReportWorkflowStart(executionId, playbook)
-	reporter.ReportStepStart(executionId, step1, cacao.NewVariables(expectedVariables))
-	reporter.ReportStepEnd(executionId, step1, cacao.NewVariables(expectedVariables), nil)
-	reporter.ReportWorkflowEnd(executionId, playbook, nil)
+	wg.Add(2)
+	mock_ds_reporter1.On("ReportWorkflowEnd", executionId, playbook, nil, timeNow).Return(nil)
+	mock_ds_reporter2.On("ReportWorkflowEnd", executionId, playbook, nil, timeNow).Return(nil)
+
+	reporter.ReportWorkflowStart(executionId, playbook, mock_time.Now())
+	reporter.ReportStepStart(executionId, step1, cacao.NewVariables(expectedVariables), mock_time.Now())
+	reporter.ReportStepEnd(executionId, step1, cacao.NewVariables(expectedVariables), nil, mock_time.Now())
+	reporter.ReportWorkflowEnd(executionId, playbook, nil, mock_time.Now())
 
 	wg.Wait()
 	mock_ds_reporter1.AssertExpectations(t)
 	mock_ds_reporter2.AssertExpectations(t)
+	mock_time.AssertExpectations(t)
 }

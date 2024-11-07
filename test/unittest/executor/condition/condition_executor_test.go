@@ -7,7 +7,9 @@ import (
 	"soarca/models/execution"
 	"soarca/test/unittest/mocks/mock_reporter"
 	mock_stix "soarca/test/unittest/mocks/mock_utils/stix"
+	mock_time "soarca/test/unittest/mocks/mock_utils/time"
 	"testing"
+	"time"
 
 	"github.com/go-playground/assert/v2"
 	"github.com/google/uuid"
@@ -16,8 +18,9 @@ import (
 func TestExecuteConditionTrue(t *testing.T) {
 	mock_stix := new(mock_stix.MockStix)
 	mock_reporter := new(mock_reporter.Mock_Reporter)
+	mock_time := new(mock_time.MockTime)
 
-	conditionExecutior := condition.New(mock_stix, mock_reporter)
+	conditionExecutior := condition.New(mock_stix, mock_reporter, mock_time)
 
 	executionId := uuid.New()
 
@@ -31,9 +34,14 @@ func TestExecuteConditionTrue(t *testing.T) {
 		OnFalse:   "4"}
 	vars := cacao.NewVariables()
 
-	mock_reporter.On("ReportStepStart", executionId, step, vars)
+	layout := "2006-01-02T15:04:05.000Z"
+	str := "2014-11-12T11:45:26.371Z"
+	timeNow, _ := time.Parse(layout, str)
+	mock_time.On("Now").Return(timeNow)
+
+	mock_reporter.On("ReportStepStart", executionId, step, vars, timeNow)
 	mock_stix.On("Evaluate", "a = a", vars).Return(true, nil)
-	mock_reporter.On("ReportStepEnd", executionId, step, vars, nil)
+	mock_reporter.On("ReportStepEnd", executionId, step, vars, nil, timeNow)
 
 	nextStepId, goToBranch, err := conditionExecutior.Execute(meta, step, vars)
 	assert.Equal(t, nil, err)
@@ -42,14 +50,15 @@ func TestExecuteConditionTrue(t *testing.T) {
 
 	mock_reporter.AssertExpectations(t)
 	mock_stix.AssertExpectations(t)
-
+	mock_time.AssertExpectations(t)
 }
 
 func TestExecuteConditionFalse(t *testing.T) {
 	mock_stix := new(mock_stix.MockStix)
 	mock_reporter := new(mock_reporter.Mock_Reporter)
+	mock_time := new(mock_time.MockTime)
 
-	conditionExecutior := condition.New(mock_stix, mock_reporter)
+	conditionExecutior := condition.New(mock_stix, mock_reporter, mock_time)
 
 	executionId := uuid.New()
 
@@ -63,9 +72,14 @@ func TestExecuteConditionFalse(t *testing.T) {
 		OnFalse:   "4"}
 	vars := cacao.NewVariables()
 
-	mock_reporter.On("ReportStepStart", executionId, step, vars)
+	layout := "2006-01-02T15:04:05.000Z"
+	str := "2014-11-12T11:45:26.371Z"
+	timeNow, _ := time.Parse(layout, str)
+	mock_time.On("Now").Return(timeNow)
+
+	mock_reporter.On("ReportStepStart", executionId, step, vars, timeNow)
 	mock_stix.On("Evaluate", "a = a", vars).Return(false, nil)
-	mock_reporter.On("ReportStepEnd", executionId, step, vars, nil)
+	mock_reporter.On("ReportStepEnd", executionId, step, vars, nil, timeNow)
 
 	nextStepId, goToBranch, err := conditionExecutior.Execute(meta, step, vars)
 	assert.Equal(t, nil, err)
@@ -74,13 +88,15 @@ func TestExecuteConditionFalse(t *testing.T) {
 
 	mock_reporter.AssertExpectations(t)
 	mock_stix.AssertExpectations(t)
+	mock_time.AssertExpectations(t)
 }
 
 func TestExecuteConditionError(t *testing.T) {
 	mock_stix := new(mock_stix.MockStix)
 	mock_reporter := new(mock_reporter.Mock_Reporter)
+	mock_time := new(mock_time.MockTime)
 
-	conditionExecutior := condition.New(mock_stix, mock_reporter)
+	conditionExecutior := condition.New(mock_stix, mock_reporter, mock_time)
 
 	executionId := uuid.New()
 
@@ -94,11 +110,16 @@ func TestExecuteConditionError(t *testing.T) {
 		OnFalse:   "4"}
 	vars := cacao.NewVariables()
 
+	layout := "2006-01-02T15:04:05.000Z"
+	str := "2014-11-12T11:45:26.371Z"
+	timeNow, _ := time.Parse(layout, str)
+	mock_time.On("Now").Return(timeNow)
+
 	evaluationError := errors.New("some ds error")
 
-	mock_reporter.On("ReportStepStart", executionId, step, vars)
+	mock_reporter.On("ReportStepStart", executionId, step, vars, timeNow).Return()
 	mock_stix.On("Evaluate", "a = a", vars).Return(false, evaluationError)
-	mock_reporter.On("ReportStepEnd", executionId, step, vars, evaluationError)
+	mock_reporter.On("ReportStepEnd", executionId, step, vars, evaluationError, timeNow).Return()
 
 	nextStepId, goToBranch, err := conditionExecutior.Execute(meta, step, vars)
 	assert.Equal(t, evaluationError, err)
@@ -107,4 +128,5 @@ func TestExecuteConditionError(t *testing.T) {
 
 	mock_reporter.AssertExpectations(t)
 	mock_stix.AssertExpectations(t)
+	mock_time.AssertExpectations(t)
 }

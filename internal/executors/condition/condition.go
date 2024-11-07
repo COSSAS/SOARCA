@@ -9,6 +9,7 @@ import (
 	"soarca/models/cacao"
 	"soarca/models/execution"
 	"soarca/utils/stix/expression/comparison"
+	timeUtil "soarca/utils/time"
 )
 
 var component = reflect.TypeOf(Executor{}).PkgPath()
@@ -19,9 +20,9 @@ func init() {
 }
 
 func New(comparison comparison.IComparison,
-	reporter reporter.IStepReporter) *Executor {
+	reporter reporter.IStepReporter, time timeUtil.ITime) *Executor {
 	return &Executor{comparison: comparison,
-		reporter: reporter}
+		reporter: reporter, time: time}
 }
 
 type IExecuter interface {
@@ -32,6 +33,7 @@ type IExecuter interface {
 type Executor struct {
 	comparison comparison.IComparison
 	reporter   reporter.IStepReporter
+	time       timeUtil.ITime
 }
 
 func (executor *Executor) Execute(meta execution.Metadata, step cacao.Step, variables cacao.Variables) (string, bool, error) {
@@ -42,16 +44,14 @@ func (executor *Executor) Execute(meta execution.Metadata, step cacao.Step, vari
 		return step.OnFailure, false, err
 	}
 
-	executor.reporter.ReportStepStart(meta.ExecutionId, step, variables)
+	executor.reporter.ReportStepStart(meta.ExecutionId, step, variables, executor.time.Now())
+
+	var err error
+	defer func() {
+		executor.reporter.ReportStepEnd(meta.ExecutionId, step, variables, err, executor.time.Now())
+	}()
 
 	result, err := executor.comparison.Evaluate(step.Condition, variables)
-
-	// We are reporting early to not have double reporting
-	executor.reporter.ReportStepEnd(meta.ExecutionId,
-		step,
-		variables,
-		err)
-
 	if err != nil {
 		log.Error(err)
 		return "", false, err
