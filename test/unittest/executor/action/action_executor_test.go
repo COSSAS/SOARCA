@@ -371,11 +371,9 @@ func TestVariableInterpolation(t *testing.T) {
 		expectedCommand,
 		expectedAuth,
 		expectedTarget,
-		cacao.NewVariables(var1, var2, var3, varUser, varPassword, varOauth, varPrivateKey, varToken, varUserId, varheader1, varheader2)).
+		cacao.NewVariables(var1, var2, var3, varUser, varPassword, varOauth, varPrivateKey, varToken, varUserId, varheader1, varheader2),
 		[]string{"__in_one__", "__in_two__"},
-		[]string{"__out_one__", "__out_two__"}).
-		Return(cacao.NewVariables(var1),
-			nil)
+		[]string{"__out_one__", "__out_two__"}).Return(cacao.NewVariables(var1), nil)
 
 	step := cacao.Step{
 		Type:          cacao.StepTypeAction,
@@ -425,11 +423,9 @@ func TestVariableInterpolation(t *testing.T) {
 		expectedHttpCommand,
 		expectedAuth,
 		expectedTarget,
-		cacao.NewVariables(varHttpContent, varheader1, varheader2)).
+		cacao.NewVariables(varHttpContent, varheader1, varheader2),
 		[]string{"__in_one__", "__in_two__"},
-		[]string{"__out_one__", "__out_two__"}).
-		Return(cacao.NewVariables(var1),
-			nil)
+		[]string{"__out_one__", "__out_two__"}).Return(cacao.NewVariables(var1), nil)
 
 	_, err = executerObject.ExecuteActionStep(metadata,
 		httpCommand,
