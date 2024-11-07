@@ -1,4 +1,4 @@
-package cacao_test
+package validator
 
 import (
 	"encoding/json"
@@ -7,12 +7,13 @@ import (
 	"io"
 	"os"
 	"soarca/models/cacao"
-	"soarca/models/validator"
 	"strings"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
 )
+
+var PB_PATH string = "../../test/playbooks/"
 
 func TestNotValidCacaoJsonInvalidAgentTargetType(t *testing.T) {
 	jsonFile, err := os.Open(PB_PATH + "invalid_playbook.json")
@@ -22,7 +23,7 @@ func TestNotValidCacaoJsonInvalidAgentTargetType(t *testing.T) {
 	}
 	defer jsonFile.Close()
 	byteValue, _ := io.ReadAll(jsonFile)
-	errValid := validator.IsValidCacaoJson(byteValue)
+	errValid := IsValidCacaoJson(byteValue)
 	if errValid == nil {
 		t.Fail()
 	}
@@ -41,7 +42,7 @@ func TestValidCacaoJson(t *testing.T) {
 	}
 	defer jsonFile.Close()
 	byteValue, _ := io.ReadAll(jsonFile)
-	errValidation := validator.IsValidCacaoJson(byteValue)
+	errValidation := IsValidCacaoJson(byteValue)
 	if errValidation != nil {
 		fmt.Println(err)
 		t.Fail()
@@ -62,7 +63,7 @@ func TestValidWorkflow(t *testing.T) {
 	if err := json.Unmarshal(data, &playbook); err != nil {
 		t.Fail()
 	}
-	errSafeWorkflow := validator.IsSafeCacaoWorkflow(&playbook)
+	errSafeWorkflow := IsSafeCacaoWorkflow(&playbook)
 	assert.Equal(t, errSafeWorkflow, nil)
 }
 
@@ -81,7 +82,7 @@ func TestIsSafeCacaoWorkflowFailMissingStep(t *testing.T) {
 		t.Fail()
 	}
 
-	errSafeWorkflow := validator.IsSafeCacaoWorkflow(&playbook)
+	errSafeWorkflow := IsSafeCacaoWorkflow(&playbook)
 
 	expected := errors.New(
 		"step end--6b23c237-ade8-4d00-9aa1-75999738d558 does not exist")
@@ -105,7 +106,7 @@ func TestIsSafeCacaoWorkflowFailInfinite(t *testing.T) {
 		t.Fail()
 	}
 
-	errSafeWorkflow := validator.IsSafeCacaoWorkflow(&playbook)
+	errSafeWorkflow := IsSafeCacaoWorkflow(&playbook)
 
 	expected := "worflow seems to loop on branch sequence"
 
@@ -127,7 +128,7 @@ func TestIsSafeCacaoWorkflowFailAgentEmail(t *testing.T) {
 		t.Fail()
 	}
 
-	errSafeWorkflow := validator.IsSafeCacaoWorkflow(&playbook)
+	errSafeWorkflow := IsSafeCacaoWorkflow(&playbook)
 	fmt.Println(errSafeWorkflow)
 
 	expected := "invalid email"
@@ -147,7 +148,7 @@ func TestIsSafeCacaoWorkflow(t *testing.T) {
 	if err := json.Unmarshal(data, &playbook); err != nil {
 		t.Fail()
 	}
-	errSafeWorkflow := validator.IsSafeCacaoWorkflow(&playbook)
+	errSafeWorkflow := IsSafeCacaoWorkflow(&playbook)
 
 	assert.Equal(t, errSafeWorkflow, nil)
 
