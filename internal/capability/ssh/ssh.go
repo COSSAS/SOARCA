@@ -116,8 +116,8 @@ func getSession(config ssh.ClientConfig, target cacao.AgentTarget) (*ssh.Session
 		log.Error(err)
 		return nil, nil, err
 	}
-	var session *ssh.Session
-	session, err = client.NewSession()
+
+	session, err := client.NewSession()
 	if err != nil {
 		log.Error(err)
 		client.Close()
