@@ -12,18 +12,17 @@ SOARCA utilizes push-based reporting to provide information on the instantiation
 
 ## General Reporting Architecture
 
-For the execution of a playbook, a *Decomposer* and invoked *Executor*s are injected with a *Reporter*. The *Reporter* maintains the reporting logic that reports execution information to a set of specified and available targets.
+For the execution of a playbook, a *Decomposer* and invoked *Executor*s are injected with a *Reporter*. The *Reporter* maintains the reporting logic that reports execution information to a set of specified and available reporting targets.
 
-A reporting target can be internal to SOARCA, such as a [Cache](#cache-reporter). A reporting target can also be a third-party tool, such as an external SOAR/ SIEM, or incident case management system (see [connectors](https://cossas.github.io/SOARCA/docs/core-components/connectors/)).
+A reporting target can be internal to SOARCA, such as a [Cache](#cache-reporter). A reporting target can also be a third-party tool, such as an external SOAR/ SIEM, or incident case management system (see [connectors](#connectors-and-3p-tools-reporting)).
 
 Upon execution trigger for a playbook, information about the chain of playbook steps to be executed will be pushed to the targets via dedicated reporting classes.
 
 Along the execution of the workflow steps, the reporting classes will dynamically update the steps execution information such as output variables, and step execution success or failure.
 
-The reporting features will enable the population and updating of views and data concerning workflow composition and its dynamic execution results. This data can be transmitted to SOARCA internal reporting components such as a cache, as well as to third-party tools (see [connectors](#connectors)).
+The reporting modules enables the population and updating of views and data concerning workflow composition and its dynamic execution results. This data can be transmitted to SOARCA internal reporting components such as a cache, as well as to third-party tools (see [connectors](#connectors-and-3p-tools-reporting)).
 
 The schema below represents the architecture concept.
-
 
 ```plantuml
 @startuml
@@ -75,6 +74,36 @@ TheHiveReporter .up.|> IDownStreamReporter
 3PToolReporter .up.|> IDownStreamReporter
 
 ```
+
+### Reporting is Asynchronous
+Reporting functionalities are triggered asynchronously by means of go routines, such that reporting logic does not affect the execution timings of the CACAO playbooks. Note that this also implies that there might be small inconsistencies between the actual status of an execution, and what can be found in the reporting. For instance, reporting on the status of a step N, might take longer than reporting on the status of step N+1. Typically, the actual playbook execution may be slightly ahead of the reporting - and generally within a seconds-wide window. Execution timings, though, are always reported correctly, since we generated them within the workflow execution itself, and not within the reporting module.
+
+The flow diagram below highlights the asynchronous mechanisms of reporting.
+
+```plantuml
+@startuml
+
+participant "Decomposer" as decomposer
+participant "Executor" as executor
+participant "Reporter" as reporter
+participant "DonwstreamReporter" as ds_reporter
+
+decomposer -> reporter : ReportWorkflowStart()
+reporter -->> ds_reporter : go ReportWorkflowStart()
+decomposer -> executor : Execute step
+activate executor
+executor -> reporter : ReportStepStart()
+reporter -->> ds_reporter : go ReportStepStart()
+executor -> reporter : ReportStepEnd()
+reporter -->> ds_reporter : go ReportStepEnd()
+decomposer <- executor : return (variables, errors)
+deactivate executor
+decomposer -> reporter : ReportWorkflowEnd()
+reporter -->> ds_reporter : go ReportWorkflowEnd()
+
+@enduml
+```
+Note that the main reporter module is invoked synchronously. In turn, the main reporter module calls all downstream reporters, which implement the actual reporting logic, asynchronously. Also note any eventual reporting error never stops an execution, and only logs a warning.
 
 ### Interfaces
 
