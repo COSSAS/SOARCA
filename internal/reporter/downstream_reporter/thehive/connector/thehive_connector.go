@@ -17,6 +17,7 @@ import (
 
 // TODOs
 // Fix start and end steps appearance vs reporting
+// Add "at" timings from reporter interface instead of generating in here
 // Post variables as tables and not as JSONs
 // Add configuration of The Hive reporter and registration in reporters
 // Add logging in all functions
