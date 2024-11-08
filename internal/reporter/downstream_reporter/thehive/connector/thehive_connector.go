@@ -15,6 +15,12 @@ import (
 	"time"
 )
 
+// TODOs
+// Fix start and end steps appearance vs reporting
+// Post variables as tables and not as JSONs
+// Add configuration of The Hive reporter and registration in reporters
+// Add logging in all functions
+
 var (
 	component = reflect.TypeOf(TheHiveConnector{}).PkgPath()
 	log       *logger.Log
@@ -53,133 +59,7 @@ func New(theHiveEndpoint string, theHiveApiKey string) *TheHiveConnector {
 	}
 }
 
-// ############################### Playbook to TheHive ID mappings
-
-type SOARCATheHiveMap struct {
-	executionsCaseMaps map[string]ExecutionCaseMap
-}
-type ExecutionCaseMap struct {
-	caseId                  string
-	stepsTasksMap           map[string]string
-	variablesObservablesMap map[string]string
-}
-
-// TODO: Change to using observables instead of updating the tasks descriptions
-
-func (soarcaTheHiveMap *SOARCATheHiveMap) checkExecutionCaseExists(executionId string) error {
-	if _, ok := soarcaTheHiveMap.executionsCaseMaps[executionId]; !ok {
-		return fmt.Errorf("case not found for execution id %s", executionId)
-	}
-	return nil
-}
-func (soarcaTheHiveMap *SOARCATheHiveMap) checkExecutionStepTaskExists(executionId string, stepId string) error {
-	if _, ok := soarcaTheHiveMap.executionsCaseMaps[executionId].stepsTasksMap[stepId]; !ok {
-		return fmt.Errorf("task not found for execution id %s for step id %s", executionId, stepId)
-	}
-	return nil
-}
-
-func (soarcaTheHiveMap *SOARCATheHiveMap) checkExecutionVariableObservableExists(executionId string, variableName string) error {
-	if _, ok := soarcaTheHiveMap.executionsCaseMaps[executionId].variablesObservablesMap[variableName]; !ok {
-		return fmt.Errorf("variable not found: execution id %s; variable: %s", executionId, variableName)
-	}
-	return nil
-}
-
-func (soarcaTheHiveMap *SOARCATheHiveMap) registerExecutionInCase(executionId string, caseId string) error {
-	soarcaTheHiveMap.executionsCaseMaps[executionId] = ExecutionCaseMap{
-		caseId:                  caseId,
-		stepsTasksMap:           map[string]string{},
-		variablesObservablesMap: map[string]string{},
-	}
-	//fmt.Printf("registering execution: %s, case id: %s", executionId, caseId)
-	//fmt.Printf("execution entry id %s", soarcaTheHiveMap.executionsCaseMaps[executionId].caseId)
-	log.Debugf("registering execution: %s, case id: %s", executionId, caseId)
-	log.Debugf("execution entry id %s", soarcaTheHiveMap.executionsCaseMaps[executionId].caseId)
-
-	return nil
-}
-func (soarcaTheHiveMap *SOARCATheHiveMap) registerStepTaskInCase(executionId string, stepId string, taskId string) {
-	soarcaTheHiveMap.executionsCaseMaps[executionId].stepsTasksMap[stepId] = taskId
-}
-
-func (soarcaTheHiveMap *SOARCATheHiveMap) registerVariableObservableInCase(executionId string, variableName string, observableId string) {
-	soarcaTheHiveMap.executionsCaseMaps[executionId].variablesObservablesMap[variableName] = observableId
-	fmt.Printf("registering observable: %s, variable name: %s", observableId, variableName)
-	fmt.Printf("observable entry entry %s", soarcaTheHiveMap.executionsCaseMaps[executionId].variablesObservablesMap[variableName])
-}
-
-func (soarcaTheHiveMap *SOARCATheHiveMap) retrieveCaseId(executionId string) (string, error) {
-	err := soarcaTheHiveMap.checkExecutionCaseExists(executionId)
-	if err != nil {
-		return "", err
-	}
-	return soarcaTheHiveMap.executionsCaseMaps[executionId].caseId, nil
-}
-
-func (soarcaTheHiveMap *SOARCATheHiveMap) retrieveTaskId(executionId string, stepId string) (string, error) {
-	err := soarcaTheHiveMap.checkExecutionCaseExists(executionId)
-	if err != nil {
-		return "", err
-	}
-	err = soarcaTheHiveMap.checkExecutionStepTaskExists(executionId, stepId)
-	if err != nil {
-		return "", err
-	}
-	return soarcaTheHiveMap.executionsCaseMaps[executionId].stepsTasksMap[stepId], nil
-}
-
-func (soarcaTheHiveMap *SOARCATheHiveMap) retrieveObservableId(executionId string, variableName string) (string, error) {
-	err := soarcaTheHiveMap.checkExecutionCaseExists(executionId)
-	if err != nil {
-		return "", err
-	}
-	err = soarcaTheHiveMap.checkExecutionVariableObservableExists(executionId, variableName)
-	if err != nil {
-		return "", err
-	}
-	return soarcaTheHiveMap.executionsCaseMaps[executionId].variablesObservablesMap[variableName], nil
-}
-
-// func (soarcaTheHiveMap *SOARCATheHiveMap) clearCase(executionId string) error {
-// 	err := soarcaTheHiveMap.checkExecutionCaseExists(executionId)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
-
-// func (soarcaTheHiveMap *SOARCATheHiveMap) clearMap(executionId string) error
-
 // ############################### Functions
-
-func (theHiveConnector *TheHiveConnector) PostStepTaskInCase(executionId string, step cacao.Step) error {
-	caseId, err := theHiveConnector.ids_map.retrieveCaseId(executionId)
-	if err != nil {
-		return err
-	}
-	url := theHiveConnector.baseUrl + "/case/" + caseId + "/task"
-	method := "POST"
-
-	taskDescription := step.Description + "\n" + fmt.Sprintf("(SOARCA step: %s )", step.ID)
-	task := schemas.Task{
-		Title:       step.Name,
-		Description: taskDescription,
-	}
-
-	body, err := theHiveConnector.sendRequest(method, url, task)
-	if err != nil {
-		return err
-	}
-
-	task_id, err := theHiveConnector.getIdFromRespBody(body)
-	if err != nil {
-		return err
-	}
-	theHiveConnector.ids_map.registerStepTaskInCase(executionId, step.ID, task_id)
-
-	return nil
-}
 
 func (theHiveConnector *TheHiveConnector) PostCommentInTaskLog(executionId string, step cacao.Step, note string) error {
 	taskId, err := theHiveConnector.ids_map.retrieveTaskId(executionId, step.ID)
@@ -258,40 +138,6 @@ func (theHiveConnector *TheHiveConnector) PostVariablesAsCommentInCase(execution
 	return nil
 }
 
-func (theHiveConnector *TheHiveConnector) PostVariableObservableInCase(executionId string, variable cacao.Variable) error {
-	caseId, err := theHiveConnector.ids_map.retrieveCaseId(executionId)
-	if err != nil {
-		return err
-	}
-
-	url := theHiveConnector.baseUrl + "/case/" + caseId + "/observable"
-	method := "POST"
-
-	observable := schemas.Observable{
-		DataType: schemas.ObservableTypeOther,
-		Name:     variable.Name,
-		Data:     []string{variable.Type},
-		Message:  variable.Description,
-		TLP:      4,
-		Tags:     []string{"CACAO Variable", executionId, variable.Value},
-	}
-
-	body, err := theHiveConnector.sendRequest(method, url, observable)
-	if err != nil {
-		return err
-	}
-	observableId, err := theHiveConnector.getIdFromRespBody(body)
-	if err != nil {
-		return err
-	}
-
-	theHiveConnector.ids_map.registerVariableObservableInCase(executionId, variable.Name, observableId)
-
-	return nil
-}
-
-// TODO: revise this function through
-
 func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(executionId string, playbook cacao.Playbook) (string, error) {
 	log.Tracef("posting new case to The Hive. execution ID %s, playbook %+v", executionId, playbook)
 
@@ -305,8 +151,8 @@ func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(executionId strin
 	data := schemas.Case{
 		Title:       playbook.Name,
 		Description: playbook.Description,
-		StartDate:   time.Now().Unix(),
-		Tags:        caseTags,
+		//StartDate:   int(time.Now().Unix()),
+		Tags: caseTags,
 	}
 
 	body, err := theHiveConnector.sendRequest(method, url, data)
@@ -332,16 +178,6 @@ func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(executionId strin
 		}
 	}
 
-	// Add variables as observables in case
-	for _, variable := range playbook.PlaybookVariables {
-		err := theHiveConnector.PostVariableObservableInCase(executionId, variable)
-		if err != nil {
-			fmt.Println("error in post variable observable")
-			fmt.Println(err)
-			return "", err
-		}
-	}
-
 	err = theHiveConnector.PostVariablesAsCommentInCase(executionId, playbook.PlaybookVariables, "variables at start of execution")
 	if err != nil {
 		log.Warningf("could not report variables in case comment: %s", err)
@@ -349,6 +185,34 @@ func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(executionId strin
 
 	log.Tracef("case posted with case ID: %s", caseId)
 	return string(body), nil
+}
+
+func (theHiveConnector *TheHiveConnector) PostStepTaskInCase(executionId string, step cacao.Step) error {
+	caseId, err := theHiveConnector.ids_map.retrieveCaseId(executionId)
+	if err != nil {
+		return err
+	}
+	url := theHiveConnector.baseUrl + "/case/" + caseId + "/task"
+	method := "POST"
+
+	taskDescription := step.Description + "\n" + fmt.Sprintf("(SOARCA step: %s )", step.ID)
+	task := schemas.Task{
+		Title:       step.Name,
+		Description: taskDescription,
+	}
+
+	body, err := theHiveConnector.sendRequest(method, url, task)
+	if err != nil {
+		return err
+	}
+
+	task_id, err := theHiveConnector.getIdFromRespBody(body)
+	if err != nil {
+		return err
+	}
+	theHiveConnector.ids_map.registerStepTaskInCase(executionId, step.ID, task_id)
+
+	return nil
 }
 
 func (theHiveConnector *TheHiveConnector) UpdateEndExecutionCase(executionId string, variables cacao.Variables, workflowErr error) (string, error) {
@@ -370,12 +234,16 @@ func (theHiveConnector *TheHiveConnector) UpdateEndExecutionCase(executionId str
 		if err != nil {
 			log.Warningf("could not add task log: %s", err)
 		}
+	}
 
+	err = theHiveConnector.PostVariablesAsCommentInCase(executionId, variables, closureComment)
+	if err != nil {
+		log.Warningf("could not add task log: %s", err)
 	}
 
 	data := schemas.Case{
-		EndDate: time.Now().Unix(),
-		Status:  caseStatus,
+		//EndDate: int(time.Now().Unix()),
+		Status: caseStatus,
 		//ImpactStatus: schemas.TheHiveCaseImpacStatustLow,
 		Summary: "summary not implemented yet. Look at the tasks :)",
 	}
@@ -453,6 +321,12 @@ func (theHiveConnector *TheHiveConnector) UpdateEndStepTaskInCase(executionId st
 		}
 	}
 
+	closureComment = closureComment + "\n variables at the end of the step execution"
+	err = theHiveConnector.PostStepVariablesAsCommentInTaskLog(executionId, step, closureComment)
+	if err != nil {
+		log.Warningf("could not report variables in step task log: %s", err)
+	}
+
 	task := schemas.Task{
 		// StartDate: wait for merging of new reporting interface with timings passing,
 		EndDate: time.Now().Unix(),
@@ -465,27 +339,6 @@ func (theHiveConnector *TheHiveConnector) UpdateEndStepTaskInCase(executionId st
 	}
 
 	return string(body), nil
-}
-
-func (theHiveConnector *TheHiveConnector) UpdateVariableObservableInCase(executionId string, variable cacao.Variable) (string, error) {
-	observableId, err := theHiveConnector.ids_map.retrieveObservableId(executionId, variable.Name)
-	if err != nil {
-		return "", err
-	}
-
-	url := theHiveConnector.baseUrl + "/observable/" + observableId
-	method := "PATCH"
-
-	observableUpdate := schemas.Observable{
-		AddTags: []string{variable.Value},
-	}
-
-	body, err := theHiveConnector.sendRequest(method, url, observableUpdate)
-	if err != nil {
-		return "", err
-	}
-
-	return theHiveConnector.getIdFromRespBody(body)
 }
 
 // ############################### HTTP interaction
@@ -572,6 +425,9 @@ func (theHiveConnector *TheHiveConnector) sendRequest(method string, url string,
 	if err != nil {
 		return nil, err
 	}
+
+	log.Debugf("response body: %s", respbody)
+	fmt.Printf("response body: %s", respbody)
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return nil, fmt.Errorf("received non-2xx status code: %d\nURL: %s: %s", resp.StatusCode, url, respbody)

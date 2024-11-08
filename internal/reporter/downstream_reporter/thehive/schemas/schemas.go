@@ -84,8 +84,8 @@ type MessagePost struct {
 
 type TaskLog struct {
 	Message            string   `bson:"message" json:"message" validate:"required,min=1,max=1048576"`
-	StartDate          int64    `bson:"startDate,omitempty" json:"startDate,omitempty" example:"1640000000000"`
-	IncludeIntTimeline int64    `bson:"includeIntTimeline,omitempty" json:"includeIntTimeline,omitempty" example:"1640000000000"`
+	StartDate          int      `bson:"startDate,omitempty" json:"startDate,omitempty" example:"1640000000000"`
+	IncludeIntTimeline int      `bson:"includeIntTimeline,omitempty" json:"includeIntTimeline,omitempty" example:"1640000000000"`
 	Attachments        []string `bson:"attachments,omitempty" json:"attachments,omitempty"`
 }
 
@@ -93,8 +93,8 @@ type Case struct {
 	Title             string             `bson:"title,omitempty" json:"title,omitempty" validate:"required,min=1,max=512" example:"Example Case"`
 	Description       string             `bson:"description,omitempty" json:"description,omitempty" validate:"required,max=1048576"`
 	Severity          int                `bson:"severity,omitempty" json:"severity,omitempty" validate:"min=1,max=4" example:"2"`
-	StartDate         int64              `bson:"startDate,omitempty" json:"startDate,omitempty" example:"1640000000000"`
-	EndDate           int64              `bson:"endDate,omitempty" json:"endDate,omitempty" example:"1640000000000"`
+	StartDate         int                `bson:"startDate,omitempty" json:"startDate,omitempty" example:"1640000000000"`
+	EndDate           int                `bson:"endDate,omitempty" json:"endDate,omitempty" example:"1640000000000"`
 	Tags              []string           `bson:"tags,omitempty" json:"tags,omitempty" validate:"max=128,dive,min=1,max=128" example:"[\"example\", \"test\"]"`
 	Flag              bool               `bson:"flag,omitempty" json:"flag,omitempty" example:"false"`
 	TLP               int                `bson:"tlp,omitempty" json:"tlp,omitempty" validate:"min=0,max=4" example:"2"`
