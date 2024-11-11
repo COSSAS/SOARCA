@@ -42,11 +42,11 @@ type ITheHiveConnector interface {
 type TheHiveConnector struct {
 	baseUrl string
 	apiKey  string
-	ids_map SOARCATheHiveMap
+	ids_map *SOARCATheHiveMap
 }
 
 func NewConnector(theHiveEndpoint string, theHiveApiKey string) *TheHiveConnector {
-	ids_map := SOARCATheHiveMap{}
+	ids_map := &SOARCATheHiveMap{}
 	ids_map.executionsCaseMaps = map[string]ExecutionCaseMap{}
 	return &TheHiveConnector{
 		baseUrl: theHiveEndpoint,
@@ -58,6 +58,7 @@ func NewConnector(theHiveEndpoint string, theHiveApiKey string) *TheHiveConnecto
 // ############################### Functions
 
 func (theHiveConnector *TheHiveConnector) postCommentInTaskLog(executionId string, step cacao.Step, note string) error {
+	log.Trace(fmt.Sprintf("posting comment in task log via execution ID: %s. step ID: %s", executionId, step.ID))
 	taskId, err := theHiveConnector.ids_map.retrieveTaskId(executionId, step.ID)
 	if err != nil {
 		return err
@@ -81,7 +82,6 @@ func (theHiveConnector *TheHiveConnector) postCommentInTaskLog(executionId strin
 }
 
 func (theHiveConnector *TheHiveConnector) postStepVariablesAsCommentInTaskLog(executionId string, step cacao.Step, note string) error {
-
 	variablesString := note + "\n"
 	for _, variable := range step.StepVariables {
 		variablesString = variablesString + formatVariable(variable)
@@ -96,6 +96,7 @@ func (theHiveConnector *TheHiveConnector) postStepVariablesAsCommentInTaskLog(ex
 }
 
 func (theHiveConnector *TheHiveConnector) postCommentInCase(executionId string, note string) error {
+	log.Info(fmt.Sprintf("posting comment in case via execution ID: %s.", executionId))
 	caseId, err := theHiveConnector.ids_map.retrieveCaseId(executionId)
 	if err != nil {
 		return err
@@ -114,7 +115,7 @@ func (theHiveConnector *TheHiveConnector) postCommentInCase(executionId string, 
 	if err != nil {
 		return err
 	}
-	log.Tracef("Case comment created. execution ID %s, caseId %s, message Id: %s", executionId, caseId, messageId)
+	log.Trace(fmt.Sprintf("Case comment created. execution ID %s, caseId %s, message Id: %s", executionId, caseId, messageId))
 	return nil
 }
 
@@ -164,8 +165,7 @@ func (theHiveConnector *TheHiveConnector) registerStepTaskInCase(executionId str
 // ######################################## Connector interface
 
 func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(executionId string, playbook cacao.Playbook, at time.Time) (string, error) {
-	log.Tracef("posting new case to The Hive. execution ID %s, playbook %+v", executionId, playbook)
-	log.Infof("posting new case to The Hive. execution ID %s, playbook %+v", executionId, playbook)
+	log.Trace(fmt.Sprintf("posting new case to The Hive. execution ID %s, playbook %+v", executionId, playbook))
 	url := theHiveConnector.baseUrl + "/case"
 	method := "POST"
 
@@ -211,7 +211,7 @@ func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(executionId strin
 	executionStartMessage := fmt.Sprintf("START\nplaybook ID [ %s ]\nexecution ID [ %s ]\nstarted in SOARCA at: [ %s ]", playbook.ID, executionId, at.String())
 	err = theHiveConnector.postCommentInCase(executionId, executionStartMessage)
 	if err != nil {
-		log.Warningf("could post message to case: %s", err)
+		log.Warningf("could not post message to case: %s", err)
 	}
 
 	err = theHiveConnector.postVariablesAsCommentInCase(executionId, playbook.PlaybookVariables, "variables at start of execution")
@@ -228,7 +228,7 @@ func (theHiveConnector *TheHiveConnector) UpdateEndExecutionCase(executionId str
 	if err != nil {
 		return "", err
 	}
-	log.Tracef("updating case status to The Hive. execution ID %s, The Hive case ID %s", executionId, caseId)
+	log.Trace(fmt.Sprintf("updating case status to The Hive. execution ID %s, The Hive case ID %s", executionId, caseId))
 
 	url := theHiveConnector.baseUrl + "/case/" + caseId
 	method := "PATCH"
@@ -267,7 +267,7 @@ func (theHiveConnector *TheHiveConnector) UpdateEndExecutionCase(executionId str
 // TODO: revise this function through
 
 func (theHiveConnector *TheHiveConnector) UpdateStartStepTaskInCase(executionId string, step cacao.Step, variables cacao.Variables, at time.Time) (string, error) {
-	log.Tracef("updating task in thehive. case ID %s", executionId)
+	log.Trace(fmt.Sprintf("updating task in thehive. case ID %s. task started.", executionId))
 	taskId, err := theHiveConnector.ids_map.retrieveTaskId(executionId, step.ID)
 	if err != nil {
 		return "", err
@@ -315,7 +315,7 @@ func (theHiveConnector *TheHiveConnector) UpdateStartStepTaskInCase(executionId 
 }
 
 func (theHiveConnector *TheHiveConnector) UpdateEndStepTaskInCase(executionId string, step cacao.Step, returnVars cacao.Variables, stepErr error, at time.Time) (string, error) {
-	log.Tracef("updating task in thehive. case ID %s", executionId)
+	log.Trace(fmt.Sprintf("updating task in thehive. case ID %s. task ended.", executionId))
 	taskId, err := theHiveConnector.ids_map.retrieveTaskId(executionId, step.ID)
 	if err != nil {
 		return "", err
