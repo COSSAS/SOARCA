@@ -9,6 +9,7 @@ import (
 	"soarca/models/cacao"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -53,7 +54,7 @@ func TestTheHiveConnection(t *testing.T) {
 	fmt.Println(str)
 }
 
-func TestTheHiveOpenCase(t *testing.T) {
+func TestTheHiveReporting(t *testing.T) {
 	thehive_api_tkn, err := LoadEnv("THEHIVE_TEST_API_TOKEN")
 	if err != nil {
 		t.Fail()
@@ -132,27 +133,26 @@ func TestTheHiveOpenCase(t *testing.T) {
 	}
 	executionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
 
-	err = thr.ReportWorkflowStart(executionId0, playbook)
+	err = thr.ReportWorkflowStart(executionId0, playbook, time.Now())
 	if err != nil {
 		fmt.Println("failing at report workflow start")
 		fmt.Println(err)
 		t.Fail()
 	}
-	err = thr.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables))
+	err = thr.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables), time.Now())
 	if err != nil {
 		fmt.Println(err)
 		t.Fail()
 	}
-	err = thr.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil)
+	err = thr.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil, time.Now())
 	if err != nil {
 		fmt.Println(err)
 		t.Fail()
 	}
 
-	err = thr.ReportWorkflowEnd(executionId0, playbook, nil)
+	err = thr.ReportWorkflowEnd(executionId0, playbook, nil, time.Now())
 	if err != nil {
 		fmt.Println(err)
 		t.Fail()
 	}
-	t.Fail()
 }
