@@ -78,52 +78,24 @@ func GetIdFromObjectBody(body []byte) (string, error) {
 	return _id, nil
 }
 
-func FormatVariable(s interface{}) string {
-	v := reflect.ValueOf(s)
-	t := v.Type()
+func StructToMDJSON(v interface{}) (string, error) {
 
-	var sb strings.Builder
-
-	sb.WriteString(strings.Repeat("*", 30) + "\n")
-
-	maxFieldLength := 0
-	for i := 0; i < v.NumField(); i++ {
-		field := t.Field(i).Name
-		if len(field) > maxFieldLength {
-			maxFieldLength = len(field)
-		}
+	indentedJSON, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("error marshalling to JSON: %w", err)
 	}
 
-	var name, value, description string
-	var otherFields []string
+	markdownContent := "```json\n" + string(indentedJSON) + "\n```"
+	return markdownContent, nil
+}
 
-	for i := 0; i < v.NumField(); i++ {
-		field := t.Field(i).Name
-		fieldValue := fmt.Sprintf("%v", v.Field(i).Interface())
-		padding := strings.Repeat("\t", (maxFieldLength-len(field))/4+1)
-		switch field {
-		case "Name":
-			name = fmt.Sprintf("%s:%s%s\n", field, padding, fieldValue)
-		case "Value":
-			value = fmt.Sprintf("%s:%s%s\n", field, padding, fieldValue)
-		case "Description":
-			description = fmt.Sprintf("%s:%s%s\n", field, padding, fieldValue)
-		default:
-			otherFields = append(otherFields, fmt.Sprintf("%s:%s%s\n", field, padding, fieldValue))
-		}
+func StructToTxtJSON(v interface{}) (string, error) {
+
+	indentedJSON, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("error marshalling to JSON: %w", err)
 	}
 
-	// Append "Name", "Description", and "Value" fields first
-	sb.WriteString(name)
-	sb.WriteString(description)
-	sb.WriteString(value)
-
-	// Append all other fields
-	for _, field := range otherFields {
-		sb.WriteString(field)
-	}
-
-	sb.WriteString(strings.Repeat("*", 30) + "\n")
-
-	return sb.String()
+	txtContent := string(indentedJSON) + "\n"
+	return txtContent, nil
 }

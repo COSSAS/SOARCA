@@ -33,7 +33,7 @@ func (theHiveReporter *TheHiveReporter) ReportWorkflowEnd(executionId uuid.UUID,
 
 // Adds *event* to case
 func (theHiveReporter *TheHiveReporter) ReportStepStart(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, at time.Time) error {
-	_, err := theHiveReporter.connector.UpdateStartStepTaskInCase(executionId.String(), step, stepResults, at)
+	_, err := theHiveReporter.connector.UpdateStartStepTaskInCase(executionId.String(), step, at)
 	return err
 }
 

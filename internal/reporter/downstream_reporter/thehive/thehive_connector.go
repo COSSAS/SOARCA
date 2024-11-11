@@ -32,7 +32,7 @@ type ITheHiveConnector interface {
 	Hello() string
 	PostNewExecutionCase(executionId string, playbook cacao.Playbook, at time.Time) (string, error)
 	UpdateEndExecutionCase(executionId string, variables cacao.Variables, workflowErr error, at time.Time) (string, error)
-	UpdateStartStepTaskInCase(executionId string, step cacao.Step, variables cacao.Variables, at time.Time) (string, error)
+	UpdateStartStepTaskInCase(executionId string, step cacao.Step, at time.Time) (string, error)
 	UpdateEndStepTaskInCase(executionId string, step cacao.Step, returnVars cacao.Variables, stepErr error, at time.Time) (string, error)
 }
 
@@ -80,10 +80,32 @@ func (theHiveConnector *TheHiveConnector) postCommentInTaskLog(executionId strin
 	return nil
 }
 
+func (theHiveConnector *TheHiveConnector) postStepDataAsCommentInTaskLog(executionId string, step cacao.Step, note string) error {
+
+	message := note + "\n"
+	stepData, err := thehive_utils.StructToMDJSON(step)
+	if err != nil {
+		return err
+	}
+
+	message = message + stepData
+
+	err = theHiveConnector.postCommentInTaskLog(executionId, step, message)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (theHiveConnector *TheHiveConnector) postStepVariablesAsCommentInTaskLog(executionId string, step cacao.Step, note string) error {
 	variablesString := note + "\n"
 	for _, variable := range step.StepVariables {
-		variablesString = variablesString + thehive_utils.FormatVariable(variable)
+		variableJson, err := thehive_utils.StructToMDJSON(variable)
+		if err != nil {
+			return err
+		}
+		variablesString = variablesString + variableJson
 	}
 
 	err := theHiveConnector.postCommentInTaskLog(executionId, step, variablesString)
@@ -122,7 +144,11 @@ func (theHiveConnector *TheHiveConnector) postVariablesAsCommentInCase(execution
 
 	variablesString := note + "\n"
 	for _, variable := range variables {
-		variablesString = variablesString + thehive_utils.FormatVariable(variable)
+		variableJson, err := thehive_utils.StructToTxtJSON(variable)
+		if err != nil {
+			return err
+		}
+		variablesString = variablesString + variableJson
 	}
 
 	err := theHiveConnector.postCommentInCase(executionId, variablesString)
@@ -207,7 +233,7 @@ func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(executionId strin
 		}
 	}
 
-	executionStartMessage := fmt.Sprintf("START\nplaybook ID [ %s ]\nexecution ID [ %s ]\nstarted in SOARCA at: [ %s ]", playbook.ID, executionId, at.String())
+	executionStartMessage := fmt.Sprintf("START\nplaybook ID\n\t\t[ %s ]\nexecution ID\n\t\t[ %s ]\nstarted at\n\t\t[ %s ]", playbook.ID, executionId, at.String())
 	err = theHiveConnector.postCommentInCase(executionId, executionStartMessage)
 	if err != nil {
 		log.Warningf("could not post message to case: %s", err)
@@ -238,7 +264,7 @@ func (theHiveConnector *TheHiveConnector) UpdateEndExecutionCase(executionId str
 	}
 
 	caseStatus := thehive_models.TheHiveCaseStatusTruePositive
-	closureComment := fmt.Sprintf("END\nexecution ID [ %s ]\nended in SOARCA at: [ %s ]", executionId, at.String())
+	closureComment := fmt.Sprintf("END\nexecution ID\n\t\t[ %s ]\nended at\n\t\t[ %s ]", executionId, at.String())
 	if workflowErr != nil {
 		caseStatus = thehive_models.TheHiveCaseStatusIndeterminate
 		closureComment = closureComment + fmt.Sprintf("execution error: %s", workflowErr)
@@ -249,9 +275,7 @@ func (theHiveConnector *TheHiveConnector) UpdateEndExecutionCase(executionId str
 	}
 
 	data := thehive_models.Case{
-		//EndDate: int(time.Now().Unix()),
-		Status: caseStatus,
-		//ImpactStatus: TheHiveCaseImpacStatustLow,
+		Status:  caseStatus,
 		Summary: "summary not implemented yet. Look at the tasks :)",
 	}
 
@@ -265,7 +289,7 @@ func (theHiveConnector *TheHiveConnector) UpdateEndExecutionCase(executionId str
 
 // TODO: revise this function through
 
-func (theHiveConnector *TheHiveConnector) UpdateStartStepTaskInCase(executionId string, step cacao.Step, variables cacao.Variables, at time.Time) (string, error) {
+func (theHiveConnector *TheHiveConnector) UpdateStartStepTaskInCase(executionId string, step cacao.Step, at time.Time) (string, error) {
 	log.Trace(fmt.Sprintf("updating task in thehive. case ID %s. task started.", executionId))
 	taskId, err := theHiveConnector.ids_map.retrieveTaskId(executionId, step.ID)
 	if err != nil {
@@ -288,10 +312,8 @@ func (theHiveConnector *TheHiveConnector) UpdateStartStepTaskInCase(executionId 
 		taskAssignee = "soarca@soarca.eu"
 	}
 	task := thehive_models.Task{
-		// StartDate: wait for merging of new reporting interface with timings passing,
-		StartDate: time.Now().Unix(),
-		Status:    thehive_models.TheHiveStatusInProgress,
-		Assignee:  taskAssignee,
+		Status:   thehive_models.TheHiveStatusInProgress,
+		Assignee: taskAssignee,
 	}
 
 	body, err := theHiveConnector.sendRequest(method, url, task)
@@ -299,15 +321,15 @@ func (theHiveConnector *TheHiveConnector) UpdateStartStepTaskInCase(executionId 
 		return "", err
 	}
 
-	executionStartMessage := fmt.Sprintf("START\nexecution ID [ %s ]\nstep ID [ %s ]\nstarted in SOARCA at: [ %s ]", executionId, step.ID, at.String())
+	executionStartMessage := fmt.Sprintf("START\nexecution ID\t\t[ %s ]\nstep ID\t\t[ %s ]\nstarted at\t\t[ %s ]", executionId, step.ID, at.String())
 	err = theHiveConnector.postCommentInTaskLog(executionId, step, executionStartMessage)
 	if err != nil {
 		log.Warningf("could post message to task: %s", err)
 	}
 
-	err = theHiveConnector.postStepVariablesAsCommentInTaskLog(executionId, step, "variables at start of step execution")
+	err = theHiveConnector.postStepDataAsCommentInTaskLog(executionId, step, "step data")
 	if err != nil {
-		log.Warningf("could not report variables in step task log: %s", err)
+		log.Warningf("could not report step data in step task log: %s", err)
 	}
 
 	return theHiveConnector.getIdFromRespBody(body)
@@ -323,13 +345,13 @@ func (theHiveConnector *TheHiveConnector) UpdateEndStepTaskInCase(executionId st
 	url := theHiveConnector.baseUrl + "/task/" + taskId
 	method := "PATCH"
 
-	err = theHiveConnector.postStepVariablesAsCommentInTaskLog(executionId, step, "variables at end of step execution")
+	err = theHiveConnector.postStepVariablesAsCommentInTaskLog(executionId, step, "returned variables")
 	if err != nil {
 		log.Warningf("could not report variables in step task log: %s", err)
 	}
 
 	taskStatus := thehive_models.TheHiveStatusCompleted
-	executionEndMessage := fmt.Sprintf("END\nexecution ID [ %s ]\nstep ID [ %s ]\nended in SOARCA at: [ %s ]", executionId, step.ID, at.String())
+	executionEndMessage := fmt.Sprintf("END\nexecution ID\t\t[ %s ]\nstep ID\t\t[ %s ]\nended at\t\t[ %s ]", executionId, step.ID, at.String())
 
 	if stepErr != nil {
 		taskStatus = thehive_models.TheHiveStatusCancelled
@@ -341,9 +363,7 @@ func (theHiveConnector *TheHiveConnector) UpdateEndStepTaskInCase(executionId st
 	}
 
 	task := thehive_models.Task{
-		// StartDate: wait for merging of new reporting interface with timings passing,
-		EndDate: time.Now().Unix(),
-		Status:  taskStatus,
+		Status: taskStatus,
 	}
 
 	body, err := theHiveConnector.sendRequest(method, url, task)
