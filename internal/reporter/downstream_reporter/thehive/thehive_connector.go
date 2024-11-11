@@ -356,45 +356,6 @@ func (theHiveConnector *TheHiveConnector) UpdateEndStepTaskInCase(executionId st
 
 // ############################### HTTP interaction
 
-func (theHiveConnector *TheHiveConnector) getIdFromRespBody(body []byte) (string, error) {
-
-	if len(body) == 0 {
-		return "", nil
-	}
-	// Try to unmarshal as a slice of maps
-	var respArray []map[string]interface{}
-	err := json.Unmarshal(body, &respArray)
-	if err == nil {
-		if len(respArray) == 0 {
-			return "", errors.New("response array is empty")
-		}
-
-		_id, ok := respArray[0]["_id"].(string)
-		if !ok {
-			log.Error("type assertion for retrieving TheHive ID failed")
-			return "", errors.New("type assertion for retrieving TheHive ID failed")
-		}
-
-		return _id, nil
-	}
-
-	// If unmarshalling as a slice fails, try to unmarshal as a single map
-	var respMap map[string]interface{}
-	err = json.Unmarshal(body, &respMap)
-	if err != nil {
-		log.Error("failed to unmarshal as single object:", err)
-		return "", err
-	}
-
-	_id, ok := respMap["_id"].(string)
-	if !ok {
-		log.Error("type assertion for retrieving TheHive ID from map failed")
-		return "", errors.New("type assertion for retrieving TheHive ID from map failed")
-	}
-
-	return _id, nil
-}
-
 func (theHiveConnector *TheHiveConnector) sendRequest(method string, url string, body interface{}) ([]byte, error) {
 	log.Trace(fmt.Sprintf("sending request: %s %s", method, url))
 
@@ -456,6 +417,27 @@ func (theHiveConnector *TheHiveConnector) Hello() string {
 	return (string(body))
 }
 
+func (theHiveConnector *TheHiveConnector) getIdFromRespBody(body []byte) (string, error) {
+
+	if len(body) == 0 {
+		return "", nil
+	}
+
+	id, err := getIdFromArrayBody(body)
+	if err == nil {
+		return id, err
+	}
+
+	id, err = getIdFromObjectBody(body)
+	if err == nil {
+		return id, err
+	}
+
+	log.Debug(fmt.Sprintf("body: %s", string(body)))
+	return "", errors.New("failed to get ID from response body")
+
+}
+
 // ############################### Utils
 func PrettyPrintObject(object interface{}) string {
 	pretty, err := json.MarshalIndent(object, "", "    ")
@@ -464,6 +446,43 @@ func PrettyPrintObject(object interface{}) string {
 		return ""
 	}
 	return string(pretty) + "\n"
+}
+
+func getIdFromArrayBody(body []byte) (string, error) {
+	// Try to unmarshal as a slice of maps
+	var respArray []map[string]interface{}
+	err := json.Unmarshal(body, &respArray)
+	if err != nil {
+		return "", err
+	}
+
+	if len(respArray) == 0 {
+		return "", errors.New("response array is empty")
+	}
+
+	_id, ok := respArray[0]["_id"].(string)
+	if !ok {
+		log.Error("type assertion for retrieving TheHive ID failed")
+		return "", errors.New("type assertion for retrieving TheHive ID failed")
+	}
+	return _id, nil
+}
+
+func getIdFromObjectBody(body []byte) (string, error) {
+	// If unmarshalling as a slice fails, try to unmarshal as a single map
+	var respMap map[string]interface{}
+	err := json.Unmarshal(body, &respMap)
+	if err != nil {
+		return "", err
+	}
+
+	_id, ok := respMap["_id"].(string)
+	if !ok {
+		log.Error("type assertion for retrieving TheHive ID from map failed")
+		return "", errors.New("type assertion for retrieving TheHive ID from map failed")
+	}
+
+	return _id, nil
 }
 
 func formatVariable(s interface{}) string {
