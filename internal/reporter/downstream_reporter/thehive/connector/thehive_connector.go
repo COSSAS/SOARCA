@@ -16,8 +16,6 @@ import (
 )
 
 // TODOs
-// Add "at" timings from reporter interface instead of generating in here
-// Post variables as tables and not as JSONs
 // Add configuration of The Hive reporter and registration in reporters
 // Add logging in all functions
 
@@ -88,7 +86,7 @@ func (theHiveConnector *TheHiveConnector) postStepVariablesAsCommentInTaskLog(ex
 
 	variablesString := note + "\n"
 	for _, variable := range step.StepVariables {
-		variablesString = variablesString + PrettyJSONString(variable)
+		variablesString = variablesString + formatVariable(variable)
 	}
 
 	err := theHiveConnector.postCommentInTaskLog(executionId, step, variablesString)
@@ -126,7 +124,7 @@ func (theHiveConnector *TheHiveConnector) postVariablesAsCommentInCase(execution
 
 	variablesString := note + "\n"
 	for _, variable := range variables {
-		variablesString = variablesString + PrettyJSONString(variable)
+		variablesString = variablesString + formatVariable(variable)
 	}
 
 	err := theHiveConnector.postCommentInCase(executionId, variablesString)
@@ -465,11 +463,61 @@ func (theHiveConnector *TheHiveConnector) Hello() string {
 }
 
 // ############################### Utils
-func PrettyJSONString(object interface{}) string {
+func PrettyPrintObject(object interface{}) string {
 	pretty, err := json.MarshalIndent(object, "", "    ")
 	if err != nil {
 		log.Warningf("Error marshalling object to JSON: %s", err)
 		return ""
 	}
 	return string(pretty) + "\n"
+}
+
+func formatVariable(s interface{}) string {
+	v := reflect.ValueOf(s)
+	t := v.Type()
+
+	var sb strings.Builder
+
+	sb.WriteString(strings.Repeat("*", 30) + "\n")
+
+	maxFieldLength := 0
+	for i := 0; i < v.NumField(); i++ {
+		field := t.Field(i).Name
+		if len(field) > maxFieldLength {
+			maxFieldLength = len(field)
+		}
+	}
+
+	var name, value, description string
+	var otherFields []string
+
+	for i := 0; i < v.NumField(); i++ {
+		field := t.Field(i).Name
+		fieldValue := fmt.Sprintf("%v", v.Field(i).Interface())
+		padding := strings.Repeat("\t", (maxFieldLength-len(field))/4+1)
+		switch field {
+		case "Name":
+			name = fmt.Sprintf("%s:%s%s\n", field, padding, fieldValue)
+		case "Value":
+			value = fmt.Sprintf("%s:%s%s\n", field, padding, fieldValue)
+		case "Description":
+			description = fmt.Sprintf("%s:%s%s\n", field, padding, fieldValue)
+		default:
+			otherFields = append(otherFields, fmt.Sprintf("%s:%s%s\n", field, padding, fieldValue))
+		}
+	}
+
+	// Append "Name", "Description", and "Value" fields first
+	sb.WriteString(name)
+	sb.WriteString(description)
+	sb.WriteString(value)
+
+	// Append all other fields
+	for _, field := range otherFields {
+		sb.WriteString(field)
+	}
+
+	sb.WriteString(strings.Repeat("*", 30) + "\n")
+
+	return sb.String()
 }
