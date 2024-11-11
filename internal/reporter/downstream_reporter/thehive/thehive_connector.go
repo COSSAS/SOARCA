@@ -1,4 +1,4 @@
-package connector
+package thehive
 
 import (
 	"bytes"
@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"reflect"
-	"soarca/internal/reporter/downstream_reporter/thehive/schemas"
 	"soarca/logger"
 	"soarca/models/cacao"
 	"strings"
@@ -46,7 +45,7 @@ type TheHiveConnector struct {
 	ids_map SOARCATheHiveMap
 }
 
-func New(theHiveEndpoint string, theHiveApiKey string) *TheHiveConnector {
+func NewConnector(theHiveEndpoint string, theHiveApiKey string) *TheHiveConnector {
 	ids_map := SOARCATheHiveMap{}
 	ids_map.executionsCaseMaps = map[string]ExecutionCaseMap{}
 	return &TheHiveConnector{
@@ -66,7 +65,7 @@ func (theHiveConnector *TheHiveConnector) postCommentInTaskLog(executionId strin
 	url := theHiveConnector.baseUrl + "/task/" + taskId + "/log"
 	method := "POST"
 
-	message := schemas.TaskLog{Message: note}
+	message := TaskLog{Message: note}
 
 	body, err := theHiveConnector.sendRequest(method, url, message)
 	if err != nil {
@@ -76,8 +75,7 @@ func (theHiveConnector *TheHiveConnector) postCommentInTaskLog(executionId strin
 	if err != nil {
 		return err
 	}
-	log.Tracef("task log created. execution ID %s, Task id %s, message Id: %s", executionId, taskId, messageId)
-	fmt.Printf("task log created. execution ID %s, Task id %s, message Id: %s", executionId, taskId, messageId)
+	log.Trace(fmt.Sprintf("task log created. execution ID %s, Task id %s, message Id: %s", executionId, taskId, messageId))
 
 	return nil
 }
@@ -106,7 +104,7 @@ func (theHiveConnector *TheHiveConnector) postCommentInCase(executionId string, 
 	url := theHiveConnector.baseUrl + "/case/" + caseId + "/comment"
 	method := "POST"
 
-	message := schemas.MessagePost{Message: note}
+	message := MessagePost{Message: note}
 
 	body, err := theHiveConnector.sendRequest(method, url, message)
 	if err != nil {
@@ -144,7 +142,7 @@ func (theHiveConnector *TheHiveConnector) registerStepTaskInCase(executionId str
 	method := "POST"
 
 	taskDescription := step.Description + "\n" + fmt.Sprintf("(SOARCA step: %s )", step.ID)
-	task := schemas.Task{
+	task := Task{
 		Title:       step.Name,
 		Description: taskDescription,
 	}
@@ -167,7 +165,7 @@ func (theHiveConnector *TheHiveConnector) registerStepTaskInCase(executionId str
 
 func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(executionId string, playbook cacao.Playbook, at time.Time) (string, error) {
 	log.Tracef("posting new case to The Hive. execution ID %s, playbook %+v", executionId, playbook)
-
+	log.Infof("posting new case to The Hive. execution ID %s, playbook %+v", executionId, playbook)
 	url := theHiveConnector.baseUrl + "/case"
 	method := "POST"
 
@@ -175,12 +173,14 @@ func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(executionId strin
 	caseTags := []string{executionId, playbook.ID}
 	caseTags = append(caseTags, playbook.Labels...)
 
-	data := schemas.Case{
+	data := Case{
 		Title:       playbook.Name,
 		Description: playbook.Description,
 		//StartDate:   int(time.Now().Unix()),
 		Tags: caseTags,
 	}
+
+	log.Tracef("sending request: %s %s", method, url)
 
 	body, err := theHiveConnector.sendRequest(method, url, data)
 	if err != nil {
@@ -238,10 +238,10 @@ func (theHiveConnector *TheHiveConnector) UpdateEndExecutionCase(executionId str
 		log.Warningf("could not add task log: %s", err)
 	}
 
-	caseStatus := schemas.TheHiveCaseStatusTruePositive
+	caseStatus := TheHiveCaseStatusTruePositive
 	closureComment := fmt.Sprintf("END\nexecution ID [ %s ]\nended in SOARCA at: [ %s ]", executionId, at.String())
 	if workflowErr != nil {
-		caseStatus = schemas.TheHiveCaseStatusIndeterminate
+		caseStatus = TheHiveCaseStatusIndeterminate
 		closureComment = closureComment + fmt.Sprintf("execution error: %s", workflowErr)
 	}
 	err = theHiveConnector.postCommentInCase(executionId, closureComment)
@@ -249,10 +249,10 @@ func (theHiveConnector *TheHiveConnector) UpdateEndExecutionCase(executionId str
 		log.Warningf("could not add task log: %s", err)
 	}
 
-	data := schemas.Case{
+	data := Case{
 		//EndDate: int(time.Now().Unix()),
 		Status: caseStatus,
-		//ImpactStatus: schemas.TheHiveCaseImpacStatustLow,
+		//ImpactStatus: TheHiveCaseImpacStatustLow,
 		Summary: "summary not implemented yet. Look at the tasks :)",
 	}
 
@@ -288,10 +288,10 @@ func (theHiveConnector *TheHiveConnector) UpdateStartStepTaskInCase(executionId 
 	if fullyAuto {
 		taskAssignee = "soarca@soarca.eu"
 	}
-	task := schemas.Task{
+	task := Task{
 		// StartDate: wait for merging of new reporting interface with timings passing,
 		StartDate: time.Now().Unix(),
-		Status:    schemas.TheHiveStatusInProgress,
+		Status:    TheHiveStatusInProgress,
 		Assignee:  taskAssignee,
 	}
 
@@ -329,11 +329,11 @@ func (theHiveConnector *TheHiveConnector) UpdateEndStepTaskInCase(executionId st
 		log.Warningf("could not report variables in step task log: %s", err)
 	}
 
-	taskStatus := schemas.TheHiveStatusCompleted
+	taskStatus := TheHiveStatusCompleted
 	executionEndMessage := fmt.Sprintf("END\nexecution ID [ %s ]\nstep ID [ %s ]\nended in SOARCA at: [ %s ]", executionId, step.ID, at.String())
 
 	if stepErr != nil {
-		taskStatus = schemas.TheHiveStatusCancelled
+		taskStatus = TheHiveStatusCancelled
 		executionEndMessage = executionEndMessage + fmt.Sprintf("\nexecution error: %s", stepErr)
 	}
 	err = theHiveConnector.postCommentInTaskLog(executionId, step, executionEndMessage)
@@ -341,7 +341,7 @@ func (theHiveConnector *TheHiveConnector) UpdateEndStepTaskInCase(executionId st
 		log.Warningf("could post message to task: %s", err)
 	}
 
-	task := schemas.Task{
+	task := Task{
 		// StartDate: wait for merging of new reporting interface with timings passing,
 		EndDate: time.Now().Unix(),
 		Status:  taskStatus,
@@ -397,14 +397,12 @@ func (theHiveConnector *TheHiveConnector) getIdFromRespBody(body []byte) (string
 }
 
 func (theHiveConnector *TheHiveConnector) sendRequest(method string, url string, body interface{}) ([]byte, error) {
+	log.Trace(fmt.Sprintf("sending request: %s %s", method, url))
 
 	// Replace double slashes in the URL after http(s)://
 	parts := strings.SplitN(url, "//", 2)
 	cleanedPath := strings.ReplaceAll(parts[1], "//", "/")
 	url = parts[0] + "//" + cleanedPath
-
-	log.Tracef("sending request: %s %s", method, url)
-	fmt.Printf("sending request: %s %s", method, url)
 
 	var requestBody io.Reader
 	if body != nil {
@@ -412,11 +410,9 @@ func (theHiveConnector *TheHiveConnector) sendRequest(method string, url string,
 		if err != nil {
 			return nil, fmt.Errorf("error marshalling JSON: %v", err)
 		}
-		fmt.Printf("Body: %s", jsonData)
 		requestBody = bytes.NewBuffer(jsonData)
 	}
-	log.Debugf("request body: %s", requestBody)
-	fmt.Printf("request body: %s", requestBody)
+	log.Debug(fmt.Sprintf("request body: %s", requestBody))
 
 	req, err := http.NewRequest(method, url, requestBody)
 	if err != nil {
@@ -440,8 +436,7 @@ func (theHiveConnector *TheHiveConnector) sendRequest(method string, url string,
 		return nil, err
 	}
 
-	log.Debugf("response body: %s", respbody)
-	fmt.Printf("response body: %s", respbody)
+	log.Debug(fmt.Sprintf("response body: %s", respbody))
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return nil, fmt.Errorf("received non-2xx status code: %d\nURL: %s: %s", resp.StatusCode, url, respbody)

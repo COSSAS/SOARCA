@@ -54,6 +54,10 @@ func New(reporters []downstreamReporter.IDownStreamReporter) *Reporter {
 }
 
 func (reporter *Reporter) RegisterReporters(reporters []downstreamReporter.IDownStreamReporter) error {
+	if len(reporters) == 0 {
+		log.Warning("reporters list is empty. No action taken.")
+		return nil
+	}
 	if (len(reporter.reporters) + len(reporters)) > reporter.maxReporters {
 		log.Warning("reporter not registered, too many reporters")
 		return errors.New("attempting to register too many reporters")

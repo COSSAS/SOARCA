@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"soarca/internal/reporter/downstream_reporter/thehive"
-	"soarca/internal/reporter/downstream_reporter/thehive/connector"
 	"soarca/models/cacao"
 	"strings"
 	"testing"
@@ -49,7 +48,7 @@ func TestTheHiveConnection(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	thr := thehive.New(connector.New(thehive_api_base_uri, thehive_api_tkn))
+	thr := thehive.NewReporter(thehive.NewConnector(thehive_api_base_uri, thehive_api_tkn))
 	str := thr.ConnectorTest()
 	fmt.Println(str)
 }
@@ -63,7 +62,7 @@ func TestTheHiveReporting(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	thr := thehive.New(connector.New(thehive_api_base_uri, thehive_api_tkn))
+	thr := thehive.NewReporter(thehive.NewConnector(thehive_api_base_uri, thehive_api_tkn))
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",

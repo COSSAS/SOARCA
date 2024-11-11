@@ -4,16 +4,14 @@ import (
 	"soarca/models/cacao"
 	"time"
 
-	"soarca/internal/reporter/downstream_reporter/thehive/connector"
-
 	"github.com/google/uuid"
 )
 
 type TheHiveReporter struct {
-	connector connector.ITheHiveConnector
+	connector ITheHiveConnector
 }
 
-func New(connector connector.ITheHiveConnector) *TheHiveReporter {
+func NewReporter(connector ITheHiveConnector) *TheHiveReporter {
 	return &TheHiveReporter{connector: connector}
 }
 

@@ -1,4 +1,4 @@
-package schemas
+package thehive
 
 const (
 	TheHiveStatusInProgress = "InProgress"

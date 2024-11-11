@@ -2,7 +2,7 @@
     "type": "playbook",
     "spec_version": "cacao-2.0",
     "id": "playbook--300270f9-0e64-42c8-93cc-0927edbe3ae7",
-    "name": "Example ssh",
+    "name": "Example http",
     "description": "This playbook is to demonstrate the http functionality",
     "playbook_types": [
         "notification"
