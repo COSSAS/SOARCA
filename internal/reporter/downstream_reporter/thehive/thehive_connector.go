@@ -15,8 +15,7 @@ import (
 )
 
 // TODOs
-// Add configuration of The Hive reporter and registration in reporters
-// Add logging in all functions
+// Fix asynchronous http api calls causing The Hive reporting to be all over the place
 
 var (
 	component = reflect.TypeOf(TheHiveConnector{}).PkgPath()
