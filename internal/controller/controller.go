@@ -23,15 +23,12 @@ import (
 	"soarca/internal/guid"
 	"soarca/internal/reporter"
 	cache "soarca/internal/reporter/downstream_reporter/cache"
+	"soarca/internal/reporter/downstream_reporter/thehive"
 	"soarca/logger"
 	"soarca/utils"
 	httpUtil "soarca/utils/http"
 	"soarca/utils/stix/expression/comparison"
 	timeUtil "soarca/utils/time"
-
-	// Integrations
-	// The Hive
-	"soarca/internal/reporter/downstream_reporter/thehive"
 
 	downstreamReporter "soarca/internal/reporter/downstream_reporter"
 

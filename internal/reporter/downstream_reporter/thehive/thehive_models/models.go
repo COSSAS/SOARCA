@@ -1,4 +1,4 @@
-package thehive
+package thehive_models
 
 const (
 	TheHiveStatusInProgress = "InProgress"

@@ -1,13 +1,13 @@
 package thehive
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"reflect"
+	"soarca/internal/reporter/downstream_reporter/thehive/thehive_models"
+	"soarca/internal/reporter/downstream_reporter/thehive/thehive_utils"
 	"soarca/logger"
 	"soarca/models/cacao"
 	"strings"
@@ -65,7 +65,7 @@ func (theHiveConnector *TheHiveConnector) postCommentInTaskLog(executionId strin
 	url := theHiveConnector.baseUrl + "/task/" + taskId + "/log"
 	method := "POST"
 
-	message := TaskLog{Message: note}
+	message := thehive_models.TaskLog{Message: note}
 
 	body, err := theHiveConnector.sendRequest(method, url, message)
 	if err != nil {
@@ -83,7 +83,7 @@ func (theHiveConnector *TheHiveConnector) postCommentInTaskLog(executionId strin
 func (theHiveConnector *TheHiveConnector) postStepVariablesAsCommentInTaskLog(executionId string, step cacao.Step, note string) error {
 	variablesString := note + "\n"
 	for _, variable := range step.StepVariables {
-		variablesString = variablesString + formatVariable(variable)
+		variablesString = variablesString + thehive_utils.FormatVariable(variable)
 	}
 
 	err := theHiveConnector.postCommentInTaskLog(executionId, step, variablesString)
@@ -104,7 +104,7 @@ func (theHiveConnector *TheHiveConnector) postCommentInCase(executionId string, 
 	url := theHiveConnector.baseUrl + "/case/" + caseId + "/comment"
 	method := "POST"
 
-	message := MessagePost{Message: note}
+	message := thehive_models.MessagePost{Message: note}
 
 	body, err := theHiveConnector.sendRequest(method, url, message)
 	if err != nil {
@@ -122,7 +122,7 @@ func (theHiveConnector *TheHiveConnector) postVariablesAsCommentInCase(execution
 
 	variablesString := note + "\n"
 	for _, variable := range variables {
-		variablesString = variablesString + formatVariable(variable)
+		variablesString = variablesString + thehive_utils.FormatVariable(variable)
 	}
 
 	err := theHiveConnector.postCommentInCase(executionId, variablesString)
@@ -142,7 +142,7 @@ func (theHiveConnector *TheHiveConnector) registerStepTaskInCase(executionId str
 	method := "POST"
 
 	taskDescription := step.Description + "\n" + fmt.Sprintf("(SOARCA step: %s )", step.ID)
-	task := Task{
+	task := thehive_models.Task{
 		Title:       step.Name,
 		Description: taskDescription,
 	}
@@ -172,7 +172,7 @@ func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(executionId strin
 	caseTags := []string{executionId, playbook.ID}
 	caseTags = append(caseTags, playbook.Labels...)
 
-	data := Case{
+	data := thehive_models.Case{
 		Title:       playbook.Name,
 		Description: playbook.Description,
 		//StartDate:   int(time.Now().Unix()),
@@ -237,10 +237,10 @@ func (theHiveConnector *TheHiveConnector) UpdateEndExecutionCase(executionId str
 		log.Warningf("could not add task log: %s", err)
 	}
 
-	caseStatus := TheHiveCaseStatusTruePositive
+	caseStatus := thehive_models.TheHiveCaseStatusTruePositive
 	closureComment := fmt.Sprintf("END\nexecution ID [ %s ]\nended in SOARCA at: [ %s ]", executionId, at.String())
 	if workflowErr != nil {
-		caseStatus = TheHiveCaseStatusIndeterminate
+		caseStatus = thehive_models.TheHiveCaseStatusIndeterminate
 		closureComment = closureComment + fmt.Sprintf("execution error: %s", workflowErr)
 	}
 	err = theHiveConnector.postCommentInCase(executionId, closureComment)
@@ -248,7 +248,7 @@ func (theHiveConnector *TheHiveConnector) UpdateEndExecutionCase(executionId str
 		log.Warningf("could not add task log: %s", err)
 	}
 
-	data := Case{
+	data := thehive_models.Case{
 		//EndDate: int(time.Now().Unix()),
 		Status: caseStatus,
 		//ImpactStatus: TheHiveCaseImpacStatustLow,
@@ -287,10 +287,10 @@ func (theHiveConnector *TheHiveConnector) UpdateStartStepTaskInCase(executionId 
 	if fullyAuto {
 		taskAssignee = "soarca@soarca.eu"
 	}
-	task := Task{
+	task := thehive_models.Task{
 		// StartDate: wait for merging of new reporting interface with timings passing,
 		StartDate: time.Now().Unix(),
-		Status:    TheHiveStatusInProgress,
+		Status:    thehive_models.TheHiveStatusInProgress,
 		Assignee:  taskAssignee,
 	}
 
@@ -328,11 +328,11 @@ func (theHiveConnector *TheHiveConnector) UpdateEndStepTaskInCase(executionId st
 		log.Warningf("could not report variables in step task log: %s", err)
 	}
 
-	taskStatus := TheHiveStatusCompleted
+	taskStatus := thehive_models.TheHiveStatusCompleted
 	executionEndMessage := fmt.Sprintf("END\nexecution ID [ %s ]\nstep ID [ %s ]\nended in SOARCA at: [ %s ]", executionId, step.ID, at.String())
 
 	if stepErr != nil {
-		taskStatus = TheHiveStatusCancelled
+		taskStatus = thehive_models.TheHiveStatusCancelled
 		executionEndMessage = executionEndMessage + fmt.Sprintf("\nexecution error: %s", stepErr)
 	}
 	err = theHiveConnector.postCommentInTaskLog(executionId, step, executionEndMessage)
@@ -340,7 +340,7 @@ func (theHiveConnector *TheHiveConnector) UpdateEndStepTaskInCase(executionId st
 		log.Warningf("could post message to task: %s", err)
 	}
 
-	task := Task{
+	task := thehive_models.Task{
 		// StartDate: wait for merging of new reporting interface with timings passing,
 		EndDate: time.Now().Unix(),
 		Status:  taskStatus,
@@ -359,34 +359,14 @@ func (theHiveConnector *TheHiveConnector) UpdateEndStepTaskInCase(executionId st
 func (theHiveConnector *TheHiveConnector) sendRequest(method string, url string, body interface{}) ([]byte, error) {
 	log.Trace(fmt.Sprintf("sending request: %s %s", method, url))
 
-	// Replace double slashes in the URL after http(s)://
-	parts := strings.SplitN(url, "//", 2)
-	cleanedPath := strings.ReplaceAll(parts[1], "//", "/")
-	url = parts[0] + "//" + cleanedPath
-
-	var requestBody io.Reader
-	if body != nil {
-		jsonData, err := json.Marshal(body)
-		if err != nil {
-			return nil, fmt.Errorf("error marshalling JSON: %v", err)
-		}
-		requestBody = bytes.NewBuffer(jsonData)
-	}
-	log.Debug(fmt.Sprintf("request body: %s", requestBody))
-
-	req, err := http.NewRequest(method, url, requestBody)
+	req, err := theHiveConnector.prepareRequest(method, url, body)
 	if err != nil {
-		log.Error(err)
 		return nil, err
 	}
-
-	req.Header.Add("Authorization", "Bearer "+theHiveConnector.apiKey)
-	req.Header.Add("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Error(err)
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -403,6 +383,25 @@ func (theHiveConnector *TheHiveConnector) sendRequest(method string, url string,
 	}
 
 	return respbody, nil
+}
+
+func (theHiveConnector *TheHiveConnector) prepareRequest(method string, url string, body interface{}) (*http.Request, error) {
+	url = thehive_utils.CleanUrlString(url)
+
+	requestBody, err := thehive_utils.MarhsalRequestBody(body)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(method, url, requestBody)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Authorization", "Bearer "+theHiveConnector.apiKey)
+	req.Header.Add("Content-Type", "application/json")
+
+	return req, nil
 }
 
 func (theHiveConnector *TheHiveConnector) Hello() string {
@@ -423,12 +422,12 @@ func (theHiveConnector *TheHiveConnector) getIdFromRespBody(body []byte) (string
 		return "", nil
 	}
 
-	id, err := getIdFromArrayBody(body)
+	id, err := thehive_utils.GetIdFromArrayBody(body)
 	if err == nil {
 		return id, err
 	}
 
-	id, err = getIdFromObjectBody(body)
+	id, err = thehive_utils.GetIdFromObjectBody(body)
 	if err == nil {
 		return id, err
 	}
@@ -436,101 +435,4 @@ func (theHiveConnector *TheHiveConnector) getIdFromRespBody(body []byte) (string
 	log.Debug(fmt.Sprintf("body: %s", string(body)))
 	return "", errors.New("failed to get ID from response body")
 
-}
-
-// ############################### Utils
-func PrettyPrintObject(object interface{}) string {
-	pretty, err := json.MarshalIndent(object, "", "    ")
-	if err != nil {
-		log.Warningf("Error marshalling object to JSON: %s", err)
-		return ""
-	}
-	return string(pretty) + "\n"
-}
-
-func getIdFromArrayBody(body []byte) (string, error) {
-	// Try to unmarshal as a slice of maps
-	var respArray []map[string]interface{}
-	err := json.Unmarshal(body, &respArray)
-	if err != nil {
-		return "", err
-	}
-
-	if len(respArray) == 0 {
-		return "", errors.New("response array is empty")
-	}
-
-	_id, ok := respArray[0]["_id"].(string)
-	if !ok {
-		log.Error("type assertion for retrieving TheHive ID failed")
-		return "", errors.New("type assertion for retrieving TheHive ID failed")
-	}
-	return _id, nil
-}
-
-func getIdFromObjectBody(body []byte) (string, error) {
-	// If unmarshalling as a slice fails, try to unmarshal as a single map
-	var respMap map[string]interface{}
-	err := json.Unmarshal(body, &respMap)
-	if err != nil {
-		return "", err
-	}
-
-	_id, ok := respMap["_id"].(string)
-	if !ok {
-		log.Error("type assertion for retrieving TheHive ID from map failed")
-		return "", errors.New("type assertion for retrieving TheHive ID from map failed")
-	}
-
-	return _id, nil
-}
-
-func formatVariable(s interface{}) string {
-	v := reflect.ValueOf(s)
-	t := v.Type()
-
-	var sb strings.Builder
-
-	sb.WriteString(strings.Repeat("*", 30) + "\n")
-
-	maxFieldLength := 0
-	for i := 0; i < v.NumField(); i++ {
-		field := t.Field(i).Name
-		if len(field) > maxFieldLength {
-			maxFieldLength = len(field)
-		}
-	}
-
-	var name, value, description string
-	var otherFields []string
-
-	for i := 0; i < v.NumField(); i++ {
-		field := t.Field(i).Name
-		fieldValue := fmt.Sprintf("%v", v.Field(i).Interface())
-		padding := strings.Repeat("\t", (maxFieldLength-len(field))/4+1)
-		switch field {
-		case "Name":
-			name = fmt.Sprintf("%s:%s%s\n", field, padding, fieldValue)
-		case "Value":
-			value = fmt.Sprintf("%s:%s%s\n", field, padding, fieldValue)
-		case "Description":
-			description = fmt.Sprintf("%s:%s%s\n", field, padding, fieldValue)
-		default:
-			otherFields = append(otherFields, fmt.Sprintf("%s:%s%s\n", field, padding, fieldValue))
-		}
-	}
-
-	// Append "Name", "Description", and "Value" fields first
-	sb.WriteString(name)
-	sb.WriteString(description)
-	sb.WriteString(value)
-
-	// Append all other fields
-	for _, field := range otherFields {
-		sb.WriteString(field)
-	}
-
-	sb.WriteString(strings.Repeat("*", 30) + "\n")
-
-	return sb.String()
 }
