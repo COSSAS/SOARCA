@@ -34,10 +34,7 @@ func (soarcaTheHiveMap *SOARCATheHiveMap) registerExecutionInCase(executionId st
 		caseId:        caseId,
 		stepsTasksMap: map[string]string{},
 	}
-	//fmt.Printf("registering execution: %s, case id: %s", executionId, caseId)
-	//fmt.Printf("execution entry id %s", soarcaTheHiveMap.executionsCaseMaps[executionId].caseId)
-	log.Debugf("registering execution: %s, case id: %s", executionId, caseId)
-	log.Debugf("execution entry id %s", soarcaTheHiveMap.executionsCaseMaps[executionId].caseId)
+	log.Info(fmt.Sprintf("registering execution: %s, case id: %s", executionId, caseId))
 
 	return nil
 }

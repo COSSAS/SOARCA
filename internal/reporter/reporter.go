@@ -100,6 +100,7 @@ func (reporter *Reporter) reporStepStart(executionId uuid.UUID, step cacao.Step,
 	for _, rep := range reporter.reporters {
 		err := rep.ReportStepStart(executionId, step, returnVars, at)
 		if err != nil {
+			log.Info("reporting reportStepStart error")
 			log.Warning(err)
 		}
 	}
@@ -113,6 +114,7 @@ func (reporter *Reporter) reportStepEnd(executionId uuid.UUID, step cacao.Step, 
 	for _, rep := range reporter.reporters {
 		err := rep.ReportStepEnd(executionId, step, returnVars, stepError, at)
 		if err != nil {
+			log.Info("reporting reportStepEnd error")
 			log.Warning(err)
 		}
 	}

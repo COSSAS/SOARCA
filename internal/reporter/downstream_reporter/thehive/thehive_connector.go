@@ -10,7 +10,6 @@ import (
 	"soarca/internal/reporter/downstream_reporter/thehive/thehive_utils"
 	"soarca/logger"
 	"soarca/models/cacao"
-	"strings"
 	"time"
 )
 
@@ -159,7 +158,7 @@ func (theHiveConnector *TheHiveConnector) postVariablesAsCommentInCase(execution
 	return nil
 }
 
-func (theHiveConnector *TheHiveConnector) registerStepTaskInCase(executionId string, step cacao.Step) error {
+func (theHiveConnector *TheHiveConnector) postNewStepTaskInCase(executionId string, step cacao.Step) error {
 	caseId, err := theHiveConnector.ids_map.retrieveCaseId(executionId)
 	if err != nil {
 		return err
@@ -190,6 +189,7 @@ func (theHiveConnector *TheHiveConnector) registerStepTaskInCase(executionId str
 // ######################################## Connector interface
 
 func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(executionId string, playbook cacao.Playbook, at time.Time) (string, error) {
+	log.Info("TheHive connector posting new execution in case")
 	log.Trace(fmt.Sprintf("posting new case to The Hive. execution ID %s, playbook %+v", executionId, playbook))
 	url := theHiveConnector.baseUrl + "/case"
 	method := "POST"
@@ -217,6 +217,8 @@ func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(executionId strin
 		return "", err
 	}
 
+	log.Info("Executing register execution in case")
+
 	err = theHiveConnector.ids_map.registerExecutionInCase(executionId, caseId)
 	if err != nil {
 		return "", err
@@ -224,10 +226,10 @@ func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(executionId strin
 
 	// Pre-populate tasks according to playbook steps
 	for _, step := range playbook.Workflow {
-		if strings.Contains(step.ID, "start") || strings.Contains(step.ID, "end") {
+		if step.Type == cacao.StepTypeStart || step.Type == cacao.StepTypeEnd {
 			continue
 		}
-		err := theHiveConnector.registerStepTaskInCase(executionId, step)
+		err := theHiveConnector.postNewStepTaskInCase(executionId, step)
 		if err != nil {
 			return "", err
 		}
@@ -377,6 +379,7 @@ func (theHiveConnector *TheHiveConnector) UpdateEndStepTaskInCase(executionId st
 // ############################### HTTP interaction
 
 func (theHiveConnector *TheHiveConnector) sendRequest(method string, url string, body interface{}) ([]byte, error) {
+	log.Info("Sending request")
 	log.Trace(fmt.Sprintf("sending request: %s %s", method, url))
 
 	req, err := theHiveConnector.prepareRequest(method, url, body)
