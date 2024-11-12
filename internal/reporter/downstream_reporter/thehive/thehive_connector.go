@@ -116,7 +116,7 @@ func (theHiveConnector *TheHiveConnector) postStepVariablesAsCommentInTaskLog(ex
 }
 
 func (theHiveConnector *TheHiveConnector) postCommentInCase(executionId string, note string) error {
-	log.Info(fmt.Sprintf("posting comment in case via execution ID: %s.", executionId))
+	log.Trace(fmt.Sprintf("posting comment in case via execution ID: %s.", executionId))
 	caseId, err := theHiveConnector.ids_map.retrieveCaseId(executionId)
 	if err != nil {
 		return err
@@ -189,7 +189,6 @@ func (theHiveConnector *TheHiveConnector) postNewStepTaskInCase(executionId stri
 // ######################################## Connector interface
 
 func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(execMetadata thehive_models.ExecutionMetadata, at time.Time) (string, error) {
-	log.Info("TheHive connector posting new execution in case")
 	log.Trace(fmt.Sprintf("posting new case to The Hive. execution ID %s, playbook %+v", execMetadata.ExecutionId, execMetadata.Playbook))
 	url := theHiveConnector.baseUrl + "/case"
 	method := "POST"
@@ -217,7 +216,7 @@ func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(execMetadata theh
 		return "", err
 	}
 
-	log.Info("Executing register execution in case")
+	log.Trace("Executing register execution in case")
 
 	err = theHiveConnector.ids_map.registerExecutionInCase(execMetadata.ExecutionId, caseId)
 	if err != nil {
@@ -388,7 +387,6 @@ func (theHiveConnector *TheHiveConnector) UpdateEndStepTaskInCase(execMetadata t
 // ############################### HTTP interaction
 
 func (theHiveConnector *TheHiveConnector) sendRequest(method string, url string, body interface{}) ([]byte, error) {
-	log.Info("Sending request")
 	log.Trace(fmt.Sprintf("sending request: %s %s", method, url))
 
 	req, err := theHiveConnector.prepareRequest(method, url, body)
