@@ -25,6 +25,17 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
+// TODO:
+// Reporter now uses an Async Processor
+// The Processor uses Reportables
+// Reportables use DownStreamReporters
+// The Processor runs in a go routine and receives "packets" for reporting tasks
+// Processor uses four Reportables of iFace IReportable : {intended custom data, DS reporters} + Report()
+// Reporter.ReportFcn creates a Reportable with the provided arguments for the specific ReportFcn
+// Reportables are put in the Processor queue
+// The Processor calls one of the four Reportables which calls Report(IDSReporter.ReportFcn) for every DS reporter
+// The Reportable uses the respective IDSReporter report function
+
 // Reporter interfaces
 type IWorkflowReporter interface {
 	// -> Give info to downstream reporters
@@ -44,7 +55,10 @@ type Reporter struct {
 	reporters    []downstreamReporter.IDownStreamReporter
 	maxReporters int
 	wg           sync.WaitGroup
-	reportingch  chan func()
+	// TODO: change chan from func() to Reportable
+	// IReportable interface that only has Report(), implement four structs for the reporting funcs
+	// The four structs can be implemented in different folders
+	reportingch chan func()
 }
 
 func New(reporters []downstreamReporter.IDownStreamReporter) *Reporter {
@@ -94,6 +108,8 @@ func (reporter *Reporter) RegisterReporters(reporters []downstreamReporter.IDown
 //		}
 //	}
 func (reporter *Reporter) ReportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook, at time.Time) {
+	// Create reportable for WorkflowStart for every DS reporter, and put in queue
+	// I have to put DS reporters inside the reportable
 	log.Trace(fmt.Sprintf("[execution: %s, playbook: %s] reporting workflow start", executionId, playbook.ID))
 	log.Info("reporting workflow start")
 	reporter.wg.Add(1)
