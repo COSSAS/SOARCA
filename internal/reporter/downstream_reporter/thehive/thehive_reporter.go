@@ -21,6 +21,7 @@ func (theHiveReporter *TheHiveReporter) ConnectorTest() string {
 
 // Creates a new *case* in The Hive with related triggering metadata
 func (theHiveReporter *TheHiveReporter) ReportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook, at time.Time) error {
+	log.Info("TheHive reporter reporting workflow start")
 	_, err := theHiveReporter.connector.PostNewExecutionCase(executionId.String(), playbook, at)
 	return err
 }

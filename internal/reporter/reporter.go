@@ -1,10 +1,13 @@
 package reporter
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"reflect"
+	"runtime"
 	"strconv"
+	"sync"
 	"time"
 
 	downstreamReporter "soarca/internal/reporter/downstream_reporter"
@@ -42,15 +45,42 @@ const MaxReporters int = 10
 type Reporter struct {
 	reporters    []downstreamReporter.IDownStreamReporter
 	maxReporters int
+	wg           sync.WaitGroup
+	reportingch  chan func()
+	ctx          context.Context
+	cancel       context.CancelFunc
 }
 
 func New(reporters []downstreamReporter.IDownStreamReporter) *Reporter {
 	maxReporters, _ := strconv.Atoi(utils.GetEnv("MAX_REPORTERS", strconv.Itoa(MaxReporters)))
+	ctx, cancel := context.WithCancel(context.Background())
 	instance := Reporter{
 		reporters:    reporters,
 		maxReporters: maxReporters,
+		reportingch:  make(chan func(), 100), // Buffer size can be adjusted
+		wg:           sync.WaitGroup{},
+		ctx:          ctx,
+		cancel:       cancel,
 	}
+	log.Info("Starting reporting processor, goroutines:", runtime.NumGoroutine())
+	go instance.startReportingProcessor()
 	return &instance
+}
+
+func (reporter *Reporter) startReportingProcessor() {
+	defer log.Info("Exiting reporting processor, goroutines:", runtime.NumGoroutine())
+	for {
+		select {
+		case task, ok := <-reporter.reportingch:
+			if !ok {
+				return
+			}
+			task()
+		case <-reporter.ctx.Done():
+			// Context canceled; exit processor
+			return
+		}
+	}
 }
 
 func (reporter *Reporter) RegisterReporters(reporters []downstreamReporter.IDownStreamReporter) error {
@@ -68,58 +98,108 @@ func (reporter *Reporter) RegisterReporters(reporters []downstreamReporter.IDown
 
 // ######################## IWorkflowReporter interface
 
-func (reporter *Reporter) reportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook, at time.Time) {
-	for _, rep := range reporter.reporters {
-		err := rep.ReportWorkflowStart(executionId, playbook, at)
-		if err != nil {
-			log.Warning(err)
-		}
-	}
-}
+//	func (reporter *Reporter) reportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook, at time.Time) {
+//		defer reporter.wg.Done()
+//		for _, rep := range reporter.reporters {
+//			err := rep.ReportWorkflowStart(executionId, playbook, at)
+//			if err != nil {
+//				log.Warning(err)
+//			}
+//		}
+//	}
 func (reporter *Reporter) ReportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook, at time.Time) {
 	log.Trace(fmt.Sprintf("[execution: %s, playbook: %s] reporting workflow start", executionId, playbook.ID))
-	go reporter.reportWorkflowStart(executionId, playbook, at)
-}
-
-func (reporter *Reporter) reportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook, workflowError error, at time.Time) {
-	for _, rep := range reporter.reporters {
-		err := rep.ReportWorkflowEnd(executionId, playbook, workflowError, at)
-		if err != nil {
-			log.Warning(err)
+	log.Info("reporting workflow start")
+	reporter.wg.Add(1)
+	reporter.reportingch <- func() {
+		defer reporter.wg.Done()
+		for _, downstreamRep := range reporter.reporters {
+			err := downstreamRep.ReportWorkflowStart(executionId, playbook, at)
+			if err != nil {
+				log.Warning(err)
+			}
 		}
 	}
+	//go reporter.reportWorkflowStart(executionId, playbook, at)
 }
+
+//	func (reporter *Reporter) reportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook, workflowError error, at time.Time) {
+//		defer reporter.wg.Done()
+//		for _, rep := range reporter.reporters {
+//			err := rep.ReportWorkflowEnd(executionId, playbook, workflowError, at)
+//			if err != nil {
+//				log.Warning(err)
+//			}
+//		}
+//	}
 func (reporter *Reporter) ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook, workflowError error, at time.Time) {
 	log.Trace(fmt.Sprintf("[execution: %s, playbook: %s] reporting workflow end", executionId, playbook.ID))
-	go reporter.reportWorkflowEnd(executionId, playbook, workflowError, at)
+	log.Info("reporting workflow end")
+	reporter.wg.Add(1)
+	reporter.reportingch <- func() {
+		defer reporter.wg.Done()
+		for _, downstreamRep := range reporter.reporters {
+			err := downstreamRep.ReportWorkflowEnd(executionId, playbook, workflowError, at)
+			if err != nil {
+				log.Warning(err)
+			}
+		}
+	}
+	//go reporter.reportWorkflowEnd(executionId, playbook, workflowError, at)
 }
 
 // ######################## IStepReporter interface
 
-func (reporter *Reporter) reporStepStart(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, at time.Time) {
-	for _, rep := range reporter.reporters {
-		err := rep.ReportStepStart(executionId, step, returnVars, at)
-		if err != nil {
-			log.Info("reporting reportStepStart error")
-			log.Warning(err)
-		}
-	}
-}
+//	func (reporter *Reporter) reporStepStart(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, at time.Time) {
+//		defer reporter.wg.Done()
+//		for _, rep := range reporter.reporters {
+//			err := rep.ReportStepStart(executionId, step, returnVars, at)
+//			if err != nil {
+//				log.Info("reporting reportStepStart error")
+//				log.Warning(err)
+//			}
+//		}
+//	}
 func (reporter *Reporter) ReportStepStart(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, at time.Time) {
 	log.Trace(fmt.Sprintf("[execution: %s, step: %s] reporting step start", executionId, step.ID))
-	go reporter.reporStepStart(executionId, step, returnVars, at)
-}
-
-func (reporter *Reporter) reportStepEnd(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, stepError error, at time.Time) {
-	for _, rep := range reporter.reporters {
-		err := rep.ReportStepEnd(executionId, step, returnVars, stepError, at)
-		if err != nil {
-			log.Info("reporting reportStepEnd error")
-			log.Warning(err)
+	log.Info("reporting step start")
+	reporter.wg.Add(1)
+	reporter.reportingch <- func() {
+		defer reporter.wg.Done()
+		for _, downstreamRep := range reporter.reporters {
+			err := downstreamRep.ReportStepStart(executionId, step, returnVars, at)
+			if err != nil {
+				log.Info("reporting reportStepStart error")
+				log.Warning(err)
+			}
 		}
 	}
+	//go reporter.reporStepStart(executionId, step, returnVars, at)
 }
+
+//	func (reporter *Reporter) reportStepEnd(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, stepError error, at time.Time) {
+//		defer reporter.wg.Done()
+//		for _, rep := range reporter.reporters {
+//			err := rep.ReportStepEnd(executionId, step, returnVars, stepError, at)
+//			if err != nil {
+//				log.Info("reporting reportStepEnd error")
+//				log.Warning(err)
+//			}
+//		}
+//	}
 func (reporter *Reporter) ReportStepEnd(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, stepError error, at time.Time) {
 	log.Trace(fmt.Sprintf("[execution: %s, step: %s] reporting step end", executionId, step.ID))
-	go reporter.reportStepEnd(executionId, step, returnVars, stepError, at)
+	log.Info("reporting step end")
+	reporter.wg.Add(1)
+	reporter.reportingch <- func() {
+		defer reporter.wg.Done()
+		for _, downstreamRep := range reporter.reporters {
+			err := downstreamRep.ReportStepEnd(executionId, step, returnVars, stepError, at)
+			if err != nil {
+				log.Info("reporting reportStepEnd error")
+				log.Warning(err)
+			}
+		}
+	}
+	//go reporter.reportStepEnd(executionId, step, returnVars, stepError, at)
 }
