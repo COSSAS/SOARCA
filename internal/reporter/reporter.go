@@ -1,11 +1,9 @@
 package reporter
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"reflect"
-	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -47,39 +45,27 @@ type Reporter struct {
 	maxReporters int
 	wg           sync.WaitGroup
 	reportingch  chan func()
-	ctx          context.Context
-	cancel       context.CancelFunc
 }
 
 func New(reporters []downstreamReporter.IDownStreamReporter) *Reporter {
 	maxReporters, _ := strconv.Atoi(utils.GetEnv("MAX_REPORTERS", strconv.Itoa(MaxReporters)))
-	ctx, cancel := context.WithCancel(context.Background())
 	instance := Reporter{
 		reporters:    reporters,
 		maxReporters: maxReporters,
 		reportingch:  make(chan func(), 100), // Buffer size can be adjusted
 		wg:           sync.WaitGroup{},
-		ctx:          ctx,
-		cancel:       cancel,
 	}
-	log.Info("Starting reporting processor, goroutines:", runtime.NumGoroutine())
 	go instance.startReportingProcessor()
 	return &instance
 }
 
 func (reporter *Reporter) startReportingProcessor() {
-	defer log.Info("Exiting reporting processor, goroutines:", runtime.NumGoroutine())
 	for {
-		select {
-		case task, ok := <-reporter.reportingch:
-			if !ok {
-				return
-			}
-			task()
-		case <-reporter.ctx.Done():
-			// Context canceled; exit processor
+		task, ok := <-reporter.reportingch
+		if !ok {
 			return
 		}
+		task()
 	}
 }
 
