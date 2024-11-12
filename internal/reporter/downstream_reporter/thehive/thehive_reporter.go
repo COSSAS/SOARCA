@@ -1,6 +1,7 @@
 package thehive
 
 import (
+	"soarca/internal/reporter/downstream_reporter/thehive/thehive_models"
 	"soarca/models/cacao"
 	"time"
 
@@ -22,24 +23,51 @@ func (theHiveReporter *TheHiveReporter) ConnectorTest() string {
 // Creates a new *case* in The Hive with related triggering metadata
 func (theHiveReporter *TheHiveReporter) ReportWorkflowStart(executionId uuid.UUID, playbook cacao.Playbook, at time.Time) error {
 	log.Info("TheHive reporter reporting workflow start")
-	_, err := theHiveReporter.connector.PostNewExecutionCase(executionId.String(), playbook, at)
+	_, err := theHiveReporter.connector.PostNewExecutionCase(
+		thehive_models.ExecutionMetadata{
+			ExecutionId: executionId.String(),
+			Playbook:    playbook,
+		},
+		at,
+	)
 	return err
 }
 
 // Marks case closure according to workflow execution. Also reports all variables, and data
 func (theHiveReporter *TheHiveReporter) ReportWorkflowEnd(executionId uuid.UUID, playbook cacao.Playbook, workflowErr error, at time.Time) error {
-	_, err := theHiveReporter.connector.UpdateEndExecutionCase(executionId.String(), playbook.PlaybookVariables, workflowErr, at)
+	_, err := theHiveReporter.connector.UpdateEndExecutionCase(
+		thehive_models.ExecutionMetadata{
+			ExecutionId:  executionId.String(),
+			Variables:    playbook.PlaybookVariables,
+			ExecutionErr: workflowErr,
+		},
+		at,
+	)
 	return err
 }
 
 // Adds *event* to case
 func (theHiveReporter *TheHiveReporter) ReportStepStart(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, at time.Time) error {
-	_, err := theHiveReporter.connector.UpdateStartStepTaskInCase(executionId.String(), step, at)
+	_, err := theHiveReporter.connector.UpdateStartStepTaskInCase(
+		thehive_models.ExecutionMetadata{
+			ExecutionId: executionId.String(),
+			Step:        step,
+		},
+		at,
+	)
 	return err
 }
 
 // Populates event with step execution information
 func (theHiveReporter *TheHiveReporter) ReportStepEnd(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, stepErr error, at time.Time) error {
-	_, err := theHiveReporter.connector.UpdateEndStepTaskInCase(executionId.String(), step, stepResults, stepErr, at)
+	_, err := theHiveReporter.connector.UpdateEndStepTaskInCase(
+		thehive_models.ExecutionMetadata{
+			ExecutionId:  executionId.String(),
+			Step:         step,
+			Variables:    stepResults,
+			ExecutionErr: stepErr,
+		},
+		at,
+	)
 	return err
 }

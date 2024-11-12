@@ -1,5 +1,7 @@
 package thehive_models
 
+import "soarca/models/cacao"
+
 const (
 	TheHiveStatusInProgress = "InProgress"
 	TheHiveStatusCompleted  = "Completed"
@@ -110,4 +112,12 @@ type Case struct {
 	SharingParameters []SharingParameter `bson:"sharingParameters,omitempty" json:"sharingParameters,omitempty"`
 	TaskRule          string             `bson:"taskRule,omitempty" json:"taskRule,omitempty" validate:"max=128" example:"Task rule"`
 	ObservableRule    string             `bson:"observableRule,omitempty" json:"observableRule,omitempty" validate:"max=128" example:"Observable rule"`
+}
+
+type ExecutionMetadata struct {
+	ExecutionId  string
+	Playbook     cacao.Playbook
+	Step         cacao.Step
+	Variables    cacao.Variables
+	ExecutionErr error
 }
