@@ -1,4 +1,4 @@
-package finmodel_test
+package fin_test
 
 import (
 	"soarca/models/fin"
