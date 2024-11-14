@@ -1,4 +1,4 @@
-package ssh_test
+package http_test
 
 import (
 	"encoding/base64"
