@@ -67,6 +67,7 @@ class "Ssh" as ssh
 class "OpenC2" as openc2
 class "HttpApi" as api
 class "Manual" as manual
+class "CalderaCmd" as calderacmd
 class "Fin" as fin
 
 
@@ -214,4 +215,4 @@ Note only [Comparison Expression](http://docs.oasis-open.org/cti/stix/v2.0/cs01/
 {{% /alert %}}
 
 ### Parallel step executor
-The parallel executor will execute the parallel step. This wil be done in sequence to simplify implementation. As parallel steps must not be depended on each other sequential execution is possible. Later this will be changed. 
+The parallel executor will execute the parallel step. This will be done in sequence to simplify implementation. As parallel steps must not depend on each other, sequential execution is possible. Later this will be changed.
