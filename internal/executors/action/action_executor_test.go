@@ -1,4 +1,4 @@
-package action_executor_test
+package action_test
 
 import (
 	"errors"

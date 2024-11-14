@@ -1,4 +1,4 @@
-package playbook_action_executor_test
+package playbook_action_test
 
 import (
 	"testing"
