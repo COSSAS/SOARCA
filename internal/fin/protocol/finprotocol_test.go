@@ -1,4 +1,4 @@
-package finprotocol_test
+package protocol_test
 
 import (
 	"encoding/json"
