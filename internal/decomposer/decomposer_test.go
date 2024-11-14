@@ -1,4 +1,4 @@
-package decomposer_test
+package decomposer
 
 import (
 	"errors"
@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"soarca/internal/decomposer"
 	"soarca/internal/executors/action"
 	"soarca/models/cacao"
 	"soarca/models/execution"
@@ -40,7 +39,7 @@ func TestExecutePlaybook(t *testing.T) {
 		Value: "testing",
 	}
 
-	decomposer := decomposer.New(mock_action_executor,
+	decomposer := New(mock_action_executor,
 		mock_playbook_action_executor,
 		mock_condition_executor,
 		uuid_mock,
@@ -160,7 +159,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 		Value: "testing2",
 	}
 
-	decomposer := decomposer.New(mock_action_executor,
+	decomposer := New(mock_action_executor,
 		mock_playbook_action_executor,
 		mock_condition_executor,
 		uuid_mock,
@@ -315,7 +314,7 @@ func TestExecuteEmptyMultiStep(t *testing.T) {
 		Name: "soarca-ssh",
 	}
 
-	decomposer2 := decomposer.New(mock_action_executor2,
+	decomposer2 := New(mock_action_executor2,
 		mock_playbook_action_executor2,
 		mock_condition_executor,
 		uuid_mock2,
@@ -403,7 +402,7 @@ func TestFailingStepResultsInFailingPlaybook(t *testing.T) {
 		Value: "testing2",
 	}
 
-	decomposer := decomposer.New(mock_action_executor,
+	decomposer := New(mock_action_executor,
 		mock_playbook_action_executor,
 		mock_condition_executor,
 		uuid_mock,
@@ -566,7 +565,7 @@ func TestExecuteIllegalMultiStep(t *testing.T) {
 		Value: "testing",
 	}
 
-	decomposer2 := decomposer.New(mock_action_executor2,
+	decomposer2 := New(mock_action_executor2,
 		mock_playbook_action_executor2,
 		mock_condition_executor,
 		uuid_mock2,
@@ -625,7 +624,7 @@ func TestExecutePlaybookAction(t *testing.T) {
 		Value: "testing",
 	}
 
-	decomposer := decomposer.New(mock_action_executor,
+	decomposer := New(mock_action_executor,
 		mock_playbook_action_executor,
 		mock_condition_executor,
 		uuid_mock,
@@ -721,7 +720,7 @@ func TestExecuteIfCondition(t *testing.T) {
 		Name: "soarca-ssh",
 	}
 
-	decomposer := decomposer.New(mock_action_executor,
+	decomposer := New(mock_action_executor,
 		mock_playbook_action_executor,
 		mock_condition_executor,
 		uuid_mock,
@@ -901,7 +900,7 @@ func TestDelayStepExecution(t *testing.T) {
 		Delay:         10,
 	}
 
-	decomposer := decomposer.New(mock_action_executor,
+	decomposer := New(mock_action_executor,
 		mock_playbook_action_executor,
 		mock_condition_executor,
 		uuid_mock,
@@ -955,7 +954,7 @@ func TestDelayStepNegativeTimeExecution(t *testing.T) {
 		Delay:         -10,
 	}
 
-	decomposer := decomposer.New(mock_action_executor,
+	decomposer := New(mock_action_executor,
 		mock_playbook_action_executor,
 		mock_condition_executor,
 		uuid_mock,

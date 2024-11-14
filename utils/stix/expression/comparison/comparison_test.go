@@ -1,9 +1,8 @@
-package comparison_test
+package comparison
 
 import (
 	"errors"
 	"soarca/models/cacao"
-	"soarca/utils/stix/expression/comparison"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
@@ -11,7 +10,7 @@ import (
 
 func TestStringEquals(t *testing.T) {
 
-	stix := comparison.New()
+	stix := New()
 
 	var1 := cacao.Variable{Type: cacao.VariableTypeString}
 	var1.Value = "a"
@@ -55,7 +54,7 @@ func TestStringEquals(t *testing.T) {
 }
 
 func TestIntEquals(t *testing.T) {
-	stix := comparison.New()
+	stix := New()
 
 	var1 := cacao.Variable{Type: cacao.VariableTypeLong}
 	var1.Value = "1000"
@@ -102,7 +101,7 @@ func TestIntEquals(t *testing.T) {
 }
 
 func TestFloatEquals(t *testing.T) {
-	stix := comparison.New()
+	stix := New()
 
 	var1 := cacao.Variable{Type: cacao.VariableTypeFloat}
 	var1.Value = "1000.0"
@@ -158,7 +157,7 @@ func TestFloatEquals(t *testing.T) {
 }
 
 func TestIp4AddressEquals(t *testing.T) {
-	stix := comparison.New()
+	stix := New()
 	var1 := cacao.Variable{Type: cacao.VariableTypeIpv4Address}
 	var1.Value = "10.0.0.30"
 	var1.Name = "__var1__"
@@ -182,7 +181,7 @@ func TestIp4AddressEquals(t *testing.T) {
 }
 
 func TestIp6AddressEquals(t *testing.T) {
-	stix := comparison.New()
+	stix := New()
 	var1 := cacao.Variable{Type: cacao.VariableTypeIpv6Address}
 	var1.Value = "2001:db8::1"
 	var1.Name = "__var1__"
@@ -206,7 +205,7 @@ func TestIp6AddressEquals(t *testing.T) {
 }
 
 func TestMacAddressEquals(t *testing.T) {
-	stix := comparison.New()
+	stix := New()
 	var1 := cacao.Variable{Type: cacao.VariableTypeMacAddress}
 	var1.Value = "BC-24-11-00-00-01"
 	var1.Name = "__var1__"
@@ -240,7 +239,7 @@ func TestMacAddressEquals(t *testing.T) {
 }
 
 func TestHashEquals(t *testing.T) {
-	stix := comparison.New()
+	stix := New()
 	md5 := cacao.Variable{Type: cacao.VariableTypeMd5Has}
 	md5.Value = "d41d8cd98f00b204e9800998ecf8427e"
 	md5.Name = "__md5__"
@@ -294,7 +293,7 @@ func TestHashEquals(t *testing.T) {
 }
 
 func TestUriEquals(t *testing.T) {
-	stix := comparison.New()
+	stix := New()
 
 	var1 := cacao.Variable{Type: cacao.VariableTypeUri}
 	var1.Value = "https://google.com"
@@ -316,7 +315,7 @@ func TestUriEquals(t *testing.T) {
 }
 
 func TestUuidEquals(t *testing.T) {
-	stix := comparison.New()
+	stix := New()
 
 	var1 := cacao.Variable{Type: cacao.VariableTypeUuid}
 	var1.Value = "ec887691-9a21-4ccf-8fae-360c13a819d1"

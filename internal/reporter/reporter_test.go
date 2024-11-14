@@ -1,8 +1,7 @@
-package reporter_test
+package reporter
 
 import (
 	"errors"
-	"soarca/internal/reporter"
 	ds_reporter "soarca/internal/reporter/downstream_reporter"
 	"soarca/models/cacao"
 	"soarca/test/unittest/mocks/mock_reporter"
@@ -20,7 +19,7 @@ import (
 
 func TestRegisterReporter(t *testing.T) {
 	mock_ds_reporter := mock_reporter.Mock_Downstream_Reporter{}
-	reporter := reporter.New([]ds_reporter.IDownStreamReporter{})
+	reporter := New([]ds_reporter.IDownStreamReporter{})
 	err := reporter.RegisterReporters([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
 	if err != nil {
 		t.Fail()
@@ -34,7 +33,7 @@ func TestRegisterTooManyReporters(t *testing.T) {
 		too_many_reporters[i] = &mock_ds_reporter
 	}
 
-	reporter := reporter.New([]ds_reporter.IDownStreamReporter{})
+	reporter := New([]ds_reporter.IDownStreamReporter{})
 	err := reporter.RegisterReporters(too_many_reporters)
 
 	expected_err := errors.New("attempting to register too many reporters")
@@ -44,7 +43,7 @@ func TestRegisterTooManyReporters(t *testing.T) {
 func TestReportWorkflowStart(t *testing.T) {
 	var wg sync.WaitGroup
 	mock_ds_reporter := mock_reporter.Mock_Downstream_Reporter{Wg: &wg}
-	reporter := reporter.New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
+	reporter := New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
 	mock_time := new(mock_time.MockTime)
 
 	expectedCommand := cacao.Command{
@@ -123,7 +122,7 @@ func TestReportWorkflowStart(t *testing.T) {
 func TestReportWorkflowEnd(t *testing.T) {
 	var wg sync.WaitGroup
 	mock_ds_reporter := mock_reporter.Mock_Downstream_Reporter{Wg: &wg}
-	reporter := reporter.New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
+	reporter := New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
 	mock_time := new(mock_time.MockTime)
 
 	expectedCommand := cacao.Command{
@@ -202,7 +201,7 @@ func TestReportWorkflowEnd(t *testing.T) {
 func TestReportStepStart(t *testing.T) {
 	var wg sync.WaitGroup
 	mock_ds_reporter := mock_reporter.Mock_Downstream_Reporter{Wg: &wg}
-	reporter := reporter.New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
+	reporter := New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
 	mock_time := new(mock_time.MockTime)
 
 	expectedCommand := cacao.Command{
@@ -246,7 +245,7 @@ func TestReportStepStart(t *testing.T) {
 func TestReportStepEnd(t *testing.T) {
 	var wg sync.WaitGroup
 	mock_ds_reporter := mock_reporter.Mock_Downstream_Reporter{Wg: &wg}
-	reporter := reporter.New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
+	reporter := New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
 	mock_time := new(mock_time.MockTime)
 
 	expectedCommand := cacao.Command{
@@ -292,7 +291,7 @@ func TestMultipleDownstreamReporters(t *testing.T) {
 	var wg sync.WaitGroup
 	mock_ds_reporter1 := mock_reporter.Mock_Downstream_Reporter{Wg: &wg}
 	mock_ds_reporter2 := mock_reporter.Mock_Downstream_Reporter{Wg: &wg}
-	reporter := reporter.New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter1, &mock_ds_reporter2})
+	reporter := New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter1, &mock_ds_reporter2})
 	mock_time := new(mock_time.MockTime)
 
 	expectedCommand := cacao.Command{

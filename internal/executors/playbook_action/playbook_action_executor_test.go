@@ -1,11 +1,10 @@
-package playbook_action_test
+package playbook_action
 
 import (
 	"testing"
 	"time"
 
 	"soarca/internal/decomposer"
-	"soarca/internal/executors/playbook_action"
 	mock_database_controller "soarca/test/unittest/mocks/mock_controller/database"
 	mock_decomposer_controller "soarca/test/unittest/mocks/mock_controller/decomposer"
 	"soarca/test/unittest/mocks/mock_decomposer"
@@ -30,7 +29,7 @@ func TestExecutePlaybook(t *testing.T) {
 	controller := new(mock_decomposer_controller.Mock_Controller)
 	database := new(mock_database_controller.Mock_Controller)
 
-	executerObject := playbook_action.New(controller, database, mock_reporter, mock_time)
+	executerObject := New(controller, database, mock_reporter, mock_time)
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	playbookId := "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
 	stepId := "step--81eff59f-d084-4324-9e0a-59e353dbd28f"

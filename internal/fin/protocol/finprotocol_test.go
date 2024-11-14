@@ -1,10 +1,9 @@
-package protocol_test
+package protocol
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"soarca/internal/fin/protocol"
 	"soarca/internal/guid"
 	"soarca/models/cacao"
 	"soarca/models/fin"
@@ -22,7 +21,7 @@ func TestSubscribe(t *testing.T) {
 	mock_token := mock_mqtt.Mock_MqttToken{}
 
 	guid := new(guid.Guid)
-	prot := protocol.FinProtocol{Guid: guid, Topic: protocol.Topic("testing"), Broker: "localhost", Port: 1883}
+	prot := FinProtocol{Guid: guid, Topic: Topic("testing"), Broker: "localhost", Port: 1883}
 
 	mock_token.On("Wait").Return(true)
 	mock_client.On("Subscribe", "testing", uint8(1), mock.Anything).Return(&mock_token)
@@ -35,7 +34,7 @@ func TestTimeoutAndCallbackTimerElaspsed(t *testing.T) {
 	mock_token := mock_mqtt.Mock_MqttToken{}
 
 	guid := new(guid.Guid)
-	prot := protocol.FinProtocol{Guid: guid, Topic: protocol.Topic("testing"), Broker: "localhost", Port: 1883}
+	prot := FinProtocol{Guid: guid, Topic: Topic("testing"), Broker: "localhost", Port: 1883}
 
 	mock_token.On("Wait").Return(true)
 	mock_client.On("Subscribe", "testing", uint8(1), mock.Anything).Return(&mock_token)
@@ -58,7 +57,7 @@ func TestTimeoutAndCallbackHandlerCalled(t *testing.T) {
 
 	guid := new(guid.Guid)
 
-	prot := protocol.New(guid, "testing", "localhost", 1883)
+	prot := New(guid, "testing", "localhost", 1883)
 	mock_token.On("Wait").Return(true)
 	mock_client.On("Subscribe", "testing", uint8(1), mock.Anything).Return(&mock_token)
 
@@ -83,7 +82,7 @@ func TestTimeoutAndCallbackHandlerCalled(t *testing.T) {
 }
 
 // Helper for TestTimeoutAndCallbackHandlerCalled
-func helper(prot *protocol.FinProtocol) {
+func helper(prot *FinProtocol) {
 	time.Sleep(1 * time.Millisecond)
 	client := mock_mqtt.Mock_MqttClient{}
 	message := mock_mqtt.Mock_MqttMessage{}
