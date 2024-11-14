@@ -69,7 +69,7 @@ func TestExecuteStep(t *testing.T) {
 		Targets:       []string{"target1"},
 	}
 
-	actionMetadata := action.PlaybookStepMetadata{
+	actionMetadata := PlaybookStepMetadata{
 		Step:      step,
 		Targets:   map[string]cacao.AgentTarget{expectedTarget.ID: expectedTarget},
 		Auth:      map[string]cacao.AuthenticationInformation{expectedAuth.ID: expectedAuth},

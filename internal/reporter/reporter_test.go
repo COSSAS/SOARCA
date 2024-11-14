@@ -27,7 +27,7 @@ func TestRegisterReporter(t *testing.T) {
 }
 
 func TestRegisterTooManyReporters(t *testing.T) {
-	too_many_reporters := make([]ds_reporter.IDownStreamReporter, reporter.MaxReporters+1)
+	too_many_reporters := make([]ds_reporter.IDownStreamReporter, MaxReporters+1)
 	mock_ds_reporter := mock_reporter.Mock_Downstream_Reporter{}
 	for i := range too_many_reporters {
 		too_many_reporters[i] = &mock_ds_reporter
