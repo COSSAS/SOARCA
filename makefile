@@ -21,7 +21,11 @@ build: swagger
 	CGO_ENABLED=0 go build -o ./build/soarca $(GOFLAGS) main.go
 
 test:
-	go test ./test/unittest/... -v
+	go test ./models/... -v
+	go test ./internal/... -v
+	go test ./routes/... -v
+	go test ./logger/... -v
+	go test ./database/... -v
 
 integration-test: swagger
 	go test ./test/integration/... -v
