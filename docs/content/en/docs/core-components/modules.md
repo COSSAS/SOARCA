@@ -261,6 +261,63 @@ The result of the step is stored in the following output variables:
 }
 ```
 
+### Caldera capability
+
+This capability executes [Caldera Abilities](https://caldera.readthedocs.io/en/latest/Learning-the-terminology.html#abilities-and-adversaries) on the specified targets by creating an operation on a separate Caldera server. 
+The server is packaged in the docker build of SOARCA, but can also be provided separably as a stand-alone server.
+
+#### Success and failure
+
+The Caldera step is considered successful if a connection to the Caldera server can be established, the ability, if supplied as b64command, can be created on the server, an operation can be started on the specified group and adversary, and the operation finished without errors.
+
+In every other circumstance the step is considered to have failed.
+
+#### Variables
+
+This module does not define specific variables as input, but variable interpolation is supported in the command and target definitions. It has the following output variables:
+
+```json
+{
+    "__soarca_caldera_cmd_result__": {
+        "type": "string",
+        "value": ""
+    }
+}
+```
+
+#### Example
+
+This example will start an operation that executes the ability with ID `36eecb80-ede3-442b-8774-956e906aff02` on the Caldera agent group `infiltrators`.
+```json
+{
+    "workflow": {
+        "action--7777c6b6-e275-434e-9e0b-d68f72e691c1": {
+            "type": "action",
+            "agent": "soarca--00010001-1000-1000-a000-000100010001",
+            "targets": ["security-category--c7e6af1b-9e5a-4055-adeb-26b97e1c4db7"],
+            "commands": [
+                {
+                    "type": "caldera",
+                    "command": "36eecb80-ede3-442b-8774-956e906aff02"
+                }
+            ]
+        }
+    },
+    "agent_definitions": {
+        "soarca--00010001-1000-1000-a000-000100010001": {
+            "type": "soarca",
+            "name": "soarca-caldera-cmd"
+        }
+    },
+    "target_definitions": {
+        "linux--c7e6af1b-9e5a-4055-adeb-26b97e1c4db7": {
+            "type": "security-category",
+            "name": "infiltrators"
+            "category": ["caldera"],
+        }
+    }
+}
+```
 
 ---
 

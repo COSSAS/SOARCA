@@ -10,7 +10,7 @@ date: 2023-01-05
 
 
 {{% alert title="Warning" color="warning" %}}
-SOARCA V.1.0.X implements currently the following native capalities: **HTTP capability**, **OpenC2 capability**, and **SSH capability**. Other core capabilities are part of our milestones which can be found [here](https://github.com/COSSAS/SOARCA/milestones).
+SOARCA V.1.0.X implements currently the following native capalities: **HTTP capability**, **OpenC2 capability**, **SSH capability**, and **Caldera capability**. Other core capabilities are part of our milestones which can be found [here](https://github.com/COSSAS/SOARCA/milestones).
 {{% /alert %}}
 
 SOARCA features a set of [native capabilities](/docs/soarca-extensions/native-capabilities). The HTTP, OpenC2 HTTP, and SSH transport mechanisms are supported by the first release of SOARCA. SOARCA's capabilities can be extended with custom implementations, which is further discussed on this page.
