@@ -30,7 +30,7 @@ make build && ./build/soarca
 wget https://github.com/COSSAS/SOARCA/releases/download/SOARCA_1.0.0/SOARCA_1.0.0_linux_amd64.tar.gz  && tar -xvf SOARCA* && ./SOARCA
 {{< /tab >}}
 {{< tab header="Docker Compose" lang="sh" >}}
-cd docker/soarca && sudo docker compose up -d
+cd docker/soarca && docker compose up -d
 {{< /tab >}}
 {{< /tabpane >}}
 
@@ -72,6 +72,22 @@ curl -X POST -H "Content-Type: application/json" -d @./example/openc2-playbook.j
 {{< /tab >}}
 {{< /tabpane >}}
 
+### Caldera setup
+
+SOARCA optionally comes packaged together with Caldera. To use the
+[Caldera capability](/docs/soarca-extensions/native-capabilities#caldera-capability), simply make
+sure you use the right Compose file when running:
+
+```diff
+- cd docker/soarca && docker compose up -d
++ cd docker/soarca && docker compose --profile caldera up -d
+```
+
+{{% alert title="Warning" %}}
+This only works when using Docker Compose to run SOARCA. When building SOARCA from scratch,
+you should supply your own Caldera instance and [configure](#configuration) its URL manually.
+{{% /alert %}}
+
 ## Configuration
 
 SOARCA reads its configuration from the environment variables or a `.env` file. An example of a `.env` is given below:
@@ -98,17 +114,47 @@ ENABLE_FINS: false
 MQTT_BROKER: "localhost"
 MQTT_PORT: 1883
 
+CALDERA_URL: ""
+
 HTTP_SKIP_CERT_VALIDATION: false
 {{< /tab >}}
 {{< /tabpane >}}
 
+The environment variables have the following meaning:
 
-For more custom and advanced deployment instructions go [here](/docs/installation-configuration/_index.md).
-### Docker hub
+|variable |content |description
+|---|---|---|
+|PORT |port  |Set the exposed port of SOARCA the default is `8080`
+|DATABASE |true \| false   | Set if you want to run with external database default is `false`
+|MONGODB_URI |uri  |Set the Mongo DB uri default is `mongodb://localhost:27017`
+|DATABASE_NAME |name  |Set the Mongo DB database name when using docker default is `soarca`
+|DB_USERNAME |user  |Set the Mongo DB database user when using docker default is `root`
+|DB_PASSWORD |password  |Set the Mongo DB database users password when using docker default is `rootpassword`. IT IS RECOMMENDED TO CHANGE THIS IN PRODUCTION!
+|MAX_REPORTERS |number  |Set the maximum number of downstream reporters default is `5` 
+|LOG_GLOBAL_LEVEL |[Log levels]  |One of the specified log levels. Defaults to `info`
+|LOG_MODE |development \| production  |If production is chosen the `LOG_GLOBAL_LEVEL` is used for all modules defaults to `production`
+|LOG_FILE_PATH |filepath  |Path to the logfile you want to use for all logging. Defaults to `""` (empty string)
+|LOG_FORMAT |text \| json  |The logging can be in plain text format or in JSON format. Defaults to `json`
+|MQTT_BROKER | dns name or ip | The broker address for SOARCA to connect to, for communication with fins default is `localhost`
+|MQTT_PORT   | port | The broker address for SOARCA to connect to, for communication with fins default is `1883`
+|ENABLE_FINS| true \| false | Enable fins in SOARCA defaults to `false`
+|CALDERA_URL| url | Instance URL which the [Caldera capability](/docs/soarca-extensions/native-capabilities#caldera-capability) may use; leaving this empty will disable the Caldera capability
+|VALIDATION_SCHEMA_URL|url| Set a custom validation schema to be used to validate playbooks defaul is `""` to use internal. NOTE: changing this heavily impacts performance. 
 
-`docker pull cossas/soarca`
+## Obtaining
 
-### Building from Source
+There are several ways to obtain a copy of the SOARCA software.
+
+### Docker Hub 
+
+A prebuilt image can be pulled from the
+[Docker Hub](https://hub.docker.com/r/cossas/soarca):
+
+```bash
+docker pull cossas/soarca
+```
+
+### Building from source
 
 ```bash
 git clone https://github.com/COSSAS/SOARCA.git
