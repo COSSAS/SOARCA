@@ -30,7 +30,7 @@ make build && ./build/soarca
 wget https://github.com/COSSAS/SOARCA/releases/download/SOARCA_1.0.0/SOARCA_1.0.0_linux_amd64.tar.gz  && tar -xvf SOARCA* && ./SOARCA
 {{< /tab >}}
 {{< tab header="Docker Compose" lang="sh" >}}
-cd docker/soarca && sudo docker compose up -d
+cd docker/soarca && docker compose up -d
 {{< /tab >}}
 {{< /tabpane >}}
 
@@ -74,6 +74,21 @@ curl -X POST -H "Content-Type: application/json" -d @./example-playbooks/openc2-
 {{< /tab >}}
 {{< /tabpane >}}
 
+### Caldera setup
+
+SOARCA optionally comes packaged together with Caldera. To use the
+[Caldera capability](/docs/soarca-extensions/native-capabilities#caldera-capability), simply make
+sure you use the right Compose file when running:
+
+```diff
+- cd docker/soarca && docker compose up -d
++ cd docker/soarca && docker compose --profile caldera up -d
+```
+
+{{% alert title="Warning" %}}
+This only works when using Docker Compose to run SOARCA. When building SOARCA from scratch,
+you should supply your own Caldera instance and [configure](#configuration) its URL manually.
+{{% /alert %}}
 
 ## Configuration
 
@@ -82,6 +97,8 @@ SOARCA reads its configuration from the environment variables or a `.env` file. 
 {{< tabpane langEqualsHeader=false  >}}
 {{< tab header="`.env`" lang="txt" >}}
 PORT: 8080
+SOARCA_ALLOWED_ORIGINS: "*"
+GIN_MODE: "release"
 MONGODB_URI: "mongodb://localhost:27017"
 DATABASE_NAME: "soarca"
 DB_USERNAME: "root"
@@ -98,24 +115,14 @@ LOG_FORMAT: "json"
 ENABLE_FINS: false
 MQTT_BROKER: "localhost"
 MQTT_PORT: 1883
-VALIDATION_SCHEMA_URL: ""
+
+CALDERA_URL: ""
+
+HTTP_SKIP_CERT_VALIDATION: false
 {{< /tab >}}
 {{< /tabpane >}}
 
-### Docker hub 
-
-`docker pull cossas/soarca`
-
-### Building from Source
-
-```bash
-git clone https://github.com/COSSAS/SOARCA.git
-make build
-cp .env.example .env
-./build/soarca
-```
-
-### Configuring SOARCA
+The environment variables have the following meaning:
 
 |variable |content |description
 |---|---|---|
@@ -133,4 +140,27 @@ cp .env.example .env
 |MQTT_BROKER | dns name or ip | The broker address for SOARCA to connect to, for communication with fins default is `localhost`
 |MQTT_PORT   | port | The broker address for SOARCA to connect to, for communication with fins default is `1883`
 |ENABLE_FINS| true \| false | Enable fins in SOARCA defaults to `false`
+|CALDERA_URL| url | Instance URL which the [Caldera capability](/docs/soarca-extensions/native-capabilities#caldera-capability) may use; leaving this empty will disable the Caldera capability
 |VALIDATION_SCHEMA_URL|url| Set a custom validation schema to be used to validate playbooks defaul is `""` to use internal. NOTE: changing this heavily impacts performance. 
+
+## Obtaining
+
+There are several ways to obtain a copy of the SOARCA software.
+
+### Docker Hub 
+
+A prebuilt image can be pulled from the
+[Docker Hub](https://hub.docker.com/r/cossas/soarca):
+
+```bash
+docker pull cossas/soarca
+```
+
+### Building from source
+
+```bash
+git clone https://github.com/COSSAS/SOARCA.git
+make build
+cp .env.example .env
+./build/soarca
+```

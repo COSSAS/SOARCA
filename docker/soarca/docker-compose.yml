@@ -1,4 +1,3 @@
-version: '3.7'
 services:
   mongodb_container:
     image: docker.io/mongo:latest
@@ -12,6 +11,19 @@ services:
       - type: volume
         source: mongodb_data_container
         target: /data/db
+
+  caldera:
+    image: soarca-caldera
+    build: https://github.com/mitre/caldera.git
+    networks:
+      - caldera-net
+    ports:
+      - "7010:7010"
+      - "7011:7011/udp"
+      - "7012:7012"
+      - "8888:8888"
+    profiles:
+      - caldera
 
   mosquitto:
     image: docker.io/eclipse-mosquitto
@@ -59,6 +71,7 @@ services:
       MQTT_BROKER: "mosquitto"
       MQTT_PORT: 1883
       HTTP_SKIP_CERT_VALIDATION: false
+      CALDERA_URL: "http://caldera:8888"
       # Integrations:
       # The Hive
       THEHIVE_ACTIVATE: false
@@ -67,6 +80,7 @@ services:
     networks:
       - db-net
       - mqtt-net
+      - caldera-net
     ports:
       - 127.0.0.1:8080:8080
     depends_on:
@@ -76,7 +90,7 @@ services:
 networks:
   db-net:
   mqtt-net:
-
+  caldera-net:
 
 volumes:
   mongodb_data_container:
@@ -88,5 +102,3 @@ volumes:
       o: bind
   mosquitto_data:
   mosquitto_log:
-
-

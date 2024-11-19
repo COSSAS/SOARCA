@@ -41,8 +41,6 @@ SOARCA currently supports the following transport mechanisms:
 {{% card header="SSH - Native" %}}
 [![Ssh](/SOARCA/images/logos-external/ssh.svg)](/docs/soarca-extensions/native-capabilities/#ssh-capability)
 {{% /card %}}
-{{< /cardpane >}}
-</div>
 
 {{% card header="PowerShell WinRM - Native" %}}
 [![PowerShell](/SOARCA/images/logos-external/powershell.svg)](/docs/soarca-extensions/native-capabilities/#powershell-capability)
