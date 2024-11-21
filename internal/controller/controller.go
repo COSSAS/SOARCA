@@ -2,6 +2,7 @@ package controller
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"reflect"
 	"strconv"
@@ -22,6 +23,7 @@ import (
 	"soarca/internal/guid"
 	"soarca/internal/reporter"
 	cache "soarca/internal/reporter/downstream_reporter/cache"
+	"soarca/internal/reporter/downstream_reporter/thehive"
 	"soarca/logger"
 	"soarca/utils"
 	httpUtil "soarca/utils/http"
@@ -89,10 +91,22 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 
 	// NOTE: Enrolling mainCache by default as reporter
 	reporter := reporter.New([]downstreamReporter.IDownStreamReporter{})
-	downstreamReporters := []downstreamReporter.IDownStreamReporter{&mainCache}
-	err := reporter.RegisterReporters(downstreamReporters)
+	cacheReporterAsList := []downstreamReporter.IDownStreamReporter{&mainCache}
+
+	// Reporter integrations
+	theHiveReporterAsList := []downstreamReporter.IDownStreamReporter{}
+	thehive_reporter := initializeIntegrationTheHiveReporting()
+	if thehive_reporter != nil {
+		theHiveReporterAsList = append(theHiveReporterAsList, thehive_reporter)
+	}
+
+	err := reporter.RegisterReporters(cacheReporterAsList)
 	if err != nil {
 		log.Error("could not load main Cache as reporter for decomposer and executors")
+	}
+	err = reporter.RegisterReporters(theHiveReporterAsList)
+	if err != nil {
+		log.Error("could not load The Hive as reporter for decomposer and executors")
 	}
 
 	soarcaTime := new(timeUtil.Time)
@@ -227,6 +241,26 @@ func (controller *Controller) setupAndRunMqtt() error {
 	}
 	go capabilityController.Run()
 	return nil
+}
+
+func initializeIntegrationTheHiveReporting() downstreamReporter.IDownStreamReporter {
+	initTheHiveReporter, _ := strconv.ParseBool(utils.GetEnv("THEHIVE_ACTIVATE", "false"))
+	if !initTheHiveReporter {
+		return nil
+	}
+	log.Info("initializing The Hive reporting integration")
+
+	thehive_api_token := utils.GetEnv("THEHIVE_API_TOKEN", "")
+	thehive_api_base_url := utils.GetEnv("THEHIVE_API_BASE_URL", "")
+	if len(thehive_api_base_url) < 1 || len(thehive_api_token) < 1 {
+		log.Warning("could not initialize The Hive reporting integration. Check to have configured the env variables correctly.")
+		return nil
+	}
+
+	log.Info(fmt.Sprintf("creating new The hive connector with API base url at : %s", thehive_api_base_url))
+	theHiveConnector := thehive.NewConnector(thehive_api_base_url, thehive_api_token)
+	theHiveReporter := thehive.NewReporter(theHiveConnector)
+	return theHiveReporter
 }
 
 func getMqttDetails() (string, int) {
