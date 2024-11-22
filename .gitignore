@@ -9,7 +9,7 @@ plugins/*
 build/*
 !build/build.md
 bin/*
-swaggerdocs/*
+api/*
 **.env
 test/cacao/flatfile-db-example.json
 
