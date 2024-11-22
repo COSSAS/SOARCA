@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"soarca/internal/decomposer"
+	"soarca/pkg/core/decomposer"
 	mock_database_controller "soarca/test/unittest/mocks/mock_controller/database"
 	mock_decomposer_controller "soarca/test/unittest/mocks/mock_controller/decomposer"
 	"soarca/test/unittest/mocks/mock_decomposer"
@@ -12,8 +12,8 @@ import (
 	"soarca/test/unittest/mocks/mock_reporter"
 	mock_time "soarca/test/unittest/mocks/mock_utils/time"
 
-	"soarca/models/cacao"
-	"soarca/models/execution"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/execution"
 
 	"github.com/go-playground/assert/v2"
 	"github.com/google/uuid"

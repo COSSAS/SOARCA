@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"soarca/internal/capability"
-	"soarca/models/cacao"
-	"soarca/models/execution"
+	"soarca/pkg/capability"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/execution"
 	"soarca/test/unittest/mocks/mock_capability"
 	"soarca/test/unittest/mocks/mock_reporter"
 	mock_time "soarca/test/unittest/mocks/mock_utils/time"

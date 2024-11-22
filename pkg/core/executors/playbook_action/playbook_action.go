@@ -6,11 +6,11 @@ import (
 	"reflect"
 	"soarca/internal/controller/database"
 	"soarca/internal/controller/decomposer_controller"
+	"soarca/internal/logger"
 	"soarca/internal/reporter"
-	"soarca/logger"
-	"soarca/models/cacao"
-	"soarca/models/execution"
-	timeUtil "soarca/utils/time"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/execution"
+	timeUtil "soarca/pkg/utils/time"
 )
 
 type PlaybookAction struct {

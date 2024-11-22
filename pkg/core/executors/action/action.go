@@ -4,12 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"soarca/internal/capability"
+	"soarca/internal/logger"
 	"soarca/internal/reporter"
-	"soarca/logger"
-	"soarca/models/cacao"
-	"soarca/models/execution"
-	timeUtil "soarca/utils/time"
+	"soarca/pkg/capability"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/execution"
+	timeUtil "soarca/pkg/utils/time"
 )
 
 var component = reflect.TypeOf(Executor{}).PkgPath()

@@ -2,8 +2,8 @@ package condition
 
 import (
 	"errors"
-	"soarca/models/cacao"
-	"soarca/models/execution"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/execution"
 	"soarca/test/unittest/mocks/mock_reporter"
 	mock_stix "soarca/test/unittest/mocks/mock_utils/stix"
 	mock_time "soarca/test/unittest/mocks/mock_utils/time"
