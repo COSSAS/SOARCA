@@ -10,22 +10,19 @@ GOLDFLAGS += -X main.Buildtime=$(BUILDTIME)
 GOFLAGS = -ldflags "$(GOLDFLAGS)"
 
 swagger:
-	mkdir -p swaggerdocs
-	swag init -o swaggerdocs
+	mkdir -p api
+	swag init -g cmd/soarca/main.go -o api
 
 lint: swagger
 	
 	golangci-lint run  --timeout 5m -v
 
 build: swagger
-	CGO_ENABLED=0 go build -o ./build/soarca $(GOFLAGS) main.go
+	CGO_ENABLED=0 go build -o ./build/soarca $(GOFLAGS) ./cmd/soarca/main.go
 
 test: swagger
-	go test ./models/... -v
+	go test ./pkg/... -v
 	go test ./internal/... -v
-	go test ./routes/... -v
-	go test ./logger/... -v
-	go test ./database/... -v
 
 integration-test: swagger
 	go test ./test/integration/... -v
@@ -39,9 +36,9 @@ clean:
 compile: swagger
 	echo "Compiling for every OS and Platform"
 	
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/${BINARY_NAME}-${VERSION}-linux-amd64 $(GOFLAGS) main.go
-	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o bin/${BINARY_NAME}-${VERSION}-darwin-arm64 $(GOFLAGS) main.go
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o bin/${BINARY_NAME}-${VERSION}-windows-amd64 $(GOFLAGS) main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/${BINARY_NAME}-${VERSION}-linux-amd64 $(GOFLAGS) cmd/soarca/main.go
+	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o bin/${BINARY_NAME}-${VERSION}-darwin-arm64 $(GOFLAGS) cmd/soarca/main.go
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o bin/${BINARY_NAME}-${VERSION}-windows-amd64 $(GOFLAGS) cmd/soarca/main.go
 
 sbom:
 	echo "Generating SBOMs"
@@ -51,7 +48,7 @@ sbom:
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 cyclonedx-gomod app -json -licenses -output bin/${BINARY_NAME}-${VERSION}-windows-amd64.bom.json
 
 pre-docker-build: swagger
-	GOOS=linux GOARCH=amd64 go build -o bin/${BINARY_NAME}-${VERSION}-linux-amd64 $(GOFLAGS) main.go
+	GOOS=linux GOARCH=amd64 go build -o bin/${BINARY_NAME}-${VERSION}-linux-amd64 $(GOFLAGS) cmd/soarca/main.go
 
 docker: pre-docker-build
 	docker build --no-cache -t soarca:${VERSION}  --build-arg="VERSION=${VERSION}" .
