@@ -1,7 +1,7 @@
 package swagger
 
 import (
-	"soarca/swaggerdocs"
+	api "soarca/api"
 
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
@@ -9,7 +9,7 @@ import (
 )
 
 func Routes(route *gin.Engine) {
-	swaggerdocs.SwaggerInfo.BasePath = "/"
+	api.SwaggerInfo.BasePath = "/"
 	swagger := route.Group("/swagger")
 	{
 		swagger.GET("/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))

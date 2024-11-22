@@ -3,8 +3,8 @@ package status
 import (
 	"net/http"
 	"runtime"
-	"soarca/models/api"
-	"soarca/utils"
+	"soarca/pkg/models/api"
+	"soarca/pkg/utils"
 	"time"
 
 	"github.com/gin-gonic/gin"

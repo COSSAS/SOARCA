@@ -11,12 +11,12 @@ import (
 
 	"soarca/internal/controller/database"
 	"soarca/internal/controller/decomposer_controller"
-	"soarca/internal/decomposer"
-	"soarca/logger"
-	"soarca/models/api"
-	"soarca/models/cacao"
-	"soarca/models/decoder"
-	apiError "soarca/routes/error"
+	"soarca/internal/logger"
+	apiError "soarca/pkg/api/error"
+	"soarca/pkg/core/decomposer"
+	"soarca/pkg/models/api"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/decoder"
 
 	"github.com/gin-gonic/gin"
 )

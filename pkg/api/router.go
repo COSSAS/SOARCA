@@ -4,13 +4,11 @@ import (
 	"soarca/internal/controller/database"
 	"soarca/internal/controller/decomposer_controller"
 	"soarca/internal/controller/informer"
-	coa_routes "soarca/routes/coa"
-	operator "soarca/routes/operator"
-	playbook_routes "soarca/routes/playbook"
-	reporter "soarca/routes/reporter"
-	status "soarca/routes/status"
-	swagger "soarca/routes/swagger"
-	"soarca/routes/trigger"
+	playbook_routes "soarca/pkg/api/playbook"
+	reporter "soarca/pkg/api/reporter"
+	status "soarca/pkg/api/status"
+	swagger "soarca/pkg/api/swagger"
+	"soarca/pkg/api/trigger"
 
 	"github.com/gin-contrib/cors"
 	gin "github.com/gin-gonic/gin"
@@ -46,9 +44,7 @@ func Api(app *gin.Engine,
 	// gin.SetMode(gin.ReleaseMode)
 
 	trigger_api := trigger.New(controller, database)
-	coa_routes.Routes(app)
 	status.Routes(app)
-	operator.Routes(app)
 	trigger.Routes(app, trigger_api)
 
 	return nil

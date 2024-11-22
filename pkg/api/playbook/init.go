@@ -3,7 +3,7 @@ package playbook
 import (
 	"reflect"
 
-	"soarca/logger"
+	"soarca/internal/logger"
 )
 
 var log *logger.Log

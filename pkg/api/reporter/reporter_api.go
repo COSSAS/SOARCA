@@ -3,15 +3,15 @@ package reporter
 import (
 	"net/http"
 	"soarca/internal/controller/informer"
-	"soarca/models/api"
+	"soarca/pkg/models/api"
 
 	"reflect"
-	"soarca/routes/error"
+	"soarca/pkg/api/error"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"soarca/logger"
+	"soarca/internal/logger"
 )
 
 var log *logger.Log

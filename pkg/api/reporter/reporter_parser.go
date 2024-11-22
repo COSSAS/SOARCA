@@ -1,8 +1,8 @@
 package reporter
 
 import (
-	api_model "soarca/models/api"
-	cache_model "soarca/models/cache"
+	api_model "soarca/pkg/models/api"
+	cache_model "soarca/pkg/models/cache"
 )
 
 const defaultRequestInterval int = 5

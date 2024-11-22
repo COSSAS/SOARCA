@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
-	playbookrepository "soarca/database/playbook"
 	"soarca/internal/controller/database"
+	playbookrepository "soarca/internal/database/playbook"
 
 	"github.com/gin-gonic/gin"
 )
