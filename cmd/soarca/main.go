@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 
+	api "soarca/api"
 	"soarca/internal/controller"
-	"soarca/logger"
-	"soarca/routes/status"
-	"soarca/swaggerdocs"
-	"soarca/utils"
+	"soarca/internal/logger"
+	"soarca/pkg/api/status"
+	"soarca/pkg/utils"
 
 	"github.com/joho/godotenv"
 )
@@ -36,25 +36,25 @@ const banner = `
 
 `
 
-//	@title		SOARCA API
-//	@version	1.0.0
+// @title		SOARCA API
+// @version	1.0.0
 func main() {
 	fmt.Print(banner)
 	log.Info("Version: ", Version)
 	log.Info("Buildtime: ", Buildtime)
 
-	errenv := godotenv.Load(".env")
-	if errenv != nil {
+	err := godotenv.Load(".env")
+	if err != nil {
 		log.Warning("Failed to read env variable, but will continue")
 	}
 	Host = "localhost:" + utils.GetEnv("PORT", "8080")
-	swaggerdocs.SwaggerInfo.Host = Host
+	api.SwaggerInfo.Host = Host
 
 	// Version is only available here
 	status.SetVersion(Version)
-	errinit := controller.Initialize()
-	if errinit != nil {
-		log.Fatal("Something Went wrong with setting-up the app, msg: ", errinit)
-		panic(errinit)
+	err = controller.Initialize()
+	if err != nil {
+		log.Fatal("Something Went wrong with setting-up the app, msg: ", err)
+		panic(err)
 	}
 }
