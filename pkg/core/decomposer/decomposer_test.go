@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"soarca/internal/executors/action"
-	"soarca/models/cacao"
-	"soarca/models/execution"
+	"soarca/pkg/core/executors/action"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/execution"
 	"soarca/test/unittest/mocks/mock_executor"
 	mock_condition_executor "soarca/test/unittest/mocks/mock_executor/condition"
 	mock_playbook_action_executor "soarca/test/unittest/mocks/mock_executor/playbook_action"

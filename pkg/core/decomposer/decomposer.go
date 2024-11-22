@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"reflect"
 
-	"soarca/internal/executors"
-	"soarca/internal/executors/action"
-	"soarca/internal/executors/condition"
-	"soarca/internal/guid"
+	"soarca/internal/logger"
 	"soarca/internal/reporter"
-	"soarca/logger"
-	"soarca/models/cacao"
-	"soarca/models/execution"
-	timeUtil "soarca/utils/time"
+	"soarca/pkg/core/executors"
+	"soarca/pkg/core/executors/action"
+	"soarca/pkg/core/executors/condition"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/execution"
+	"soarca/pkg/utils/guid"
+	timeUtil "soarca/pkg/utils/time"
 
 	t "time"
 
