@@ -3,7 +3,7 @@ package logger
 import (
 	"fmt"
 	"os"
-	"soarca/utils"
+	"soarca/pkg/utils"
 	"strings"
 
 	logrus "github.com/sirupsen/logrus"
