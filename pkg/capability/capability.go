@@ -1,8 +1,8 @@
 package capability
 
 import (
-	"soarca/models/cacao"
-	"soarca/models/execution"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/execution"
 )
 
 type ICapability interface {

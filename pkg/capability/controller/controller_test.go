@@ -2,7 +2,7 @@ package controller
 
 import (
 	"encoding/json"
-	"soarca/models/fin"
+	"soarca/pkg/models/fin"
 	"soarca/test/unittest/mocks/mock_mqtt"
 	"testing"
 

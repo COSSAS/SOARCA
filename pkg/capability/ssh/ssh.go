@@ -3,12 +3,12 @@ package ssh
 import (
 	"errors"
 	"reflect"
-	"soarca/models/cacao"
-	"soarca/models/execution"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/execution"
 	"strings"
 	"time"
 
-	"soarca/logger"
+	"soarca/internal/logger"
 
 	"golang.org/x/crypto/ssh"
 )

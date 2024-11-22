@@ -1,9 +1,9 @@
 package fin
 
 import (
-	"soarca/models/cacao"
-	"soarca/models/execution"
-	model "soarca/models/fin"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/execution"
+	model "soarca/pkg/models/fin"
 	"soarca/test/unittest/mocks/mock_finprotocol"
 	"testing"
 

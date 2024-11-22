@@ -6,10 +6,10 @@ package http
 import (
 	"errors"
 
-	"soarca/models/cacao"
-	"soarca/models/execution"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/execution"
+	http_request "soarca/pkg/utils/http"
 	mock_request "soarca/test/unittest/mocks/mock_utils/http"
-	http_request "soarca/utils/http"
 	"testing"
 
 	"github.com/go-playground/assert/v2"

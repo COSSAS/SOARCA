@@ -2,7 +2,7 @@ package ssh
 
 import (
 	"errors"
-	"soarca/models/cacao"
+	"soarca/pkg/models/cacao"
 	"testing"
 
 	"github.com/go-playground/assert/v2"

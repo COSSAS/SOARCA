@@ -2,10 +2,10 @@ package http
 
 import (
 	"reflect"
-	"soarca/logger"
-	"soarca/models/cacao"
-	"soarca/models/execution"
-	"soarca/utils/http"
+	"soarca/internal/logger"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/execution"
+	"soarca/pkg/utils/http"
 )
 
 // Receive HTTP API command data from decomposer/executer

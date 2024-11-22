@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"reflect"
 	"soarca/internal/fin/protocol"
-	"soarca/logger"
-	"soarca/models/fin"
+	"soarca/internal/logger"
+	"soarca/pkg/models/fin"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )

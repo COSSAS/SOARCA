@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	"soarca/logger"
-	"soarca/models/cacao"
-	"soarca/models/execution"
+	"soarca/internal/logger"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/execution"
 
 	"github.com/masterzen/winrm"
 )

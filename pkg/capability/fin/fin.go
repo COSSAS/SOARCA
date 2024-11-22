@@ -3,10 +3,10 @@ package fin
 import (
 	"reflect"
 	"soarca/internal/fin/protocol"
-	"soarca/logger"
-	"soarca/models/cacao"
-	"soarca/models/execution"
-	finModel "soarca/models/fin"
+	"soarca/internal/logger"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/execution"
+	finModel "soarca/pkg/models/fin"
 )
 
 type FinCapability struct {

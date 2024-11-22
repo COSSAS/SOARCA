@@ -3,10 +3,10 @@ package openc2
 import (
 	"testing"
 
-	"soarca/models/cacao"
-	"soarca/models/execution"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/execution"
+	"soarca/pkg/utils/http"
 	mockRequest "soarca/test/unittest/mocks/mock_utils/http"
-	"soarca/utils/http"
 
 	assert "github.com/go-playground/assert/v2"
 	"github.com/google/uuid"
