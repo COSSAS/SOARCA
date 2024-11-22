@@ -3,7 +3,7 @@ package mongodb
 import (
 	"reflect"
 
-	"soarca/logger"
+	"soarca/internal/logger"
 )
 
 var log *logger.Log

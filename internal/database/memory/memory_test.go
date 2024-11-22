@@ -6,15 +6,15 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"soarca/models/cacao"
-	"soarca/models/decoder"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/decoder"
 	"sort"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
 )
 
-var PB_PATH string = "../../test/playbooks/"
+var PB_PATH string = "../../../test/playbooks/"
 
 func TestCreate(t *testing.T) {
 	jsonFile, err := os.Open(PB_PATH + "playbook.json")

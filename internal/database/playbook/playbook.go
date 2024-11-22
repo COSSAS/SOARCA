@@ -3,12 +3,12 @@ package playbookrepository
 import (
 	"errors"
 
-	database "soarca/database"
-	"soarca/database/projections"
+	database "soarca/internal/database"
+	"soarca/internal/database/projections"
 	validator "soarca/internal/validators"
-	"soarca/models/api"
-	"soarca/models/cacao"
-	"soarca/models/decoder"
+	"soarca/pkg/models/api"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/decoder"
 )
 
 type IPlaybookRepository interface {

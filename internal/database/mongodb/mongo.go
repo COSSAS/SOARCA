@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"time"
 
-	"soarca/database/projections"
-	cacao "soarca/models/cacao"
+	"soarca/internal/database/projections"
+	cacao "soarca/pkg/models/cacao"
 
 	"go.mongodb.org/mongo-driver/bson"
 	mongo "go.mongodb.org/mongo-driver/mongo"

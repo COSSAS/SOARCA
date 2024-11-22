@@ -2,9 +2,9 @@ package memory
 
 import (
 	"errors"
-	"soarca/models/api"
-	"soarca/models/cacao"
-	"soarca/models/decoder"
+	"soarca/pkg/models/api"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/decoder"
 )
 
 type InMemoryDatabase struct {
