@@ -1,6 +1,6 @@
 package thehive_models
 
-import "soarca/models/cacao"
+import "soarca/pkg/models/cacao"
 
 const (
 	TheHiveStatusInProgress = "InProgress"

@@ -1,7 +1,7 @@
 package database
 
 import (
-	playbookrepository "soarca/database/playbook"
+	playbookrepository "soarca/internal/database/playbook"
 )
 
 type IController interface {

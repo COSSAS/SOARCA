@@ -6,10 +6,10 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+	"soarca/internal/logger"
 	"soarca/internal/reporter/downstream_reporter/thehive/thehive_models"
 	"soarca/internal/reporter/downstream_reporter/thehive/thehive_utils"
-	"soarca/logger"
-	"soarca/models/cacao"
+	"soarca/pkg/models/cacao"
 	"time"
 )
 

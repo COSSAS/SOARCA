@@ -3,8 +3,8 @@ package cache
 import (
 	b64 "encoding/base64"
 	"errors"
-	"soarca/models/cacao"
-	cache_model "soarca/models/cache"
+	"soarca/pkg/models/cacao"
+	cache_model "soarca/pkg/models/cache"
 	mock_time "soarca/test/unittest/mocks/mock_utils/time"
 	"testing"
 	"time"

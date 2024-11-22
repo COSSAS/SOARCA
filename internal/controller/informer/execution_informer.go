@@ -1,7 +1,7 @@
 package informer
 
 import (
-	"soarca/models/cache"
+	"soarca/pkg/models/cache"
 
 	"github.com/google/uuid"
 )

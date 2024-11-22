@@ -1,7 +1,7 @@
 package decomposer_controller
 
 import (
-	"soarca/internal/decomposer"
+	"soarca/pkg/core/decomposer"
 )
 
 type IController interface {

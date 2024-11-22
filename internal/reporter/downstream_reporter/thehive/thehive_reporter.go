@@ -2,7 +2,7 @@ package thehive
 
 import (
 	"soarca/internal/reporter/downstream_reporter/thehive/thehive_models"
-	"soarca/models/cacao"
+	"soarca/pkg/models/cacao"
 	"time"
 
 	"github.com/google/uuid"

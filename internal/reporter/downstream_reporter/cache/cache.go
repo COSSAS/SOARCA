@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"slices"
-	"soarca/models/cacao"
-	cache_report "soarca/models/cache"
-	itime "soarca/utils/time"
+	"soarca/pkg/models/cacao"
+	cache_report "soarca/pkg/models/cache"
+	itime "soarca/pkg/utils/time"
 	"sync"
 	"time"
 

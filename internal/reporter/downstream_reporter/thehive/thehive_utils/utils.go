@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
-	"soarca/logger"
+	"soarca/internal/logger"
 	"strings"
 )
 

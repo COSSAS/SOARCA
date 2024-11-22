@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
+	"soarca/internal/logger"
 	downstreamReporter "soarca/internal/reporter/downstream_reporter"
-	"soarca/logger"
-	"soarca/models/cacao"
-	"soarca/utils"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/utils"
 
 	"github.com/google/uuid"
 )
