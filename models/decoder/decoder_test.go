@@ -1,10 +1,9 @@
-package cacao_test
+package decoder
 
 import (
 	"fmt"
 	"io"
 	"os"
-	"soarca/models/decoder"
 	"testing"
 	"time"
 
@@ -16,7 +15,7 @@ import (
 // The schemas are CDS01 compatible as they have the following properties renamed:
 //   - "agents" from CDS01 instead of "agent_definitions" from CDS03+
 //   - "targets" from CDS01 instead of "target_definitions" from CDS03+
-var PB_PATH string = "playbooks/"
+var PB_PATH string = "../../test/playbooks/"
 
 func getTime(data string) time.Time {
 	res, _ := time.Parse(time.RFC3339, data)
@@ -41,7 +40,7 @@ func TestCacaoDecode(t *testing.T) {
 		return
 	}
 
-	var workflow = decoder.DecodeValidate(byteValue)
+	var workflow = DecodeValidate(byteValue)
 
 	// fmt.Println(workflow)
 

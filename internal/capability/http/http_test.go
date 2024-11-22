@@ -1,11 +1,11 @@
-package http_test
+package http
 
 // Build http capability with New() using mock http Request
 // test correct parsing of HttpOptions fields and errors handling
 
 import (
 	"errors"
-	"soarca/internal/capability/http"
+
 	"soarca/models/cacao"
 	"soarca/models/execution"
 	mock_request "soarca/test/unittest/mocks/mock_utils/http"
@@ -18,7 +18,7 @@ import (
 
 func TestHTTPOptionsCorrectlyGenerated(t *testing.T) {
 	mock_http_request := new(mock_request.MockHttpRequest)
-	httpCapability := http.New(mock_http_request)
+	httpCapability := New(mock_http_request)
 
 	var oauth2_info = cacao.AuthenticationInformation{
 		ID:    "6ba7b810-9dad-11d1-80b4-00c04fd430c9",
@@ -74,7 +74,7 @@ func TestHTTPOptionsCorrectlyGenerated(t *testing.T) {
 
 func TestHTTPOptionsEmptyAuth(t *testing.T) {
 	mock_http_request := &mock_request.MockHttpRequest{}
-	httpCapability := http.New(mock_http_request)
+	httpCapability := New(mock_http_request)
 
 	target := cacao.AgentTarget{Address: map[cacao.NetAddressType][]string{
 		"url": {"https://httpbin.org/post"},
@@ -125,7 +125,7 @@ func TestHTTPOptionsEmptyAuth(t *testing.T) {
 
 func TestHTTPOptionsEmptyCommand(t *testing.T) {
 	mock_http_request := &mock_request.MockHttpRequest{}
-	httpCapability := http.New(mock_http_request)
+	httpCapability := New(mock_http_request)
 
 	target := cacao.AgentTarget{Address: map[cacao.NetAddressType][]string{
 		"url": {"https://httpbin.org/post"},

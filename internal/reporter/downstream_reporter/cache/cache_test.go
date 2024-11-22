@@ -1,9 +1,8 @@
-package cache_test
+package cache
 
 import (
 	b64 "encoding/base64"
 	"errors"
-	"soarca/internal/reporter/downstream_reporter/cache"
 	"soarca/models/cacao"
 	cache_model "soarca/models/cache"
 	mock_time "soarca/test/unittest/mocks/mock_utils/time"
@@ -17,7 +16,7 @@ import (
 func TestReportWorkflowStartFirst(t *testing.T) {
 
 	mock_time := new(mock_time.MockTime)
-	cacheReporter := cache.New(mock_time, 10)
+	cacheReporter := New(mock_time, 10)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -149,7 +148,7 @@ func TestReportWorkflowStartFirst(t *testing.T) {
 
 func TestReportWorkflowStartFifo(t *testing.T) {
 	mock_time := new(mock_time.MockTime)
-	cacheReporter := cache.New(mock_time, 3)
+	cacheReporter := New(mock_time, 3)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -295,7 +294,7 @@ func TestReportWorkflowStartFifo(t *testing.T) {
 func TestReportWorkflowEnd(t *testing.T) {
 
 	mock_time := new(mock_time.MockTime)
-	cacheReporter := cache.New(mock_time, 10)
+	cacheReporter := New(mock_time, 10)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -398,7 +397,7 @@ func TestReportWorkflowEnd(t *testing.T) {
 
 func TestReportStepStartAndEnd(t *testing.T) {
 	mock_time := new(mock_time.MockTime)
-	cacheReporter := cache.New(mock_time, 10)
+	cacheReporter := New(mock_time, 10)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -522,7 +521,7 @@ func TestReportStepStartAndEnd(t *testing.T) {
 
 func TestReportStepStartCommandsEncoding(t *testing.T) {
 	mock_time := new(mock_time.MockTime)
-	cacheReporter := cache.New(mock_time, 10)
+	cacheReporter := New(mock_time, 10)
 
 	expectedCommand1 := cacao.Command{
 		Type:       "manual",
@@ -662,7 +661,7 @@ func TestReportStepStartCommandsEncoding(t *testing.T) {
 
 func TestReportStepStartManualCommand(t *testing.T) {
 	mock_time := new(mock_time.MockTime)
-	cacheReporter := cache.New(mock_time, 10)
+	cacheReporter := New(mock_time, 10)
 
 	expectedCommand := cacao.Command{
 		Type:    "manual",
@@ -792,7 +791,7 @@ func TestReportStepStartManualCommand(t *testing.T) {
 
 func TestInvalidStepReportAfterStepEnd(t *testing.T) {
 	mock_time := new(mock_time.MockTime)
-	cacheReporter := cache.New(mock_time, 10)
+	cacheReporter := New(mock_time, 10)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -882,7 +881,7 @@ func TestInvalidStepReportAfterStepEnd(t *testing.T) {
 func TestAcceptedStepReportAfterExecutionEnd(t *testing.T) {
 
 	mock_time := new(mock_time.MockTime)
-	cacheReporter := cache.New(mock_time, 10)
+	cacheReporter := New(mock_time, 10)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",

@@ -1,7 +1,6 @@
-package finmodel_test
+package fin
 
 import (
-	"soarca/models/fin"
 	"testing"
 	"time"
 
@@ -9,9 +8,9 @@ import (
 )
 
 func TestFinCommandCreation(t *testing.T) {
-	command := fin.NewCommand()
+	command := NewCommand()
 	// Check if set
-	assert.Equal(t, command.Type, fin.MessageTypeCommand)
+	assert.Equal(t, command.Type, MessageTypeCommand)
 	assert.Equal(t, command.CommandSubstructure.Context.Timeout, 1)
 	assert.Equal(t, time.Time.IsZero(command.CommandSubstructure.Context.GeneratedOn), true)
 

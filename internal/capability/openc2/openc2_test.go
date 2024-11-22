@@ -1,9 +1,8 @@
-package openc2_test
+package openc2
 
 import (
 	"testing"
 
-	openc2 "soarca/internal/capability/openc2"
 	"soarca/models/cacao"
 	"soarca/models/execution"
 	mockRequest "soarca/test/unittest/mocks/mock_utils/http"
@@ -15,7 +14,7 @@ import (
 
 func TestOpenC2Request(t *testing.T) {
 	mockHttp := &mockRequest.MockHttpRequest{}
-	openc2 := openc2.New(mockHttp)
+	openc2 := New(mockHttp)
 
 	authId, _ := uuid.Parse("6aa7b810-9dad-11d1-81b4-00c04fd430c8")
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")

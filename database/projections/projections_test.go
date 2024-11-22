@@ -1,9 +1,7 @@
-package database_test
+package projections
 
 import (
 	"testing"
-
-	"soarca/database/projections"
 
 	"github.com/go-playground/assert/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -20,7 +18,7 @@ func TestProjectionMeta(t *testing.T) {
 		{Key: "labels", Value: 1},
 	}
 
-	validationMeta := projections.Meta.GetProjection()
+	validationMeta := Meta.GetProjection()
 	assert.Equal(t, testMeta, validationMeta)
 }
 
@@ -29,6 +27,6 @@ func TestProjectionID(t *testing.T) {
 		{Key: "_id", Value: 1},
 	}
 
-	validationMeta := projections.Id.GetProjection()
+	validationMeta := Id.GetProjection()
 	assert.Equal(t, testMeta, validationMeta)
 }

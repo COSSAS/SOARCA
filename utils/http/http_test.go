@@ -1,4 +1,4 @@
-package ssh_test
+package http
 
 import (
 	"encoding/base64"
@@ -9,7 +9,6 @@ import (
 
 	b64 "encoding/base64"
 	"soarca/models/cacao"
-	http "soarca/utils/http"
 
 	"github.com/go-playground/assert/v2"
 )
@@ -36,7 +35,7 @@ type httpBinResponseBody struct {
 // Test general http options, we do not check responses body, as these are variable for the general connection tests
 
 func TestHttpGetConnection(t *testing.T) {
-	httpRequest := http.HttpRequest{}
+	httpRequest := HttpRequest{}
 
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
@@ -48,7 +47,7 @@ func TestHttpGetConnection(t *testing.T) {
 		Command: "GET / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
-	httpOptions := http.HttpOptions{
+	httpOptions := HttpOptions{
 		Command: &command,
 		Target:  &target,
 	}
@@ -64,7 +63,7 @@ func TestHttpGetConnection(t *testing.T) {
 }
 
 func TestHttpPostConnection(t *testing.T) {
-	httpRequest := http.HttpRequest{}
+	httpRequest := HttpRequest{}
 
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
@@ -76,7 +75,7 @@ func TestHttpPostConnection(t *testing.T) {
 		Command: "POST / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
-	httpOptions := http.HttpOptions{
+	httpOptions := HttpOptions{
 		Command: &command,
 		Target:  &target,
 	}
@@ -92,7 +91,7 @@ func TestHttpPostConnection(t *testing.T) {
 }
 
 func TestHttpPutConnection(t *testing.T) {
-	httpRequest := http.HttpRequest{}
+	httpRequest := HttpRequest{}
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
 			"url": {"https://httpbin.org/put"},
@@ -103,7 +102,7 @@ func TestHttpPutConnection(t *testing.T) {
 		Command: "PUT / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
-	httpOptions := http.HttpOptions{
+	httpOptions := HttpOptions{
 		Command: &command,
 		Target:  &target,
 	}
@@ -118,7 +117,7 @@ func TestHttpPutConnection(t *testing.T) {
 }
 
 func TestHttpDeleteConnection(t *testing.T) {
-	httpRequest := http.HttpRequest{}
+	httpRequest := HttpRequest{}
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
 			"url": {"https://httpbin.org/delete"},
@@ -129,7 +128,7 @@ func TestHttpDeleteConnection(t *testing.T) {
 		Command: "DELETE / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
-	httpOptions := http.HttpOptions{
+	httpOptions := HttpOptions{
 		Command: &command,
 		Target:  &target,
 	}
@@ -146,7 +145,7 @@ func TestHttpDeleteConnection(t *testing.T) {
 // test status codes handling
 
 func TestHttpStatus200(t *testing.T) {
-	httpRequest := http.HttpRequest{}
+	httpRequest := HttpRequest{}
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
 			"url": {"https://httpbin.org/status/200"},
@@ -157,7 +156,7 @@ func TestHttpStatus200(t *testing.T) {
 		Command: "GET / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
-	httpOptions := http.HttpOptions{
+	httpOptions := HttpOptions{
 		Command: &command,
 		Target:  &target,
 	}
@@ -172,7 +171,7 @@ func TestHttpStatus200(t *testing.T) {
 
 func TestHttpBearerToken(t *testing.T) {
 	bearerToken := "test_token"
-	httpRequest := http.HttpRequest{}
+	httpRequest := HttpRequest{}
 
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
@@ -190,7 +189,7 @@ func TestHttpBearerToken(t *testing.T) {
 		Command: "GET / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
-	httpOptions := http.HttpOptions{
+	httpOptions := HttpOptions{
 		Command: &command,
 		Target:  &target,
 		Auth:    &auth,
@@ -217,7 +216,7 @@ func TestHttpBasicAuth(t *testing.T) {
 	user_id := "test"
 	password := "password"
 	url := fmt.Sprintf("https://httpbin.org/basic-auth/%s/%s", user_id, password)
-	httpRequest := http.HttpRequest{}
+	httpRequest := HttpRequest{}
 
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
@@ -238,7 +237,7 @@ func TestHttpBasicAuth(t *testing.T) {
 		Command: "GET / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
-	httpOptions := http.HttpOptions{
+	httpOptions := HttpOptions{
 		Command: &command,
 		Target:  &target,
 		Auth:    &auth,
@@ -262,7 +261,7 @@ func TestHttpBasicAuth(t *testing.T) {
 }
 
 func TestHttpPostWithContentConnection(t *testing.T) {
-	httpRequest := http.HttpRequest{}
+	httpRequest := HttpRequest{}
 
 	testJsonObj := testJson{Id: "28818819", User: "test", Description: "very interesting description"}
 	requestBody, err := json.Marshal(testJsonObj)
@@ -286,7 +285,7 @@ func TestHttpPostWithContentConnection(t *testing.T) {
 		Headers: map[string][]string{"accept": {"application/json"}},
 		Content: body,
 	}
-	httpOptions := http.HttpOptions{
+	httpOptions := HttpOptions{
 		Command: &command,
 		Target:  &target,
 	}
@@ -308,7 +307,7 @@ func TestHttpPostWithContentConnection(t *testing.T) {
 }
 
 func TestHttpPostWithBase64ContentConnection(t *testing.T) {
-	httpRequest := http.HttpRequest{}
+	httpRequest := HttpRequest{}
 
 	testJsonObj := testJson{Id: "28818819", User: "test", Description: "very interesting description"}
 	requestBody, err := json.Marshal(testJsonObj)
@@ -332,7 +331,7 @@ func TestHttpPostWithBase64ContentConnection(t *testing.T) {
 		Headers:    map[string][]string{"accept": {"application/json"}},
 		ContentB64: base64EncodedBody,
 	}
-	httpOptions := http.HttpOptions{
+	httpOptions := HttpOptions{
 		Command: &command,
 		Target:  &target,
 	}
@@ -368,7 +367,7 @@ func TestHttpPathDnameParser(t *testing.T) {
 		Command: "POST /url HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
-	httpOptions := http.HttpOptions{
+	httpOptions := HttpOptions{
 		Target:  &target,
 		Command: &command,
 	}
@@ -390,7 +389,7 @@ func TestHttpPathDnamePortParser(t *testing.T) {
 		Command: "POST /url HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
-	httpOptions := http.HttpOptions{
+	httpOptions := HttpOptions{
 		Target:  &target,
 		Command: &command,
 	}
@@ -412,7 +411,7 @@ func TestHttpPathDnameRandomPortParser(t *testing.T) {
 		Command: "POST /url HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
-	httpOptions := http.HttpOptions{
+	httpOptions := HttpOptions{
 		Target:  &target,
 		Command: &command,
 	}
@@ -434,7 +433,7 @@ func TestHttpPathIpv4Parser(t *testing.T) {
 		Command: "POST / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
-	httpOptions := http.HttpOptions{
+	httpOptions := HttpOptions{
 		Target:  &target,
 		Command: &command,
 	}
@@ -458,7 +457,7 @@ func TestHttpPathParser(t *testing.T) {
 		Command: "POST / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
-	httpOptions := http.HttpOptions{
+	httpOptions := HttpOptions{
 		Target:  &target,
 		Command: &command,
 	}
@@ -482,7 +481,7 @@ func TestHttpPathUrlComposition(t *testing.T) {
 		Command: "POST /isp/cst HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
-	httpOptions := http.HttpOptions{
+	httpOptions := HttpOptions{
 		Target:  &target,
 		Command: &command,
 	}
@@ -508,7 +507,7 @@ func TestHttpPathBreakingParser(t *testing.T) {
 		Command: "POST / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
-	httpOptions := http.HttpOptions{
+	httpOptions := HttpOptions{
 		Target:  &target,
 		Command: &command,
 	}
@@ -526,7 +525,7 @@ func TestMethodExtract(t *testing.T) {
 		Command: "POST /api1/newObject HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
-	method, err := http.GetMethodFrom(&command)
+	method, err := GetMethodFrom(&command)
 	if err != nil {
 		t.Error("failed test because: ", err)
 	}
@@ -539,7 +538,7 @@ func TestPathExtract(t *testing.T) {
 		Command: "POST /api1/newObject HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
-	path, err := http.GetPathFrom(&command)
+	path, err := GetPathFrom(&command)
 	if err != nil {
 		t.Error("failed test because: ", err)
 	}
@@ -552,7 +551,7 @@ func TestVersionExtract(t *testing.T) {
 		Command: "POST /api1/newObject HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
-	version, err := http.GetVersionFrom(&command)
+	version, err := GetVersionFrom(&command)
 	if err != nil {
 		t.Error("failed test because: ", err)
 	}
@@ -565,7 +564,7 @@ func TestCommandFailedExtract(t *testing.T) {
 		Command: "POST /api1/newObject",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
-	version, err := http.GetVersionFrom(&command)
+	version, err := GetVersionFrom(&command)
 	if err == nil {
 		t.Error("should give error as only 2 values are provided")
 	}
@@ -582,7 +581,7 @@ func TestDnameWithInvalidPathParser(t *testing.T) {
 		Command: "POST /url HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
-	httpOptions := http.HttpOptions{
+	httpOptions := HttpOptions{
 		Target:  &target,
 		Command: &command,
 	}
@@ -604,7 +603,7 @@ func TestHttpPathIpv4WithRandomPort(t *testing.T) {
 		Command: "POST /url HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
-	httpOptions := http.HttpOptions{
+	httpOptions := HttpOptions{
 		Target:  &target,
 		Command: &command,
 	}
@@ -626,7 +625,7 @@ func TestInvalidDname(t *testing.T) {
 		Command: "POST /url HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
-	httpOptions := http.HttpOptions{
+	httpOptions := HttpOptions{
 		Target:  &target,
 		Command: &command,
 	}
@@ -649,7 +648,7 @@ func TestInvalidIpv4(t *testing.T) {
 		Command: "POST /url HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
-	httpOptions := http.HttpOptions{
+	httpOptions := HttpOptions{
 		Target:  &target,
 		Command: &command,
 	}

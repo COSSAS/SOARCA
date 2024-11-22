@@ -1,8 +1,7 @@
-package condition_test
+package condition
 
 import (
 	"errors"
-	"soarca/internal/executors/condition"
 	"soarca/models/cacao"
 	"soarca/models/execution"
 	"soarca/test/unittest/mocks/mock_reporter"
@@ -20,7 +19,7 @@ func TestExecuteConditionTrue(t *testing.T) {
 	mock_reporter := new(mock_reporter.Mock_Reporter)
 	mock_time := new(mock_time.MockTime)
 
-	conditionExecutior := condition.New(mock_stix, mock_reporter, mock_time)
+	conditionExecutior := New(mock_stix, mock_reporter, mock_time)
 
 	executionId := uuid.New()
 
@@ -58,7 +57,7 @@ func TestExecuteConditionFalse(t *testing.T) {
 	mock_reporter := new(mock_reporter.Mock_Reporter)
 	mock_time := new(mock_time.MockTime)
 
-	conditionExecutior := condition.New(mock_stix, mock_reporter, mock_time)
+	conditionExecutior := New(mock_stix, mock_reporter, mock_time)
 
 	executionId := uuid.New()
 
@@ -96,7 +95,7 @@ func TestExecuteConditionError(t *testing.T) {
 	mock_reporter := new(mock_reporter.Mock_Reporter)
 	mock_time := new(mock_time.MockTime)
 
-	conditionExecutior := condition.New(mock_stix, mock_reporter, mock_time)
+	conditionExecutior := New(mock_stix, mock_reporter, mock_time)
 
 	executionId := uuid.New()
 

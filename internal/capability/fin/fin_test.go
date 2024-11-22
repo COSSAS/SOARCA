@@ -1,7 +1,6 @@
-package fin_test
+package fin
 
 import (
-	"soarca/internal/capability/fin"
 	"soarca/models/cacao"
 	"soarca/models/execution"
 	model "soarca/models/fin"
@@ -15,7 +14,7 @@ import (
 func TestFinExecution(t *testing.T) {
 	mockFinProtocol := new(mock_finprotocol.MockFinProtocol)
 	//mockGuid := new(mock_guid.Mock_Guid)
-	finCapability := fin.New(mockFinProtocol)
+	finCapability := New(mockFinProtocol)
 
 	var executionId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	var playbookId, _ = uuid.Parse("d09351a2-a075-40c8-8054-0b7c423db83f")
