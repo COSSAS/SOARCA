@@ -3,9 +3,9 @@ package decoder
 import (
 	"encoding/json"
 	"reflect"
-	"soarca/logger"
-	"soarca/models/cacao"
-	"soarca/models/validator"
+	"soarca/internal/logger"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/validator"
 )
 
 type Empty struct{}

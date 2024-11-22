@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"soarca/models/cacao"
+	"soarca/pkg/models/cacao"
 	"strings"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
 )
 
-var PB_PATH string = "../../test/playbooks/"
+var PB_PATH string = "../../../test/playbooks/"
 
 func TestNotValidCacaoJsonInvalidAgentTargetType(t *testing.T) {
 	jsonFile, err := os.Open(PB_PATH + "invalid_playbook.json")

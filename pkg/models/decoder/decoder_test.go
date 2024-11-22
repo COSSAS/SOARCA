@@ -15,7 +15,7 @@ import (
 // The schemas are CDS01 compatible as they have the following properties renamed:
 //   - "agents" from CDS01 instead of "agent_definitions" from CDS03+
 //   - "targets" from CDS01 instead of "target_definitions" from CDS03+
-var PB_PATH string = "../../test/playbooks/"
+var PB_PATH string = "../../../test/playbooks/"
 
 func getTime(data string) time.Time {
 	res, _ := time.Parse(time.RFC3339, data)

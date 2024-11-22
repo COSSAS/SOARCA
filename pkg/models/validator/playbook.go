@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/mail"
 
-	"soarca/logger"
-	"soarca/models/cacao"
+	"soarca/internal/logger"
+	"soarca/pkg/models/cacao"
 )
 
 func init() {

@@ -3,8 +3,8 @@ package api
 import (
 	"errors"
 	"fmt"
-	"soarca/models/cacao"
-	cache_model "soarca/models/cache"
+	"soarca/pkg/models/cacao"
+	cache_model "soarca/pkg/models/cache"
 	"time"
 )
 

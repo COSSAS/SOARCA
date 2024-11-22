@@ -6,9 +6,9 @@ import (
 	"errors"
 	"io/fs"
 	"reflect"
-	"soarca/logger"
-	"soarca/models/cacao"
-	"soarca/utils"
+	"soarca/internal/logger"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/utils"
 	"strings"
 
 	"github.com/go-playground/validator/v10"

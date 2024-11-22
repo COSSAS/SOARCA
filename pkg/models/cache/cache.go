@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"soarca/models/cacao"
+	"soarca/pkg/models/cacao"
 	"time"
 
 	"github.com/google/uuid"
