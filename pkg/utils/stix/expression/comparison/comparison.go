@@ -6,8 +6,8 @@ import (
 	"net"
 	"net/url"
 	"reflect"
-	"soarca/logger"
-	"soarca/models/cacao"
+	"soarca/internal/logger"
+	"soarca/pkg/models/cacao"
 	"strconv"
 	"strings"
 

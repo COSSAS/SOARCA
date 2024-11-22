@@ -14,8 +14,8 @@ import (
 	"strconv"
 	"strings"
 
-	"soarca/logger"
-	"soarca/models/cacao"
+	"soarca/internal/logger"
+	"soarca/pkg/models/cacao"
 )
 
 var (

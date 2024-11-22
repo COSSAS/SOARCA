@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	b64 "encoding/base64"
-	"soarca/models/cacao"
+	"soarca/pkg/models/cacao"
 
 	"github.com/go-playground/assert/v2"
 )
