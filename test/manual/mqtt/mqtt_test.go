@@ -3,8 +3,8 @@ package mqtt_test
 import (
 	"fmt"
 	"soarca/internal/fin/protocol"
-	"soarca/internal/guid"
-	model "soarca/models/fin"
+	model "soarca/pkg/models/fin"
+	"soarca/pkg/utils/guid"
 	"testing"
 
 	"github.com/google/uuid"

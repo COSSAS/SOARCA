@@ -1,7 +1,7 @@
 package mock_database_controller
 
 import (
-	playbookrepository "soarca/database/playbook"
+	playbookrepository "soarca/internal/database/playbook"
 
 	"github.com/stretchr/testify/mock"
 )

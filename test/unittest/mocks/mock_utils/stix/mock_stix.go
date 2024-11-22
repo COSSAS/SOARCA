@@ -1,7 +1,7 @@
 package mock_stix
 
 import (
-	"soarca/models/cacao"
+	"soarca/pkg/models/cacao"
 
 	"github.com/stretchr/testify/mock"
 )

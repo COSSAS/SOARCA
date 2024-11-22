@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"soarca/internal/reporter/downstream_reporter/thehive"
-	"soarca/models/cacao"
+	"soarca/pkg/models/cacao"
 	"strings"
 	"testing"
 	"time"

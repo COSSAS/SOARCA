@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	api_model "soarca/models/api"
-	cache_model "soarca/models/cache"
-	"soarca/routes/reporter"
+	"soarca/pkg/api/reporter"
+	api_model "soarca/pkg/models/api"
+	cache_model "soarca/pkg/models/cache"
 	mock_cache "soarca/test/unittest/mocks/mock_cache"
 	"testing"
 

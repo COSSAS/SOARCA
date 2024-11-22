@@ -2,9 +2,9 @@ package ssh_integration_test
 
 import (
 	"fmt"
-	"soarca/internal/capability/ssh"
-	"soarca/models/cacao"
-	"soarca/models/execution"
+	"soarca/pkg/capability/ssh"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/execution"
 	"testing"
 
 	"github.com/google/uuid"

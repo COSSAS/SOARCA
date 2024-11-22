@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	logger "soarca/logger"
+	logger "soarca/internal/logger"
 )
 
 func TestDebugModeLogTrace(t *testing.T) {

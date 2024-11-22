@@ -1,7 +1,7 @@
 package mock_cache
 
 import (
-	cache_model "soarca/models/cache"
+	cache_model "soarca/pkg/models/cache"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"

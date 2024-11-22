@@ -1,7 +1,7 @@
 package mock_reporter
 
 import (
-	"soarca/models/cacao"
+	"soarca/pkg/models/cacao"
 	"time"
 
 	"github.com/google/uuid"

@@ -1,7 +1,7 @@
 package mock_decomposer_controller
 
 import (
-	"soarca/internal/decomposer"
+	"soarca/pkg/core/decomposer"
 
 	"github.com/stretchr/testify/mock"
 )

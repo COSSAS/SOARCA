@@ -1,8 +1,8 @@
 package mock_playbook_action_executor
 
 import (
-	"soarca/models/cacao"
-	"soarca/models/execution"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/execution"
 
 	"github.com/stretchr/testify/mock"
 )

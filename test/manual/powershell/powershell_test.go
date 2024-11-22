@@ -2,9 +2,9 @@ package powershell_integration_test
 
 import (
 	"fmt"
-	"soarca/internal/capability/powershell"
-	"soarca/models/cacao"
-	"soarca/models/execution"
+	"soarca/pkg/capability/powershell"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/execution"
 	"testing"
 
 	"github.com/google/uuid"

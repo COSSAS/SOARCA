@@ -1,7 +1,7 @@
 package mock_executor
 
 import (
-	"soarca/utils/http"
+	"soarca/pkg/utils/http"
 
 	"github.com/stretchr/testify/mock"
 )
