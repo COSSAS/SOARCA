@@ -1,5 +1,5 @@
 <div align="center">
-<a href="https://cossas-project.org/cossas-software/soarca"><img src="img/soarca-logo.svg"/>
+<a href="https://cossas-project.org/cossas-software/soarca"><img src="assets/soarca-logo.svg"/>
 
 
 [![https://cossas-project.org/portfolio/SOARCA/](https://img.shields.io/badge/website-cossas--project.org-orange)](https://cossas-project.org/portfolio/SOARCA/)
