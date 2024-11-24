@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"soarca/internal/logger"
 	"soarca/internal/reporter"
-	"soarca/pkg/capability"
+	"soarca/pkg/core/capability"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	timeUtil "soarca/pkg/utils/time"

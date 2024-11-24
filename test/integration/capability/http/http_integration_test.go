@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"soarca/pkg/capability/http"
+	"soarca/pkg/core/capability/http"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	httpUtil "soarca/pkg/utils/http"
