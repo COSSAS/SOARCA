@@ -2,7 +2,7 @@ package capability_controller_test
 
 import (
 	"fmt"
-	"soarca/pkg/capability/controller"
+	"soarca/pkg/core/capability/controller"
 	"testing"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"

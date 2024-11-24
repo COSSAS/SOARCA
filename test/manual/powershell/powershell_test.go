@@ -2,7 +2,7 @@ package powershell_integration_test
 
 import (
 	"fmt"
-	"soarca/pkg/capability/powershell"
+	"soarca/pkg/core/capability/powershell"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"testing"
