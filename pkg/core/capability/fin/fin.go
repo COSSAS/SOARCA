@@ -2,8 +2,8 @@ package fin
 
 import (
 	"reflect"
-	"soarca/internal/fin/protocol"
 	"soarca/internal/logger"
+	"soarca/pkg/core/capability/fin/protocol"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	finModel "soarca/pkg/models/fin"

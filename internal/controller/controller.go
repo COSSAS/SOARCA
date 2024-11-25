@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"soarca/internal/fin/protocol"
 	"soarca/internal/logger"
 	"soarca/internal/reporter"
 	cache "soarca/internal/reporter/downstream_reporter/cache"
@@ -16,6 +15,7 @@ import (
 	"soarca/pkg/core/capability"
 	capabilityController "soarca/pkg/core/capability/controller"
 	finExecutor "soarca/pkg/core/capability/fin"
+	"soarca/pkg/core/capability/fin/protocol"
 	"soarca/pkg/core/capability/http"
 	"soarca/pkg/core/capability/openc2"
 	"soarca/pkg/core/capability/powershell"
