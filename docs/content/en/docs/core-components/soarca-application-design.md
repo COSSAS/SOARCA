@@ -26,42 +26,61 @@ set separator ::
 
 protocol /playbook #lightgreen
 protocol /trigger #lightgreen
+protocol /status #lightgreen
+protocol /reporter #lightgreen
 protocol /step #red
 protocol /trusted/variables #red
-protocol /status #red
 
-class controller  #lightgreen
-class database  #lightgreen
-class log  #lightgreen
+class internal::controller  #lightgreen
+class internal::database  #lightgreen
+class internal::logger  #lightgreen
 class core::decomposer #lightgreen
 class core::executor  #lightgreen
-class endpoints::playbook #lightgreen
-class endpoints::trigger #lightgreen
-class core::modules::http #lightgreen
-class core::modules::ssh #lightgreen
-class core::modules::openC2 #orange
-class core::modules::fin #orange
+class api::playbook #lightgreen
+class api::trigger #lightgreen
+class core::capability::http #lightgreen
+class core::capability::ssh #lightgreen
+class core::capability::openC2 #lightgreen
+class core::capability::fin #lightgreen
+class core::capability::powershell #lightgreen
+class api::status #lightgreen
+class api::reporter #lightgreen
 
-class endpoints::step #red
-class endpoints::variables #red
-class endpoints::status #red
+class api::step #red
+class api::variables #red
+
+class api::reporter #lightgreen
+
+class reporter::cache #orange
 
 
-"/step" *-- endpoints::step 
-"/playbook" *-- endpoints::playbook
-"/trigger" *-- endpoints::trigger
-"/status" *-- endpoints::status
-"/trusted/variables" *-- endpoints::variables
+"/step" *-- api::step 
+"/playbook" *-- api::playbook
+"/trigger" *-- api::trigger
+"/status" *-- api::status
+"/reporter" *-- api::reporter
+"/trusted/variables" *-- api::variables
 
-endpoints *-down- controller
+api *-down- controller
 controller -* database
-log *- controller
-controller -down-* core::decomposer
+logger *- controller
+controller -down-* core
+
+api::reporter -down-> reporter::cache
+
+reporter::cache <-- core::decomposer
+reporter::cache <-- core::executor
+
+api::playbook --> internal::database
+api::trigger --> core::decomposer
+api::trigger --> internal::database
+
 core::decomposer -down-> core::executor
-core::executor --> core::modules::openC2
-core::executor --> core::modules::fin
-core::executor --> core::modules::http
-core::executor --> core::modules::ssh
+core::executor --> core::capability::openC2
+core::executor --> core::capability::fin
+core::executor --> core::capability::http
+core::executor --> core::capability::ssh
+core::executor --> core::capability::powershell
 @enduml
 ```
 
@@ -108,7 +127,7 @@ ICapability <- Executer
 ```
 
 ### Controller
-The SOARCA controller will create all classed needed by SOARCA. The controller glues the endpoints and decomposer together. Each run will instantiate a new decomposer. 
+The SOARCA controller will create all classed needed by SOARCA. The controller glues the api and decomposer together. Each run will instantiate a new decomposer. 
 
 ```plantuml
 interface IPlaybook{
