@@ -1,7 +1,7 @@
 package thehive
 
 import (
-	thehive_models "soarca/pkg/integration/thehive/models"
+	thehive_models "soarca/pkg/integration/thehive/common/models"
 	"soarca/pkg/models/cacao"
 	"time"
 
