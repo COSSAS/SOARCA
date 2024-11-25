@@ -1,4 +1,4 @@
-package thehive_models
+package models
 
 import "soarca/pkg/models/cacao"
 

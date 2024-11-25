@@ -1,4 +1,4 @@
-package thehive_utils
+package utils
 
 import (
 	"bytes"
