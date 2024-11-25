@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"reflect"
 	"soarca/internal/logger"
+	thehive_models "soarca/pkg/integration/thehive/models"
+	thehive_utils "soarca/pkg/integration/thehive/utils"
 	"soarca/pkg/models/cacao"
-	"soarca/pkg/reporter/downstream_reporter/thehive/thehive_models"
-	"soarca/pkg/reporter/downstream_reporter/thehive/thehive_utils"
 	"time"
 )
 
