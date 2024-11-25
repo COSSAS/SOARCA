@@ -109,7 +109,6 @@ jobs:
         run: |
           go install github.com/swaggo/swag/cmd/swag@latest
           go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@latest
-          swag init -o swaggerdocs
           make sbom
           zip -r bin/sbom.zip bin
 
