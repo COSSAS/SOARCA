@@ -2,8 +2,8 @@ package reporter
 
 import (
 	"errors"
-	ds_reporter "soarca/internal/reporter/downstream_reporter"
 	"soarca/pkg/models/cacao"
+	ds_reporter "soarca/pkg/reporter/downstream_reporter"
 	"soarca/test/unittest/mocks/mock_reporter"
 	mock_time "soarca/test/unittest/mocks/mock_utils/time"
 	"sync"

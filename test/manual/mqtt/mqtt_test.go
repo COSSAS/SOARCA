@@ -2,7 +2,7 @@ package mqtt_test
 
 import (
 	"fmt"
-	"soarca/internal/fin/protocol"
+	"soarca/pkg/core/capability/fin/protocol"
 	model "soarca/pkg/models/fin"
 	"soarca/pkg/utils/guid"
 	"testing"

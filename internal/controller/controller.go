@@ -9,9 +9,6 @@ import (
 	"strings"
 
 	"soarca/internal/logger"
-	"soarca/internal/reporter"
-	cache "soarca/internal/reporter/downstream_reporter/cache"
-	"soarca/internal/reporter/downstream_reporter/thehive"
 	"soarca/pkg/core/capability"
 	capabilityController "soarca/pkg/core/capability/controller"
 	finExecutor "soarca/pkg/core/capability/fin"
@@ -24,13 +21,16 @@ import (
 	"soarca/pkg/core/executors/action"
 	"soarca/pkg/core/executors/condition"
 	"soarca/pkg/core/executors/playbook_action"
+	"soarca/pkg/reporter"
+	cache "soarca/pkg/reporter/downstream_reporter/cache"
+	"soarca/pkg/reporter/downstream_reporter/thehive"
 	"soarca/pkg/utils"
 	"soarca/pkg/utils/guid"
 	httpUtil "soarca/pkg/utils/http"
 	"soarca/pkg/utils/stix/expression/comparison"
 	timeUtil "soarca/pkg/utils/time"
 
-	downstreamReporter "soarca/internal/reporter/downstream_reporter"
+	downstreamReporter "soarca/pkg/reporter/downstream_reporter"
 
 	"github.com/gin-gonic/gin"
 

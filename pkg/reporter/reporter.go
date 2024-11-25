@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"soarca/internal/logger"
-	downstreamReporter "soarca/internal/reporter/downstream_reporter"
 	"soarca/pkg/models/cacao"
+	downstreamReporter "soarca/pkg/reporter/downstream_reporter"
 	"soarca/pkg/utils"
 
 	"github.com/google/uuid"

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"reflect"
 	"soarca/internal/logger"
-	"soarca/internal/reporter"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
+	"soarca/pkg/reporter"
 	"soarca/pkg/utils/stix/expression/comparison"
 	timeUtil "soarca/pkg/utils/time"
 )

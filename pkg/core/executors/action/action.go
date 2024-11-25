@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"reflect"
 	"soarca/internal/logger"
-	"soarca/internal/reporter"
 	"soarca/pkg/core/capability"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
+	"soarca/pkg/reporter"
 	timeUtil "soarca/pkg/utils/time"
 )
 

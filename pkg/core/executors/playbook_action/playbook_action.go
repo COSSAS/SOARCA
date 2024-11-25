@@ -7,9 +7,9 @@ import (
 	"soarca/internal/controller/database"
 	"soarca/internal/controller/decomposer_controller"
 	"soarca/internal/logger"
-	"soarca/internal/reporter"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
+	"soarca/pkg/reporter"
 	timeUtil "soarca/pkg/utils/time"
 )
 

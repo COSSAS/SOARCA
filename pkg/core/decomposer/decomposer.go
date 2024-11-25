@@ -6,12 +6,12 @@ import (
 	"reflect"
 
 	"soarca/internal/logger"
-	"soarca/internal/reporter"
 	"soarca/pkg/core/executors"
 	"soarca/pkg/core/executors/action"
 	"soarca/pkg/core/executors/condition"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
+	"soarca/pkg/reporter"
 	"soarca/pkg/utils/guid"
 	timeUtil "soarca/pkg/utils/time"
 
