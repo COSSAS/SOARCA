@@ -127,7 +127,7 @@ ICapability <- Executer
 ```
 
 ### Controller
-The SOARCA controller will create all classed needed by SOARCA. The controller glues the api and decomposer together. Each run will instantiate a new decomposer. 
+The SOARCA controller will create all classes needed by SOARCA. The controller glues the api and decomposer together. Each run will instantiate a new decomposer. 
 
 ```plantuml
 interface IPlaybook{
