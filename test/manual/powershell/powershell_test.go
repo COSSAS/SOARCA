@@ -2,6 +2,7 @@ package powershell_integration_test
 
 import (
 	"fmt"
+	"soarca/pkg/core/capability"
 	"soarca/pkg/core/capability/powershell"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
@@ -11,7 +12,7 @@ import (
 )
 
 func TestPowershellConnection(t *testing.T) {
-	capability := powershell.New()
+	powershell := powershell.New()
 
 	expectedCommand := cacao.Command{
 		Type:    "powershell",
@@ -35,11 +36,13 @@ func TestPowershellConnection(t *testing.T) {
 	var playbookId = "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
 	var stepId = "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
 	var metadata = execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId, StepId: stepId}
-	results, err := capability.Execute(metadata,
-		expectedCommand,
-		expectedAuthenticationInformation,
-		expectedTarget,
-		cacao.NewVariables())
+	var data = capability.Context{
+		Command:        expectedCommand,
+		Authentication: expectedAuthenticationInformation,
+		Target:         expectedTarget,
+	}
+	results, err := powershell.Execute(metadata,
+		data)
 	if err != nil {
 		fmt.Println(err)
 		t.Fail()

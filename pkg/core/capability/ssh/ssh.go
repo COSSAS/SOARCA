@@ -3,6 +3,7 @@ package ssh
 import (
 	"errors"
 	"reflect"
+	"soarca/pkg/core/capability"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"strings"
@@ -33,13 +34,10 @@ func (sshCapability *SshCapability) GetType() string {
 }
 
 func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
-	command cacao.Command,
-	authentication cacao.AuthenticationInformation,
-	target cacao.AgentTarget,
-	variables cacao.Variables) (cacao.Variables, error) {
+	context capability.Context) (cacao.Variables, error) {
 
 	log.Trace(metadata.ExecutionId)
-	return execute(command, authentication, target)
+	return execute(context.Command, context.Authentication, context.Target)
 }
 
 func execute(command cacao.Command,

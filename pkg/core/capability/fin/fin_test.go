@@ -1,6 +1,7 @@
 package fin
 
 import (
+	"soarca/pkg/core/capability"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	model "soarca/pkg/models/fin"
@@ -50,9 +51,16 @@ func TestFinExecution(t *testing.T) {
 
 	expectedVariableMap := cacao.NewVariables(variable1)
 
+	data := capability.Context{
+		Command:        command,
+		Authentication: auth,
+		Target:         target,
+		Variables:      inputVariable,
+	}
+
 	//mockGuid.On("New").Return(id)
 	mockFinProtocol.On("SendCommand", expectedCommand).Return(expectedVariableMap, nil)
-	result, err := finCapability.Execute(metadata, command, auth, target, inputVariable)
+	result, err := finCapability.Execute(metadata, data)
 
 	assert.Equal(t, err, nil)
 	assert.Equal(t, result, expectedVariableMap)

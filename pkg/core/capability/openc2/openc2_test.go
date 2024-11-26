@@ -3,6 +3,7 @@ package openc2
 import (
 	"testing"
 
+	"soarca/pkg/core/capability"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"soarca/pkg/utils/http"
@@ -64,12 +65,14 @@ func TestOpenC2Request(t *testing.T) {
 
 	mockHttp.On("Request", httpOptions).Return(payloadBytes, nil)
 
+	data := capability.Context{Command: command,
+		Authentication: auth,
+		Target:         target,
+		Variables:      cacao.NewVariables(cacaoVariable)}
+
 	results, err := openc2.Execute(
 		metadata,
-		command,
-		auth,
-		target,
-		cacao.NewVariables(cacaoVariable))
+		data)
 	if err != nil {
 		t.Log(err)
 		t.Fail()

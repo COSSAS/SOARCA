@@ -3,6 +3,7 @@ package fin
 import (
 	"reflect"
 	"soarca/internal/logger"
+	"soarca/pkg/core/capability"
 	"soarca/pkg/core/capability/fin/protocol"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
@@ -30,15 +31,12 @@ func (FinCapability *FinCapability) GetType() string {
 
 func (finCapability *FinCapability) Execute(
 	metadata execution.Metadata,
-	command cacao.Command,
-	authentication cacao.AuthenticationInformation,
-	target cacao.AgentTarget,
-	variables cacao.Variables) (cacao.Variables, error) {
+	context capability.Context) (cacao.Variables, error) {
 
 	finCommand := finModel.NewCommand()
-	finCommand.CommandSubstructure.Command = command.Command
-	finCommand.CommandSubstructure.Authentication = authentication
-	finCommand.CommandSubstructure.Variables = variables
+	finCommand.CommandSubstructure.Command = context.Command.Command
+	finCommand.CommandSubstructure.Authentication = context.Authentication
+	finCommand.CommandSubstructure.Variables = context.Variables
 	finCommand.CommandSubstructure.Context.ExecutionId = metadata.ExecutionId.String()
 	finCommand.CommandSubstructure.Context.PlaybookId = metadata.PlaybookId
 	finCommand.CommandSubstructure.Context.StepId = metadata.StepId

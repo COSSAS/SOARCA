@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"soarca/internal/logger"
+	"soarca/pkg/core/capability"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 
@@ -45,26 +46,23 @@ func (capability *PowershellCapability) GetType() string {
 
 func (capability *PowershellCapability) Execute(
 	metadata execution.Metadata,
-	command cacao.Command,
-	authentication cacao.AuthenticationInformation,
-	target cacao.AgentTarget,
-	variables cacao.Variables,
+	capabilityContext capability.Context,
 ) (cacao.Variables, error) {
 	log.Trace(metadata.ExecutionId)
 
-	port, err := strconv.Atoi(target.Port)
+	port, err := strconv.Atoi(capabilityContext.Target.Port)
 	if err != nil {
 		log.Error("port is not parsable " + err.Error())
 		return cacao.NewVariables(), err
 	}
 
-	address, err := determineTargetAddress(target)
+	address, err := determineTargetAddress(capabilityContext.Target)
 	if err != nil {
 		return cacao.NewVariables(), err
 	}
 
 	endpoint := winrm.NewEndpoint(address, port, false, false, nil, nil, nil, 0)
-	client, err := winrm.NewClient(endpoint, authentication.Username, authentication.Password)
+	client, err := winrm.NewClient(endpoint, capabilityContext.Authentication.Username, capabilityContext.Authentication.Password)
 	if err != nil {
 		log.Error("failed to create client")
 		log.Error(err)
@@ -75,14 +73,14 @@ func (capability *PowershellCapability) Execute(
 	defer cancel()
 
 	effectiveCommand := ""
-	if command.CommandB64 != "" {
-		bytes, err := base64.StdEncoding.DecodeString(command.CommandB64)
+	if capabilityContext.Command.CommandB64 != "" {
+		bytes, err := base64.StdEncoding.DecodeString(capabilityContext.Command.CommandB64)
 		if err != nil {
 			return cacao.NewVariables(), err
 		}
 		effectiveCommand = string(bytes)
 	} else {
-		effectiveCommand = command.Command
+		effectiveCommand = capabilityContext.Command.Command
 	}
 
 	result, stdErr, _, err := client.RunPSWithContext(ctx, effectiveCommand)

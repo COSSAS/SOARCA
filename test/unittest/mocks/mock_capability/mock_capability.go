@@ -1,6 +1,7 @@
 package mock_capability
 
 import (
+	"soarca/pkg/core/capability"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 
@@ -12,11 +13,8 @@ type Mock_Capability struct {
 }
 
 func (capability *Mock_Capability) Execute(metadata execution.Metadata,
-	command cacao.Command,
-	authentication cacao.AuthenticationInformation,
-	target cacao.AgentTarget,
-	variables cacao.Variables) (cacao.Variables, error) {
-	args := capability.Called(metadata, command, authentication, target, variables)
+	context capability.Context) (cacao.Variables, error) {
+	args := capability.Called(metadata, context)
 	return args.Get(0).(cacao.Variables), args.Error(1)
 }
 
