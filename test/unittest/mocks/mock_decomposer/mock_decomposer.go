@@ -1,8 +1,8 @@
 package mock_decomposer
 
 import (
-	"soarca/internal/decomposer"
-	"soarca/models/cacao"
+	"soarca/pkg/core/decomposer"
+	"soarca/pkg/models/cacao"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"

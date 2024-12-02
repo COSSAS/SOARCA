@@ -10,10 +10,10 @@ import (
 	"os"
 	"testing"
 
-	"soarca/models/api"
-	"soarca/models/cacao"
-	"soarca/models/decoder"
-	playbookRouter "soarca/routes/playbook"
+	playbookRouter "soarca/pkg/api/playbook"
+	"soarca/pkg/models/api"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/decoder"
 	mock_database_controller "soarca/test/unittest/mocks/mock_controller/database"
 	mock_playbook "soarca/test/unittest/mocks/mock_playbook_database"
 

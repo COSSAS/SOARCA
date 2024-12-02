@@ -1,8 +1,8 @@
 package mock_playbook_database
 
 import (
-	"soarca/models/api"
-	"soarca/models/cacao"
+	"soarca/pkg/models/api"
+	"soarca/pkg/models/cacao"
 
 	"github.com/stretchr/testify/mock"
 )

@@ -10,9 +10,9 @@ import (
 	"os"
 	"testing"
 
-	"soarca/internal/decomposer"
-	"soarca/models/cacao"
-	"soarca/routes/trigger"
+	"soarca/pkg/api/trigger"
+	"soarca/pkg/core/decomposer"
+	"soarca/pkg/models/cacao"
 	mock_database_controller "soarca/test/unittest/mocks/mock_controller/database"
 	mock_decomposer_controller "soarca/test/unittest/mocks/mock_controller/decomposer"
 	"soarca/test/unittest/mocks/mock_decomposer"

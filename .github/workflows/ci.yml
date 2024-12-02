@@ -60,7 +60,7 @@ jobs:
         run:  go install github.com/swaggo/swag/cmd/swag@latest  
         timeout-minutes: 12
       - name: Start docker containers for test
-        run: docker compose -f "docker/testing/httpbin-test/docker-compose.yml" up -d --build
+        run: docker compose -f "deployments/docker/testing/httpbin-test/docker-compose.yml" up -d --build
       - name: Run tests
         run: |
           sudo apt update

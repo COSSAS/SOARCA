@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"soarca/internal/capability/http"
-	"soarca/models/cacao"
-	"soarca/models/execution"
-	httpUtil "soarca/utils/http"
+	"soarca/pkg/core/capability/http"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/execution"
+	httpUtil "soarca/pkg/utils/http"
 
 	"github.com/go-playground/assert/v2"
 	"github.com/google/uuid"

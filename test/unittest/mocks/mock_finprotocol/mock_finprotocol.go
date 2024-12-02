@@ -1,8 +1,8 @@
 package mock_finprotocol
 
 import (
-	"soarca/models/cacao"
-	"soarca/models/fin"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/fin"
 
 	"github.com/stretchr/testify/mock"
 )
