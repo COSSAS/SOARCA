@@ -251,15 +251,15 @@ func initializeIntegrationTheHiveReporting() downstreamReporter.IDownStreamRepor
 	}
 	log.Info("initializing The Hive reporting integration")
 
-	thehive_api_token := utils.GetEnv("THEHIVE_API_TOKEN", "")
-	thehive_api_base_url := utils.GetEnv("THEHIVE_API_BASE_URL", "")
-	if len(thehive_api_base_url) < 1 || len(thehive_api_token) < 1 {
+	thehiveApiToken := utils.GetEnv("THEHIVE_API_TOKEN", "")
+	thehiveApiBaseUrl := utils.GetEnv("THEHIVE_API_BASE_URL", "")
+	if len(thehiveApiBaseUrl) < 1 || len(thehiveApiToken) < 1 {
 		log.Warning("could not initialize The Hive reporting integration. Check to have configured the env variables correctly.")
 		return nil
 	}
 
-	log.Info(fmt.Sprintf("creating new The hive connector with API base url at : %s", thehive_api_base_url))
-	theHiveConnector := thehive.NewConnector(thehive_api_base_url, thehive_api_token)
+	log.Info(fmt.Sprintf("creating new The hive connector with API base url at : %s", thehiveApiBaseUrl))
+	theHiveConnector := thehive.NewConnector(thehiveApiBaseUrl, thehiveApiToken)
 	theHiveReporter := thehive.NewReporter(theHiveConnector)
 	return theHiveReporter
 }
