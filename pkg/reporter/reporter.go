@@ -71,7 +71,7 @@ func (reporter *Reporter) startReportingProcessor() {
 
 func (reporter *Reporter) RegisterReporters(reporters []downstreamReporter.IDownStreamReporter) error {
 	if len(reporters) == 0 {
-		log.Warning("reporters list is empty. No action taken.")
+		log.Warning("reporters integrations list is empty. No action taken.")
 		return nil
 	}
 	if (len(reporter.reporters) + len(reporters)) > reporter.maxReporters {
