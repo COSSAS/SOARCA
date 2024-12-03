@@ -1,7 +1,6 @@
 package reporter
 
 import (
-	"errors"
 	"soarca/pkg/models/cacao"
 	ds_reporter "soarca/pkg/reporter/downstream_reporter"
 	"soarca/test/unittest/mocks/mock_reporter"
@@ -20,10 +19,8 @@ import (
 func TestRegisterReporter(t *testing.T) {
 	mock_ds_reporter := mock_reporter.Mock_Downstream_Reporter{}
 	reporter := New([]ds_reporter.IDownStreamReporter{})
-	err := reporter.RegisterReporters([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
-	if err != nil {
-		t.Fail()
-	}
+	reporter.RegisterReporters([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
+	assert.Equal(t, len(reporter.reporters), 1)
 }
 
 func TestRegisterTooManyReporters(t *testing.T) {
@@ -34,10 +31,9 @@ func TestRegisterTooManyReporters(t *testing.T) {
 	}
 
 	reporter := New([]ds_reporter.IDownStreamReporter{})
-	err := reporter.RegisterReporters(too_many_reporters)
-
-	expected_err := errors.New("attempting to register too many reporters")
-	assert.Equal(t, expected_err, err)
+	reporter.RegisterReporters(too_many_reporters)
+	assert.Equal(t, len(reporter.reporters), reporter.maxReporters)
+	mock_ds_reporter.AssertExpectations(t)
 }
 
 func TestReportWorkflowStart(t *testing.T) {

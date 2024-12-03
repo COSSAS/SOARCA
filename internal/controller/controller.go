@@ -91,24 +91,16 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 
 	// NOTE: Enrolling mainCache by default as reporter
 	reporter := reporter.New([]downstreamReporter.IDownStreamReporter{})
-	cacheReporterAsList := []downstreamReporter.IDownStreamReporter{&mainCache}
+	downstreamReporters := []downstreamReporter.IDownStreamReporter{&mainCache}
 
 	// Reporter integrations
-	reporterIntegrations := []downstreamReporter.IDownStreamReporter{}
 
 	thehive_reporter := initializeIntegrationTheHiveReporting()
 	if thehive_reporter != nil {
-		reporterIntegrations = append(reporterIntegrations, thehive_reporter)
+		downstreamReporters = append(downstreamReporters, thehive_reporter)
 	}
 
-	err := reporter.RegisterReporters(cacheReporterAsList)
-	if err != nil {
-		log.Error("could not load main Cache as reporter for decomposer and executors")
-	}
-	err = reporter.RegisterReporters(reporterIntegrations)
-	if err != nil {
-		log.Error("could not load reporter integrations")
-	}
+	reporter.RegisterReporters(downstreamReporters)
 
 	soarcaTime := new(timeUtil.Time)
 	actionExecutor := action.New(capabilities, reporter, soarcaTime)
