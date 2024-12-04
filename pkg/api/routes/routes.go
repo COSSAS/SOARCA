@@ -71,15 +71,15 @@ func SwaggerRoutes(route *gin.Engine) {
 // PUT     /playbook/playbook-id
 // DELETE  /playbook/playbook-id
 func PlaybookRoutes(route *gin.Engine, controller database.IController) {
-	playbookController := NewPlaybookController(controller)
+	playbookHandler := NewPlaybookHandler(controller)
 	playbook := route.Group("/playbook")
 	{
-		playbook.GET("/", playbookController.getAllPlaybooks)
-		playbook.GET("/meta/", playbookController.getAllPlaybookMetas)
-		playbook.POST("/", playbookController.submitPlaybook)
-		playbook.GET("/:id", playbookController.getPlaybookByID)
-		playbook.PUT("/:id", playbookController.updatePlaybookByID)
-		playbook.DELETE("/:id", playbookController.deleteByPlaybookID)
+		playbook.GET("/", playbookHandler.GetAllPlaybooks)
+		playbook.GET("/meta/", playbookHandler.GetAllPlaybookMetas)
+		playbook.POST("/", playbookHandler.SubmitPlaybook)
+		playbook.GET("/:id", playbookHandler.GetPlaybookByID)
+		playbook.PUT("/:id", playbookHandler.UpdatePlaybookByID)
+		playbook.DELETE("/:id", playbookHandler.DeleteByPlaybookID)
 
 	}
 }
