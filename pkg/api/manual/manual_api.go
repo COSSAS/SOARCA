@@ -5,7 +5,6 @@ import (
 )
 
 type ManualHandler struct {
-	//
 }
 
 // manual

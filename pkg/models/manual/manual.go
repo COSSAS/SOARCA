@@ -1,6 +1,8 @@
 package manual
 
-import "soarca/pkg/models/cacao"
+import (
+	"soarca/pkg/models/cacao"
+)
 
 type ManualCommandData struct {
 	Type            string                       `bson:"type" json:"type" validate:"required" example:"execution-status"` // The type of this content
@@ -23,7 +25,7 @@ type ManualOutArg struct {
 	External    bool   `bson:"external,omitempty" json:"external,omitempty" example:"false"`             // Indicate if it's external
 }
 
-type ManualRequestPayload struct {
+type ManualOutArgUpdatePayload struct {
 	Type            string                  `bson:"type" json:"type" validate:"required" example:"string"`          // The type of this content
 	ExecutionId     string                  `bson:"execution_id" json:"execution_id" validate:"required"`           // The id of the execution
 	PlaybookId      string                  `bson:"playbook_id" json:"playbook_id" validate:"required"`             // The id of the CACAO playbook executed by the execution
