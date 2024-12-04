@@ -66,6 +66,7 @@ class "If condition Executor" as condition
 class "Ssh" as ssh
 class "OpenC2" as openc2
 class "HttpApi" as api
+class "Manual" as manual
 class "Fin" as fin
 
 
@@ -74,6 +75,7 @@ ICapability <-up- Executor
 ICapability <|.. ssh
 ICapability <|.. openc2
 ICapability <|.. api
+ICapability <|.. manual
 ICapability <|.. fin
 
 playbookaction.IExecutor <|.. playbook
@@ -105,12 +107,12 @@ The capability selector will select the implementation which is capable of execu
     * http-api
     * openc2-http
     * powershell
-* **Coming soon**
     * manual
-* **Future (potentially)**
+* **Coming soon**
     * bash
-    * caldera-cmd
     * elastic
+    * caldera-cmd
+* **Future (potentially)**
     * jupyter
     * kestrel
     * sigma
@@ -121,8 +123,10 @@ The executor will select a module that is capable of executing the command and p
 
 The result of the step execution will be returned to the decomposer. A result can be either output variables or error status.
 
+
+
 #### MQTT executor -> Fin capabilities
-The Executor will put the command on the MQTT topic that is offered by the module. How a module handles this is described in the link:modules.adoc[module documentation]
+The Executor will put the command on the MQTT topic that is offered by the module. How a module handles this is described in the [module documentation](/docs/core-components/modules) and in the [fin documentation](/docs/soarca-extensions/).
 
 #### Component overview
 
