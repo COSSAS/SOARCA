@@ -3,22 +3,22 @@ package playbook
 import (
 	"io"
 	"net/http"
+	"soarca/internal/controller/database"
 	"strconv"
 
-	"soarca/internal/controller/database"
 	playbookrepository "soarca/internal/database/playbook"
 
 	"github.com/gin-gonic/gin"
 )
 
-// A PlaybookController implements the playbook API endpoints is dependent on a database.
-type playbookController struct {
+// a playbookhandler implements the playbook api endpoints is dependent on a database.
+type playbookHandler struct {
 	playbookRepo playbookrepository.IPlaybookRepository
 }
 
-// NewPlaybookController makes a new instance of playbookControler
-func NewPlaybookController(controller database.IController) *playbookController {
-	return &playbookController{playbookRepo: controller.GetDatabaseInstance()}
+// newplaybookcontroller makes a new instance of playbookcontroler
+func NewPlaybookHandler(controller database.IController) *playbookHandler {
+	return &playbookHandler{playbookRepo: controller.GetDatabaseInstance()}
 }
 
 // getAllPlaybooks GET handler for obtaining all the playbooks in the database and return this to the gin context in json format
@@ -31,10 +31,10 @@ func NewPlaybookController(controller database.IController) *playbookController 
 //	@success		200	{array}		cacao.Playbook
 //	@failure		400	{object}	api.Error
 //	@Router			/playbook/ [GET]
-func (plabookCtrl *playbookController) getAllPlaybooks(g *gin.Context) {
+func (playbookHndlr *playbookHandler) GetAllPlaybooks(g *gin.Context) {
 	log.Trace("Trying to obtain all playbook IDs")
 
-	returnListIDs, err := plabookCtrl.playbookRepo.GetPlaybooks()
+	returnListIDs, err := playbookHndlr.playbookRepo.GetPlaybooks()
 	if err != nil {
 		log.Debug("Could not obtain any PlaybookMetas", err)
 		SendErrorResponse(g, http.StatusBadRequest, "Could not obtain any IDs", "GET /playbook/meta")
@@ -55,7 +55,7 @@ func (plabookCtrl *playbookController) getAllPlaybooks(g *gin.Context) {
 //	@success		200	{array}		api.PlaybookMeta
 //	@failure		400	{object}	api.Error
 //	@Router			/playbook/meta [GET]
-func (plabookCtrl *playbookController) getAllPlaybookMetas(g *gin.Context) {
+func (playbookHndlr *playbookHandler) GetAllPlaybookMeta(g *gin.Context) {
 	log.Trace("Trying to obtain all playbook IDs")
 
 	returnListIDs, err := plabookCtrl.playbookRepo.GetPlaybookMetas()
@@ -80,7 +80,7 @@ func (plabookCtrl *playbookController) getAllPlaybookMetas(g *gin.Context) {
 //	@Success		200		{object}	cacao.Playbook
 //	@failure		400		{object}	api.Error
 //	@Router			/playbook/ [POST]
-func (plabookCtrl *playbookController) submitPlaybook(g *gin.Context) {
+func (playbookHndlr *playbookController) submitPlaybook(g *gin.Context) {
 	jsonData, err := io.ReadAll(g.Request.Body)
 	if err != nil {
 		log.Trace("Submit playbook Endpoint has failed: ", err.Error())
@@ -112,7 +112,7 @@ func (plabookCtrl *playbookController) submitPlaybook(g *gin.Context) {
 //	@Success		200	{object}	cacao.Playbook
 //	@failure		400	{object}	api.Error
 //	@Router			/playbook/{id} [GET]
-func (plabookCtrl *playbookController) getPlaybookByID(g *gin.Context) {
+func (playbookHndlr *playbookController) getPlaybookByID(g *gin.Context) {
 	id := g.Param("id")
 	log.Trace("Trying to obtain playbook for id: ", id)
 
@@ -138,7 +138,7 @@ func (plabookCtrl *playbookController) getPlaybookByID(g *gin.Context) {
 //	@Success		200		{object}	cacao.Playbook
 //	@failure		400		{object}	api.Error
 //	@Router			/playbook/{id} [PUT]
-func (plabookCtrl *playbookController) updatePlaybookByID(g *gin.Context) {
+func (playbookHndlr *playbookController) updatePlaybookByID(g *gin.Context) {
 	id := g.Param("id")
 	log.Trace("Trying to update playbook for id: ", id)
 
@@ -169,9 +169,9 @@ func (plabookCtrl *playbookController) updatePlaybookByID(g *gin.Context) {
 //	@Success		200
 //	@failure		400	{object}	api.Error
 //	@Router			/playbook/{id} [DELETE]
-func (plabookCtrl *playbookController) deleteByPlaybookID(g *gin.Context) {
+func (playbookHndlr *playbookController) deleteByPlaybookID(g *gin.Context) {
 	id := g.Param("id")
-	err := plabookCtrl.playbookRepo.Delete(id)
+	err := playbookHndlr.playbookRepo.Delete(id)
 	if err != nil {
 		log.Debug("Something when wrong tying to delete the playbook object. Does the object exists?")
 		SendErrorResponse(g, http.StatusBadRequest, "Could not delete object", "DELETE /playbook/{id}")
