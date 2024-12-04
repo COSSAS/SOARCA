@@ -154,7 +154,7 @@ None
 General error
 
 #### POST `/manual/continue`
-Respond to manual command pending in SOARCA, if out_args are defined they must be filled in and returned in the payload body
+Respond to manual command pending in SOARCA, if out_args are defined they must be filled in and returned in the payload body. Only value is required in the response of the variable. You can however return the entire object. Of the object does not match the original out_arg the call we be considered as failed.
 
 ##### Call payload
 |field              |content                |type               | description |
