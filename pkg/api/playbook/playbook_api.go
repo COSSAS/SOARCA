@@ -3,13 +3,23 @@ package playbook
 import (
 	"io"
 	"net/http"
+	"reflect"
 	"soarca/internal/controller/database"
+	"soarca/internal/logger"
 	"strconv"
 
 	playbookrepository "soarca/internal/database/playbook"
 
 	"github.com/gin-gonic/gin"
 )
+
+var log *logger.Log
+
+type Empty struct{}
+
+func init() {
+	log = logger.Logger(reflect.TypeOf(Empty{}).PkgPath(), logger.Info, "", logger.Json)
+}
 
 // a playbookhandler implements the playbook api endpoints is dependent on a database.
 type playbookHandler struct {
