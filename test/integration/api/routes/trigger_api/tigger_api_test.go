@@ -8,15 +8,17 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"testing"
-
-	"soarca/pkg/api/trigger"
 	"soarca/pkg/core/decomposer"
 	"soarca/pkg/models/cacao"
-	mock_database_controller "soarca/test/unittest/mocks/mock_controller/database"
-	mock_decomposer_controller "soarca/test/unittest/mocks/mock_controller/decomposer"
 	"soarca/test/unittest/mocks/mock_decomposer"
 	"soarca/test/unittest/mocks/mock_playbook_database"
+	"testing"
+
+	api_routes "soarca/pkg/api"
+
+	trigger_handler "soarca/pkg/api/trigger"
+	mock_database_controller "soarca/test/unittest/mocks/mock_controller/database"
+	mock_decomposer_controller "soarca/test/unittest/mocks/mock_controller/decomposer"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/assert/v2"
@@ -40,12 +42,11 @@ func TestTriggerExecutionOfPlaybook(t *testing.T) {
 	mock_controller.On("NewDecomposer").Return(mock_decomposer)
 	playbook := cacao.Decode(byteValue)
 
-	triggerApi := trigger.New(mock_controller, mock_database_controller)
 	recorder := httptest.NewRecorder()
-	trigger.Routes(app, triggerApi)
-
+	triggerHandler := trigger_handler.NewTriggerHandler(mock_controller, mock_database_controller)
+	api_routes.TriggerRoutes(app, triggerHandler)
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
-	mock_decomposer.On("ExecuteAsync", *playbook, triggerApi.ExecutionsChannel).Return(&decomposer.ExecutionDetails{}, nil, executionId)
+	mock_decomposer.On("ExecuteAsync", *playbook, triggerHandler.ExecutionsChannel).Return(&decomposer.ExecutionDetails{}, nil, executionId)
 
 	request, err := http.NewRequest("POST", "/trigger/playbook", bytes.NewBuffer(byteValue))
 	if err != nil {
@@ -81,9 +82,9 @@ func TestExecutionOfPlaybookById(t *testing.T) {
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
 	recorder := httptest.NewRecorder()
-	triggerApi := trigger.New(mock_controller, mock_database_controller)
-	trigger.Routes(app, triggerApi)
-	mock_decomposer.On("ExecuteAsync", *playbook, triggerApi.ExecutionsChannel).Return(&decomposer.ExecutionDetails{}, nil, executionId)
+	triggerHandler := trigger_handler.NewTriggerHandler(mock_controller, mock_database_controller)
+	api_routes.TriggerRoutes(app, triggerHandler)
+	mock_decomposer.On("ExecuteAsync", *playbook, triggerHandler.ExecutionsChannel).Return(&decomposer.ExecutionDetails{}, nil, executionId)
 
 	request, err := http.NewRequest("POST", "/trigger/playbook/1", nil)
 	if err != nil {
@@ -129,10 +130,10 @@ func TestExecutionOfPlaybookByIdWithPayloadValidVariables(t *testing.T) {
 	assert.Equal(t, err, nil)
 
 	recorder := httptest.NewRecorder()
-	triggerApi := trigger.New(mock_controller, mock_database_controller)
-	trigger.Routes(app, triggerApi)
+	triggerHandler := trigger_handler.NewTriggerHandler(mock_controller, mock_database_controller)
+	api_routes.TriggerRoutes(app, triggerHandler)
 
-	mock_decomposer.On("ExecuteAsync", *playbook, triggerApi.ExecutionsChannel).Return(&decomposer.ExecutionDetails{}, nil, executionId)
+	mock_decomposer.On("ExecuteAsync", *playbook, triggerHandler.ExecutionsChannel).Return(&decomposer.ExecutionDetails{}, nil, executionId)
 
 	request, err := http.NewRequest("POST", "/trigger/playbook/1", bytes.NewReader(json))
 	if err != nil {
@@ -166,9 +167,9 @@ func TestPlaybookByIdVariableNotInPlaybook(t *testing.T) {
 	mock_controller.On("NewDecomposer").Return(mock_decomposer)
 
 	recorder := httptest.NewRecorder()
-	triggerApi := trigger.New(mock_controller, mock_database_controller)
+	triggerHandler := trigger_handler.NewTriggerHandler(mock_controller, mock_database_controller)
+	api_routes.TriggerRoutes(app, triggerHandler)
 
-	trigger.Routes(app, triggerApi)
 	var_not_in_playbook := cacao.Variable{
 		Name: "__not_in_playbook__",
 		Type: cacao.VariableTypeString,
@@ -193,7 +194,6 @@ func TestPlaybookByIdVariableNotInPlaybook(t *testing.T) {
 	notInPlaybookError := "Cannot execute. reason: provided variables is not a valid subset of the variables for the referenced playbook [ playbook id: playbook--61a6c41e-6efc-4516-a242-dfbc5c89d562 ]"
 	assert.Equal(t, 400, recorder.Code)
 	assert.Equal(t, notInPlaybookError, resultNotInPlaybook["message"].(string))
-
 }
 
 func TestPlaybookByIdVariableTypeMismatch(t *testing.T) {
@@ -217,9 +217,8 @@ func TestPlaybookByIdVariableTypeMismatch(t *testing.T) {
 	mock_controller.On("NewDecomposer").Return(mock_decomposer)
 
 	recorder := httptest.NewRecorder()
-	triggerApi := trigger.New(mock_controller, mock_database_controller)
-
-	trigger.Routes(app, triggerApi)
+	triggerHandler := trigger_handler.NewTriggerHandler(mock_controller, mock_database_controller)
+	api_routes.TriggerRoutes(app, triggerHandler)
 
 	var_wrong_type := cacao.Variable{
 		Name: "__var1__",
@@ -246,11 +245,9 @@ func TestPlaybookByIdVariableTypeMismatch(t *testing.T) {
 	expected_message_wrong_type := "Cannot execute. reason: mismatch in variables type for [ __var1__ ]: payload var type = integer, playbook var type = string"
 	assert.Equal(t, 400, recorder.Code)
 	assert.Equal(t, expected_message_wrong_type, resultWrongType["message"].(string))
-
 }
 
 func TestPlaybookByIdVariableIsNotExternal(t *testing.T) {
-
 	jsonFile, err := os.Open("../playbook.json")
 	if err != nil {
 		fmt.Println(err)
@@ -271,9 +268,8 @@ func TestPlaybookByIdVariableIsNotExternal(t *testing.T) {
 	mock_controller.On("NewDecomposer").Return(mock_decomposer)
 
 	recorder := httptest.NewRecorder()
-	triggerApi := trigger.New(mock_controller, mock_database_controller)
-
-	trigger.Routes(app, triggerApi)
+	triggerHandler := trigger_handler.NewTriggerHandler(mock_controller, mock_database_controller)
+	api_routes.TriggerRoutes(app, triggerHandler)
 
 	varNotExternal := cacao.Variable{
 		Name:  "__var2_not_external__",
@@ -303,5 +299,4 @@ func TestPlaybookByIdVariableIsNotExternal(t *testing.T) {
 	assert.Equal(t, expectedError, resultNotExternal["message"].(string))
 
 	mock_decomposer.AssertExpectations(t)
-
 }

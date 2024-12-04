@@ -33,14 +33,14 @@ func init() {
 	log = logger.Logger(reflect.TypeOf(Empty{}).PkgPath(), logger.Info, "", logger.Json)
 }
 
-type triggerHandler struct {
+type TriggerHandler struct {
 	controller        decomposer_controller.IController
 	database          database.IController
 	ExecutionsChannel chan decomposer.ExecutionDetails
 }
 
-func NewTriggerHandler(controller decomposer_controller.IController, database database.IController) *triggerHandler {
-	instance := triggerHandler{}
+func NewTriggerHandler(controller decomposer_controller.IController, database database.IController) *TriggerHandler {
+	instance := TriggerHandler{}
 	instance.controller = controller
 	instance.database = database
 	// Channel to get back execution details
@@ -61,7 +61,7 @@ func NewTriggerHandler(controller decomposer_controller.IController, database da
 //	@Success		200		{object}	api.Execution
 //	@failure		400		{object}	api.Error
 //	@Router			/trigger/playbook/{id} [POST]
-func (trigger *triggerHandler) ExecuteById(context *gin.Context) {
+func (trigger *TriggerHandler) ExecuteById(context *gin.Context) {
 	id := context.Param("id")
 
 	db := trigger.database.GetDatabaseInstance()
@@ -100,7 +100,7 @@ func (trigger *triggerHandler) ExecuteById(context *gin.Context) {
 //	@Success		200			{object}	api.Execution
 //	@failure		400			{object}	api.Error
 //	@Router			/trigger/playbook [POST]
-func (trigger *triggerHandler) Execute(context *gin.Context) {
+func (trigger *TriggerHandler) Execute(context *gin.Context) {
 	jsonData, err := io.ReadAll(context.Request.Body)
 	if err != nil {
 		log.Error("failed")
@@ -120,7 +120,7 @@ func (trigger *triggerHandler) Execute(context *gin.Context) {
 	trigger.executePlaybook(playbook, context)
 }
 
-func (trigger *triggerHandler) executePlaybook(playbook *cacao.Playbook, context *gin.Context) {
+func (trigger *TriggerHandler) executePlaybook(playbook *cacao.Playbook, context *gin.Context) {
 	decomposer := trigger.controller.NewDecomposer()
 	go decomposer.ExecuteAsync(*playbook, trigger.ExecutionsChannel)
 	timer := time.NewTimer(time.Duration(3) * time.Second)

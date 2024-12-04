@@ -1,31 +1,37 @@
-package routes
+package api
 
 import (
+	"reflect"
+	open_api "soarca/api"
 	"soarca/internal/controller/database"
 	"soarca/internal/controller/decomposer_controller"
 	"soarca/internal/controller/informer"
+	"soarca/internal/logger"
 	playbook_handler "soarca/pkg/api/playbook"
-	playbook_routes "soarca/pkg/api/playbook"
-	reporter "soarca/pkg/api/reporter"
 	reporter_handler "soarca/pkg/api/reporter"
-	status "soarca/pkg/api/status"
 	status_handler "soarca/pkg/api/status"
-	"soarca/pkg/api/trigger"
+
+	trigger_handler "soarca/pkg/api/trigger"
 
 	"github.com/gin-contrib/cors"
 	gin "github.com/gin-gonic/gin"
+	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-// POST    /operator/coa/coa-id
+var log *logger.Log
 
-// Function setup the required routes for the API layout.
-// Requires database dependency injection.
+type Empty struct{}
+
+func init() {
+	log = logger.Logger(reflect.TypeOf(Empty{}).PkgPath(), logger.Info, "", logger.Json)
+}
 
 func Database(app *gin.Engine,
 	controller database.IController,
 ) error {
-	playbook_routes.Routes(app, controller)
+	log.Trace("Setting up playbook routes")
+	PlaybookRoutes(app, controller)
 	return nil
 }
 
@@ -35,7 +41,7 @@ func Logging(app *gin.Engine) {
 
 func Reporter(app *gin.Engine, informer informer.IExecutionInformer) error {
 	log.Trace("Setting up reporter routes")
-	reporter.Routes(app, informer)
+	ReporterRoutes(app, informer)
 	return nil
 }
 
@@ -45,10 +51,9 @@ func Api(app *gin.Engine,
 ) error {
 	log.Trace("Trying to setup all Routes")
 	// gin.SetMode(gin.ReleaseMode)
-
-	trigger_api := trigger.New(controller, database)
-	status.Routes(app)
-	trigger.Routes(app, trigger_api)
+	triggerHandler := trigger_handler.NewTriggerHandler(controller, database)
+	TriggerRoutes(app, triggerHandler)
+	StatusRoutes(app)
 
 	return nil
 }
@@ -59,8 +64,12 @@ func Cors(app *gin.Engine, origins []string) {
 	app.Use(cors.New(config))
 }
 
-func SwaggerRoutes(route *gin.Engine) {
-	api.SwaggerInfo.BasePath = "/"
+func Swagger(app *gin.Engine) {
+	swaggerRoutes(app)
+}
+
+func swaggerRoutes(route *gin.Engine) {
+	open_api.SwaggerInfo.BasePath = "/"
 	swagger := route.Group("/swagger")
 	{
 		swagger.GET("/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
@@ -101,19 +110,19 @@ func ReporterRoutes(route *gin.Engine, informer informer.IExecutionInformer) {
 
 // GET     /status
 // GET     /status/ping
-func StepRoutes(route *gin.Engine) {
+func StatusRoutes(route *gin.Engine) {
 	router := route.Group("/status")
 	{
-		router.GET("/", status_handler.Api)
-		router.GET("/ping", status_handler.Pong)
+		router.GET("/", status_handler.GetApi)
+		router.GET("/ping", status_handler.GetPong)
 
 	}
 }
 
-func TriggerRoutes(route *gin.Engine, trigger *triggerHandler) {
+func TriggerRoutes(route *gin.Engine, triggerHandler *trigger_handler.TriggerHandler) {
 	group := route.Group("/trigger")
 	{
-		group.POST("/playbook", trigger.Execute)
-		group.POST("/playbook/:id", trigger.ExecuteById)
+		group.POST("/playbook", triggerHandler.Execute)
+		group.POST("/playbook/:id", triggerHandler.ExecuteById)
 	}
 }
