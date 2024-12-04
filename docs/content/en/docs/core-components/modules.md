@@ -277,7 +277,7 @@ The main way to interact with the manual step is through SOARCA's [manual api](/
 
 #### Success and failure
 
-The manual step is considered successful if a response is made through the [manual api](/docs/core-components/api-manual). The manual command can specify a timeout but if none is specified SOARCA will use a default timeout of 10 minutes. If a timeout occurs the step is considered as failed.
+In SOARCA the manual step is considered successful if a response is made through the [manual api](/docs/core-components/api-manual). The manual command can specify a timeout but if none is specified SOARCA will use a default timeout of 10 minutes. If a timeout occurs the step is considered as failed and SOARCA will return an error to the decomposer.
 
 #### Variables
 
