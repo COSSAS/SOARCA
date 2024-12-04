@@ -90,7 +90,7 @@ func (playbookHndlr *playbookHandler) GetAllPlaybookMeta(g *gin.Context) {
 //	@Success		200		{object}	cacao.Playbook
 //	@failure		400		{object}	api.Error
 //	@Router			/playbook/ [POST]
-func (playbookHndlr *playbookController) submitPlaybook(g *gin.Context) {
+func (playbookHndlr *playbookHandler) submitPlaybook(g *gin.Context) {
 	jsonData, err := io.ReadAll(g.Request.Body)
 	if err != nil {
 		log.Trace("Submit playbook Endpoint has failed: ", err.Error())
@@ -122,7 +122,7 @@ func (playbookHndlr *playbookController) submitPlaybook(g *gin.Context) {
 //	@Success		200	{object}	cacao.Playbook
 //	@failure		400	{object}	api.Error
 //	@Router			/playbook/{id} [GET]
-func (playbookHndlr *playbookController) getPlaybookByID(g *gin.Context) {
+func (playbookHndlr *playbookHandler) getPlaybookByID(g *gin.Context) {
 	id := g.Param("id")
 	log.Trace("Trying to obtain playbook for id: ", id)
 
@@ -148,7 +148,7 @@ func (playbookHndlr *playbookController) getPlaybookByID(g *gin.Context) {
 //	@Success		200		{object}	cacao.Playbook
 //	@failure		400		{object}	api.Error
 //	@Router			/playbook/{id} [PUT]
-func (playbookHndlr *playbookController) updatePlaybookByID(g *gin.Context) {
+func (playbookHndlr *playbookHandler) updatePlaybookByID(g *gin.Context) {
 	id := g.Param("id")
 	log.Trace("Trying to update playbook for id: ", id)
 
@@ -179,7 +179,7 @@ func (playbookHndlr *playbookController) updatePlaybookByID(g *gin.Context) {
 //	@Success		200
 //	@failure		400	{object}	api.Error
 //	@Router			/playbook/{id} [DELETE]
-func (playbookHndlr *playbookController) deleteByPlaybookID(g *gin.Context) {
+func (playbookHndlr *playbookHandler) deleteByPlaybookID(g *gin.Context) {
 	id := g.Param("id")
 	err := playbookHndlr.playbookRepo.Delete(id)
 	if err != nil {
