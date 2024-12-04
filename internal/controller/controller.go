@@ -8,6 +8,7 @@ import (
 	"soarca/internal/database/memory"
 	"soarca/internal/logger"
 	"soarca/pkg/core/capability"
+	capabilityController "soarca/pkg/core/capability/fin/controller"
 	"soarca/pkg/core/capability/fin/protocol"
 	"soarca/pkg/core/capability/http"
 	"soarca/pkg/core/capability/openc2"
