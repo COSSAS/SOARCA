@@ -1,6 +1,8 @@
 package manual
 
 import (
+	"soarca/pkg/models/manual"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -52,10 +54,11 @@ func (manualHandler *ManualHandler) GetPendingCommand(g *gin.Context) {
 //	@Param			playbook_id			body	string	true	"playbook ID"
 //	@Param			step_id				body	string	true	"step ID"
 //	@Param			response_status		body	string	true	"response status"
-//	@Param			response_out_args	body	model.ResponseOutArgs	true	"out args"
+//	@Param			response_out_args	body	manual.ManualOutArg	true	"out args"
 //	@Success		200			{object}	api.Execution
 //	@failure		400			{object}	api.Error
 //	@Router			/manual/continue/ [POST]
 func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
-
+	var test manual.ManualOutArg
+	log.Debug(test)
 }

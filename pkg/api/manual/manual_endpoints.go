@@ -1,8 +1,19 @@
 package manual
 
 import (
+	"reflect"
+	"soarca/internal/logger"
+
 	"github.com/gin-gonic/gin"
 )
+
+var log *logger.Log
+
+type Empty struct{}
+
+func init() {
+	log = logger.Logger(reflect.TypeOf(Empty{}).PkgPath(), logger.Info, "", logger.Json)
+}
 
 // TODO:
 // The manual API expose general executions-wide information
