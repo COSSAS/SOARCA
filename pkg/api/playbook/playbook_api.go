@@ -68,7 +68,7 @@ func (playbookHndlr *playbookHandler) GetAllPlaybooks(g *gin.Context) {
 func (playbookHndlr *playbookHandler) GetAllPlaybookMeta(g *gin.Context) {
 	log.Trace("Trying to obtain all playbook IDs")
 
-	returnListIDs, err := plabookCtrl.playbookRepo.GetPlaybookMetas()
+	returnListIDs, err := playbookHndlr.playbookRepo.GetPlaybookMetas()
 	if err != nil {
 		log.Debug("Could not obtain any PlaybookMetas", err)
 		SendErrorResponse(g, http.StatusBadRequest, "Could not obtain any IDs", "GET /playbook/meta")
@@ -97,7 +97,7 @@ func (playbookHndlr *playbookController) submitPlaybook(g *gin.Context) {
 		SendErrorResponse(g, http.StatusBadRequest, "Failed to marshall json on server side", "POST /playbook")
 		return
 	}
-	playbook, err := plabookCtrl.playbookRepo.Create(&jsonData)
+	playbook, err := playbookHndlr.playbookRepo.Create(&jsonData)
 	if err != nil {
 		log.Debug("Submit playbook Endpoint has failed:", err.Error())
 		if err.Error() == "duplicate" {
@@ -126,7 +126,7 @@ func (playbookHndlr *playbookController) getPlaybookByID(g *gin.Context) {
 	id := g.Param("id")
 	log.Trace("Trying to obtain playbook for id: ", id)
 
-	playbook, err := plabookCtrl.playbookRepo.Read(id)
+	playbook, err := playbookHndlr.playbookRepo.Read(id)
 	if err != nil {
 		log.Debug("Could not find document for given id")
 		SendErrorResponse(g, http.StatusBadRequest, "Could not find playbook for given ID", "GET /playbook/{id}")
@@ -158,7 +158,7 @@ func (playbookHndlr *playbookController) updatePlaybookByID(g *gin.Context) {
 		SendErrorResponse(g, http.StatusBadRequest, "Failed to marshall json on server sider", "PUT /playbook/{id}")
 		return
 	}
-	updated_data, err := plabookCtrl.playbookRepo.Update(id, &jsonData)
+	updated_data, err := playbookHndlr.playbookRepo.Update(id, &jsonData)
 	if err != nil {
 		log.Trace("Could not find document for given ")
 		SendErrorResponse(g, http.StatusBadRequest, "Could not find playbook for given ID", "PUT /playbook/{id}")
