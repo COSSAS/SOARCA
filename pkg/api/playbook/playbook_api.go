@@ -65,7 +65,7 @@ func (playbookHndlr *playbookHandler) GetAllPlaybooks(g *gin.Context) {
 //	@success		200	{array}		api.PlaybookMeta
 //	@failure		400	{object}	api.Error
 //	@Router			/playbook/meta [GET]
-func (playbookHndlr *playbookHandler) GetAllPlaybookMeta(g *gin.Context) {
+func (playbookHndlr *playbookHandler) GetAllPlaybookMetas(g *gin.Context) {
 	log.Trace("Trying to obtain all playbook IDs")
 
 	returnListIDs, err := playbookHndlr.playbookRepo.GetPlaybookMetas()
@@ -90,7 +90,7 @@ func (playbookHndlr *playbookHandler) GetAllPlaybookMeta(g *gin.Context) {
 //	@Success		200		{object}	cacao.Playbook
 //	@failure		400		{object}	api.Error
 //	@Router			/playbook/ [POST]
-func (playbookHndlr *playbookHandler) submitPlaybook(g *gin.Context) {
+func (playbookHndlr *playbookHandler) SubmitPlaybook(g *gin.Context) {
 	jsonData, err := io.ReadAll(g.Request.Body)
 	if err != nil {
 		log.Trace("Submit playbook Endpoint has failed: ", err.Error())
@@ -122,7 +122,7 @@ func (playbookHndlr *playbookHandler) submitPlaybook(g *gin.Context) {
 //	@Success		200	{object}	cacao.Playbook
 //	@failure		400	{object}	api.Error
 //	@Router			/playbook/{id} [GET]
-func (playbookHndlr *playbookHandler) getPlaybookByID(g *gin.Context) {
+func (playbookHndlr *playbookHandler) GetPlaybookByID(g *gin.Context) {
 	id := g.Param("id")
 	log.Trace("Trying to obtain playbook for id: ", id)
 
@@ -148,7 +148,7 @@ func (playbookHndlr *playbookHandler) getPlaybookByID(g *gin.Context) {
 //	@Success		200		{object}	cacao.Playbook
 //	@failure		400		{object}	api.Error
 //	@Router			/playbook/{id} [PUT]
-func (playbookHndlr *playbookHandler) updatePlaybookByID(g *gin.Context) {
+func (playbookHndlr *playbookHandler) UpdatePlaybookByID(g *gin.Context) {
 	id := g.Param("id")
 	log.Trace("Trying to update playbook for id: ", id)
 
@@ -179,7 +179,7 @@ func (playbookHndlr *playbookHandler) updatePlaybookByID(g *gin.Context) {
 //	@Success		200
 //	@failure		400	{object}	api.Error
 //	@Router			/playbook/{id} [DELETE]
-func (playbookHndlr *playbookHandler) deleteByPlaybookID(g *gin.Context) {
+func (playbookHndlr *playbookHandler) DeleteByPlaybookID(g *gin.Context) {
 	id := g.Param("id")
 	err := playbookHndlr.playbookRepo.Delete(id)
 	if err != nil {
