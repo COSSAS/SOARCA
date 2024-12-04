@@ -4,6 +4,7 @@ import (
 	"reflect"
 
 	"soarca/internal/logger"
+	"soarca/pkg/core/capability"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"soarca/pkg/utils/http"
@@ -39,17 +40,14 @@ func (OpenC2Capability *OpenC2Capability) GetType() string {
 
 func (OpenC2Capability *OpenC2Capability) Execute(
 	metadata execution.Metadata,
-	command cacao.Command,
-	authentication cacao.AuthenticationInformation,
-	target cacao.AgentTarget,
-	variables cacao.Variables,
+	context capability.Context,
 ) (cacao.Variables, error) {
 	log.Trace(metadata.ExecutionId)
 
 	httpOptions := http.HttpOptions{
-		Command: &command,
-		Target:  &target,
-		Auth:    &authentication,
+		Command: &context.Command,
+		Target:  &context.Target,
+		Auth:    &context.Authentication,
 	}
 	response, err := OpenC2Capability.httpRequest.Request(httpOptions)
 	if err != nil {

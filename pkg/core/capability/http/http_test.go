@@ -6,6 +6,7 @@ package http
 import (
 	"errors"
 
+	"soarca/pkg/core/capability"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	http_request "soarca/pkg/utils/http"
@@ -56,12 +57,16 @@ func TestHTTPOptionsCorrectlyGenerated(t *testing.T) {
 	payload_byte := []byte(payload)
 	mock_http_request.On("Request", httpOptions).Return(payload_byte, nil)
 
+	data := capability.Context{
+		Command:        command,
+		Authentication: oauth2_info,
+		Target:         target,
+		Variables:      cacao.NewVariables(variable1),
+	}
+
 	results, err := httpCapability.Execute(
 		metadata,
-		command,
-		oauth2_info,
-		target,
-		cacao.NewVariables(variable1))
+		data)
 	if err != nil {
 		t.Log(err)
 		t.Fail()
@@ -107,12 +112,16 @@ func TestHTTPOptionsEmptyAuth(t *testing.T) {
 	payload_byte := []byte(payload)
 	mock_http_request.On("Request", httpOptions).Return(payload_byte, nil)
 
+	data := capability.Context{
+		Command:        command,
+		Authentication: *empty_auth,
+		Target:         target,
+		Variables:      cacao.NewVariables(variable1),
+	}
+
 	results, err := httpCapability.Execute(
 		metadata,
-		command,
-		*empty_auth,
-		target,
-		cacao.NewVariables(variable1))
+		data)
 	if err != nil {
 		t.Log(err)
 		t.Fail()
@@ -158,12 +167,16 @@ func TestHTTPOptionsEmptyCommand(t *testing.T) {
 	expected_error := errors.New("command pointer is empty")
 	mock_http_request.On("Request", httpOptions).Return([]byte{}, expected_error)
 
+	data := capability.Context{
+		Command:        *empty_command,
+		Authentication: oauth2_info,
+		Target:         target,
+		Variables:      cacao.NewVariables(variable1),
+	}
+
 	results, err := httpCapability.Execute(
 		metadata,
-		*empty_command,
-		oauth2_info,
-		target,
-		cacao.NewVariables(variable1))
+		data)
 	if err == nil {
 		t.Log(err)
 		t.Fail()

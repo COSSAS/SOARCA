@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"soarca/pkg/core/capability"
 	"soarca/pkg/core/capability/http"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
@@ -39,12 +40,14 @@ func TestHttpConnection(t *testing.T) {
 	stepId, _ := uuid.Parse("action--81eff59f-d084-4324-9e0a-59e353dbd28f")
 
 	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId.String(), StepId: stepId.String()}
+	data := capability.Context{
+		Command:   expectedCommand,
+		Target:    target,
+		Variables: cacao.NewVariables(variable1),
+	}
 	// But what to do if there is no target and no AuthInfo?
 	results, err := httpCapability.Execute(
-		metadata, expectedCommand,
-		cacao.AuthenticationInformation{},
-		target,
-		cacao.NewVariables(variable1))
+		metadata, data)
 	if err != nil {
 		fmt.Println(err)
 		t.Fail()
@@ -80,12 +83,15 @@ func TestHttpOAuth2(t *testing.T) {
 	playbookId, _ := uuid.Parse("d09351a2-a075-40c8-8054-0b7c423db83f")
 	stepId, _ := uuid.Parse("81eff59f-d084-4324-9e0a-59e353dbd28f")
 	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId.String(), StepId: stepId.String()}
+	data := capability.Context{
+		Command:        command,
+		Target:         target,
+		Authentication: auth,
+		Variables:      cacao.NewVariables(),
+	}
 	results, err := httpCapability.Execute(
 		metadata,
-		command,
-		auth,
-		target,
-		cacao.NewVariables())
+		data)
 	if err != nil {
 		fmt.Println(err)
 		t.Fail()
@@ -123,12 +129,15 @@ func TestHttpBasicAuth(t *testing.T) {
 	playbookId, _ := uuid.Parse("d09351a2-a075-40c8-8054-0b7c423db83f")
 	stepId, _ := uuid.Parse("81eff59f-d084-4324-9e0a-59e353dbd28f")
 	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId.String(), StepId: stepId.String()}
+	data := capability.Context{
+		Command:        command,
+		Target:         target,
+		Authentication: auth,
+		Variables:      cacao.NewVariables(),
+	}
 	results, err := httpCapability.Execute(
 		metadata,
-		command,
-		auth,
-		target,
-		cacao.NewVariables())
+		data)
 	if err != nil {
 		fmt.Println(err)
 		t.Fail()

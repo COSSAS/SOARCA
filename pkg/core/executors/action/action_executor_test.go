@@ -77,6 +77,13 @@ func TestExecuteStep(t *testing.T) {
 		Variables: cacao.NewVariables(expectedVariables),
 	}
 
+	context1 := capability.Context{
+		Command:        expectedCommand,
+		Authentication: expectedAuth,
+		Target:         expectedTarget,
+		Variables:      cacao.NewVariables(expectedVariables),
+	}
+
 	layout := "2006-01-02T15:04:05.000Z"
 	str := "2014-11-12T11:45:26.371Z"
 	timeNow, _ := time.Parse(layout, str)
@@ -87,10 +94,7 @@ func TestExecuteStep(t *testing.T) {
 	mock_reporter.On("ReportStepEnd", executionId, step, cacao.NewVariables(expectedVariables), nil, timeNow).Return()
 	mock_ssh.On("Execute",
 		metadata,
-		expectedCommand,
-		expectedAuth,
-		expectedTarget,
-		cacao.NewVariables(expectedVariables)).
+		context1).
 		Return(cacao.NewVariables(expectedVariables),
 			nil)
 
@@ -142,21 +146,27 @@ func TestExecuteActionStep(t *testing.T) {
 		Name: "ssh",
 	}
 
+	context1 := capability.Context{
+		Command:        expectedCommand,
+		Authentication: expectedAuth,
+		Target:         expectedTarget,
+		Variables:      cacao.NewVariables(expectedVariables),
+	}
+
 	mock_ssh.On("Execute",
 		metadata,
-		expectedCommand,
-		expectedAuth,
-		expectedTarget,
-		cacao.NewVariables(expectedVariables)).
+		context1).
 		Return(cacao.NewVariables(expectedVariables),
 			nil)
 
-	_, err := executerObject.ExecuteActionStep(metadata,
-		expectedCommand,
-		expectedAuth,
-		expectedTarget,
-		cacao.NewVariables(expectedVariables),
-		agent)
+	data := data{command: expectedCommand,
+		authentication: expectedAuth,
+		target:         expectedTarget,
+		variables:      cacao.NewVariables(expectedVariables),
+		agent:          agent}
+
+	_, err := executerObject.executeCommands(metadata,
+		data)
 
 	assert.Equal(t, err, nil)
 	mock_reporter.AssertExpectations(t)
@@ -202,12 +212,13 @@ func TestNonExistingCapabilityStep(t *testing.T) {
 		Name: "non-existing",
 	}
 
-	_, err := executerObject.ExecuteActionStep(metadata,
-		expectedCommand,
-		expectedAuth,
-		expectedTarget,
-		cacao.NewVariables(expectedVariables),
-		agent)
+	data := data{command: expectedCommand,
+		authentication: expectedAuth,
+		target:         expectedTarget,
+		variables:      cacao.NewVariables(expectedVariables),
+		agent:          agent}
+	_, err := executerObject.executeCommands(metadata,
+		data)
 
 	assert.Equal(t, err, errors.New("capability: non-existing is not available in soarca"))
 	mock_ssh.AssertExpectations(t)
@@ -354,21 +365,25 @@ func TestVariableInterpolation(t *testing.T) {
 		Name: "cap1",
 	}
 
+	context1 := capability.Context{Command: expectedCommand,
+		Authentication: expectedAuth,
+		Target:         expectedTarget,
+		Variables:      cacao.NewVariables(var1, var2, var3, varUser, varPassword, varOauth, varPrivateKey, varToken, varUserId, varheader1, varheader2)}
+
 	mock_capability1.On("Execute",
 		metadata,
-		expectedCommand,
-		expectedAuth,
-		expectedTarget,
-		cacao.NewVariables(var1, var2, var3, varUser, varPassword, varOauth, varPrivateKey, varToken, varUserId, varheader1, varheader2)).
+		context1).
 		Return(cacao.NewVariables(var1),
 			nil)
 
-	_, err := executerObject.ExecuteActionStep(metadata,
-		inputCommand,
-		inputAuth,
-		inputTarget,
-		cacao.NewVariables(var1, var2, var3, varUser, varPassword, varOauth, varPrivateKey, varToken, varUserId, varheader1, varheader2),
-		agent)
+	data1 := data{command: inputCommand,
+		authentication: inputAuth,
+		target:         inputTarget,
+		variables:      cacao.NewVariables(var1, var2, var3, varUser, varPassword, varOauth, varPrivateKey, varToken, varUserId, varheader1, varheader2),
+		agent:          agent}
+
+	_, err := executerObject.executeCommands(metadata,
+		data1)
 
 	assert.Equal(t, err, nil)
 	mock_capability1.AssertExpectations(t)
@@ -391,22 +406,25 @@ func TestVariableInterpolation(t *testing.T) {
 	}
 
 	metadataHttp := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId, StepId: stepId}
+	contextHttp := capability.Context{Command: expectedHttpCommand,
+		Authentication: expectedAuth,
+		Target:         expectedTarget,
+		Variables:      cacao.NewVariables(varHttpContent, varheader1, varheader2)}
 
 	mock_capability1.On("Execute",
 		metadataHttp,
-		expectedHttpCommand,
-		expectedAuth,
-		expectedTarget,
-		cacao.NewVariables(varHttpContent, varheader1, varheader2)).
+		contextHttp).
 		Return(cacao.NewVariables(var1),
 			nil)
 
-	_, err = executerObject.ExecuteActionStep(metadata,
-		httpCommand,
-		expectedAuth,
-		expectedTarget,
-		cacao.NewVariables(varHttpContent, varheader1, varheader2),
-		agent)
+	data2 := data{command: httpCommand,
+		authentication: expectedAuth,
+		target:         expectedTarget,
+		variables:      cacao.NewVariables(varHttpContent, varheader1, varheader2),
+		agent:          agent}
+
+	_, err = executerObject.executeCommands(metadata,
+		data2)
 
 	assert.Equal(t, err, nil)
 	mock_capability1.AssertExpectations(t)

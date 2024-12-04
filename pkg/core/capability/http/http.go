@@ -3,6 +3,7 @@ package http
 import (
 	"reflect"
 	"soarca/internal/logger"
+	"soarca/pkg/core/capability"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"soarca/pkg/utils/http"
@@ -41,15 +42,12 @@ func (httpCapability *HttpCapability) GetType() string {
 
 func (httpCapability *HttpCapability) Execute(
 	metadata execution.Metadata,
-	command cacao.Command,
-	authentication cacao.AuthenticationInformation,
-	target cacao.AgentTarget,
-	variables cacao.Variables) (cacao.Variables, error) {
+	context capability.Context) (cacao.Variables, error) {
 
 	soarca_http_options := http.HttpOptions{
-		Target:  &target,
-		Command: &command,
-		Auth:    &authentication,
+		Target:  &context.Target,
+		Command: &context.Command,
+		Auth:    &context.Authentication,
 	}
 
 	responseBytes, err := httpCapability.soarca_http_request.Request(soarca_http_options)

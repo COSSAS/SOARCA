@@ -46,6 +46,14 @@ type Executor struct {
 	time         timeUtil.ITime
 }
 
+type data struct {
+	command        cacao.Command
+	authentication cacao.AuthenticationInformation
+	target         cacao.AgentTarget
+	variables      cacao.Variables
+	agent          cacao.AgentTarget
+}
+
 func (executor *Executor) Execute(meta execution.Metadata, metadata PlaybookStepMetadata) (cacao.Variables, error) {
 
 	executor.reporter.ReportStepStart(meta.ExecutionId, metadata.Step, metadata.Variables, executor.time.Now())
@@ -62,6 +70,12 @@ func (executor *Executor) Execute(meta execution.Metadata, metadata PlaybookStep
 		return cacao.NewVariables(), err
 	}
 
+	returnVariables, err = executor.executeCommandFromArray(meta, metadata)
+	return returnVariables, err
+}
+
+func (executor *Executor) executeCommandFromArray(meta execution.Metadata, metadata PlaybookStepMetadata) (cacao.Variables, error) {
+	returnVariables := cacao.NewVariables()
 	for _, command := range metadata.Step.Commands {
 		// NOTE: This assumes we want to run Command for every Target individually.
 		//       Is that something we want to enforce or leave up to the capability?
@@ -70,13 +84,17 @@ func (executor *Executor) Execute(meta execution.Metadata, metadata PlaybookStep
 			target := metadata.Targets[element]
 			auth := metadata.Auth[target.AuthInfoIdentifier]
 
-			outputVariables, err := executor.ExecuteActionStep(
+			data := data{
+				command:        command,
+				authentication: auth,
+				target:         target,
+				variables:      metadata.Variables,
+				agent:          metadata.Agent,
+			}
+
+			outputVariables, err := executor.executeCommands(
 				meta,
-				command,
-				auth,
-				target,
-				metadata.Variables,
-				metadata.Agent)
+				data)
 
 			if len(metadata.Step.OutArgs) > 0 {
 				// If OutArgs is set, only update execution args that are explicitly referenced
@@ -93,50 +111,61 @@ func (executor *Executor) Execute(meta execution.Metadata, metadata PlaybookStep
 			}
 		}
 	}
-
 	return returnVariables, nil
 }
 
-func (executor *Executor) ExecuteActionStep(metadata execution.Metadata,
-	command cacao.Command,
-	authentication cacao.AuthenticationInformation,
-	target cacao.AgentTarget,
-	variables cacao.Variables,
-	agent cacao.AgentTarget) (cacao.Variables, error) {
-
-	if capability, ok := executor.capabilities[agent.Name]; ok {
-		command.Command = variables.Interpolate(command.Command)
-		command.Content = variables.Interpolate(command.Content)
-		command.ContentB64 = variables.Interpolate(command.ContentB64)
-
-		for key, headers := range command.Headers {
-			var slice []string
-			for _, header := range headers {
-				slice = append(slice, variables.Interpolate(header))
-			}
-			command.Headers[key] = slice
+func interpolateCommand(command cacao.Command, variables cacao.Variables) cacao.Command {
+	command.Command = variables.Interpolate(command.Command)
+	command.Content = variables.Interpolate(command.Content)
+	command.ContentB64 = variables.Interpolate(command.ContentB64)
+	for key, headers := range command.Headers {
+		var slice []string
+		for _, header := range headers {
+			slice = append(slice, variables.Interpolate(header))
 		}
+		command.Headers[key] = slice
+	}
+	return command
+}
 
-		for key, addresses := range target.Address {
-			var slice []string
-			for _, address := range addresses {
-				slice = append(slice, variables.Interpolate(address))
-			}
-			target.Address[key] = slice
+func interpolatedTarget(target cacao.AgentTarget, variables cacao.Variables) cacao.AgentTarget {
+	for key, addresses := range target.Address {
+		var slice []string
+		for _, address := range addresses {
+			slice = append(slice, variables.Interpolate(address))
 		}
+		target.Address[key] = slice
+	}
+	return target
+}
 
-		authentication.Password = variables.Interpolate(authentication.Password)
-		authentication.Username = variables.Interpolate(authentication.Username)
-		authentication.UserId = variables.Interpolate(authentication.UserId)
-		authentication.Token = variables.Interpolate(authentication.Token)
-		authentication.OauthHeader = variables.Interpolate(authentication.OauthHeader)
-		authentication.PrivateKey = variables.Interpolate(authentication.PrivateKey)
+func interpolateAuthentication(authentication cacao.AuthenticationInformation, variables cacao.Variables) cacao.AuthenticationInformation {
+	authentication.Username = variables.Interpolate(authentication.Username)
+	authentication.Password = variables.Interpolate(authentication.Password)
+	authentication.UserId = variables.Interpolate(authentication.UserId)
+	authentication.Token = variables.Interpolate(authentication.Token)
+	authentication.OauthHeader = variables.Interpolate(authentication.OauthHeader)
+	authentication.PrivateKey = variables.Interpolate(authentication.PrivateKey)
 
-		returnVariables, err := capability.Execute(metadata, command, authentication, target, variables)
+	return authentication
+
+}
+
+func (executor *Executor) executeCommands(metadata execution.Metadata,
+	data data) (cacao.Variables, error) {
+
+	context := capability.Context{}
+
+	if capability, ok := executor.capabilities[data.agent.Name]; ok {
+		context.Command = interpolateCommand(data.command, data.variables)
+		context.Target = interpolatedTarget(data.target, data.variables)
+		context.Authentication = interpolateAuthentication(data.authentication, data.variables)
+		context.Variables = data.variables
+		returnVariables, err := capability.Execute(metadata, context)
 		return returnVariables, err
 	} else {
 		empty := cacao.NewVariables()
-		err := errors.New(fmt.Sprint("capability: ", agent.Name, " is not available in soarca"))
+		err := errors.New(fmt.Sprint("capability: ", data.agent.Name, " is not available in soarca"))
 		log.Error(err)
 		return empty, err
 	}
