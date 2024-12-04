@@ -154,7 +154,7 @@ None
 General error
 
 #### POST `/manual/continue`
-Respond to manual command pending in SOARCA, if out_args are defined they must be filled in and returned in the payload body. Only value is required in the response of the variable. You can however return the entire object. Of the object does not match the original out_arg the call we be considered as failed.
+Respond to manual command pending in SOARCA, if out_args are defined they must be filled in and returned in the payload body. Only value is required in the response of the variable. You can however return the entire object. If the object does not match the original out_arg, the call we be considered as failed.
 
 ##### Call payload
 |field              |content                |type               | description |
@@ -164,8 +164,7 @@ Respond to manual command pending in SOARCA, if out_args are defined they must b
 |playbook_id        |UUID                   |string             |The id of the CACAO playbook executed by the execution
 |step_id            |UUID                   |string             |The id of the step executed by the execution
 |response_status    |enum                   |string             |Can be either `success` or `failed`
-|response_out_args  |cacao variables        |dictionary         |Map of [cacao variables](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256555) handled in the step out args with current values and definitions
-
+|response_out_args  |cacao variables name and value        |dictionary         |Map of cacao variables's names and values, as per variables handled in the step out args
 
 
 ```plantuml
