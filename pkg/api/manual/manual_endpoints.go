@@ -1,8 +1,6 @@
 package manual
 
 import (
-	"soarca/pkg/core/capability/manual/controller"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -30,11 +28,11 @@ import (
 
 // The controller manages the manual command infromation and status, like a cache. And interfaces any interactor type (e.g. API, integration)
 
-func Routes(route *gin.Engine, manualController *controller.IManualController) {
-	// group := route.Group("/manual")
-	// {
-	// 	group.GET("/", manualController.GetPendingAll())
-	// 	group.GET("/:executionId/:stepId", manualController.GetPendingCommand)
-	// 	group.POST("/manual/continue", manualController.PostContinue)
-	// }
+func Routes(route *gin.Engine, manualHandler *ManualHandler) {
+	group := route.Group("/manual")
+	{
+		group.GET("/", manualHandler.GetPendingCommands)
+		group.GET("/:executionId/:stepId", manualHandler.GetPendingCommand)
+		group.POST("/manual/continue", manualHandler.PostContinue)
+	}
 }

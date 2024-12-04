@@ -29,3 +29,5 @@ type IManualController interface {
 type ManualController struct {
 	manualCommandsRegistry map[string]ManualCommandInfo
 }
+
+func (controller *ManualController) GetPendingCommands()
