@@ -25,7 +25,7 @@ func init() {
 // The manual capability waits on interactioncontroller.WasCompleted() status != pending (to implement)
 // Meanwhile, external systems use the InteractionController to do GetPending. GetPending just uses the memory registry of InteractionController
 // Also meanwhile, external systems can use InteractionController to do Continue()
-// Upon a Continue and relative updates, the WasCompleted will return status == completed, and the related info
+// Upon a Continue and relative updates, the IsCompleted will return status == completed, and the related info
 // The manual capability continues.
 
 type IInteraction interface {
@@ -38,7 +38,7 @@ type IInteractionController interface {
 	GetPendingCommands() ([]manual.ManualCommandData, error)
 	GetPendingCommand(metadata execution.Metadata) (manual.ManualCommandData, error)
 	Continue(outArgsResult manual.ManualOutArgUpdatePayload) error
-	WasCompleted(metadata execution.Metadata) (cacao.Variables, string, error)
+	IsCompleted(metadata execution.Metadata) (cacao.Variables, string, error)
 }
 
 type InteractionController struct {
