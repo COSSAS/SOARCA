@@ -8,3 +8,9 @@ dependencychecker:
 
 thirdpartyfindings:
   enabled: true
+
+component_base_dirs:
+  - "cmd"
+  - "pkg"
+  - "internal"
+  - ""
