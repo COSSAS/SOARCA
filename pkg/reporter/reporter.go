@@ -1,7 +1,6 @@
 package reporter
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -69,17 +68,20 @@ func (reporter *Reporter) startReportingProcessor() {
 	}
 }
 
-func (reporter *Reporter) RegisterReporters(reporters []downstreamReporter.IDownStreamReporter) error {
+func (reporter *Reporter) RegisterReporters(reporters []downstreamReporter.IDownStreamReporter) {
 	if len(reporters) == 0 {
 		log.Warning("reporters list is empty. No action taken.")
-		return nil
 	}
 	if (len(reporter.reporters) + len(reporters)) > reporter.maxReporters {
-		log.Warning("reporter not registered, too many reporters")
-		return errors.New("attempting to register too many reporters")
+		log.Warning("too many reporters provided. Not all provided reporters will be instantiated.")
 	}
-	reporter.reporters = append(reporter.reporters, reporters...)
-	return nil
+
+	for _, downstreamRep := range reporters {
+		if len(reporter.reporters) >= reporter.maxReporters {
+			return
+		}
+		reporter.reporters = append(reporter.reporters, downstreamRep)
+	}
 }
 
 // ######################## IWorkflowReporter interface

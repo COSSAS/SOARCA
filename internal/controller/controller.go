@@ -91,23 +91,16 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 
 	// NOTE: Enrolling mainCache by default as reporter
 	reporter := reporter.New([]downstreamReporter.IDownStreamReporter{})
-	cacheReporterAsList := []downstreamReporter.IDownStreamReporter{&mainCache}
+	downstreamReporters := []downstreamReporter.IDownStreamReporter{&mainCache}
 
 	// Reporter integrations
-	theHiveReporterAsList := []downstreamReporter.IDownStreamReporter{}
+
 	thehive_reporter := initializeIntegrationTheHiveReporting()
 	if thehive_reporter != nil {
-		theHiveReporterAsList = append(theHiveReporterAsList, thehive_reporter)
+		downstreamReporters = append(downstreamReporters, thehive_reporter)
 	}
 
-	err := reporter.RegisterReporters(cacheReporterAsList)
-	if err != nil {
-		log.Error("could not load main Cache as reporter for decomposer and executors")
-	}
-	err = reporter.RegisterReporters(theHiveReporterAsList)
-	if err != nil {
-		log.Error("could not load The Hive as reporter for decomposer and executors")
-	}
+	reporter.RegisterReporters(downstreamReporters)
 
 	soarcaTime := new(timeUtil.Time)
 	actionExecutor := action.New(capabilities, reporter, soarcaTime)
@@ -250,15 +243,15 @@ func initializeIntegrationTheHiveReporting() downstreamReporter.IDownStreamRepor
 	}
 	log.Info("initializing The Hive reporting integration")
 
-	thehive_api_token := utils.GetEnv("THEHIVE_API_TOKEN", "")
-	thehive_api_base_url := utils.GetEnv("THEHIVE_API_BASE_URL", "")
-	if len(thehive_api_base_url) < 1 || len(thehive_api_token) < 1 {
+	thehiveApiToken := utils.GetEnv("THEHIVE_API_TOKEN", "")
+	thehiveApiBaseUrl := utils.GetEnv("THEHIVE_API_BASE_URL", "")
+	if len(thehiveApiBaseUrl) < 1 || len(thehiveApiToken) < 1 {
 		log.Warning("could not initialize The Hive reporting integration. Check to have configured the env variables correctly.")
 		return nil
 	}
 
-	log.Info(fmt.Sprintf("creating new The hive connector with API base url at : %s", thehive_api_base_url))
-	theHiveConnector := thehive.NewConnector(thehive_api_base_url, thehive_api_token)
+	log.Info(fmt.Sprintf("creating new The hive connector with API base url at : %s", thehiveApiBaseUrl))
+	theHiveConnector := thehive.NewConnector(thehiveApiBaseUrl, thehiveApiToken)
 	theHiveReporter := thehive.NewReporter(theHiveConnector)
 	return theHiveReporter
 }
