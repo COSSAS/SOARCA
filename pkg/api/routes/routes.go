@@ -4,9 +4,12 @@ import (
 	"soarca/internal/controller/database"
 	"soarca/internal/controller/decomposer_controller"
 	"soarca/internal/controller/informer"
+	playbook_handler "soarca/pkg/api/playbook"
 	playbook_routes "soarca/pkg/api/playbook"
 	reporter "soarca/pkg/api/reporter"
+	reporter_handler "soarca/pkg/api/reporter"
 	status "soarca/pkg/api/status"
+	status_handler "soarca/pkg/api/status"
 	"soarca/pkg/api/trigger"
 
 	"github.com/gin-contrib/cors"
@@ -71,7 +74,7 @@ func SwaggerRoutes(route *gin.Engine) {
 // PUT     /playbook/playbook-id
 // DELETE  /playbook/playbook-id
 func PlaybookRoutes(route *gin.Engine, controller database.IController) {
-	playbookHandler := NewPlaybookHandler(controller)
+	playbookHandler := playbook_handler.NewPlaybookHandler(controller)
 	playbook := route.Group("/playbook")
 	{
 		playbook.GET("/", playbookHandler.GetAllPlaybooks)
@@ -88,11 +91,11 @@ func PlaybookRoutes(route *gin.Engine, controller database.IController) {
 // GET     /reporter
 // GET     /reporter/{execution-id}
 func ReporterRoutes(route *gin.Engine, informer informer.IExecutionInformer) {
-	executionInformer := NewExecutionInformer(informer)
+	reportHandler := reporter_handler.NewReportHandler(informer)
 	report := route.Group("/reporter")
 	{
-		report.GET("/", executionInformer.getExecutions)
-		report.GET("/:id", executionInformer.getExecutionReport)
+		report.GET("/", reportHandler.GetExecutions)
+		report.GET("/:id", reportHandler.GetExecutionReport)
 	}
 }
 
@@ -101,13 +104,13 @@ func ReporterRoutes(route *gin.Engine, informer informer.IExecutionInformer) {
 func StepRoutes(route *gin.Engine) {
 	router := route.Group("/status")
 	{
-		router.GET("/", Api)
-		router.GET("/ping", Pong)
+		router.GET("/", status_handler.Api)
+		router.GET("/ping", status_handler.Pong)
 
 	}
 }
 
-func TriggerRoutes(route *gin.Engine, trigger *TriggerApi) {
+func TriggerRoutes(route *gin.Engine, trigger *triggerHandler) {
 	group := route.Group("/trigger")
 	{
 		group.POST("/playbook", trigger.Execute)

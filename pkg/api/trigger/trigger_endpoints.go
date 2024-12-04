@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Routes(route *gin.Engine, trigger *TriggerApi) {
+func Routes(route *gin.Engine, trigger *triggerHandler) {
 	group := route.Group("/trigger")
 	{
 		group.POST("/playbook", trigger.Execute)
