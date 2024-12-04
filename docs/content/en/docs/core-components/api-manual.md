@@ -90,7 +90,7 @@ General error
 
 ---
 
-#### GET `/manual/<execution-id>`
+#### GET `/manual/<execution-id>/<step-id>`
 Get pending manual actions objects that are currently waiting in SOARCA for specific execution.
 
 ##### Call payload
