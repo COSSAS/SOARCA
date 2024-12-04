@@ -33,7 +33,7 @@ Get all pending manual actions objects that are currently waiting in SOARCA.
 None
 
 ##### Response
-200/OK with payload:
+200/OK with payload list of:
 
 
 
