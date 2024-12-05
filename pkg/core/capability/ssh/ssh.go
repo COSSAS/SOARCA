@@ -55,10 +55,10 @@ func execute(command cacao.Command,
 		return cacao.NewVariables(), err
 	}
 	session, client, err := getSession(config, target)
-	defer client.Close()
 	if err != nil {
 		return cacao.NewVariables(), err
 	}
+	defer client.Close()
 
 	return executeCommand(session, command)
 }
@@ -67,12 +67,12 @@ func executeCommand(session *ssh.Session,
 	command cacao.Command) (cacao.Variables, error) {
 
 	response, err := session.Output(StripSshPrepend(command.Command))
-	defer session.Close()
 
 	if err != nil {
 		log.Error(err)
 		return cacao.NewVariables(), err
 	}
+	defer session.Close()
 	results := cacao.NewVariables(cacao.Variable{Type: cacao.VariableTypeString,
 		Name:  sshResultVariableName,
 		Value: string(response)})
