@@ -15,7 +15,7 @@ We will use HTTP status codes https://en.wikipedia.org/wiki/List_of_HTTP_status_
 
 ```plantuml
 @startuml
-protocol Reporter {
+protocol Manual {
     GET     /manual
     POST    /manual/continue
 }

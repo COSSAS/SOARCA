@@ -325,9 +325,71 @@ This example will start an operation that executes the ability with ID `36eecb80
 This capability executes [manual Commands](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256491) and provides them through the [SOARCA api](/docs/core-components/api-manual).
 
 
-<!-- The manual capability will allow an operator to interact with a playbook. It could allow one to perform a manual step that could not be automated, enter a variable to the playbook execution or a combination of these operations.
+The manual capability will allow an operator to interact with a playbook. It could allow one to perform a manual step that could not be automated, enter a variable to the playbook execution or a combination of these operations.
 
-The main way to interact with the manual step is through SOARCA's [manual api](/docs/core-components/api-manual). The manual step should provide a timeout SOARCA will by default use a timeout of 10 minutes. If a timeout occurs the step is considered as failed. -->
+The manual step should provide a timeout SOARCA will by default use a timeout of 10 minutes. If a timeout occurs the step is considered as failed.
+
+#### Manual capability architecture
+
+In essence, executing a manual command involves the following actions:
+1. A message, the `command` of a manual command, is posted *somewhere* *somehow*, together with the variables expected to be filled.
+2. The playbook execution stops, waiting for *something* to respond to the message with the variables values.
+3. The variables are streamed inside the playbook execution and handled accordingly.
+
+Because the *somewhere* and *somehow* for posting a message can vary, and the *something* that replies can vary too, SOARCA adopts a flexible architecture to accomodate different ways of manual *interactions*. Below a simplified view of the architecture.
+
+```plantuml
+@startuml
+set separator ::
+
+interface ICapability{
+   Execute()
+}
+
+interface IInteractionController{
+    PostCommand()
+	GetPendingCommands()
+	GetPendingCommand()
+	Continue()
+	IsCompleted()
+}
+
+protocol ManualAPI {
+    GET     /manual
+    POST    /manual/continue
+}
+
+interface IInteraction {
+    PostCommand()
+	Continue()
+}
+
+class ManualStep 
+
+class InteractionController {
+    interactions []IInteraction
+}
+class Interaction
+
+
+ManualStep .left.|> ICapability
+ManualStep -right-> IInteractionController
+InteractionController .up.|> IInteractionController
+
+ManualAPI -left-> IInteractionController
+
+InteractionController -right-> IInteraction
+Interaction .up.|> IInteraction
+
+
+```
+
+
+The main way to interact with the manual step is through SOARCA's [manual api](/docs/core-components/api-manual). 
+
+Besides SOARCA's [manual api](/docs/core-components/api-manual), SOARCA is designed to allow for configuration of additional ways that a manual command should be executed.
+
+
 
 
 
