@@ -5,13 +5,11 @@ description: >
 categories: [API]
 tags: [protocol, http, rest, api]
 weight: 2
-date: 2024-05-1
 ---
 
 # Endpoint description
 
-We will use HTTP status codes https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
-
+We will use HTTP status codes <https://en.wikipedia.org/wiki/List_of_HTTP_status_codes>
 
 ```plantuml
 @startuml
@@ -22,17 +20,20 @@ protocol Reporter {
 @enduml
 ```
 
-
 ## /reporter
+
 The reporter endpoint is used to fetch information about ongoing playbook executions in SOARCA
 
 ### GET `/reporter`
+
 Get all execution IDs of currently ongoing executions.
 
 #### Call payload
+
 None
 
 #### Response
+
 200/OK with payload:
 
 ```plantuml
@@ -46,22 +47,23 @@ None
 ]
 @endjson
 ```
+
 #### Error
+
 400/BAD REQUEST with payload:
 General error
 
-
-
 ### GET `/reporter/{execution-id}`
+
 Get information about ongoing execution
 
 #### Call payload
+
 None
 
 #### Response
 
 Response data model:
-
 
 |field              |content                |type               | description |
 | ----------------- | --------------------- | ----------------- | ----------- |
@@ -76,8 +78,8 @@ Response data model:
 |step_results       |step_results           |dictionary         |Map of step-id to related [step execution data](#step-execution-data)
 |request_interval   |seconds                |integer            |Suggests the polling interval for the next request (default suggested is 5 seconds).
 
-
 ##### Step execution data
+
 |field              |content                |type               | description |
 | ----------------- | --------------------- | ----------------- | ----------- |
 |step_id            |UUID                   |string             |The id of the step being executed
@@ -91,9 +93,11 @@ Response data model:
 |variables          |cacao variables        |dictionary         |Map of [cacao variables](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256555) handled in the step (both in and out) with current values and definitions
 |automated_execution | boolean              |string            |This property identifies if the workflow step was executed manually or automatically. It is either true or false.
 
-##### Execution stataus 
+##### Execution stataus
+
 Table from [Cyentific RNI workflow Status](https://github.com/cyentific-rni/workflow-status/blob/main/README.md#21-refined-execution-status-enumeration)
 **Vocabulary Name:** `execution-status-enum`
+
 | Property Name | Description|
 | :--- | :--- |
 | successfully_executed | The workflow step was executed successfully (completed). |
@@ -103,7 +107,6 @@ Table from [Cyentific RNI workflow Status](https://github.com/cyentific-rni/work
 |client_side_error| A client-side error occurred.|
 |timeout_error| A timeout error occurred. The timeout of a CACAO workflow step is specified in the “timeout” property. |
 |exception_condition_error| A exception condition error ocurred. A CACAO playbook can incorporate an exception condition at the playbook level and, in particular, with the "workflow_exception" property. |
-
 
 If the execution has completed and no further steps need to be executed
 
