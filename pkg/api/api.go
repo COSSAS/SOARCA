@@ -87,8 +87,8 @@ func PlaybookRoutes(route *gin.Engine, controller database.IController) {
 	playbookRoutes := route.Group("/playbook")
 	{
 		playbookRoutes.GET("/", playbookHandler.GetAllPlaybooks)
-		playbookRoutes.GET("/meta/", playbookHandler.GetAllPlaybookMetas)
 		playbookRoutes.POST("/", playbookHandler.SubmitPlaybook)
+		playbookRoutes.GET("/meta/", playbookHandler.GetAllPlaybookMetas)
 		playbookRoutes.GET("/:id", playbookHandler.GetPlaybookByID)
 		playbookRoutes.PUT("/:id", playbookHandler.UpdatePlaybookByID)
 		playbookRoutes.DELETE("/:id", playbookHandler.DeleteByPlaybookID)
