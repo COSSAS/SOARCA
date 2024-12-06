@@ -70,9 +70,9 @@ func Swagger(app *gin.Engine) {
 
 func swaggerRoutes(route *gin.Engine) {
 	open_api.SwaggerInfo.BasePath = "/"
-	swagger := route.Group("/swagger")
+	swaggerRoutes := route.Group("/swagger")
 	{
-		swagger.GET("/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+		swaggerRoutes.GET("/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	}
 }
 
@@ -84,14 +84,14 @@ func swaggerRoutes(route *gin.Engine) {
 // DELETE  /playbook/playbook-id
 func PlaybookRoutes(route *gin.Engine, controller database.IController) {
 	playbookHandler := playbook_handler.NewPlaybookHandler(controller)
-	playbook := route.Group("/playbook")
+	playbookRoutes := route.Group("/playbook")
 	{
-		playbook.GET("/", playbookHandler.GetAllPlaybooks)
-		playbook.GET("/meta/", playbookHandler.GetAllPlaybookMetas)
-		playbook.POST("/", playbookHandler.SubmitPlaybook)
-		playbook.GET("/:id", playbookHandler.GetPlaybookByID)
-		playbook.PUT("/:id", playbookHandler.UpdatePlaybookByID)
-		playbook.DELETE("/:id", playbookHandler.DeleteByPlaybookID)
+		playbookRoutes.GET("/", playbookHandler.GetAllPlaybooks)
+		playbookRoutes.GET("/meta/", playbookHandler.GetAllPlaybookMetas)
+		playbookRoutes.POST("/", playbookHandler.SubmitPlaybook)
+		playbookRoutes.GET("/:id", playbookHandler.GetPlaybookByID)
+		playbookRoutes.PUT("/:id", playbookHandler.UpdatePlaybookByID)
+		playbookRoutes.DELETE("/:id", playbookHandler.DeleteByPlaybookID)
 
 	}
 }
@@ -101,10 +101,10 @@ func PlaybookRoutes(route *gin.Engine, controller database.IController) {
 // GET     /reporter/{execution-id}
 func ReporterRoutes(route *gin.Engine, informer informer.IExecutionInformer) {
 	reportHandler := reporter_handler.NewReportHandler(informer)
-	report := route.Group("/reporter")
+	reportRoutes := route.Group("/reporter")
 	{
-		report.GET("/", reportHandler.GetExecutions)
-		report.GET("/:id", reportHandler.GetExecutionReport)
+		reportRoutes.GET("/", reportHandler.GetExecutions)
+		reportRoutes.GET("/:id", reportHandler.GetExecutionReport)
 	}
 }
 
@@ -120,9 +120,9 @@ func StatusRoutes(route *gin.Engine) {
 }
 
 func TriggerRoutes(route *gin.Engine, triggerHandler *trigger_handler.TriggerHandler) {
-	group := route.Group("/trigger")
+	triggerRoutes := route.Group("/trigger")
 	{
-		group.POST("/playbook", triggerHandler.Execute)
-		group.POST("/playbook/:id", triggerHandler.ExecuteById)
+		triggerRoutes.POST("/playbook", triggerHandler.Execute)
+		triggerRoutes.POST("/playbook/:id", triggerHandler.ExecuteById)
 	}
 }
