@@ -192,6 +192,7 @@ func initializeCore(app *gin.Engine) error {
 		log.Error(err)
 		return err
 	}
+	routes.Cors(app, origins)
 
 	var auth *gauth.Authenticator
 	if authEnabled {
@@ -200,9 +201,9 @@ func initializeCore(app *gin.Engine) error {
 			log.Error("Failed to initialize authenticator:", err)
 			return err
 		}
-		routes.Middlewares(app, auth.LoadAuthContext(), auth.Middleware([]string{"admin", "soarca"}))
+		app.Use(auth.LoadAuthContext())
+		app.Use(auth.Middleware([]string{"admin"}))
 	}
-	routes.Cors(app, origins)
 
 	err = mainController.setupDatabase()
 	if err != nil {
