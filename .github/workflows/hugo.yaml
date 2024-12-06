@@ -31,7 +31,7 @@ jobs:
     if: ${{ contains(github.head_ref, 'feature/docs/') || (github.ref == 'refs/heads/master' && github.github.event_name == 'push') }}
     runs-on: ubuntu-latest
     env:
-      HUGO_VERSION: 0.123.7
+      HUGO_VERSION: 0.139.3  
     steps:
 
       - name: Install Hugo CLI
