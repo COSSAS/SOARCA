@@ -7,16 +7,16 @@ import (
 	"io"
 	"net/http"
 	"reflect"
-	"time"
-
 	"soarca/internal/controller/database"
 	"soarca/internal/controller/decomposer_controller"
 	"soarca/internal/logger"
-	apiError "soarca/pkg/api/error"
 	"soarca/pkg/core/decomposer"
 	"soarca/pkg/models/api"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/decoder"
+	"time"
+
+	apiError "soarca/pkg/api/error"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,14 +33,14 @@ func init() {
 	log = logger.Logger(reflect.TypeOf(Empty{}).PkgPath(), logger.Info, "", logger.Json)
 }
 
-type TriggerApi struct {
+type TriggerHandler struct {
 	controller        decomposer_controller.IController
 	database          database.IController
 	ExecutionsChannel chan decomposer.ExecutionDetails
 }
 
-func New(controller decomposer_controller.IController, database database.IController) *TriggerApi {
-	instance := TriggerApi{}
+func NewTriggerHandler(controller decomposer_controller.IController, database database.IController) *TriggerHandler {
+	instance := TriggerHandler{}
 	instance.controller = controller
 	instance.database = database
 	// Channel to get back execution details
@@ -48,8 +48,110 @@ func New(controller decomposer_controller.IController, database database.IContro
 	return &instance
 }
 
-func MergeVariablesInPlaybook(playbook *cacao.Playbook, body []byte) error {
+// trigger
+//
+//	@Summary	trigger a playbook by id that is stored in SOARCA
+//	@Schemes
+//	@Description	trigger playbook by id
+//	@Tags			trigger
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string			true	"playbook ID"
+//	@Param			data	body		cacao.Variables	true	"playbook"
+//	@Success		200		{object}	api.Execution
+//	@failure		400		{object}	api.Error
+//	@Router			/trigger/playbook/{id} [POST]
+func (handler *TriggerHandler) ExecuteById(context *gin.Context) {
+	id := context.Param("id")
 
+	db := handler.database.GetDatabaseInstance()
+	playbook, err := db.Read(id)
+	if err != nil {
+		log.Error("failed to load playbook")
+		apiError.SendErrorResponse(context, http.StatusBadRequest,
+			"Failed to load playbook",
+			"POST /trigger/playbook/"+id, err.Error())
+		return
+	}
+	if context.Request.Body != nil {
+		jsonData, err := io.ReadAll(context.Request.Body)
+		if err != nil {
+			log.Trace("Playbook trigger has failed to decode request body")
+			apiError.SendErrorResponse(context, http.StatusBadRequest, "Failed to decode request body", "POST /trigger/playbook/"+id, "")
+		}
+		err = MergeVariablesInPlaybook(&playbook, jsonData)
+		if err != nil {
+			apiError.SendErrorResponse(context, http.StatusBadRequest, fmt.Sprintf("Cannot execute. reason: %s", err), "POST /trigger/playbook/"+id, "")
+			return
+		}
+	}
+	handler.executePlaybook(&playbook, context)
+}
+
+// trigger
+//
+//	@Summary	trigger a playbook by supplying a cacao playbook payload
+//	@Schemes
+//	@Description	trigger playbook
+//	@Tags			trigger
+//	@Accept			json
+//	@Produce		json
+//	@Param			playbook	body		cacao.Playbook	true	"execute playbook by payload"
+//	@Success		200			{object}	api.Execution
+//	@failure		400			{object}	api.Error
+//	@Router			/trigger/playbook [POST]
+func (handler *TriggerHandler) Execute(context *gin.Context) {
+	jsonData, err := io.ReadAll(context.Request.Body)
+	if err != nil {
+		log.Error("failed")
+		apiError.SendErrorResponse(context, http.StatusBadRequest,
+			"Failed to marshall json on server side",
+			"POST /trigger/playbook", "")
+		return
+	}
+	playbook := decoder.DecodeValidate(jsonData)
+	if playbook == nil {
+		apiError.SendErrorResponse(context, http.StatusBadRequest,
+			"Failed to decode playbook",
+			"POST /trigger/playbook", "")
+		return
+	}
+
+	handler.executePlaybook(playbook, context)
+}
+
+func (handler *TriggerHandler) executePlaybook(playbook *cacao.Playbook, context *gin.Context) {
+	decomposer := handler.controller.NewDecomposer()
+	go decomposer.ExecuteAsync(*playbook, handler.ExecutionsChannel)
+	timer := time.NewTimer(time.Duration(3) * time.Second)
+	for {
+		select {
+		case <-timer.C:
+			log.Error("async execution timed out for playbook ", playbook.ID)
+
+			apiError.SendErrorResponse(context,
+				http.StatusRequestTimeout,
+				"async execution timed out for playbook "+playbook.ID,
+				"POST "+context.Request.URL.Path, "")
+			return
+
+		case executionsDetail := <-handler.ExecutionsChannel:
+			playbookId := executionsDetail.PlaybookId
+			executionId := executionsDetail.ExecutionId
+			if playbookId == playbook.ID {
+				context.JSON(http.StatusOK,
+					api.Execution{
+						ExecutionId: executionId,
+						PlaybookId:  playbookId,
+					})
+				return
+			}
+		}
+	}
+}
+
+// public fun as tested externally (integration test)
+func MergeVariablesInPlaybook(playbook *cacao.Playbook, body []byte) error {
 	payloadVariables := cacao.NewVariables()
 	err := json.Unmarshal(body, &payloadVariables)
 	if err != nil {
@@ -83,106 +185,4 @@ func MergeVariablesInPlaybook(playbook *cacao.Playbook, body []byte) error {
 		playbook.PlaybookVariables[name] = updatedVariable
 	}
 	return nil
-}
-
-// trigger
-//
-//	@Summary	trigger a playbook by id that is stored in SOARCA
-//	@Schemes
-//	@Description	trigger playbook by id
-//	@Tags			trigger
-//	@Accept			json
-//	@Produce		json
-//	@Param			id		path		string			true	"playbook ID"
-//	@Param			data	body		cacao.Variables	true	"playbook"
-//	@Success		200		{object}	api.Execution
-//	@failure		400		{object}	api.Error
-//	@Router			/trigger/playbook/{id} [POST]
-func (trigger *TriggerApi) ExecuteById(context *gin.Context) {
-	id := context.Param("id")
-
-	db := trigger.database.GetDatabaseInstance()
-	playbook, err := db.Read(id)
-	if err != nil {
-		log.Error("failed to load playbook")
-		apiError.SendErrorResponse(context, http.StatusBadRequest,
-			"Failed to load playbook",
-			"POST /trigger/playbook/"+id, err.Error())
-		return
-	}
-	if context.Request.Body != nil {
-		jsonData, err := io.ReadAll(context.Request.Body)
-		if err != nil {
-			log.Trace("Playbook trigger has failed to decode request body")
-			apiError.SendErrorResponse(context, http.StatusBadRequest, "Failed to decode request body", "POST /trigger/playbook/"+id, "")
-		}
-		err = MergeVariablesInPlaybook(&playbook, jsonData)
-		if err != nil {
-			apiError.SendErrorResponse(context, http.StatusBadRequest, fmt.Sprintf("Cannot execute. reason: %s", err), "POST /trigger/playbook/"+id, "")
-			return
-		}
-	}
-	trigger.execute(&playbook, context)
-}
-
-// trigger
-//
-//	@Summary	trigger a playbook by supplying a cacao playbook payload
-//	@Schemes
-//	@Description	trigger playbook
-//	@Tags			trigger
-//	@Accept			json
-//	@Produce		json
-//	@Param			playbook	body		cacao.Playbook	true	"execute playbook by payload"
-//	@Success		200			{object}	api.Execution
-//	@failure		400			{object}	api.Error
-//	@Router			/trigger/playbook [POST]
-func (trigger *TriggerApi) Execute(context *gin.Context) {
-
-	jsonData, err := io.ReadAll(context.Request.Body)
-	if err != nil {
-		log.Error("failed")
-		apiError.SendErrorResponse(context, http.StatusBadRequest,
-			"Failed to marshall json on server side",
-			"POST /trigger/playbook", "")
-		return
-	}
-	// playbook := cacao.Decode(jsonData)
-	playbook := decoder.DecodeValidate(jsonData)
-	if playbook == nil {
-		apiError.SendErrorResponse(context, http.StatusBadRequest,
-			"Failed to decode playbook",
-			"POST /trigger/playbook", "")
-		return
-	}
-
-	trigger.execute(playbook, context)
-}
-
-func (trigger *TriggerApi) execute(playbook *cacao.Playbook, context *gin.Context) {
-	decomposer := trigger.controller.NewDecomposer()
-	go decomposer.ExecuteAsync(*playbook, trigger.ExecutionsChannel)
-	timer := time.NewTimer(time.Duration(3) * time.Second)
-	for {
-		select {
-		case <-timer.C:
-			log.Error("async execution timed out for playbook ", playbook.ID)
-
-			apiError.SendErrorResponse(context,
-				http.StatusRequestTimeout,
-				"async execution timed out for playbook "+playbook.ID,
-				"POST "+context.Request.URL.Path, "")
-			return
-
-		case executionsDetail := <-trigger.ExecutionsChannel:
-			playbookId := executionsDetail.PlaybookId
-			executionId := executionsDetail.ExecutionId
-			if playbookId == playbook.ID {
-				context.JSON(http.StatusOK,
-					api.Execution{ExecutionId: executionId,
-						PlaybookId: playbookId})
-				return
-			}
-		}
-	}
 }

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"soarca/pkg/api/reporter"
+	api_routes "soarca/pkg/api"
 	api_model "soarca/pkg/models/api"
 	cache_model "soarca/pkg/models/cache"
 	mock_cache "soarca/test/unittest/mocks/mock_cache"
@@ -25,7 +25,7 @@ func TestGetExecutionsInvocation(t *testing.T) {
 	gin.SetMode(gin.DebugMode)
 
 	recorder := httptest.NewRecorder()
-	reporter.Routes(app, mock_cache_reporter)
+	api_routes.ReporterRoutes(app, mock_cache_reporter)
 
 	request, err := http.NewRequest("GET", "/reporter/", nil)
 	if err != nil {
@@ -46,7 +46,7 @@ func TestGetExecutionReportInvocation(t *testing.T) {
 	gin.SetMode(gin.DebugMode)
 
 	recorder := httptest.NewRecorder()
-	reporter.Routes(app, mock_cache_reporter)
+	api_routes.ReporterRoutes(app, mock_cache_reporter)
 
 	executionId0, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
 

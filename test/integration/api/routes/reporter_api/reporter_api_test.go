@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"soarca/pkg/api/reporter"
 	api_model "soarca/pkg/models/api"
 	"soarca/pkg/models/cacao"
 	cache_model "soarca/pkg/models/cache"
@@ -14,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	api_routes "soarca/pkg/api"
+
 	"github.com/google/uuid"
 
 	"github.com/gin-gonic/gin"
@@ -21,7 +22,6 @@ import (
 )
 
 func TestGetExecutions(t *testing.T) {
-
 	mock_time := new(mock_time.MockTime)
 	cacheReporter := cache.New(mock_time, 10)
 
@@ -138,7 +138,7 @@ func TestGetExecutions(t *testing.T) {
 	gin.SetMode(gin.DebugMode)
 
 	recorder := httptest.NewRecorder()
-	reporter.Routes(app, cacheReporter)
+	api_routes.ReporterRoutes(app, cacheReporter)
 
 	request, err := http.NewRequest("GET", "/reporter/", nil)
 	if err != nil {
@@ -257,7 +257,7 @@ func TestGetExecutionReport(t *testing.T) {
 	gin.SetMode(gin.DebugMode)
 
 	recorder := httptest.NewRecorder()
-	reporter.Routes(app, cacheReporter)
+	api_routes.ReporterRoutes(app, cacheReporter)
 
 	expected := `{
 		"type":"execution_status",

@@ -8,12 +8,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"testing"
-
-	playbookRouter "soarca/pkg/api/playbook"
+	api_routes "soarca/pkg/api"
 	"soarca/pkg/models/api"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/decoder"
+	"testing"
+
 	mock_database_controller "soarca/test/unittest/mocks/mock_controller/database"
 	mock_playbook "soarca/test/unittest/mocks/mock_playbook_database"
 
@@ -64,7 +64,7 @@ func TestGetPlaybookMetas(t *testing.T) {
 	mockPlaybook.On("GetPlaybookMetas").Return(dummyPlaybookMetas, nil)
 
 	w := httptest.NewRecorder()
-	playbookRouter.Routes(app, mockController)
+	api_routes.PlaybookRoutes(app, mockController)
 	req, _ := http.NewRequest("GET", "/playbook/meta/", nil)
 	app.ServeHTTP(w, req)
 
@@ -108,7 +108,7 @@ func TestGetPlaybooks(t *testing.T) {
 	}
 	mockPlaybook.On("GetPlaybooks").Return(playbooks, nil)
 	w := httptest.NewRecorder()
-	playbookRouter.Routes(app, mockController)
+	api_routes.PlaybookRoutes(app, mockController)
 	req, _ := http.NewRequest("GET", "/playbook/", nil)
 	app.ServeHTTP(w, req)
 
@@ -140,7 +140,7 @@ func TestGetPlaybookByID(t *testing.T) {
 	}
 
 	w := httptest.NewRecorder()
-	playbookRouter.Routes(app, mockController)
+	api_routes.PlaybookRoutes(app, mockController)
 
 	req, _ := http.NewRequest("GET", fmt.Sprintf("/playbook/%s", dummyPlaybook.ID), nil)
 	app.ServeHTTP(w, req)
@@ -179,7 +179,7 @@ func TestPostPlaybook(t *testing.T) {
 	mockPlaybook.On("Create", &pointerDummyObject).Return(*dummyPlaybook, nil)
 
 	w := httptest.NewRecorder()
-	playbookRouter.Routes(app, mockController)
+	api_routes.PlaybookRoutes(app, mockController)
 	req, _ := http.NewRequest("POST", "/playbook/", bytes.NewBuffer(marshalledDummyPlaybook))
 	app.ServeHTTP(w, req)
 
@@ -210,7 +210,7 @@ func TestDeletePlaybook(t *testing.T) {
 	}
 	mockPlaybook.On("Delete", dummyPlaybook.ID).Return(nil)
 	w := httptest.NewRecorder()
-	playbookRouter.Routes(app, mockController)
+	api_routes.PlaybookRoutes(app, mockController)
 	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/playbook/%s", dummyPlaybook.ID), nil)
 	app.ServeHTTP(w, req)
 	assert.Equal(t, 200, w.Code)
@@ -246,7 +246,7 @@ func TestUpdatePlaybook(t *testing.T) {
 	mockPlaybook.On("Update", dummyPlaybook.ID, &pointerDummyObject).Return(*dummyPlaybook, nil)
 
 	w := httptest.NewRecorder()
-	playbookRouter.Routes(app, mockController)
+	api_routes.PlaybookRoutes(app, mockController)
 	req, _ := http.NewRequest("PUT", fmt.Sprintf("/playbook/%s", dummyPlaybook.ID), bytes.NewBuffer(marshalledDummyPlaybook))
 	app.ServeHTTP(w, req)
 
