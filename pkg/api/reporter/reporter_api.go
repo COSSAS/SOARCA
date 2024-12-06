@@ -76,7 +76,7 @@ func (reportHandler *reportHandler) GetExecutions(g *gin.Context) {
 //	@success		200	{object}	api.PlaybookExecutionReport
 //	@failure		400	{object}	api.Error
 //	@Router			/reporter/{id} [GET]
-func (reportHandler *reportHandler) GetExecutionReport(g *gin.Context) {
+func (handler *reportHandler) GetExecutionReport(g *gin.Context) {
 	id := g.Param("id")
 	log.Trace("Trying to obtain execution for id: ", id)
 	uuid, err := uuid.Parse(id)
@@ -86,7 +86,7 @@ func (reportHandler *reportHandler) GetExecutionReport(g *gin.Context) {
 		return
 	}
 
-	executionEntry, err := reportHandler.informer.GetExecutionReport(uuid)
+	executionEntry, err := handler.informer.GetExecutionReport(uuid)
 	if err != nil {
 		log.Debug("Could not find execution for given id")
 		log.Error(err)

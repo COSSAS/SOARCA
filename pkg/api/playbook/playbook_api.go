@@ -21,17 +21,17 @@ func init() {
 	log = logger.Logger(reflect.TypeOf(Empty{}).PkgPath(), logger.Info, "", logger.Json)
 }
 
-// a playbookhandler implements the playbook api endpoints is dependent on a database.
+// a playbookHandler implements the playbook api endpoints is dependent on a database.
 type playbookHandler struct {
 	playbookRepo playbookrepository.IPlaybookRepository
 }
 
-// newplaybookcontroller makes a new instance of playbookcontroler
+// NewPlaybookHandler makes a new instance of NewPlaybookHandler
 func NewPlaybookHandler(controller database.IController) *playbookHandler {
 	return &playbookHandler{playbookRepo: controller.GetDatabaseInstance()}
 }
 
-// getAllPlaybooks GET handler for obtaining all the playbooks in the database and return this to the gin context in json format
+// GetAllPlaybooks GET handler for obtaining all the playbooks in the database and return this to the gin context in json format
 //
 //	@Summary	gets all the UUIDs for the stored playbooks
 //	@Schemes
@@ -41,10 +41,10 @@ func NewPlaybookHandler(controller database.IController) *playbookHandler {
 //	@success		200	{array}		cacao.Playbook
 //	@failure		400	{object}	api.Error
 //	@Router			/playbook/ [GET]
-func (playbookHndlr *playbookHandler) GetAllPlaybooks(g *gin.Context) {
+func (handler *playbookHandler) GetAllPlaybooks(g *gin.Context) {
 	log.Trace("Trying to obtain all playbook IDs")
 
-	returnListIDs, err := playbookHndlr.playbookRepo.GetPlaybooks()
+	returnListIDs, err := handler.playbookRepo.GetPlaybooks()
 	if err != nil {
 		log.Debug("Could not obtain any PlaybookMetas", err)
 		SendErrorResponse(g, http.StatusBadRequest, "Could not obtain any IDs", "GET /playbook/meta")
@@ -54,7 +54,7 @@ func (playbookHndlr *playbookHandler) GetAllPlaybooks(g *gin.Context) {
 	g.JSON(http.StatusOK, returnListIDs)
 }
 
-// getAllPlaybookMetas GET handler for obtaining all the meta data of all the stored playbooks
+// GetAllPlaybookMetas GET handler for obtaining all the meta data of all the stored playbooks
 // in the database and return this to the gin context in json format
 //
 //	@Summary	gets all the meta information for the stored playbooks
@@ -65,10 +65,10 @@ func (playbookHndlr *playbookHandler) GetAllPlaybooks(g *gin.Context) {
 //	@success		200	{array}		api.PlaybookMeta
 //	@failure		400	{object}	api.Error
 //	@Router			/playbook/meta [GET]
-func (playbookHndlr *playbookHandler) GetAllPlaybookMetas(g *gin.Context) {
+func (handler *playbookHandler) GetAllPlaybookMetas(g *gin.Context) {
 	log.Trace("Trying to obtain all playbook IDs")
 
-	returnListIDs, err := playbookHndlr.playbookRepo.GetPlaybookMetas()
+	returnListIDs, err := handler.playbookRepo.GetPlaybookMetas()
 	if err != nil {
 		log.Debug("Could not obtain any PlaybookMetas", err)
 		SendErrorResponse(g, http.StatusBadRequest, "Could not obtain any IDs", "GET /playbook/meta")
@@ -78,7 +78,7 @@ func (playbookHndlr *playbookHandler) GetAllPlaybookMetas(g *gin.Context) {
 	g.JSON(http.StatusOK, returnListIDs)
 }
 
-// submitPlaybook POST handler for creating playbooks.
+// SubmitPlaybook POST handler for creating playbooks.
 //
 //	@Summary	submit playbook via the api
 //	@Schemes
@@ -90,14 +90,14 @@ func (playbookHndlr *playbookHandler) GetAllPlaybookMetas(g *gin.Context) {
 //	@Success		200		{object}	cacao.Playbook
 //	@failure		400		{object}	api.Error
 //	@Router			/playbook/ [POST]
-func (playbookHndlr *playbookHandler) SubmitPlaybook(g *gin.Context) {
+func (handler *playbookHandler) SubmitPlaybook(g *gin.Context) {
 	jsonData, err := io.ReadAll(g.Request.Body)
 	if err != nil {
 		log.Trace("Submit playbook Endpoint has failed: ", err.Error())
 		SendErrorResponse(g, http.StatusBadRequest, "Failed to marshall json on server side", "POST /playbook")
 		return
 	}
-	playbook, err := playbookHndlr.playbookRepo.Create(&jsonData)
+	playbook, err := handler.playbookRepo.Create(&jsonData)
 	if err != nil {
 		log.Debug("Submit playbook Endpoint has failed:", err.Error())
 		if err.Error() == "duplicate" {
@@ -110,7 +110,7 @@ func (playbookHndlr *playbookHandler) SubmitPlaybook(g *gin.Context) {
 	g.JSON(http.StatusCreated, playbook)
 }
 
-// getPlaybookByID GET handler that finds playbook by id
+// GetPlaybookByID GET handler that finds playbook by id
 //
 //	@Summary	get CACAO playbook by its ID
 //	@Schemes
@@ -122,11 +122,11 @@ func (playbookHndlr *playbookHandler) SubmitPlaybook(g *gin.Context) {
 //	@Success		200	{object}	cacao.Playbook
 //	@failure		400	{object}	api.Error
 //	@Router			/playbook/{id} [GET]
-func (playbookHndlr *playbookHandler) GetPlaybookByID(g *gin.Context) {
+func (handler *playbookHandler) GetPlaybookByID(g *gin.Context) {
 	id := g.Param("id")
 	log.Trace("Trying to obtain playbook for id: ", id)
 
-	playbook, err := playbookHndlr.playbookRepo.Read(id)
+	playbook, err := handler.playbookRepo.Read(id)
 	if err != nil {
 		log.Debug("Could not find document for given id")
 		SendErrorResponse(g, http.StatusBadRequest, "Could not find playbook for given ID", "GET /playbook/{id}")
@@ -135,7 +135,7 @@ func (playbookHndlr *playbookHandler) GetPlaybookByID(g *gin.Context) {
 	g.JSON(http.StatusOK, playbook)
 }
 
-// updatePlaybookyID PUT handler that allows updating playbook object by ID.
+// UpdatePlaybookByID PUT handler that allows updating playbook object by ID.
 //
 //	@Summary	update playbook
 //	@Schemes
@@ -148,7 +148,7 @@ func (playbookHndlr *playbookHandler) GetPlaybookByID(g *gin.Context) {
 //	@Success		200		{object}	cacao.Playbook
 //	@failure		400		{object}	api.Error
 //	@Router			/playbook/{id} [PUT]
-func (playbookHndlr *playbookHandler) UpdatePlaybookByID(g *gin.Context) {
+func (handler *playbookHandler) UpdatePlaybookByID(g *gin.Context) {
 	id := g.Param("id")
 	log.Trace("Trying to update playbook for id: ", id)
 
@@ -158,16 +158,16 @@ func (playbookHndlr *playbookHandler) UpdatePlaybookByID(g *gin.Context) {
 		SendErrorResponse(g, http.StatusBadRequest, "Failed to marshall json on server sider", "PUT /playbook/{id}")
 		return
 	}
-	updated_data, err := playbookHndlr.playbookRepo.Update(id, &jsonData)
+	updatedData, err := handler.playbookRepo.Update(id, &jsonData)
 	if err != nil {
 		log.Trace("Could not find document for given ")
 		SendErrorResponse(g, http.StatusBadRequest, "Could not find playbook for given ID", "PUT /playbook/{id}")
 		return
 	}
-	g.JSON(http.StatusOK, updated_data)
+	g.JSON(http.StatusOK, updatedData)
 }
 
-// deleteByPlaybookID DELETE handler for deleting playbook by ID.
+// DeleteByPlaybookID DELETE handler for deleting playbook by ID.
 //
 //	@Summary	delete playbook by Id
 //	@Schemes
@@ -179,9 +179,9 @@ func (playbookHndlr *playbookHandler) UpdatePlaybookByID(g *gin.Context) {
 //	@Success		200
 //	@failure		400	{object}	api.Error
 //	@Router			/playbook/{id} [DELETE]
-func (playbookHndlr *playbookHandler) DeleteByPlaybookID(g *gin.Context) {
+func (handler *playbookHandler) DeleteByPlaybookID(g *gin.Context) {
 	id := g.Param("id")
-	err := playbookHndlr.playbookRepo.Delete(id)
+	err := handler.playbookRepo.Delete(id)
 	if err != nil {
 		log.Debug("Something when wrong tying to delete the playbook object. Does the object exists?")
 		SendErrorResponse(g, http.StatusBadRequest, "Could not delete object", "DELETE /playbook/{id}")

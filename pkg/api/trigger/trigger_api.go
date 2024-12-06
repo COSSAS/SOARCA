@@ -61,10 +61,10 @@ func NewTriggerHandler(controller decomposer_controller.IController, database da
 //	@Success		200		{object}	api.Execution
 //	@failure		400		{object}	api.Error
 //	@Router			/trigger/playbook/{id} [POST]
-func (trigger *TriggerHandler) ExecuteById(context *gin.Context) {
+func (handler *TriggerHandler) ExecuteById(context *gin.Context) {
 	id := context.Param("id")
 
-	db := trigger.database.GetDatabaseInstance()
+	db := handler.database.GetDatabaseInstance()
 	playbook, err := db.Read(id)
 	if err != nil {
 		log.Error("failed to load playbook")
@@ -85,7 +85,7 @@ func (trigger *TriggerHandler) ExecuteById(context *gin.Context) {
 			return
 		}
 	}
-	trigger.executePlaybook(&playbook, context)
+	handler.executePlaybook(&playbook, context)
 }
 
 // trigger
@@ -100,7 +100,7 @@ func (trigger *TriggerHandler) ExecuteById(context *gin.Context) {
 //	@Success		200			{object}	api.Execution
 //	@failure		400			{object}	api.Error
 //	@Router			/trigger/playbook [POST]
-func (trigger *TriggerHandler) Execute(context *gin.Context) {
+func (handler *TriggerHandler) Execute(context *gin.Context) {
 	jsonData, err := io.ReadAll(context.Request.Body)
 	if err != nil {
 		log.Error("failed")
@@ -117,12 +117,12 @@ func (trigger *TriggerHandler) Execute(context *gin.Context) {
 		return
 	}
 
-	trigger.executePlaybook(playbook, context)
+	handler.executePlaybook(playbook, context)
 }
 
-func (trigger *TriggerHandler) executePlaybook(playbook *cacao.Playbook, context *gin.Context) {
-	decomposer := trigger.controller.NewDecomposer()
-	go decomposer.ExecuteAsync(*playbook, trigger.ExecutionsChannel)
+func (handler *TriggerHandler) executePlaybook(playbook *cacao.Playbook, context *gin.Context) {
+	decomposer := handler.controller.NewDecomposer()
+	go decomposer.ExecuteAsync(*playbook, handler.ExecutionsChannel)
 	timer := time.NewTimer(time.Duration(3) * time.Second)
 	for {
 		select {
@@ -135,7 +135,7 @@ func (trigger *TriggerHandler) executePlaybook(playbook *cacao.Playbook, context
 				"POST "+context.Request.URL.Path, "")
 			return
 
-		case executionsDetail := <-trigger.ExecutionsChannel:
+		case executionsDetail := <-handler.ExecutionsChannel:
 			playbookId := executionsDetail.PlaybookId
 			executionId := executionsDetail.ExecutionId
 			if playbookId == playbook.ID {
