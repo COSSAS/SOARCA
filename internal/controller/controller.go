@@ -37,13 +37,12 @@ import (
 
 	downstreamReporter "soarca/pkg/reporter/downstream_reporter"
 
+	"github.com/COSSAS/gauth"
 	"github.com/gin-gonic/gin"
 
 	mongo "soarca/internal/database/mongodb"
 	playbookrepository "soarca/internal/database/playbook"
 	routes "soarca/pkg/api"
-
-	"github.com/COSSAS/gauth"
 )
 
 var log *logger.Log
@@ -171,16 +170,20 @@ func Initialize() error {
 
 	cacheSize, _ := strconv.Atoi(utils.GetEnv("MAX_EXECUTIONS", strconv.Itoa(defaultCacheSize)))
 	mainCache = *cache.New(&timeUtil.Time{}, cacheSize)
+	err := intializeAuthenticationMiddleware(app)
+	if err != nil {
+		log.Error("Failed to setup Authentication middleware")
+		return err
+	}
 
-	errCore := initializeCore(app)
-
-	if errCore != nil {
+	err = initializeCore(app)
+	if err != nil {
 		log.Error("Failed to init core")
-		return errCore
+		return err
 	}
 
 	port := utils.GetEnv("PORT", "8080")
-	err := app.Run(":" + port)
+	err = app.Run(":" + port)
 	if err != nil {
 		log.Error("failed to run gin")
 	}
@@ -191,26 +194,9 @@ func Initialize() error {
 
 func initializeCore(app *gin.Engine) error {
 	origins := strings.Split(strings.ReplaceAll(utils.GetEnv("SOARCA_ALLOWED_ORIGINS", "*"), " ", ""), ",")
-	authEnabledStr := utils.GetEnv("AUTH_ENABLED", "false")
-	authEnabled, err := strconv.ParseBool(authEnabledStr)
-	if err != nil {
-		log.Error(err)
-		return err
-	}
 	routes.Cors(app, origins)
 
-	var auth *gauth.Authenticator
-	if authEnabled {
-		auth, err = gauth.New(gauth.DefaultConfig())
-		if err != nil {
-			log.Error("Failed to initialize authenticator:", err)
-			return err
-		}
-		app.Use(auth.LoadAuthContext())
-		app.Use(auth.Middleware([]string{"admin"}))
-	}
-
-	err = mainController.setupDatabase()
+	err := mainController.setupDatabase()
 	if err != nil {
 		log.Error("Failed to setup database:", err)
 		return err
@@ -274,6 +260,20 @@ func initializeIntegrationTheHiveReporting() downstreamReporter.IDownStreamRepor
 	theHiveConnector := thehive.NewConnector(thehiveApiBaseUrl, thehiveApiToken)
 	theHiveReporter := thehive.NewReporter(theHiveConnector)
 	return theHiveReporter
+}
+
+func intializeAuthenticationMiddleware(app *gin.Engine) error {
+	authEnabled, _ := strconv.ParseBool(utils.GetEnv("AUTH_ENABLED", "false"))
+	if authEnabled {
+		auth, err := gauth.New(gauth.DefaultConfig())
+		if err != nil {
+			log.Error("Failed to initialize authenticator:", err)
+			return err
+		}
+		app.Use(auth.LoadAuthContext())
+		app.Use(auth.Middleware([]string{"admin"}))
+	}
+	return nil
 }
 
 func getMqttDetails() (string, int) {
