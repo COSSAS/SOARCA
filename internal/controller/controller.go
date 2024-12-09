@@ -5,13 +5,9 @@ import (
 	"fmt"
 	"os"
 	"reflect"
-	"strconv"
-	"strings"
-
+	"soarca/internal/database/memory"
 	"soarca/internal/logger"
 	"soarca/pkg/core/capability"
-	capabilityController "soarca/pkg/core/capability/controller"
-	finExecutor "soarca/pkg/core/capability/fin"
 	"soarca/pkg/core/capability/fin/protocol"
 	"soarca/pkg/core/capability/http"
 	"soarca/pkg/core/capability/openc2"
@@ -21,23 +17,33 @@ import (
 	"soarca/pkg/core/executors/action"
 	"soarca/pkg/core/executors/condition"
 	"soarca/pkg/core/executors/playbook_action"
-	thehive "soarca/pkg/integration/thehive/reporter"
 	"soarca/pkg/reporter"
-	cache "soarca/pkg/reporter/downstream_reporter/cache"
 	"soarca/pkg/utils"
 	"soarca/pkg/utils/guid"
-	httpUtil "soarca/pkg/utils/http"
 	"soarca/pkg/utils/stix/expression/comparison"
+	"strconv"
+	"strings"
+
+	capabilityController "soarca/pkg/core/capability/controller"
+	finExecutor "soarca/pkg/core/capability/fin"
+
+	thehive "soarca/pkg/integration/thehive/reporter"
+
+	cache "soarca/pkg/reporter/downstream_reporter/cache"
+
+	httpUtil "soarca/pkg/utils/http"
+
 	timeUtil "soarca/pkg/utils/time"
 
 	downstreamReporter "soarca/pkg/reporter/downstream_reporter"
 
 	"github.com/gin-gonic/gin"
 
-	"soarca/internal/database/memory"
 	mongo "soarca/internal/database/mongodb"
 	playbookrepository "soarca/internal/database/playbook"
 	routes "soarca/pkg/api"
+
+	"github.com/COSSAS/gauth"
 )
 
 var log *logger.Log
@@ -141,7 +147,6 @@ func (controller *Controller) setupDatabase() error {
 	} else {
 		// Use in memory database
 		controller.playbookRepo = memory.New()
-
 	}
 
 	return nil
@@ -185,7 +190,6 @@ func Initialize() error {
 }
 
 func initializeCore(app *gin.Engine) error {
-
 	origins := strings.Split(strings.ReplaceAll(utils.GetEnv("SOARCA_ALLOWED_ORIGINS", "*"), " ", ""), ",")
 	authEnabledStr := utils.GetEnv("AUTH_ENABLED", "false")
 	authEnabled, err := strconv.ParseBool(authEnabledStr)
