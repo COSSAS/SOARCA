@@ -28,11 +28,9 @@ Enabling RBAC can be done by setting the `AUTH_ENABLED: true`.
 {{< tabpane langEqualsHeader=false  >}}
 {{< tab header="`.env`" lang="txt" >}}
 AUTH_ENABLED: false
-OIDC_ISSUER: "<https://localhost:9443/application/u/test/>"
+OIDC_ISSUER: "<https://authentikuri:9443/application/u/test/>"
 OIDC_CLIENT_SECRET: "SOME_CLIENT_SECRET"
 OIDC_CLIENT_ID: "SOME_CLIENT_ID"
-OIDC_REDIRECT_URL: "<http://localhost:8081/auth/soarca_gui/callback>"
-COOKIE_SECRET_KEY: "SOME_COOKIE_SECRET" # OPTIONAL: openssl rand -base64 32  or head -c 32 /dev/urandom | base64
 OIDC_SKIP_TLS_VERIFY: true
 {{< /tab >}}
 {{< /tabpane >}}
