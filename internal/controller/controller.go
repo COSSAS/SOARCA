@@ -5,13 +5,9 @@ import (
 	"fmt"
 	"os"
 	"reflect"
-	"strconv"
-	"strings"
-
+	"soarca/internal/database/memory"
 	"soarca/internal/logger"
 	"soarca/pkg/core/capability"
-	capabilityController "soarca/pkg/core/capability/controller"
-	finExecutor "soarca/pkg/core/capability/fin"
 	"soarca/pkg/core/capability/fin/protocol"
 	"soarca/pkg/core/capability/http"
 	"soarca/pkg/core/capability/openc2"
@@ -21,20 +17,29 @@ import (
 	"soarca/pkg/core/executors/action"
 	"soarca/pkg/core/executors/condition"
 	"soarca/pkg/core/executors/playbook_action"
-	thehive "soarca/pkg/integration/thehive/reporter"
 	"soarca/pkg/reporter"
-	cache "soarca/pkg/reporter/downstream_reporter/cache"
 	"soarca/pkg/utils"
 	"soarca/pkg/utils/guid"
-	httpUtil "soarca/pkg/utils/http"
 	"soarca/pkg/utils/stix/expression/comparison"
+	"strconv"
+	"strings"
+
+	capabilityController "soarca/pkg/core/capability/controller"
+	finExecutor "soarca/pkg/core/capability/fin"
+
+	thehive "soarca/pkg/integration/thehive/reporter"
+
+	cache "soarca/pkg/reporter/downstream_reporter/cache"
+
+	httpUtil "soarca/pkg/utils/http"
+
 	timeUtil "soarca/pkg/utils/time"
 
 	downstreamReporter "soarca/pkg/reporter/downstream_reporter"
 
+	"github.com/COSSAS/gauth"
 	"github.com/gin-gonic/gin"
 
-	"soarca/internal/database/memory"
 	mongo "soarca/internal/database/mongodb"
 	playbookrepository "soarca/internal/database/playbook"
 	routes "soarca/pkg/api"
@@ -141,7 +146,6 @@ func (controller *Controller) setupDatabase() error {
 	} else {
 		// Use in memory database
 		controller.playbookRepo = memory.New()
-
 	}
 
 	return nil
@@ -167,15 +171,14 @@ func Initialize() error {
 	cacheSize, _ := strconv.Atoi(utils.GetEnv("MAX_EXECUTIONS", strconv.Itoa(defaultCacheSize)))
 	mainCache = *cache.New(&timeUtil.Time{}, cacheSize)
 
-	errCore := initializeCore(app)
-
-	if errCore != nil {
+	err := initializeCore(app)
+	if err != nil {
 		log.Error("Failed to init core")
-		return errCore
+		return err
 	}
 
 	port := utils.GetEnv("PORT", "8080")
-	err := app.Run(":" + port)
+	err = app.Run(":" + port)
 	if err != nil {
 		log.Error("failed to run gin")
 	}
@@ -185,14 +188,17 @@ func Initialize() error {
 }
 
 func initializeCore(app *gin.Engine) error {
-
 	origins := strings.Split(strings.ReplaceAll(utils.GetEnv("SOARCA_ALLOWED_ORIGINS", "*"), " ", ""), ",")
-
 	routes.Cors(app, origins)
 
-	err := mainController.setupDatabase()
+	err := intializeAuthenticationMiddleware(app)
 	if err != nil {
-		log.Error(err)
+		log.Error("Failed to setup Authentication middleware")
+		return err
+	}
+	err = mainController.setupDatabase()
+	if err != nil {
+		log.Error("Failed to setup database:", err)
 		return err
 	}
 
@@ -254,6 +260,21 @@ func initializeIntegrationTheHiveReporting() downstreamReporter.IDownStreamRepor
 	theHiveConnector := thehive.NewConnector(thehiveApiBaseUrl, thehiveApiToken)
 	theHiveReporter := thehive.NewReporter(theHiveConnector)
 	return theHiveReporter
+}
+
+func intializeAuthenticationMiddleware(app *gin.Engine) error {
+	authEnabled, _ := strconv.ParseBool(utils.GetEnv("AUTH_ENABLED", "false"))
+	if authEnabled {
+		auth, err := gauth.New(gauth.DefaultConfig())
+		if err != nil {
+			log.Error("Failed to initialize authenticator:", err)
+			return err
+		}
+		app.Use(auth.LoadAuthContext())
+		app.Use(auth.Middleware([]string{"soarca_admin"}))
+
+	}
+	return nil
 }
 
 func getMqttDetails() (string, int) {

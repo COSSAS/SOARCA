@@ -28,6 +28,10 @@ services:
       PLAYBOOK_API_LOG_LEVEL: trace
       DATABASE: "false"
       HTTP_SKIP_CERT_VALIDATION: false
+      AUTH_ENABLED: false #OPTIONAL for OIDC Based auth 
+      OIDC_PROVIDER: "https://authentikuri:9443/application/o/soarca/"
+      OIDC_CLIENT_ID: "some client ID"
+      OIDC_SKIP_TLS_VERIFY: false
     ports:
       - 127.0.0.1:8080:8080
     depends_on:
