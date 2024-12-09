@@ -1,7 +1,7 @@
 
 ---
 
-title: Setup RBAC
+title: Setup RBAC for SOARCA
 description: >
   Setup Role-Based Access Control (RBAC) for SOARCA
 categories: [extensions, architecture]

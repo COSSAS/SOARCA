@@ -8,7 +8,7 @@ tags: [extension, security]
 weight: 4
 ---
 
-After completing the Getting Started setup for SOARCA, you may find that certain advanced configurations or customizations are necessary to optimize SOARCA for your specific use case. This section provides in-depth guidance on additional steps you can take to enhance, secure, and integrate SOARCA with your infrastructure, ensuring it meets your unique operational needs.
+After completing the [Getting Started](/docs/getting-started/_index.md) setup for SOARCA, you may find that certain advanced configurations or customizations are necessary to optimize SOARCA for your specific use cases, for example integrating with The Hive. This section provides in-depth guidance on additional steps you can take to enhance, secure, and integrate SOARCA with your infrastructure, ensuring it meets your unique operational needs.
 
 ### Configuring SOARCA
 
