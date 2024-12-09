@@ -32,7 +32,6 @@ import (
 
 	downstreamReporter "soarca/pkg/reporter/downstream_reporter"
 
-	"github.com/COSSAS/gauth"
 	"github.com/gin-gonic/gin"
 
 	"soarca/internal/database/memory"
@@ -142,6 +141,7 @@ func (controller *Controller) setupDatabase() error {
 	} else {
 		// Use in memory database
 		controller.playbookRepo = memory.New()
+
 	}
 
 	return nil
@@ -185,6 +185,7 @@ func Initialize() error {
 }
 
 func initializeCore(app *gin.Engine) error {
+
 	origins := strings.Split(strings.ReplaceAll(utils.GetEnv("SOARCA_ALLOWED_ORIGINS", "*"), " ", ""), ",")
 	authEnabledStr := utils.GetEnv("AUTH_ENABLED", "false")
 	authEnabled, err := strconv.ParseBool(authEnabledStr)
