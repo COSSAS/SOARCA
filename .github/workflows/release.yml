@@ -92,7 +92,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.21.x'
+          go-version: '1.23.x'
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v6
         with:
