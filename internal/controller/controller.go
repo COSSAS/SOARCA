@@ -170,13 +170,8 @@ func Initialize() error {
 
 	cacheSize, _ := strconv.Atoi(utils.GetEnv("MAX_EXECUTIONS", strconv.Itoa(defaultCacheSize)))
 	mainCache = *cache.New(&timeUtil.Time{}, cacheSize)
-	err := intializeAuthenticationMiddleware(app)
-	if err != nil {
-		log.Error("Failed to setup Authentication middleware")
-		return err
-	}
 
-	err = initializeCore(app)
+	err := initializeCore(app)
 	if err != nil {
 		log.Error("Failed to init core")
 		return err
@@ -196,7 +191,12 @@ func initializeCore(app *gin.Engine) error {
 	origins := strings.Split(strings.ReplaceAll(utils.GetEnv("SOARCA_ALLOWED_ORIGINS", "*"), " ", ""), ",")
 	routes.Cors(app, origins)
 
-	err := mainController.setupDatabase()
+	err := intializeAuthenticationMiddleware(app)
+	if err != nil {
+		log.Error("Failed to setup Authentication middleware")
+		return err
+	}
+	err = mainController.setupDatabase()
 	if err != nil {
 		log.Error("Failed to setup database:", err)
 		return err
