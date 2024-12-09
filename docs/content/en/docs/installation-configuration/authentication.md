@@ -27,7 +27,7 @@ Enabling RBAC can be done by setting the `AUTH_ENABLED: true`.
 
 {{< tabpane langEqualsHeader=false  >}}
 {{< tab header="`.env`" lang="txt" >}}
-AUTH_ENABLED: false
+AUTH_ENABLED: true
 OIDC_ISSUER: "<https://authentikuri:9443/application/u/test/>"
 OIDC_CLIENT_SECRET: "SOME_CLIENT_SECRET"
 OIDC_CLIENT_ID: "SOME_CLIENT_ID"
@@ -55,6 +55,41 @@ We use an token lifetime of 8 hours, since the [SOARCA-GUI](https://github.com/C
 
 ![core](/SOARCA/images/installation_configuration/authentik_setup/change-lifetime.png)
 
+Endpoints for the auth provider can also be found here:
+
+![core](/SOARCA/images/installation_configuration/authentik_setup/endpoints.png)
+
 ### Making an application
 
+Next create an application as shown in the picture below. Add the earlier made provider to this application.
+
+![core](/SOARCA/images/installation_configuration/authentik_setup/setting-application.png)
+
 ### Setting the authentication provider
+
+Next, under `providers` -> `soarca-auth-provider` -> `edit` we can find the following overview:
+
+Here we can find the:
+
+- Client ID': `some random stuff`
+- Client Secret': `some other random stuff`
+- Redirect Url': Optional, should be set when using for the SOARCA-GUI explained [here]
+
+Set these variables in the environment variables settings, for example:
+
+{{% alert title="Note" color="primary" %}}
+We only use the Authentik integration for validation on the SOARCA side. As such, only the `OIDC_CLIENT_ID` is required here. For the SOARCA-GUI, we would need the `OIDC_CLIENT_SECRET`.
+{{% /alert %}}
+
+{{% alert title="Warning" color="warning" %}}
+It is not advised to run Authentik like this! Please setup TLS certificates in a real environment and set the `OIDC_SKIP_TLS_VERIFY` to `false`.
+{{% /alert %}}
+
+{{< tabpane langEqualsHeader=false  >}}
+{{< tab header="`.env`" lang="txt" >}}
+AUTH_ENABLED: true  
+OIDC_ISSUER: "<https://authentikuri:9443/application/o/soarca/>>"
+OIDC_CLIENT_ID: "WxUcBMGZdI7c0e5oYp6mYdEd64acpXSuWKh8zBH5"
+OIDC_SKIP_TLS_VERIFY: true
+{{< /tab >}}
+{{< /tabpane >}}
