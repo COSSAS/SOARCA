@@ -271,7 +271,8 @@ func intializeAuthenticationMiddleware(app *gin.Engine) error {
 			return err
 		}
 		app.Use(auth.LoadAuthContext())
-		app.Use(auth.Middleware([]string{"soarca_users"}))
+		app.Use(auth.Middleware([]string{"admin", "soarca_users"}))
+
 	}
 	return nil
 }
