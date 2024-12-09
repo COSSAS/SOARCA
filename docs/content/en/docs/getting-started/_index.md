@@ -27,7 +27,7 @@ Below, we outline various options to kickstart SOARCA. The latest pre-compiled r
 make build && ./build/soarca
 {{< /tab >}}
 {{< tab header="Linux" lang="sh" >}}
-wget https://github.com/COSSAS/SOARCA/releases/download/SOARCA_1.0.0/SOARCA_1.0.0_linux_amd64.tar.gz  && tar -xvf SOARCA* && ./SOARCA
+wget <https://github.com/COSSAS/SOARCA/releases/download/SOARCA_1.0.0/SOARCA_1.0.0_linux_amd64.tar.gz>  && tar -xvf SOARCA* && ./SOARCA
 {{< /tab >}}
 {{< tab header="Docker Compose" lang="sh" >}}
 cd docker/soarca && sudo docker compose up -d
@@ -79,6 +79,8 @@ SOARCA reads its configuration from the environment variables or a `.env` file. 
 {{< tabpane langEqualsHeader=false  >}}
 {{< tab header="`.env`" lang="txt" >}}
 PORT: 8080
+SOARCA_ALLOWED_ORIGINS: "*"
+GIN_MODE: "release"
 MONGODB_URI: "mongodb://localhost:27017"
 DATABASE_NAME: "soarca"
 DB_USERNAME: "root"
@@ -95,7 +97,23 @@ LOG_FORMAT: "json"
 ENABLE_FINS: false
 MQTT_BROKER: "localhost"
 MQTT_PORT: 1883
-VALIDATION_SCHEMA_URL: ""
+
+HTTP_SKIP_CERT_VALIDATION: false
+
+### Integrations
+
+# The Hive
+
+THEHIVE_ACTIVATE: false
+THEHIVE_API_TOKEN: your_token
+THEHIVE_API_BASE_URL: <http://your.thehive.instance/api/v1/>
+
+# Authentication
+
+AUTH_ENABLED: false  
+OIDC_ISSUER: "<https://authentikuri:9443/application/o/soarca/>"
+OIDC_CLIENT_ID: "some client ID"
+OIDC_SKIP_TLS_VERIFY: false
 {{< /tab >}}
 {{< /tabpane >}}
 
@@ -111,23 +129,3 @@ make build
 cp .env.example .env
 ./build/soarca
 ```
-
-### Configuring SOARCA
-
-|variable |content |description
-|---|---|---|
-|PORT |port  |Set the exposed port of SOARCA the default is `8080`
-|DATABASE |true \| false   | Set if you want to run with external database default is `false`
-|MONGODB_URI |uri  |Set the Mongo DB uri default is `mongodb://localhost:27017`
-|DATABASE_NAME |name  |Set the Mongo DB database name when using docker default is `soarca`
-|DB_USERNAME |user  |Set the Mongo DB database user when using docker default is `root`
-|DB_PASSWORD |password  |Set the Mongo DB database users password when using docker default is `rootpassword`. IT IS RECOMMENDED TO CHANGE THIS IN PRODUCTION!
-|MAX_REPORTERS |number  |Set the maximum number of downstream reporters default is `5`
-|LOG_GLOBAL_LEVEL |[Log levels]  |One of the specified log levels. Defaults to `info`
-|LOG_MODE |development \| production  |If production is chosen the `LOG_GLOBAL_LEVEL` is used for all modules defaults to `production`
-|LOG_FILE_PATH |filepath  |Path to the logfile you want to use for all logging. Defaults to `""` (empty string)
-|LOG_FORMAT |text \| json  |The logging can be in plain text format or in JSON format. Defaults to `json`
-|MQTT_BROKER | dns name or ip | The broker address for SOARCA to connect to, for communication with fins default is `localhost`
-|MQTT_PORT   | port | The broker address for SOARCA to connect to, for communication with fins default is `1883`
-|ENABLE_FINS| true \| false | Enable fins in SOARCA defaults to `false`
-|VALIDATION_SCHEMA_URL|url| Set a custom validation schema to be used to validate playbooks defaul is `""` to use internal. NOTE: changing this heavily impacts performance.
