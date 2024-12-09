@@ -402,16 +402,16 @@ control "ThirdPartyManualIntegration" as 3ptool
 
 manual -> interaction : Queue(command, channel)
 interaction -> interaction : save manual command status
-interaction -> 3ptool : Notify(interactionCommand, interactionChannel)
+interaction -> 3ptool : async Notify(interactionCommand, interactionChannel)
 activate interaction
 interaction -> interaction : idle wait on chan
 
-alt
+alt Third Party Integration flow
 3ptool <--> Integration : command posting and handling
 3ptool -> 3ptool : post IntegrationInteractionResponse on channel
 3ptool --> interaction
 end
-alt
+alt Native ManualAPI flow
 api -> interaction : GetPendingCommands()
 api -> interaction : GetPendingCommand(executionId, stepId)
 api -> interaction : Continue(InteractionResponse)
@@ -422,6 +422,8 @@ interaction -> manual : manual command results
 
 @enduml
 ```
+
+Note that whoever resolves the manual command first, whether via the manualAPI, or a third party integration, then the command results are returned to the workflow execution, and the manual command is removed from the pending list.
 
 #### Success and failure
 
