@@ -20,9 +20,7 @@ SOARCA enables cyber defenders to coordinate and automate their cyber operations
 - **Extensibility with Open Interfaces**: Enjoy the flexibility of an extensible tool featuring open and well-defined interfaces, promoting adaptability, customization, and experimentation.
 - **Open-Source**: Embrace an open-source model that not only offers cost-effective solutions but also supports unrestricted use and adaptation for research purposes.
 
-
 Interested in the vision and concepts of SOARCA? Then check the [SOARCA vision and concepts](/docs/concepts/).
-
 
 ## SOARCA capabilities
 
@@ -41,7 +39,6 @@ SOARCA currently supports the following transport mechanisms:
 {{% card header="SSH - Native" %}}
 [![Ssh](/SOARCA/images/logos-external/ssh.svg)](/docs/soarca-extensions/native-capabilities/#ssh-capability)
 {{% /card %}}
-{{< /cardpane >}}
 </div>
 
 {{% card header="PowerShell WinRM - Native" %}}
@@ -50,13 +47,10 @@ SOARCA currently supports the following transport mechanisms:
 {{< /cardpane >}}
 </div>
 
-
 ## Features of SOARCA
-
-
 
 ## Where do I start?
 
 {{% alert title="Follow our getting started!" color="primary" %}}
-Following our [Getting started](/docs/getting-started/) guide will help you set up SOARCA and configure the SOAR for your internal security tooling. For more custom requirement 
+Following our [Getting started](/docs/getting-started/) guide will help you set up SOARCA and configure the SOAR for your internal security tooling. For more custom requirement
 {{% /alert %}}
