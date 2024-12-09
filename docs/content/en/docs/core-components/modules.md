@@ -342,58 +342,86 @@ Because the *somewhere* and *somehow* for posting a message can vary, and the *s
 @startuml
 set separator ::
 
-interface ICapability{
-   Execute()
-}
-
-interface IInteractionController{
-    PostCommand()
-	GetPendingCommands()
-	GetPendingCommand()
-	Continue()
-	IsCompleted()
-}
+class ManualStep 
 
 protocol ManualAPI {
     GET     /manual
     POST    /manual/continue
 }
 
-interface IInteraction {
-    PostCommand()
+interface ICapability{
+   Execute()
+}
+
+interface ICapabilityInteraction{
+    Queue(command InteractionCommand, channel chan InteractionResponse)
+}
+
+interface IInteracionStorage{
+    GetPendingCommands()
+	GetPendingCommand()
 	Continue()
 }
 
-class ManualStep 
-
-class InteractionController {
-    interactions []IInteraction
+interface IInteractionIntegrationNotifier {
+    Notify(command InteractionIntegrationCommand, channel chan IntegrationInteractionResponse)
 }
-class Interaction
+
+class Interaction {
+    notifiers []IInteractionIntegrationNotifier
+}
+class ThirdPartyManualIntegration
 
 
-ManualStep .left.|> ICapability
-ManualStep -right-> IInteractionController
-InteractionController .up.|> IInteractionController
+ManualStep .up.|> ICapability
+ManualStep -down-> ICapabilityInteraction
+Interaction .up.|> ICapabilityInteraction
+Interaction .up.|> IInteracionStorage
 
-ManualAPI -left-> IInteractionController
+ManualAPI -down-> IInteracionStorage
 
-InteractionController -right-> IInteraction
-Interaction .up.|> IInteraction
+Interaction -right-> IInteractionIntegrationNotifier
+ThirdPartyManualIntegration .up.|> IInteractionIntegrationNotifier
 
 
 ```
 
-
-The main way to interact with the manual step is through SOARCA's [manual api](/docs/core-components/api-manual). 
-
+The default and internally-supported way to interact with the manual step is through SOARCA's [manual api](/docs/core-components/api-manual). 
 Besides SOARCA's [manual api](/docs/core-components/api-manual), SOARCA is designed to allow for configuration of additional ways that a manual command should be executed.
+Integration's code should implement the *IInteractionIntegrationNotifier* interface, returning the result of the manual command execution in form of an `IntegrationInteractionResponse` object, into the respective channel.
+
+The diagram below displays the way the manual interactions components work.
+
+```plantuml
+@startuml
+control "ManualStep" as manual
+control "Interaction" as interaction
+control "ManualAPI" as api
+control "ThirdPartyManualIntegration" as 3ptool
 
 
+manual -> interaction : Queue(command, channel)
+interaction -> interaction : save manual command status
+interaction -> 3ptool : Notify(interactionCommand, interactionChannel)
+activate interaction
+interaction -> interaction : idle wait on chan
 
+alt
+3ptool <--> Integration : command posting and handling
+3ptool -> 3ptool : post IntegrationInteractionResponse on channel
+3ptool --> interaction
+end
+alt
+api -> interaction : GetPendingCommands()
+api -> interaction : GetPendingCommand(executionId, stepId)
+api -> interaction : Continue(InteractionResponse)
+end
 
+deactivate interaction
+interaction -> manual : manual command results
 
-
+@enduml
+```
 
 #### Success and failure
 
