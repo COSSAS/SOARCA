@@ -28,7 +28,7 @@ func init() {
 // The manual capability continues.
 
 type IInteractionIntegrationNotifier interface {
-	Notify(command manual.ManualCommandData, channel chan manual.ManualOutArgUpdatePayload)
+	Notify(command manual.InteractionIntegrationCommandData, channel chan manual.InteractionIntegrationResponse)
 }
 
 type ICapabilityInteraction interface {
@@ -59,4 +59,17 @@ func (manualController *InteractionController) GetPendingCommand(metadata execut
 func (manualController *InteractionController) PostContinue(outArgsResult manual.ManualOutArgUpdatePayload) error {
 	log.Trace("completing manual command")
 	return nil
+}
+
+func (manualController *InteractionController) Queue(command manual.InteractionIntegrationCommandData) error {
+	channel := make(chan manual.InteractionIntegrationResponse)
+	for _, notifier := range manualController.notifiers {
+		go notifier.Notify(command, channel)
+	}
+	for {
+		// Skeleton. Implementation todo. Also study what happens if timeout at higher level
+		result := <-channel
+		log.Debug(result)
+		return nil
+	}
 }

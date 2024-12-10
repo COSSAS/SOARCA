@@ -70,7 +70,6 @@ func (manualHandler *ManualHandler) GetPendingCommands(g *gin.Context) {
 	}
 	g.JSON(http.StatusOK,
 		commands)
-	return
 }
 
 // manual
@@ -109,7 +108,6 @@ func (manualHandler *ManualHandler) GetPendingCommand(g *gin.Context) {
 	}
 	g.JSON(http.StatusOK,
 		commandData)
-	return
 }
 
 // manual
@@ -149,5 +147,4 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 		return
 	}
 	g.JSON(http.StatusOK, api.Execution{ExecutionId: uuid.MustParse(execution_id), PlaybookId: playbook_id})
-	return
 }
