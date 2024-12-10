@@ -41,6 +41,8 @@ Next, we need to obtain variables such as `OIDC_ISSUER` etc. This section will d
 
 ### Spinning up Authentik
 
+Instruction and docker-compose on how to bundle SOARCA with Authentik will come!
+
 ### Making an authentication provider
 
 In Authentik first setup a provider. An example configuration is given below:
@@ -135,12 +137,16 @@ Content-Length: 2345
     "name": "Example ssh",
     ...
 }
-
 ```
 
 The [gauth library](https://github.com/COSSAS/gauth) will validate this bearer token against the setup Authentik provider and grant the user or application access. Replace the token with a working bearer token.  
 
+{{% alert title="Tip" %}}
+For obtaining an access (bearer) token for Authentik, we have provided an example [here](https://github.com/COSSAS/SOARC/examples/docs/auth)
+{{% /alert %}}
+
 An example curl command is provided below:
+
 {{< tabpane langEqualsHeader=false  >}}
 {{< tab header="`bash`" lang="bash" >}}
 curl -X POST "<http://localhost:8080/trigger/playbook/>" \
