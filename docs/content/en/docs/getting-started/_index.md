@@ -27,7 +27,7 @@ Below, we outline various options to kickstart SOARCA. The latest pre-compiled r
 make build && ./build/soarca
 {{< /tab >}}
 {{< tab header="Linux" lang="sh" >}}
-wget <https://github.com/COSSAS/SOARCA/releases/download/SOARCA_1.0.0/SOARCA_1.0.0_linux_amd64.tar.gz>  && tar -xvf SOARCA* && ./SOARCA
+wget https://github.com/COSSAS/SOARCA/releases/download/SOARCA_1.0.0/SOARCA_1.0.0_linux_amd64.tar.gz  && tar -xvf SOARCA* && ./SOARCA
 {{< /tab >}}
 {{< tab header="Docker Compose" lang="sh" >}}
 cd docker/soarca && sudo docker compose up -d

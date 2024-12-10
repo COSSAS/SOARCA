@@ -28,7 +28,7 @@ Enabling RBAC can be done by setting the `AUTH_ENABLED: true`.
 {{< tabpane langEqualsHeader=false  >}}
 {{< tab header="`.env`" lang="txt" >}}
 AUTH_ENABLED: true
-OIDC_ISSUER: "<https://authentikuri:9443/application/u/test/>"
+OIDC_ISSUER: "https://authentikuri:9443/application/u/test/"
 OIDC_CLIENT_SECRET: "SOME_CLIENT_SECRET"
 OIDC_CLIENT_ID: "SOME_CLIENT_ID"
 OIDC_SKIP_TLS_VERIFY: true
@@ -90,14 +90,14 @@ It is not advised to run Authentik like this! Please setup TLS certificates in a
 {{< tabpane langEqualsHeader=false  >}}
 {{< tab header="`.env`" lang="txt" >}}
 AUTH_ENABLED: true  
-OIDC_ISSUER: "<https://authentikuri/application/o/does-providing-for-soarca/>"
+OIDC_ISSUER: "https://authentikuri/application/o/does-providing-for-soarca/"
 OIDC_CLIENT_ID: "WxUcBMGZdI7c0e5oYp6mYdEd64acpXSuWKh8zBH5"
 OIDC_SKIP_TLS_VERIFY: true
 {{< /tab >}}
 
 {{< tab header="`bash`" lang="bash" >}}
 export AUTH_ENABLED=true
-export OIDC_ISSUER="<https://authentikuri:9443/application/o/does-providing-for-soarca/>"
+export OIDC_ISSUER="https://authentikuri:9443/application/o/does-providing-for-soarca/"
 export OIDC_CLIENT_ID="WxUcBMGZdI7c0e5oYp6mYdEd64acpXSuWKh8zBH5"
 export OIDC_SKIP_TLS_VERIFY=true
 {{< /tab >}}
@@ -149,7 +149,7 @@ An example curl command is provided below:
 
 {{< tabpane langEqualsHeader=false  >}}
 {{< tab header="`bash`" lang="bash" >}}
-curl -X POST "<http://localhost:8080/trigger/playbook/>" \
+curl -X POST "http://localhost:8080/trigger/playbook/" \
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer <replace token>" \
 -d '{
