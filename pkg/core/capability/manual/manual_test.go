@@ -48,5 +48,5 @@ func TestTimetoutCalculation(t *testing.T) {
 	channel := make(chan interaction.InteractionResponse)
 	manual := New(&interactionMock, channel)
 	timeout := manual.getTimeoutValue(1)
-	assert.Equal(t, timeout, time.Duration(1))
+	assert.Equal(t, timeout, time.Millisecond*1)
 }
