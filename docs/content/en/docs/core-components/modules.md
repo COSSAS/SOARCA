@@ -413,6 +413,7 @@ interaction -> interaction : idle wait on chan
 3ptool --> interaction
 deactivate 3ptool
 else Native ManualAPI flow
+interaction -> interaction : idle wait on chan
 api -> interaction : GetPendingCommands()
 api -> interaction : GetPendingCommand(executionId, stepId)
 api -> interaction : Continue(InteractionResponse)
