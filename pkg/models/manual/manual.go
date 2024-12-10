@@ -1,7 +1,9 @@
 package manual
 
 import (
+	"soarca/pkg/core/capability"
 	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/execution"
 )
 
 type ManualCommandData struct {
@@ -25,11 +27,23 @@ type ManualOutArg struct {
 	External    bool   `bson:"external,omitempty" json:"external,omitempty" example:"false"`             // Indicate if it's external
 }
 
+type ManualOutArgs map[string]ManualOutArg
+
 type ManualOutArgUpdatePayload struct {
-	Type            string                  `bson:"type" json:"type" validate:"required" example:"string"`          // The type of this content
-	ExecutionId     string                  `bson:"execution_id" json:"execution_id" validate:"required"`           // The id of the execution
-	PlaybookId      string                  `bson:"playbook_id" json:"playbook_id" validate:"required"`             // The id of the CACAO playbook executed by the execution
-	StepId          string                  `bson:"step_id" json:"step_id" validate:"required"`                     // The id of the step executed by the execution
-	ResponseStatus  bool                    `bson:"response_status" json:"response_status" validate:"required"`     // Can be either success or failure
-	ResponseOutArgs map[string]ManualOutArg `bson:"response_out_args" json:"response_out_args" validate:"required"` // Map of cacao variables expressed as ManualOutArgs, handled in the step out args, with current values and definitions
+	Type            string        `bson:"type" json:"type" validate:"required" example:"string"`          // The type of this content
+	ExecutionId     string        `bson:"execution_id" json:"execution_id" validate:"required"`           // The id of the execution
+	PlaybookId      string        `bson:"playbook_id" json:"playbook_id" validate:"required"`             // The id of the CACAO playbook executed by the execution
+	StepId          string        `bson:"step_id" json:"step_id" validate:"required"`                     // The id of the step executed by the execution
+	ResponseStatus  bool          `bson:"response_status" json:"response_status" validate:"required"`     // Can be either success or failure
+	ResponseOutArgs ManualOutArgs `bson:"response_out_args" json:"response_out_args" validate:"required"` // Map of cacao variables expressed as ManualOutArgs, handled in the step out args, with current values and definitions
+}
+
+type InteractionCommand struct {
+	Metadata execution.Metadata
+	Context  capability.Context
+}
+
+type InteractionResponse struct {
+	ResponseError error
+	Variables     ManualOutArgs
 }

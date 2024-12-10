@@ -3,7 +3,6 @@ package interaction
 import (
 	"reflect"
 	"soarca/internal/logger"
-	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"soarca/pkg/models/manual"
 )
@@ -28,22 +27,23 @@ func init() {
 // Upon a Continue and relative updates, the IsCompleted will return status == completed, and the related info
 // The manual capability continues.
 
-type IInteraction interface {
-	PostCommand(inquiry manual.ManualCommandData) error
-	Continue(outArgsResult manual.ManualOutArgUpdatePayload) error
+type IInteractionIntegrationNotifier interface {
+	Notify(command manual.ManualCommandData, channel chan manual.ManualOutArgUpdatePayload)
 }
 
-type IInteractionController interface {
-	PostCommand(inquiry manual.ManualCommandData) error
+type ICapabilityInteraction interface {
+	Queue(command manual.ManualCommandData) error
+}
+
+type IInteractionStorage interface {
 	GetPendingCommands() ([]manual.ManualCommandData, error)
 	GetPendingCommand(metadata execution.Metadata) (manual.ManualCommandData, error)
 	Continue(outArgsResult manual.ManualOutArgUpdatePayload) error
-	IsCompleted(metadata execution.Metadata) (cacao.Variables, string, error)
 }
 
 type InteractionController struct {
 	PendingCommands map[string]manual.ManualCommandData // Keyed on execution ID
-	Interactions    []IInteraction
+	notifiers       []IInteractionIntegrationNotifier
 }
 
 func (manualController *InteractionController) GetPendingCommands() ([]manual.ManualCommandData, error) {
