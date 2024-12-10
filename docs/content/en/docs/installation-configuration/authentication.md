@@ -3,7 +3,7 @@
 
 title: Setup RBAC for SOARCA
 description: >
-  Setup Role-Based Access Control (RBAC) for SOARCA
+  Setup OIDC based Role-Based Access Control (RBAC) for SOARCA
 categories: [extensions, architecture]
 tags: [security]
 weight: 2
@@ -71,7 +71,7 @@ Next, under `providers` -> `soarca-auth-provider` -> `edit` we can find the foll
 
 Here we can find the:
 
-- Client ID': `some random stuff`
+- Client ID: `some random stuff`
 - Client Secret': `some other random stuff`
 - Redirect Url': Optional, should be set when using for the SOARCA-GUI explained [here]
 
@@ -88,8 +88,160 @@ It is not advised to run Authentik like this! Please setup TLS certificates in a
 {{< tabpane langEqualsHeader=false  >}}
 {{< tab header="`.env`" lang="txt" >}}
 AUTH_ENABLED: true  
-OIDC_ISSUER: "<https://authentikuri:9443/application/o/soarca/>>"
+OIDC_ISSUER: "<https://authentikuri/application/o/does-providing-for-soarca/>"
 OIDC_CLIENT_ID: "WxUcBMGZdI7c0e5oYp6mYdEd64acpXSuWKh8zBH5"
 OIDC_SKIP_TLS_VERIFY: true
+{{< /tab >}}
+
+{{< tab header="`bash`" lang="bash" >}}
+export AUTH_ENABLED=true
+export OIDC_ISSUER="<https://authentikuri:9443/application/o/does-providing-for-soarca/>"
+export OIDC_CLIENT_ID="WxUcBMGZdI7c0e5oYp6mYdEd64acpXSuWKh8zBH5"
+export OIDC_SKIP_TLS_VERIFY=true
+{{< /tab >}}
+{{< /tabpane >}}
+
+### Adding SOARCA user group and users
+
+{{% alert title="Note" color="primary" %}}
+Again, for the current version of the implementation we only support one group to differentiate between access to the different endpoint. We plan for a later version of SOARCA to have different groups/permissions for a given API endpoint.
+{{% /alert %}}
+
+Next, we require to setup a group in Authentik that is called `soarca_admin` as explained earlier. The to be obtained tokens from Authentik needs to have this group information as this will be checked by the middleware.
+
+![core](/SOARCA/images/installation_configuration/authentik_setup/groups.png)
+
+Under `users` normal as as service accounts can be created. We advise for machine-to-machine implementation service accounts, and for normal users (used for example for SOARCA-GUI logins) normal accounts. Now we can make an users and add to the `soarca_admin` group. Make use under the application that this group is added to the application provider that we have setup earlier, otherwise the grants of token might fail.
+
+![core](/SOARCA/images/installation_configuration/authentik_setup/add-user.png)
+
+![core](/SOARCA/images/installation_configuration/authentik_setup/add-group.png)
+
+### Authentication with Bearer
+
+Now that authentication and authorization is enabled, every request requires to have a set `Authorization: Bearer <token>` header.
+
+```
+POST /trigger/playbook/ HTTP/1.1
+Host: localhost:8080
+Content-Type: application/json
+Authorization: Bearer <token from authentik> 
+Content-Length: 2345
+
+{
+    "type": "playbook",
+    "spec_version": "cacao-2.0",
+    "id": "playbook--300270f9-0e64-42c8-93cc-0927edbe3ae7",
+    "name": "Example ssh",
+    ...
+}
+
+```
+
+The [gauth library](https://github.com/COSSAS/gauth) will validate this bearer token against the setup Authentik provider and grant the user or application access. Replace the token with a working bearer token.  
+
+An example curl command is provided below:
+{{< tabpane langEqualsHeader=false  >}}
+{{< tab header="`bash`" lang="bash" >}}
+curl -X POST "<http://localhost:8080/trigger/playbook/>" \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer <replace token>" \
+-d '{
+    "type": "playbook",
+    "spec_version": "cacao-2.0",
+    "id": "playbook--300270f9-0e64-42c8-93cc-0927edbe3ae7",
+    "name": "Example ssh",
+    "description": "This playbook demonstrates ssh functionality",
+    "playbook_types": ["notification"],
+    "created_by": "identity--96abab60-238a-44ff-8962-5806aa60cbce",
+    "created": "2023-11-20T15:56:00.123456Z",
+    "modified": "2023-11-20T15:56:00.123456Z",
+    "valid_from": "2023-11-20T15:56:00.123456Z",
+    "valid_until": "2123-11-20T15:56:00.123456Z",
+    "priority": 1,
+    "severity": 1,
+    "impact": 1,
+    "labels": ["soarca", "ssh", "example"],
+    "authentication_info_definitions": {
+        "user-auth--b7ddc2ea-9f6a-4e82-8eaa-be202e942090": {
+            "type": "user-auth",
+            "username": "root",
+            "password": "password"
+        }
+    },
+    "agent_definitions": {
+        "soarca--00010001-1000-1000-a000-000100010001": {
+            "type": "soarca",
+            "name": "soarca-ssh"
+        }
+    },
+    "target_definitions": {
+        "ssh--1c3900b4-f86b-430d-b415-12312b9e31f4": {
+            "type": "ssh",
+            "name": "system 1",
+            "address": {
+                "ipv4": ["192.168.0.10"]
+            },
+            "authentication_info": "user-auth--b7ddc2ea-9f6a-4e82-8eaa-be202e942090"
+        }
+    },
+    "external_references": [{
+        "name": "TNO COSSAS",
+        "description": "TNO COSSAS",
+        "source": "TNO COSSAS",
+        "url": "https://cossas-project.org"
+    }],
+    "workflow_start": "start--9e7d62b2-88ac-4656-94e1-dbd4413ba008",
+    "workflow_exception": "end--a6f0b81e-affb-4bca-b4f6-a2d5af908958",
+    "workflow": {
+        "start--9e7d62b2-88ac-4656-94e1-dbd4413ba008": {
+            "type": "start",
+            "name": "Start ssh example",
+            "on_completion": "action--eb9372d4-d524-49fc-bf24-be26ea084779"
+        },
+        "action--eb9372d4-d524-49fc-bf24-be26ea084779": {
+            "type": "action",
+            "name": "Execute command",
+            "description": "Execute command specified in variable",
+            "on_completion": "action--88f4c4df-fa96-44e6-b310-1c06d193ea55",
+            "commands": [{
+                "type": "ssh",
+                "command": "__command__:value"
+            }],
+            "targets": ["ssh--1c3900b4-f86b-430d-b415-12312b9e31f4"],
+            "agent": "soarca--00010001-1000-1000-a000-000100010001",
+            "step_variables": {
+                "__command__": {
+                    "type": "string",
+                    "value": "ls -la",
+                    "constant": true
+                }
+            }
+        },
+        "action--88f4c4df-fa96-44e6-b310-1c06d193ea55": {
+            "type": "action",
+            "name": "Touch file",
+            "description": "Touch file at path specified by variable",
+            "on_completion": "end--a6f0b81e-affb-4bca-b4f6-a2d5af908958",
+            "commands": [{
+                "type": "ssh",
+                "command": "touch __path__:value"
+            }],
+            "targets": ["ssh--1c3900b4-f86b-430d-b415-12312b9e31f4"],
+            "agent": "soarca--00010001-1000-1000-a000-000100010001",
+            "step_variables": {
+                "__path__": {
+                    "type": "string",
+                    "value": "/root/file1",
+                    "constant": true
+                }
+            }
+        },
+        "end--a6f0b81e-affb-4bca-b4f6-a2d5af908958": {
+            "type": "end",
+            "name": "End Flow"
+        }
+    }
+}'
 {{< /tab >}}
 {{< /tabpane >}}
