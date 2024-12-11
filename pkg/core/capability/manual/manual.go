@@ -43,20 +43,20 @@ func (manual *ManualCapability) GetType() string {
 
 func (manual *ManualCapability) Execute(
 	metadata execution.Metadata,
-	context capability.Context) (cacao.Variables, error) {
+	commandContext capability.Context) (cacao.Variables, error) {
 
-	command := interaction.InteractionCommand{Metadata: metadata, Context: context}
+	command := interaction.InteractionCommand{Metadata: metadata, Context: commandContext}
 
 	err := manual.interaction.Queue(command, manual.channel)
 	if err != nil {
 		return cacao.NewVariables(), err
 	}
 
-	result, err := manual.awaitUserInput(manual.getTimeoutValue(context.Step.Timeout))
+	result, err := manual.awaitUserInput(manual.getTimeoutValue(commandContext.Step.Timeout))
 	if err != nil {
 		return cacao.NewVariables(), err
 	}
-	return result.Select(context.Step.OutArgs), nil
+	return result.Select(commandContext.Step.OutArgs), nil
 
 }
 
