@@ -364,7 +364,7 @@ interface IInteracionStorage{
 }
 
 interface IInteractionIntegrationNotifier {
-    Notify(command InteractionIntegrationCommand, channel chan IntegrationInteractionResponse)
+    Notify(command InteractionIntegrationCommand, channel chan InteractionIntegrationResponse)
 }
 
 class Interaction {
@@ -388,7 +388,7 @@ ThirdPartyManualIntegration .up.|> IInteractionIntegrationNotifier
 
 The default and internally-supported way to interact with the manual step is through SOARCA's [manual api](/docs/core-components/api-manual). 
 Besides SOARCA's [manual api](/docs/core-components/api-manual), SOARCA is designed to allow for configuration of additional ways that a manual command should be executed.
-Integration's code should implement the *IInteractionIntegrationNotifier* interface, returning the result of the manual command execution in form of an `IntegrationInteractionResponse` object, into the respective channel.
+Integration's code should implement the *IInteractionIntegrationNotifier* interface, returning the result of the manual command execution in form of an `InteractionIntegrationResponse` object, into the respective channel.
 
 The diagram below displays the way the manual interactions components work.
 
@@ -409,7 +409,7 @@ activate 3ptool
 interaction -> interaction : idle wait on chan
 
 3ptool <--> Integration : command posting and handling
-3ptool -> 3ptool : post IntegrationInteractionResponse on channel
+3ptool -> 3ptool : post InteractionIntegrationResponse on channel
 3ptool --> interaction
 deactivate 3ptool
 else Native ManualAPI flow

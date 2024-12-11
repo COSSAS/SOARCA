@@ -57,7 +57,7 @@ type ManualHandler struct {
 //	@Accept			json
 //	@Produce		json
 //	@Success		200		{object}	api.Execution
-//	@failure		400		{object}	[]manual.ManualCommandData
+//	@failure		400		{object}	[]manual.InteractionCommandData
 //	@Router			/manual/ [GET]
 func (manualHandler *ManualHandler) GetPendingCommands(g *gin.Context) {
 	commands, err := manualHandler.interactionCapability.GetPendingCommands()
@@ -82,7 +82,7 @@ func (manualHandler *ManualHandler) GetPendingCommands(g *gin.Context) {
 //	@Produce		json
 //	@Param			execution_id	path	string	true	"execution ID"
 //	@Param			step_id			path	string	true	"step ID"
-//	@Success		200		{object}	manual.ManualCommandData
+//	@Success		200		{object}	manual.InteractionCommandData
 //	@failure		400		{object}	api.Error
 //	@Router			/manual/{execution_id}/{step_id} [GET]
 func (manualHandler *ManualHandler) GetPendingCommand(g *gin.Context) {
@@ -146,5 +146,10 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 			"POST /manual/continue", err.Error())
 		return
 	}
-	g.JSON(http.StatusOK, api.Execution{ExecutionId: uuid.MustParse(execution_id), PlaybookId: playbook_id})
+	g.JSON(
+		http.StatusOK,
+		api.Execution{
+			ExecutionId: uuid.MustParse(execution_id),
+			PlaybookId:  playbook_id,
+		})
 }
