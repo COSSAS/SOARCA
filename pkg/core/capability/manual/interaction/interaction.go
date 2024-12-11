@@ -1,6 +1,7 @@
 package interaction
 
 import (
+	"fmt"
 	"reflect"
 	"soarca/internal/logger"
 	"soarca/pkg/models/execution"
@@ -42,12 +43,12 @@ type IInteractionStorage interface {
 }
 
 type InteractionController struct {
-	InteractionStorage map[string]manual.InteractionCommandData // Keyed on execution ID
+	InteractionStorage map[string]map[string]manual.InteractionCommandData // Keyed on [executionID][stepID]
 	Notifiers          []IInteractionIntegrationNotifier
 }
 
 func New(manualIntegrations []IInteractionIntegrationNotifier) *InteractionController {
-	storage := map[string]manual.InteractionCommandData{}
+	storage := map[string]map[string]manual.InteractionCommandData{}
 	return &InteractionController{
 		InteractionStorage: storage,
 		Notifiers:          manualIntegrations,
@@ -59,37 +60,38 @@ func New(manualIntegrations []IInteractionIntegrationNotifier) *InteractionContr
 // ############################################################################
 func (manualController *InteractionController) Queue(command manual.InteractionCommand, manualCapabilityChannel chan manual.InteractionResponse) error {
 
-	// Note: there is one manual capability per whole execution, which means there is one manualCapabilityChannel per execution
-	//
-
-	// TODO regsiter pending command in storage
-
-	integrationCommand := manual.InteractionIntegrationCommand{
-		Metadata: command.Metadata,
-		Context:  command.Context,
+	err := manualController.registerPendingInteraction(command)
+	if err != nil {
+		return err
 	}
+
+	// Copy and type conversion
+	integrationCommand := manual.InteractionIntegrationCommand(command)
 
 	// One response channel for all integrations. First reply resolves the manual command
 	interactionChannel := make(chan manual.InteractionIntegrationResponse)
+	defer close(interactionChannel)
 
 	for _, notifier := range manualController.Notifiers {
 		go notifier.Notify(integrationCommand, interactionChannel)
 	}
 
 	// Purposedly blocking in idle-wait. We want to receive data back before continuiing the playbook
-	for {
-		// Skeleton. Implementation todo. Also study what happens if timeout at higher level
-		// Also study what happens with concurrent manual commands e.g. from parallel steps,
-		// with respect to using one class channel or different channels per call
-		result := <-interactionChannel
+	go func() {
+		for {
+			// Skeleton. Implementation todo. Also study what happens if timeout at higher level
+			// Also study what happens with concurrent manual commands e.g. from parallel steps,
+			// with respect to using one class channel or different channels per call
+			result := <-interactionChannel
 
-		// TODO: check register for pending manual command
-		// If was already resolved, safely discard
-		// Otherwise, resolve command, post back to manual capability, de-register command form pending
+			// TODO: check register for pending manual command
+			// If was already resolved, safely discard
+			// Otherwise, resolve command, post back to manual capability, de-register command form pending
 
-		log.Debug(result)
-		return nil
-	}
+			log.Debug(result)
+		}
+	}()
+	return nil
 }
 
 // ############################################################################
@@ -113,10 +115,51 @@ func (manualController *InteractionController) PostContinue(outArgsResult manual
 // ############################################################################
 // Utilities and functionalities
 // ############################################################################
-func (manualController *InteractionController) registerPendingInteraction() {
-	// TODO
+func (manualController *InteractionController) registerPendingInteraction(command manual.InteractionCommand) error {
+
+	interaction := manual.InteractionCommandData{
+		Type:          command.Context.Command.Type,
+		ExecutionId:   command.Metadata.ExecutionId.String(),
+		PlaybookId:    command.Metadata.PlaybookId,
+		StepId:        command.Metadata.StepId,
+		Description:   command.Context.Command.Description,
+		Command:       command.Context.Command.Command,
+		CommandBase64: command.Context.Command.CommandB64,
+		Target:        command.Context.Target,
+		OutArgs:       command.Context.Variables,
+	}
+
+	execution, ok := manualController.InteractionStorage[interaction.ExecutionId]
+
+	if !ok {
+		// It's fine, no entry for execution registered. Register execution and step entry
+		manualController.InteractionStorage[interaction.ExecutionId] = map[string]manual.InteractionCommandData{
+			interaction.StepId: interaction,
+		}
+		return nil
+	}
+
+	// There is an execution entry
+	if _, ok := execution[interaction.StepId]; ok {
+		// Error: there is already a pending manual command for the action step
+		err := fmt.Errorf(
+			"a manual step is already pending for execution %s, step %s. There can only be one pending manual command per action step.",
+			interaction.ExecutionId, interaction.StepId)
+		log.Error(err)
+		return err
+	}
+
+	// Execution exist, and Finally register pending command in existing execution
+	// Question: is it ever the case that the same exact step is executed in parallel branches? Then this code would not work
+	execution[interaction.StepId] = interaction
+
+	return nil
 }
 
-func (manualController *InteractionController) continueInteraction() {
+func (manualController *InteractionController) continueInteraction(interactionResponse manual.InteractionResponse) error {
 	// TODO
+	if interactionResponse.ResponseError != nil {
+		return interactionResponse.ResponseError
+	}
+	return nil
 }
