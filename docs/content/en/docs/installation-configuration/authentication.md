@@ -27,7 +27,7 @@ Enabling RBAC can be done by setting the `AUTH_ENABLED: true`.
 {{< tab header="`.env`" lang="txt" >}}
 AUTH_ENABLED: true
 AUTH_GROUP: "soarca_admin"
-OIDC_ISSUER: "https://authentikuri:9443/application/u/test/"
+OIDC_ISSUER: "<https://authentikuri:9443/application/u/test/>"
 OIDC_CLIENT_SECRET: "SOME_CLIENT_SECRET"
 OIDC_CLIENT_ID: "SOME_CLIENT_ID"
 OIDC_SKIP_TLS_VERIFY: true
@@ -91,7 +91,7 @@ Set these variables in the environment variables settings, for example:
 {{< tab header="`.env`" lang="txt" >}}
 AUTH_ENABLED: true  
 AUTH_GROUP: "soarca_admin"
-OIDC_ISSUER: "https://authentikuri/application/o/does-providing-for-soarca/"
+OIDC_ISSUER: "<https://authentikuri/application/o/does-providing-for-soarca/>"
 OIDC_CLIENT_ID: "WxUcBMGZdI7c0e5oYp6mYdEd64acpXSuWKh8zBH5"
 OIDC_SKIP_TLS_VERIFY: true
 {{< /tab >}}
@@ -99,7 +99,7 @@ OIDC_SKIP_TLS_VERIFY: true
 {{< tab header="`bash`" lang="bash" >}}
 export AUTH_ENABLED=true
 export AUTH_GROUP="soarca_admin"
-export OIDC_ISSUER="https://authentikuri:9443/application/o/does-providing-for-soarca/"
+export OIDC_ISSUER="<https://authentikuri:9443/application/o/does-providing-for-soarca/>"
 export OIDC_CLIENT_ID="WxUcBMGZdI7c0e5oYp6mYdEd64acpXSuWKh8zBH5"
 export OIDC_SKIP_TLS_VERIFY=true
 {{< /tab >}}
@@ -111,7 +111,7 @@ export OIDC_SKIP_TLS_VERIFY=true
 Again, for the current version of the implementation we only support one group to differentiate between access to the different endpoint. We plan for a later version of SOARCA to have different groups/permissions for a given API endpoint.
 {{% /alert %}}
 
-For the current version of SOARCA and the gauth library the access to the API for a given user is dependent on the required set `AUTH_GROUP`. Users are required to be in the same group as the group that has been set through this variable. Currently, there is not yet control over which group can access a specific API or route grooup. This feature is scheduled for a future version of SOARCA. In the example below, the `AUTH_GROUP: soarca_admin` is set. 
+For the current version of SOARCA and the gauth library the access to the API for a given user is dependent on the required set `AUTH_GROUP`. Users are required to be in the same group as the group that has been set through this variable. Currently, there is not yet control over which group can access a specific API or route grooup. This feature is scheduled for a future version of SOARCA. In the example below, the `AUTH_GROUP: soarca_admin` is set.
 
 Next, we require to setup a group in Authentik that is called `soarca_admin` as explained earlier. The to be obtained tokens from Authentik needs to have this group information as this will be checked by the middleware. A group can be created under `Directory` -> `Groups` -> `New`.
 
@@ -146,7 +146,7 @@ Content-Length: 2345
 The [gauth library](https://github.com/COSSAS/gauth) will validate this bearer token against the setup Authentik provider and grant the user or application access. Replace the token with a working bearer token.  
 
 {{% alert title="Tip" %}}
-For obtaining an access (bearer) token for Authentik, we have provided an example [here](https://github.com/COSSAS/SOARC/examples/docs/auth)
+For obtaining an access (bearer) token for Authentik, we have provided an example [here](https://github.com/COSSAS/gauth/examples/m2m)
 {{% /alert %}}
 
 An example curl command is provided below:
