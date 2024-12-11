@@ -156,10 +156,10 @@ func (manualController *InteractionController) registerPendingInteraction(comman
 	return nil
 }
 
-func (manualController *InteractionController) continueInteraction(interactionResponse manual.InteractionResponse) error {
-	// TODO
-	if interactionResponse.ResponseError != nil {
-		return interactionResponse.ResponseError
-	}
-	return nil
-}
+// func (manualController *InteractionController) continueInteraction(interactionResponse manual.InteractionResponse) error {
+// 	// TODO
+// 	if interactionResponse.ResponseError != nil {
+// 		return interactionResponse.ResponseError
+// 	}
+// 	return nil
+// }
