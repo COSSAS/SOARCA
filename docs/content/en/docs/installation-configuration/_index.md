@@ -53,13 +53,24 @@ After completing the [Getting Started](/docs/getting-started/_index.md) setup fo
 {{% alert title="Note" color="primary" %}}
 More information on setting up authentication can be found [here](/docs/installation-configuration/authentication.md).
 {{% /alert %}}
+**Is your feature request related to a problem? Please describe.**
+A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
 
+**Describe the solution you'd like**
+A clear and concise description of what you want to happen.
+
+**Describe alternatives you've considered**
+A clear and concise description of any alternative solutions or features you've considered.
+
+**Additional context**
+Add any other context or screenshots about the feature request here.
 | Variable               | Content                                    | Description                                                                                 |
 |------------------------|---------------------------------------------|---------------------------------------------------------------------------------------------|
 | AUTH_ENABLED           | `false`                                    | Enable authentication. Default is `false`.                                                  |
-| OIDC_ISSUER            | `https://localhost:9443/application/u/test/` | The OIDC issuer URL.                                                                 |
-| OIDC_CLIENT_ID         | `SOME_CLIENT_ID`                           | Set the OIDC client ID.                                                                  |
-| OIDC_CLIENT_SECRET     | `SOME_CLIENT_SECRET`                       | Set the OIDC client secret.                                                              |
-| OIDC_REDIRECT_URL      | `http://localhost:8081/auth/soarca_gui/callback` | Set the OIDC redirect URL.                                                             |
+| OIDC_ISSUER            | `https://localhost:9443/application/u/test/` | The OIDC issuer URL.                                                                         |
+| OIDC_CLIENT_ID         | `SOME_CLIENT_ID`                           | Set the OIDC client ID.                                                                     |
+| OIDC_CLIENT_SECRET     | `SOME_CLIENT_SECRET`                       | Set the OIDC client secret.                                                                 |
+| OIDC_REDIRECT_URL      | `http://localhost:8081/auth/soarca_gui/callback` | Set the OIDC redirect URL.                                                                 |
 | COOKIE_SECRET_KEY      | `SOME_COOKIE_SECRET`                       | Optional: Secret key for cookies. Generate using `openssl rand -base64 32` or `head -c 32 /dev/urandom | base64`. |
-| OIDC_SKIP_TLS_VERIFY   | `true`                                     | Set whether to skip TLS verification. Default is `true`.                                 |
+| OIDC_SKIP_TLS_VERIFY   | `true`                                     | Set whether to skip TLS verification. Default is `true`.                                    |
+| AUTH_GROUP             | `soarca_admin`                             | Specify the group users must belong to for authentication against SOARCA.                  |
