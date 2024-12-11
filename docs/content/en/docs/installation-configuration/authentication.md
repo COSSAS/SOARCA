@@ -27,7 +27,7 @@ Enabling RBAC can be done by setting the `AUTH_ENABLED: true`.
 {{< tab header="`.env`" lang="txt" >}}
 AUTH_ENABLED: true
 AUTH_GROUP: "soarca_admin"
-OIDC_ISSUER: "<https://authentikuri:9443/application/u/test/>"
+OIDC_ISSUER: "https://authentikuri:9443/application/u/test/"
 OIDC_CLIENT_SECRET: "SOME_CLIENT_SECRET"
 OIDC_CLIENT_ID: "SOME_CLIENT_ID"
 OIDC_SKIP_TLS_VERIFY: true
@@ -91,7 +91,7 @@ Set these variables in the environment variables settings, for example:
 {{< tab header="`.env`" lang="txt" >}}
 AUTH_ENABLED: true  
 AUTH_GROUP: "soarca_admin"
-OIDC_ISSUER: "<https://authentikuri/application/o/does-providing-for-soarca/>"
+OIDC_ISSUER: "https://authentikuri/application/o/does-providing-for-soarca/"
 OIDC_CLIENT_ID: "WxUcBMGZdI7c0e5oYp6mYdEd64acpXSuWKh8zBH5"
 OIDC_SKIP_TLS_VERIFY: true
 {{< /tab >}}
@@ -99,7 +99,7 @@ OIDC_SKIP_TLS_VERIFY: true
 {{< tab header="`bash`" lang="bash" >}}
 export AUTH_ENABLED=true
 export AUTH_GROUP="soarca_admin"
-export OIDC_ISSUER="<https://authentikuri:9443/application/o/does-providing-for-soarca/>"
+export OIDC_ISSUER="https://authentikuri:9443/application/o/does-providing-for-soarca/"
 export OIDC_CLIENT_ID="WxUcBMGZdI7c0e5oYp6mYdEd64acpXSuWKh8zBH5"
 export OIDC_SKIP_TLS_VERIFY=true
 {{< /tab >}}
