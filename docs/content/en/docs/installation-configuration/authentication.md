@@ -19,7 +19,6 @@ Currently, for the used [gauth library](https://github.com/COSSAS/gauth) the [Au
 
 - [Authentik](https://goauthentik.io/)
 
-
 ## Enabling RBAC
 
 Enabling RBAC can be done by setting the `AUTH_ENABLED: true`.
