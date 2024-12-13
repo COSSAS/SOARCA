@@ -118,7 +118,7 @@ func (manualController *InteractionController) waitInteractionIntegrationRespons
 // ############################################################################
 func (manualController *InteractionController) GetPendingCommands() ([]manual.InteractionCommandData, error) {
 	log.Trace("getting pending manual commands")
-	return []manual.InteractionCommandData{}, nil
+	return manualController.getAllPendingInteractions(), nil
 }
 
 func (manualController *InteractionController) GetPendingCommand(metadata execution.Metadata) (manual.InteractionCommandData, error) {
@@ -128,6 +128,12 @@ func (manualController *InteractionController) GetPendingCommand(metadata execut
 
 func (manualController *InteractionController) PostContinue(outArgsResult manual.ManualOutArgUpdatePayload) error {
 	log.Trace("completing manual command")
+	// TODO
+	// Get execution metadata from updatepayload
+	// Check command is indeed pending
+	// If not, it means it was already solved (right?)
+	// If it is, put outArgs back into manualCapabilityChannel (must figure out how...)
+	// de-register the command
 	return nil
 }
 
@@ -173,6 +179,16 @@ func (manualController *InteractionController) registerPendingInteraction(comman
 	execution[interaction.StepId] = interaction
 
 	return nil
+}
+
+func (manualController *InteractionController) getAllPendingInteractions() []manual.InteractionCommandData {
+	allPendingInteractions := []manual.InteractionCommandData{}
+	for _, interactions := range manualController.InteractionStorage {
+		for _, interaction := range interactions {
+			allPendingInteractions = append(allPendingInteractions, interaction)
+		}
+	}
+	return allPendingInteractions
 }
 
 func (manualController *InteractionController) getPendingInteraction(commandMetadata execution.Metadata) (manual.InteractionCommandData, error) {
