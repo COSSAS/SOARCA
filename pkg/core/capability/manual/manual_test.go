@@ -13,13 +13,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func returnQueueCall(channel chan manualModel.InteractionResponse) {
-
-	time.Sleep(time.Millisecond * 10)
-	response := manualModel.InteractionResponse{}
-	channel <- response
-}
-
 func TestManualExecution(t *testing.T) {
 	interactionMock := mock_interaction.MockInteraction{}
 	var capturedChannel chan manualModel.InteractionResponse
