@@ -1,6 +1,7 @@
 package interaction
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"soarca/internal/logger"
@@ -32,7 +33,7 @@ type IInteractionIntegrationNotifier interface {
 }
 
 type ICapabilityInteraction interface {
-	Queue(command manual.InteractionCommand, channel chan manual.InteractionResponse) error
+	Queue(command manual.InteractionCommand, channel chan manual.InteractionResponse, ctx context.Context) error
 }
 
 type IInteractionStorage interface {
@@ -58,7 +59,7 @@ func New(manualIntegrations []IInteractionIntegrationNotifier) *InteractionContr
 // ############################################################################
 // ICapabilityInteraction implementation
 // ############################################################################
-func (manualController *InteractionController) Queue(command manual.InteractionCommand, manualCapabilityChannel chan manual.InteractionResponse) error {
+func (manualController *InteractionController) Queue(command manual.InteractionCommand, manualCapabilityChannel chan manual.InteractionResponse, ctx context.Context) error {
 
 	err := manualController.registerPendingInteraction(command)
 	if err != nil {
@@ -68,7 +69,7 @@ func (manualController *InteractionController) Queue(command manual.InteractionC
 	// Copy and type conversion
 	integrationCommand := manual.InteractionIntegrationCommand(command)
 
-	// One response channel for all integrations. First reply resolves the manual command
+	// One response channel for all integrations
 	interactionChannel := make(chan manual.InteractionIntegrationResponse)
 	defer close(interactionChannel)
 
@@ -77,21 +78,29 @@ func (manualController *InteractionController) Queue(command manual.InteractionC
 	}
 
 	// Purposedly blocking in idle-wait. We want to receive data back before continuiing the playbook
-	go func() {
-		for {
-			// Skeleton. Implementation todo. Also study what happens if timeout at higher level
-			// Also study what happens with concurrent manual commands e.g. from parallel steps,
-			// with respect to using one class channel or different channels per call
-			result := <-interactionChannel
+	go manualController.awaitIntegrationsResponse(interactionChannel, ctx)
 
+	return nil
+}
+
+func (manualController *InteractionController) awaitIntegrationsResponse(interactionChannel chan manual.InteractionIntegrationResponse, ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			log.Debug("context canceled due to timeout. exiting goroutine")
+			return
+		// Skeleton. Implementation todo. Also study what happens if timeout at higher level
+		// Also study what happens with concurrent manual commands e.g. from parallel steps,
+		// with respect to using one class channel or different channels per call
+		case result := <-interactionChannel:
+			// First reply resolves the manual command
 			// TODO: check register for pending manual command
 			// If was already resolved, safely discard
 			// Otherwise, resolve command, post back to manual capability, de-register command form pending
 
 			log.Debug(result)
 		}
-	}()
-	return nil
+	}
 }
 
 // ############################################################################

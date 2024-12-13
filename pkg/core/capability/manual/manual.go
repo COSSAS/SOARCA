@@ -1,6 +1,7 @@
 package manual
 
 import (
+	"context"
 	"errors"
 	"reflect"
 	"soarca/internal/logger"
@@ -23,10 +24,8 @@ const (
 	fallbackTimeout          = time.Minute * 1
 )
 
-func New(controller interaction.ICapabilityInteraction,
-	channel chan manualModel.InteractionResponse) ManualCapability {
-	// channel := make(chan interaction.InteractionResponse)
-	return ManualCapability{interaction: controller, channel: channel}
+func New(controller interaction.ICapabilityInteraction) ManualCapability {
+	return ManualCapability{interaction: controller}
 }
 
 func init() {
@@ -35,7 +34,6 @@ func init() {
 
 type ManualCapability struct {
 	interaction interaction.ICapabilityInteraction
-	channel     chan manualModel.InteractionResponse
 }
 
 func (manual *ManualCapability) GetType() string {
@@ -48,12 +46,21 @@ func (manual *ManualCapability) Execute(
 
 	command := manualModel.InteractionCommand{Metadata: metadata, Context: commandContext}
 
-	err := manual.interaction.Queue(command, manual.channel)
+	timeout := manual.getTimeoutValue(commandContext.Step.Timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	// One channel per Execute() invocation. Async manual capability Execute() invocations can thus
+	// use separate channels per each specific manual command, preventing manual returned args interfering
+	channel := make(chan manualModel.InteractionResponse)
+	defer close(channel)
+
+	err := manual.interaction.Queue(command, channel, ctx)
 	if err != nil {
 		return cacao.NewVariables(), err
 	}
 
-	result, err := manual.awaitUserInput(manual.getTimeoutValue(commandContext.Step.Timeout))
+	result, err := manual.awaitUserInput(channel, ctx)
 	if err != nil {
 		return cacao.NewVariables(), err
 	}
@@ -61,15 +68,15 @@ func (manual *ManualCapability) Execute(
 
 }
 
-func (manual *ManualCapability) awaitUserInput(timeout time.Duration) (cacao.Variables, error) {
-	timer := time.NewTimer(time.Duration(timeout))
+func (manual *ManualCapability) awaitUserInput(channel chan manualModel.InteractionResponse, ctx context.Context) (cacao.Variables, error) {
+
 	for {
 		select {
-		case <-timer.C:
-			err := errors.New("manual response timeout, user responded not in time")
+		case <-ctx.Done():
+			err := errors.New("manual response timed-out, no response received on time")
 			log.Error(err)
 			return cacao.NewVariables(), err
-		case response := <-manual.channel:
+		case response := <-channel:
 			log.Trace("received response from api")
 			cacaoVars := manual.copyOutArgsToVars(response.OutArgs.ResponseOutArgs)
 			return cacaoVars, response.ResponseError
