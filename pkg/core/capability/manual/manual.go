@@ -5,9 +5,10 @@ import (
 	"reflect"
 	"soarca/internal/logger"
 	"soarca/pkg/core/capability"
-	"soarca/pkg/interaction"
+	"soarca/pkg/core/capability/manual/interaction"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
+	manualModel "soarca/pkg/models/manual"
 	"time"
 )
 
@@ -23,7 +24,7 @@ const (
 )
 
 func New(controller interaction.ICapabilityInteraction,
-	channel chan interaction.InteractionResponse) ManualCapability {
+	channel chan manualModel.InteractionResponse) ManualCapability {
 	// channel := make(chan interaction.InteractionResponse)
 	return ManualCapability{interaction: controller, channel: channel}
 }
@@ -34,7 +35,7 @@ func init() {
 
 type ManualCapability struct {
 	interaction interaction.ICapabilityInteraction
-	channel     chan interaction.InteractionResponse
+	channel     chan manualModel.InteractionResponse
 }
 
 func (manual *ManualCapability) GetType() string {
@@ -45,7 +46,7 @@ func (manual *ManualCapability) Execute(
 	metadata execution.Metadata,
 	commandContext capability.Context) (cacao.Variables, error) {
 
-	command := interaction.InteractionCommand{Metadata: metadata, Context: commandContext}
+	command := manualModel.InteractionCommand{Metadata: metadata, Context: commandContext}
 
 	err := manual.interaction.Queue(command, manual.channel)
 	if err != nil {
@@ -70,10 +71,24 @@ func (manual *ManualCapability) awaitUserInput(timeout time.Duration) (cacao.Var
 			return cacao.NewVariables(), err
 		case response := <-manual.channel:
 			log.Trace("received response from api")
-			return response.Variables, response.ResponseError
+			cacaoVars := manual.copyOutArgsToVars(response.OutArgs.ResponseOutArgs)
+			return cacaoVars, response.ResponseError
 
 		}
 	}
+}
+
+func (manual *ManualCapability) copyOutArgsToVars(outArgs manualModel.ManualOutArgs) cacao.Variables {
+	vars := cacao.NewVariables()
+	for name, outVar := range outArgs {
+
+		vars[name] = cacao.Variable{
+			Type:  outVar.Type,
+			Name:  outVar.Name,
+			Value: outVar.Value,
+		}
+	}
+	return vars
 }
 
 func (manual *ManualCapability) getTimeoutValue(userTimeout int) time.Duration {

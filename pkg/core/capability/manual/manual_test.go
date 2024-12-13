@@ -2,8 +2,8 @@ package manual
 
 import (
 	"soarca/pkg/core/capability"
-	"soarca/pkg/interaction"
 	"soarca/pkg/models/execution"
+	manualModel "soarca/pkg/models/manual"
 	"soarca/test/unittest/mocks/mock_interaction"
 	"testing"
 	"time"
@@ -11,22 +11,22 @@ import (
 	"github.com/go-playground/assert/v2"
 )
 
-func returnQueueCall(channel chan interaction.InteractionResponse) {
+func returnQueueCall(channel chan manualModel.InteractionResponse) {
 
 	time.Sleep(time.Millisecond * 10)
-	response := interaction.InteractionResponse{}
+	response := manualModel.InteractionResponse{}
 	channel <- response
 }
 
 func TestManualExecution(t *testing.T) {
 	interactionMock := mock_interaction.MockInteraction{}
-	channel := make(chan interaction.InteractionResponse)
+	channel := make(chan manualModel.InteractionResponse)
 	manual := New(&interactionMock, channel)
 
 	meta := execution.Metadata{}
 	context := capability.Context{}
 
-	command := interaction.InteractionCommand{}
+	command := manualModel.InteractionCommand{}
 	go returnQueueCall(channel)
 	interactionMock.On("Queue", command, channel).Return(nil)
 	vars, err := manual.Execute(meta, context)
@@ -37,7 +37,7 @@ func TestManualExecution(t *testing.T) {
 
 func TestTimetoutCalculationNotSet(t *testing.T) {
 	interactionMock := mock_interaction.MockInteraction{}
-	channel := make(chan interaction.InteractionResponse)
+	channel := make(chan manualModel.InteractionResponse)
 	manual := New(&interactionMock, channel)
 	timeout := manual.getTimeoutValue(0)
 	assert.Equal(t, timeout, time.Minute)
@@ -45,7 +45,7 @@ func TestTimetoutCalculationNotSet(t *testing.T) {
 
 func TestTimetoutCalculation(t *testing.T) {
 	interactionMock := mock_interaction.MockInteraction{}
-	channel := make(chan interaction.InteractionResponse)
+	channel := make(chan manualModel.InteractionResponse)
 	manual := New(&interactionMock, channel)
 	timeout := manual.getTimeoutValue(1)
 	assert.Equal(t, timeout, time.Millisecond*1)
