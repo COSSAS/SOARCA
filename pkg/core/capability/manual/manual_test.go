@@ -50,7 +50,7 @@ func TestManualExecution(t *testing.T) {
 	// Simulate the response after ensuring the channel is captured
 	time.Sleep(100 * time.Millisecond)
 	capturedChannel <- manualModel.InteractionResponse{
-		OutArgs: manualModel.ManualOutArgUpdatePayload{
+		Payload: manualModel.ManualOutArgUpdatePayload{
 			ResponseOutArgs: manualModel.ManualOutArgs{
 				"example": {Value: "example_value"},
 			},

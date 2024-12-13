@@ -56,7 +56,7 @@ type ManualOutArgUpdatePayload struct {
 // The object that the Interaction module presents back to the manual capability
 type InteractionResponse struct {
 	ResponseError error
-	OutArgs       ManualOutArgUpdatePayload
+	Payload       ManualOutArgUpdatePayload
 }
 
 // ################################################################################
@@ -77,5 +77,5 @@ type InteractionIntegrationCommand struct {
 // to receive
 type InteractionIntegrationResponse struct {
 	ResponseError error
-	OutArgs       ManualOutArgUpdatePayload
+	Payload       ManualOutArgUpdatePayload
 }

@@ -4,6 +4,6 @@ import (
 	"testing"
 )
 
-func TestHello(t *testing.T) {
+func TestSAreHardToImplement(t *testing.T) {
 
 }

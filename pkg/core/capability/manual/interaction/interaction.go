@@ -7,6 +7,8 @@ import (
 	"soarca/internal/logger"
 	"soarca/pkg/models/execution"
 	"soarca/pkg/models/manual"
+
+	"github.com/google/uuid"
 )
 
 type Empty struct{}
@@ -17,16 +19,6 @@ var log *logger.Log
 func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
-
-// NOTE:
-// The InteractionController is injected with all configured Interactions (SOARCA API always, plus AT MOST ONE integration)
-// The manual capability is injected with the InteractionController
-// The manual capability triggers interactioncontroller.PostCommand
-// The InteractionController register a manual command pending in its memory registry
-// The manual capability waits on interactioncontroller.WasCompleted() status != pending (to implement)
-// Meanwhile, external systems use the InteractionController to do GetPending. GetPending just uses the memory registry of InteractionController
-// Also meanwhile, external systems can use InteractionController to do Continue()
-// The manual capability continues.
 
 type IInteractionIntegrationNotifier interface {
 	Notify(command manual.InteractionIntegrationCommand, channel chan manual.InteractionIntegrationResponse)
@@ -78,29 +70,45 @@ func (manualController *InteractionController) Queue(command manual.InteractionC
 	}
 
 	// Purposedly blocking in idle-wait. We want to receive data back before continuiing the playbook
-	go manualController.awaitIntegrationsResponse(interactionChannel, ctx)
+	go func() {
+		defer close(interactionChannel)
+		for {
+			select {
+			case <-ctx.Done():
+				log.Debug("context canceled due to timeout. exiting goroutine")
+				return
+
+			case result := <-interactionChannel:
+				// Check register for pending manual command
+				metadata := execution.Metadata{
+					ExecutionId: uuid.MustParse(result.Payload.ExecutionId),
+					PlaybookId:  result.Payload.PlaybookId,
+					StepId:      result.Payload.StepId,
+				}
+
+				_, err := manualController.getPendingInteraction(metadata)
+				if err != nil {
+					// If not in there, was already resolved
+					log.Warning(err)
+					log.Warning("manual command not found among pending ones. should be already resolved")
+					return
+				}
+
+				// Was there. It's resolved, so it's removed from the pendings register
+				manualController.removeInteractionFromPending(metadata)
+
+				responseToCapanility := manual.InteractionResponse{
+					ResponseError: result.ResponseError,
+					Payload:       result.Payload,
+				}
+
+				manualCapabilityChannel <- responseToCapanility
+				return
+			}
+		}
+	}()
 
 	return nil
-}
-
-func (manualController *InteractionController) awaitIntegrationsResponse(interactionChannel chan manual.InteractionIntegrationResponse, ctx context.Context) {
-	for {
-		select {
-		case <-ctx.Done():
-			log.Debug("context canceled due to timeout. exiting goroutine")
-			return
-		// Skeleton. Implementation todo. Also study what happens if timeout at higher level
-		// Also study what happens with concurrent manual commands e.g. from parallel steps,
-		// with respect to using one class channel or different channels per call
-		case result := <-interactionChannel:
-			// First reply resolves the manual command
-			// TODO: check register for pending manual command
-			// If was already resolved, safely discard
-			// Otherwise, resolve command, post back to manual capability, de-register command form pending
-
-			log.Debug(result)
-		}
-	}
 }
 
 // ############################################################################
@@ -113,7 +121,7 @@ func (manualController *InteractionController) GetPendingCommands() ([]manual.In
 
 func (manualController *InteractionController) GetPendingCommand(metadata execution.Metadata) (manual.InteractionCommandData, error) {
 	log.Trace("getting pending manual command")
-	return manual.InteractionCommandData{}, nil
+	return manualController.getPendingInteraction(metadata)
 }
 
 func (manualController *InteractionController) PostContinue(outArgsResult manual.ManualOutArgUpdatePayload) error {
@@ -162,6 +170,41 @@ func (manualController *InteractionController) registerPendingInteraction(comman
 	// Question: is it ever the case that the same exact step is executed in parallel branches? Then this code would not work
 	execution[interaction.StepId] = interaction
 
+	return nil
+}
+
+func (manualController *InteractionController) getPendingInteraction(commandMetadata execution.Metadata) (manual.InteractionCommandData, error) {
+	executionCommands, ok := manualController.InteractionStorage[commandMetadata.ExecutionId.String()]
+	if !ok {
+		err := fmt.Errorf("no pending commands found for execution %s", commandMetadata.ExecutionId.String())
+		return manual.InteractionCommandData{}, err
+	}
+	commandData, ok := executionCommands[commandMetadata.StepId]
+	if !ok {
+		err := fmt.Errorf("no pending commands found for execution %s -> step %s",
+			commandMetadata.ExecutionId.String(),
+			commandMetadata.StepId,
+		)
+		return manual.InteractionCommandData{}, err
+	}
+	return commandData, nil
+}
+
+func (manualController *InteractionController) removeInteractionFromPending(commandMetadata execution.Metadata) error {
+	_, err := manualController.getPendingInteraction(commandMetadata)
+	if err != nil {
+		return err
+	}
+	// Get map of pending manual commands associated to execution
+	executionCommands := manualController.InteractionStorage[commandMetadata.ExecutionId.String()]
+	// Delete stepID-linked pending command
+	delete(executionCommands, commandMetadata.StepId)
+
+	// If no pending commands associated to the execution, delete the executions map
+	// This is done to keep the storage clean.
+	if len(executionCommands) == 0 {
+		delete(manualController.InteractionStorage, commandMetadata.ExecutionId.String())
+	}
 	return nil
 }
 

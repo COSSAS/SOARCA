@@ -78,7 +78,7 @@ func (manual *ManualCapability) awaitUserInput(channel chan manualModel.Interact
 			return cacao.NewVariables(), err
 		case response := <-channel:
 			log.Trace("received response from api")
-			cacaoVars := manual.copyOutArgsToVars(response.OutArgs.ResponseOutArgs)
+			cacaoVars := manual.copyOutArgsToVars(response.Payload.ResponseOutArgs)
 			return cacaoVars, response.ResponseError
 
 		}
