@@ -69,46 +69,48 @@ func (manualController *InteractionController) Queue(command manual.InteractionC
 		go notifier.Notify(integrationCommand, interactionChannel)
 	}
 
-	// Purposedly blocking in idle-wait. We want to receive data back before continuiing the playbook
-	go func() {
-		defer close(interactionChannel)
-		for {
-			select {
-			case <-ctx.Done():
-				log.Debug("context canceled due to timeout. exiting goroutine")
-				return
-
-			case result := <-interactionChannel:
-				// Check register for pending manual command
-				metadata := execution.Metadata{
-					ExecutionId: uuid.MustParse(result.Payload.ExecutionId),
-					PlaybookId:  result.Payload.PlaybookId,
-					StepId:      result.Payload.StepId,
-				}
-
-				_, err := manualController.getPendingInteraction(metadata)
-				if err != nil {
-					// If not in there, was already resolved
-					log.Warning(err)
-					log.Warning("manual command not found among pending ones. should be already resolved")
-					return
-				}
-
-				// Was there. It's resolved, so it's removed from the pendings register
-				manualController.removeInteractionFromPending(metadata)
-
-				responseToCapanility := manual.InteractionResponse{
-					ResponseError: result.ResponseError,
-					Payload:       result.Payload,
-				}
-
-				manualCapabilityChannel <- responseToCapanility
-				return
-			}
-		}
-	}()
+	// Async idle wait on interaction integration channel
+	go manualController.waitInteractionIntegrationResponse(manualCapabilityChannel, ctx, interactionChannel)
 
 	return nil
+}
+
+func (manualController *InteractionController) waitInteractionIntegrationResponse(manualCapabilityChannel chan manual.InteractionResponse, ctx context.Context, interactionChannel chan manual.InteractionIntegrationResponse) {
+	defer close(interactionChannel)
+	for {
+		select {
+		case <-ctx.Done():
+			log.Debug("context canceled due to timeout. exiting goroutine")
+			return
+
+		case result := <-interactionChannel:
+			// Check register for pending manual command
+			metadata := execution.Metadata{
+				ExecutionId: uuid.MustParse(result.Payload.ExecutionId),
+				PlaybookId:  result.Payload.PlaybookId,
+				StepId:      result.Payload.StepId,
+			}
+
+			_, err := manualController.getPendingInteraction(metadata)
+			if err != nil {
+				// If not in there, was already resolved
+				log.Warning(err)
+				log.Warning("manual command not found among pending ones. should be already resolved")
+				return
+			}
+
+			// Was there. It's resolved, so it's removed from the pendings register
+			manualController.removeInteractionFromPending(metadata)
+
+			interactionResponse := manual.InteractionResponse{
+				ResponseError: result.ResponseError,
+				Payload:       result.Payload,
+			}
+
+			manualCapabilityChannel <- interactionResponse
+			return
+		}
+	}
 }
 
 // ############################################################################
