@@ -91,21 +91,17 @@ func (manualController *InteractionController) waitInteractionIntegrationRespons
 				StepId:      result.Payload.StepId,
 			}
 
-			_, err := manualController.getPendingInteraction(metadata)
+			// Remove interaction from pending ones
+			err := manualController.removeInteractionFromPending(metadata)
 			if err != nil {
-				// If not in there, was already resolved
+				// If it was not there, was already resolved
 				log.Warning(err)
 				log.Warning("manual command not found among pending ones. should be already resolved")
 				return
 			}
 
-			// Was there. It's resolved, so it's removed from the pendings register
-			manualController.removeInteractionFromPending(metadata)
-
-			interactionResponse := manual.InteractionResponse{
-				ResponseError: result.ResponseError,
-				Payload:       result.Payload,
-			}
+			// Copy result and conversion back to interactionResponse format
+			interactionResponse := manual.InteractionResponse(result)
 
 			manualCapabilityChannel <- interactionResponse
 			return
