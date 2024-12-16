@@ -401,25 +401,27 @@ control "ThirdPartyManualIntegration" as 3ptool
 
 
 manual -> interaction : Queue(command, channel)
+manual -> manual : idle wait on chan
 activate interaction
 interaction -> interaction : save manual command status
 alt Third Party Integration flow
-interaction -> 3ptool : async Notify(interactionCommand, interactionChannel)
+interaction ->> 3ptool : async Notify(interactionCommand, interactionChannel)
 activate 3ptool
-interaction -> interaction : idle wait on chan
+interaction ->> interaction : async wait on chan
 
 3ptool <--> Integration : command posting and handling
 3ptool -> 3ptool : post InteractionIntegrationResponse on channel
-3ptool --> interaction
+3ptool --> interaction : InteractionIntegrationResponse
+interaction --> manual : InteractionResponse
 deactivate 3ptool
 else Native ManualAPI flow
-interaction -> interaction : idle wait on chan
+interaction ->> interaction : async wait on chan
 api -> interaction : GetPendingCommands()
 api -> interaction : GetPendingCommand(executionId, stepId)
 api -> interaction : Continue(InteractionResponse)
+interaction --> manual : InteractionResponse
 end
 
-interaction -> manual : manual command results
 deactivate interaction
 
 @enduml
