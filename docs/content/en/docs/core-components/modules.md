@@ -332,11 +332,11 @@ The manual step should provide a timeout SOARCA will by default use a timeout of
 #### Manual capability architecture
 
 In essence, executing a manual command involves the following actions:
-1. A message, the `command` of a manual command, is posted *somewhere* *somehow*, together with the variables expected to be filled.
+1. A message, the `command` of a manual command, is posted *somewhere*, *somehow*, together with the variables expected to be filled.
 2. The playbook execution stops, waiting for *something* to respond to the message with the variables values.
 3. The variables are streamed inside the playbook execution and handled accordingly.
 
-Because the *somewhere* and *somehow* for posting a message can vary, and the *something* that replies can vary too, SOARCA adopts a flexible architecture to accomodate different ways of manual *interactions*. Below a simplified view of the architecture.
+Because the *somewhere* and *somehow* for posting a message can vary, and the *something* that replies can vary too, SOARCA adopts a flexible architecture to accomodate different ways of manual *interactions*. Below a view of the architecture.
 
 ```plantuml
 @startuml
@@ -369,6 +369,7 @@ interface IInteractionIntegrationNotifier {
 
 class Interaction {
     notifiers []IInteractionIntegrationNotifier
+    storage map[executionId]map[stepId]InteractionStorageEntry
 }
 class ThirdPartyManualIntegration
 
@@ -387,10 +388,10 @@ ThirdPartyManualIntegration .up.|> IInteractionIntegrationNotifier
 ```
 
 The default and internally-supported way to interact with the manual step is through SOARCA's [manual api](/docs/core-components/api-manual). 
-Besides SOARCA's [manual api](/docs/core-components/api-manual), SOARCA is designed to allow for configuration of additional ways that a manual command should be executed.
+Besides SOARCA's [manual api](/docs/core-components/api-manual), SOARCA is designed to allow for configuration of additional ways that a manual command should be executed. In particular, there can be *one* manual integration (besides the native manual APIs) per running SOARCA instance.
 Integration's code should implement the *IInteractionIntegrationNotifier* interface, returning the result of the manual command execution in form of an `InteractionIntegrationResponse` object, into the respective channel.
 
-The diagram below displays the way the manual interactions components work.
+The diagram below displays in some detail the way the manual interactions components work.
 
 ```plantuml
 @startuml
@@ -427,7 +428,7 @@ deactivate interaction
 @enduml
 ```
 
-Note that whoever resolves the manual command first, whether via the manualAPI, or a third party integration, then the command results are returned to the workflow execution, and the manual command is removed from the pending list.
+Note that whoever resolves the manual command first, whether via the manualAPI, or a third party integration, then the command results are returned to the workflow execution, and the manual command is removed from the pending list. Hence, if a manual command is resolved e.g. via the manual integration, a postContinue API call for that same command will not go through, as the command will have been resolved already, and hence removed from the registry of pending manual commands.
 
 #### Success and failure
 
