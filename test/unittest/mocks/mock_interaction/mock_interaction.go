@@ -12,9 +12,8 @@ type MockInteraction struct {
 }
 
 func (mock *MockInteraction) Queue(command manual.InteractionCommand,
-	channel chan manual.InteractionResponse,
-	ctx context.Context) error {
-	args := mock.Called(command, channel, ctx)
+	manualComms manual.ManualCapabilityCommunication) error {
+	args := mock.Called(command, manualComms)
 	return args.Error(0)
 }
 
@@ -28,6 +27,13 @@ func AnyContext() interface{} {
 // Custom matcher to capture the channel
 func AnyChannel() interface{} {
 	return mock.MatchedBy(func(ch chan manual.InteractionResponse) bool {
+		return true
+	})
+}
+
+// Custom matcher for any ManualCapabilityCommunication
+func AnyManualCapabilityCommunication() interface{} {
+	return mock.MatchedBy(func(comm manual.ManualCapabilityCommunication) bool {
 		return true
 	})
 }

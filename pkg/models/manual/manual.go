@@ -1,6 +1,7 @@
 package manual
 
 import (
+	"context"
 	"soarca/pkg/core/capability"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
@@ -39,8 +40,8 @@ type InteractionCommand struct {
 type ManualOutArg struct {
 	Type        string `bson:"type,omitempty" json:"type,omitempty" example:"string"`                    // Type of the variable should be OASIS  variable-type-ov
 	Name        string `bson:"name" json:"name" validate:"required" example:"__example_string__"`        // The name of the variable in the style __variable_name__
-	Value       string `bson:"value" json:"value" validate:"required" example:"this is a value"`         // The value of the that the variable will evaluate to
 	Description string `bson:"description,omitempty" json:"description,omitempty" example:"some string"` // A description of the variable
+	Value       string `bson:"value" json:"value" validate:"required" example:"this is a value"`         // The value of the that the variable will evaluate to
 	Constant    bool   `bson:"constant,omitempty" json:"constant,omitempty" example:"false"`             // Indicate if it's a constant
 	External    bool   `bson:"external,omitempty" json:"external,omitempty" example:"false"`             // Indicate if it's external
 }
@@ -61,7 +62,12 @@ type ManualOutArgUpdatePayload struct {
 // The object that the Interaction module presents back to the manual capability
 type InteractionResponse struct {
 	ResponseError error
-	Payload       ManualOutArgUpdatePayload
+	Payload       cacao.Variables
+}
+
+type ManualCapabilityCommunication struct {
+	Channel        chan InteractionResponse
+	TimeoutContext context.Context
 }
 
 // ################################################################################

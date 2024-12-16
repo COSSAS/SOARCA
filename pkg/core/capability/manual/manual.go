@@ -55,7 +55,11 @@ func (manual *ManualCapability) Execute(
 	channel := make(chan manualModel.InteractionResponse)
 	defer close(channel)
 
-	err := manual.interaction.Queue(command, channel, ctx)
+	err := manual.interaction.Queue(command, manualModel.ManualCapabilityCommunication{
+		Channel:        channel,
+		TimeoutContext: ctx,
+	})
+
 	if err != nil {
 		return cacao.NewVariables(), err
 	}
@@ -78,24 +82,11 @@ func (manual *ManualCapability) awaitUserInput(channel chan manualModel.Interact
 			return cacao.NewVariables(), err
 		case response := <-channel:
 			log.Trace("received response from api")
-			cacaoVars := manual.copyOutArgsToVars(response.Payload.ResponseOutArgs)
+			cacaoVars := response.Payload
 			return cacaoVars, response.ResponseError
 
 		}
 	}
-}
-
-func (manual *ManualCapability) copyOutArgsToVars(outArgs manualModel.ManualOutArgs) cacao.Variables {
-	vars := cacao.NewVariables()
-	for name, outVar := range outArgs {
-
-		vars[name] = cacao.Variable{
-			Type:  outVar.Type,
-			Name:  outVar.Name,
-			Value: outVar.Value,
-		}
-	}
-	return vars
 }
 
 func (manual *ManualCapability) getTimeoutValue(userTimeout int) time.Duration {

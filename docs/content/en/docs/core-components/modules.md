@@ -354,7 +354,7 @@ interface ICapability{
 }
 
 interface ICapabilityInteraction{
-    Queue(command InteractionCommand, channel chan InteractionResponse)
+    Queue(command InteractionCommand, manualComms ManualCapabilityCommunication)
 }
 
 interface IInteracionStorage{

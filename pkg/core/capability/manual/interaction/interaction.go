@@ -1,16 +1,19 @@
 package interaction
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"reflect"
 	"soarca/internal/logger"
+	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"soarca/pkg/models/manual"
 
 	"github.com/google/uuid"
 )
+
+// TODO
+// - write unit tests
 
 type Empty struct{}
 
@@ -26,7 +29,7 @@ type IInteractionIntegrationNotifier interface {
 }
 
 type ICapabilityInteraction interface {
-	Queue(command manual.InteractionCommand, channel chan manual.InteractionResponse, ctx context.Context) error
+	Queue(command manual.InteractionCommand, manualComms manual.ManualCapabilityCommunication) error
 }
 
 type IInteractionStorage interface {
@@ -52,9 +55,9 @@ func New(manualIntegrations []IInteractionIntegrationNotifier) *InteractionContr
 // ############################################################################
 // ICapabilityInteraction implementation
 // ############################################################################
-func (manualController *InteractionController) Queue(command manual.InteractionCommand, manualCapabilityChannel chan manual.InteractionResponse, ctx context.Context) error {
+func (manualController *InteractionController) Queue(command manual.InteractionCommand, manualComms manual.ManualCapabilityCommunication) error {
 
-	err := manualController.registerPendingInteraction(command, manualCapabilityChannel)
+	err := manualController.registerPendingInteraction(command, manualComms.Channel)
 	if err != nil {
 		return err
 	}
@@ -63,48 +66,60 @@ func (manualController *InteractionController) Queue(command manual.InteractionC
 	integrationCommand := manual.InteractionIntegrationCommand(command)
 
 	// One response channel for all integrations
-	interactionChannel := make(chan manual.InteractionIntegrationResponse)
-	defer close(interactionChannel)
+	integrationChannel := make(chan manual.InteractionIntegrationResponse)
 
 	for _, notifier := range manualController.Notifiers {
-		go notifier.Notify(integrationCommand, interactionChannel)
+		go notifier.Notify(integrationCommand, integrationChannel)
 	}
 
 	// Async idle wait on interaction integration channel
-	go manualController.waitInteractionIntegrationResponse(manualCapabilityChannel, ctx, interactionChannel)
+	go manualController.waitInteractionIntegrationResponse(manualComms, integrationChannel)
 
 	return nil
 }
 
-func (manualController *InteractionController) waitInteractionIntegrationResponse(manualCapabilityChannel chan manual.InteractionResponse, ctx context.Context, interactionChannel chan manual.InteractionIntegrationResponse) {
-	defer close(interactionChannel)
+func (manualController *InteractionController) waitInteractionIntegrationResponse(manualComms manual.ManualCapabilityCommunication, integrationChannel chan manual.InteractionIntegrationResponse) {
+	defer close(integrationChannel)
 	for {
 		select {
-		case <-ctx.Done():
-			log.Debug("context canceled due to timeout. exiting goroutine")
+		case <-manualComms.TimeoutContext.Done():
+			log.Info("context canceled due to timeout. exiting goroutine")
 			return
 
-		case result := <-interactionChannel:
+		case result := <-integrationChannel:
 			// Check register for pending manual command
-			metadata := execution.Metadata{
-				ExecutionId: uuid.MustParse(result.Payload.ExecutionId),
-				PlaybookId:  result.Payload.PlaybookId,
-				StepId:      result.Payload.StepId,
+			metadata, err := manualController.makeExecutionMetadataFromPayload(result.Payload)
+			if err != nil {
+				log.Error(err)
+				manualComms.Channel <- manual.InteractionResponse{
+					ResponseError: err,
+					Payload:       cacao.Variables{},
+				}
+				return
 			}
-
 			// Remove interaction from pending ones
-			err := manualController.removeInteractionFromPending(metadata)
+			err = manualController.removeInteractionFromPending(metadata)
 			if err != nil {
 				// If it was not there, was already resolved
 				log.Warning(err)
+				// Captured if channel not yet closed
 				log.Warning("manual command not found among pending ones. should be already resolved")
+				manualComms.Channel <- manual.InteractionResponse{
+					ResponseError: err,
+					Payload:       cacao.Variables{},
+				}
 				return
 			}
 
 			// Copy result and conversion back to interactionResponse format
-			interactionResponse := manual.InteractionResponse(result)
+			returnedVars := manualController.copyOutArgsToVars(result.Payload.ResponseOutArgs)
 
-			manualCapabilityChannel <- interactionResponse
+			interactionResponse := manual.InteractionResponse{
+				ResponseError: result.ResponseError,
+				Payload:       returnedVars,
+			}
+
+			manualComms.Channel <- interactionResponse
 			return
 		}
 	}
@@ -125,13 +140,12 @@ func (manualController *InteractionController) GetPendingCommand(metadata execut
 	return interaction.CommandData, http.StatusOK, err
 }
 
-func (manualController *InteractionController) PostContinue(outArgsResult manual.ManualOutArgUpdatePayload) (int, error) {
+func (manualController *InteractionController) PostContinue(result manual.ManualOutArgUpdatePayload) (int, error) {
 	log.Trace("completing manual command")
 
-	metadata := execution.Metadata{
-		ExecutionId: uuid.MustParse(outArgsResult.ExecutionId),
-		PlaybookId:  outArgsResult.PlaybookId,
-		StepId:      outArgsResult.StepId,
+	metadata, err := manualController.makeExecutionMetadataFromPayload(result)
+	if err != nil {
+		return http.StatusBadRequest, err
 	}
 
 	// TODO: determine status code
@@ -145,9 +159,11 @@ func (manualController *InteractionController) PostContinue(outArgsResult manual
 
 	// If it is, put outArgs back into manualCapabilityChannel
 
+	// Copy result and conversion back to interactionResponse format
+	returnedVars := manualController.copyOutArgsToVars(result.ResponseOutArgs)
 	pendingEntry.Channel <- manual.InteractionResponse{
 		ResponseError: nil,
-		Payload:       outArgsResult,
+		Payload:       returnedVars,
 	}
 	// de-register the command
 	err = manualController.removeInteractionFromPending(metadata)
@@ -181,7 +197,7 @@ func (manualController *InteractionController) registerPendingInteraction(comman
 	if !ok {
 		// It's fine, no entry for execution registered. Register execution and step entry
 		manualController.InteractionStorage[interaction.ExecutionId] = map[string]manual.InteractionStorageEntry{
-			interaction.StepId: manual.InteractionStorageEntry{
+			interaction.StepId: {
 				CommandData: interaction,
 				Channel:     manualChan,
 			},
@@ -254,10 +270,28 @@ func (manualController *InteractionController) removeInteractionFromPending(comm
 	return nil
 }
 
-// func (manualController *InteractionController) continueInteraction(interactionResponse manual.InteractionResponse) error {
-// 	// TODO
-// 	if interactionResponse.ResponseError != nil {
-// 		return interactionResponse.ResponseError
-// 	}
-// 	return nil
-// }
+func (manualController *InteractionController) copyOutArgsToVars(outArgs manual.ManualOutArgs) cacao.Variables {
+	vars := cacao.NewVariables()
+	for name, outVar := range outArgs {
+
+		vars[name] = cacao.Variable{
+			Type:  outVar.Type,
+			Name:  outVar.Name,
+			Value: outVar.Value,
+		}
+	}
+	return vars
+}
+
+func (manualController *InteractionController) makeExecutionMetadataFromPayload(payload manual.ManualOutArgUpdatePayload) (execution.Metadata, error) {
+	executionId, err := uuid.Parse(payload.ExecutionId)
+	if err != nil {
+		return execution.Metadata{}, err
+	}
+	metadata := execution.Metadata{
+		ExecutionId: executionId,
+		PlaybookId:  payload.PlaybookId,
+		StepId:      payload.StepId,
+	}
+	return metadata, nil
+}
