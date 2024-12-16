@@ -358,9 +358,9 @@ interface ICapabilityInteraction{
 }
 
 interface IInteracionStorage{
-    GetPendingCommands()
-	GetPendingCommand()
-	Continue()
+    GetPendingCommands() []CommandData
+	GetPendingCommand(execution.metadata) CommandData
+	Continue(execution.metadata) StatusCode
 }
 
 interface IInteractionIntegrationNotifier {
@@ -400,26 +400,26 @@ control "ManualAPI" as api
 control "ThirdPartyManualIntegration" as 3ptool
 
 
-manual -> interaction : Queue(command, channel)
-manual -> manual : idle wait on chan
+manual -> interaction : Queue(command, capabilityChannel)
+manual -> manual : idle wait on capabilityChannel
 activate interaction
 interaction -> interaction : save manual command status
 alt Third Party Integration flow
-interaction ->> 3ptool : async Notify(interactionCommand, interactionChannel)
+interaction ->> 3ptool : async Notify(interactionCommand, integrationChannel)
 activate 3ptool
-interaction ->> interaction : async wait on chan
+interaction ->> interaction : async wait on integrationChannel
 
 3ptool <--> Integration : command posting and handling
 3ptool -> 3ptool : post InteractionIntegrationResponse on channel
-3ptool --> interaction : InteractionIntegrationResponse
-interaction --> manual : InteractionResponse
+3ptool --> interaction : integrationChannel <- InteractionIntegrationResponse
+interaction --> manual : capabilityChannel <- InteractionResponse
 deactivate 3ptool
 else Native ManualAPI flow
-interaction ->> interaction : async wait on chan
+interaction ->> interaction : async wait on integrationChannel
 api -> interaction : GetPendingCommands()
-api -> interaction : GetPendingCommand(executionId, stepId)
+api -> interaction : GetPendingCommand(execution.metadata)
 api -> interaction : Continue(InteractionResponse)
-interaction --> manual : InteractionResponse
+interaction --> manual : capabilityChannel <- InteractionResponse
 end
 
 deactivate interaction
