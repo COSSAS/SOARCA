@@ -60,7 +60,7 @@ type ManualHandler struct {
 //	@failure		400		{object}	[]manual.InteractionCommandData
 //	@Router			/manual/ [GET]
 func (manualHandler *ManualHandler) GetPendingCommands(g *gin.Context) {
-	commands, err := manualHandler.interactionCapability.GetPendingCommands()
+	commands, status, err := manualHandler.interactionCapability.GetPendingCommands()
 	if err != nil {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusInternalServerError,
@@ -68,7 +68,7 @@ func (manualHandler *ManualHandler) GetPendingCommands(g *gin.Context) {
 			"GET /manual/", err.Error())
 		return
 	}
-	g.JSON(http.StatusOK,
+	g.JSON(status,
 		commands)
 }
 
@@ -98,7 +98,7 @@ func (manualHandler *ManualHandler) GetPendingCommand(g *gin.Context) {
 	}
 
 	executionMetadata := execution.Metadata{ExecutionId: execId, StepId: step_id}
-	commandData, err := manualHandler.interactionCapability.GetPendingCommand(executionMetadata)
+	commandData, status, err := manualHandler.interactionCapability.GetPendingCommand(executionMetadata)
 	if err != nil {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusInternalServerError,
@@ -106,7 +106,7 @@ func (manualHandler *ManualHandler) GetPendingCommand(g *gin.Context) {
 			"GET /manual/"+execution_id+"/"+step_id, err.Error())
 		return
 	}
-	g.JSON(http.StatusOK,
+	g.JSON(status,
 		commandData)
 }
 
@@ -138,7 +138,7 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 		PlaybookId:  playbook_id,
 		StepId:      step_id,
 	}
-	err := manualHandler.interactionCapability.Continue(outArgsUpdate)
+	status, err := manualHandler.interactionCapability.Continue(outArgsUpdate)
 	if err != nil {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusInternalServerError,
@@ -147,7 +147,7 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 		return
 	}
 	g.JSON(
-		http.StatusOK,
+		status,
 		api.Execution{
 			ExecutionId: uuid.MustParse(execution_id),
 			PlaybookId:  playbook_id,

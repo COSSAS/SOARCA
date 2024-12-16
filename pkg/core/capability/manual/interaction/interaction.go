@@ -3,6 +3,7 @@ package interaction
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"reflect"
 	"soarca/internal/logger"
 	"soarca/pkg/models/execution"
@@ -29,19 +30,19 @@ type ICapabilityInteraction interface {
 }
 
 type IInteractionStorage interface {
-	GetPendingCommands() ([]manual.InteractionCommandData, error)
+	GetPendingCommands() ([]manual.InteractionCommandData, int, error)
 	// even if step has multiple manual commands, there should always be just one pending manual command per action step
-	GetPendingCommand(metadata execution.Metadata) (manual.InteractionCommandData, error)
-	Continue(outArgsResult manual.ManualOutArgUpdatePayload) error
+	GetPendingCommand(metadata execution.Metadata) (manual.InteractionCommandData, int, error)
+	Continue(outArgsResult manual.ManualOutArgUpdatePayload) (int, error)
 }
 
 type InteractionController struct {
-	InteractionStorage map[string]map[string]manual.InteractionCommandData // Keyed on [executionID][stepID]
+	InteractionStorage map[string]map[string]manual.InteractionStorageEntry // Keyed on [executionID][stepID]
 	Notifiers          []IInteractionIntegrationNotifier
 }
 
 func New(manualIntegrations []IInteractionIntegrationNotifier) *InteractionController {
-	storage := map[string]map[string]manual.InteractionCommandData{}
+	storage := map[string]map[string]manual.InteractionStorageEntry{}
 	return &InteractionController{
 		InteractionStorage: storage,
 		Notifiers:          manualIntegrations,
@@ -53,7 +54,7 @@ func New(manualIntegrations []IInteractionIntegrationNotifier) *InteractionContr
 // ############################################################################
 func (manualController *InteractionController) Queue(command manual.InteractionCommand, manualCapabilityChannel chan manual.InteractionResponse, ctx context.Context) error {
 
-	err := manualController.registerPendingInteraction(command)
+	err := manualController.registerPendingInteraction(command, manualCapabilityChannel)
 	if err != nil {
 		return err
 	}
@@ -112,31 +113,56 @@ func (manualController *InteractionController) waitInteractionIntegrationRespons
 // ############################################################################
 // IInteractionStorage implementation
 // ############################################################################
-func (manualController *InteractionController) GetPendingCommands() ([]manual.InteractionCommandData, error) {
+func (manualController *InteractionController) GetPendingCommands() ([]manual.InteractionCommandData, int, error) {
 	log.Trace("getting pending manual commands")
-	return manualController.getAllPendingInteractions(), nil
+	return manualController.getAllPendingInteractions(), http.StatusOK, nil
 }
 
-func (manualController *InteractionController) GetPendingCommand(metadata execution.Metadata) (manual.InteractionCommandData, error) {
+func (manualController *InteractionController) GetPendingCommand(metadata execution.Metadata) (manual.InteractionCommandData, int, error) {
 	log.Trace("getting pending manual command")
-	return manualController.getPendingInteraction(metadata)
+	interaction, err := manualController.getPendingInteraction(metadata)
+	// TODO: determine status code
+	return interaction.CommandData, http.StatusOK, err
 }
 
-func (manualController *InteractionController) PostContinue(outArgsResult manual.ManualOutArgUpdatePayload) error {
+func (manualController *InteractionController) PostContinue(outArgsResult manual.ManualOutArgUpdatePayload) (int, error) {
 	log.Trace("completing manual command")
-	// TODO
-	// Get execution metadata from updatepayload
-	// Check command is indeed pending
+
+	metadata := execution.Metadata{
+		ExecutionId: uuid.MustParse(outArgsResult.ExecutionId),
+		PlaybookId:  outArgsResult.PlaybookId,
+		StepId:      outArgsResult.StepId,
+	}
+
+	// TODO: determine status code
+
 	// If not, it means it was already solved (right?)
-	// If it is, put outArgs back into manualCapabilityChannel (must figure out how...)
+	pendingEntry, err := manualController.getPendingInteraction(metadata)
+	if err != nil {
+		log.Warning(err)
+		return http.StatusAlreadyReported, err
+	}
+
+	// If it is, put outArgs back into manualCapabilityChannel
+
+	pendingEntry.Channel <- manual.InteractionResponse{
+		ResponseError: nil,
+		Payload:       outArgsResult,
+	}
 	// de-register the command
-	return nil
+	err = manualController.removeInteractionFromPending(metadata)
+	if err != nil {
+		log.Error(err)
+		return http.StatusInternalServerError, err
+	}
+
+	return http.StatusOK, nil
 }
 
 // ############################################################################
 // Utilities and functionalities
 // ############################################################################
-func (manualController *InteractionController) registerPendingInteraction(command manual.InteractionCommand) error {
+func (manualController *InteractionController) registerPendingInteraction(command manual.InteractionCommand, manualChan chan manual.InteractionResponse) error {
 
 	interaction := manual.InteractionCommandData{
 		Type:          command.Context.Command.Type,
@@ -154,8 +180,11 @@ func (manualController *InteractionController) registerPendingInteraction(comman
 
 	if !ok {
 		// It's fine, no entry for execution registered. Register execution and step entry
-		manualController.InteractionStorage[interaction.ExecutionId] = map[string]manual.InteractionCommandData{
-			interaction.StepId: interaction,
+		manualController.InteractionStorage[interaction.ExecutionId] = map[string]manual.InteractionStorageEntry{
+			interaction.StepId: manual.InteractionStorageEntry{
+				CommandData: interaction,
+				Channel:     manualChan,
+			},
 		}
 		return nil
 	}
@@ -172,7 +201,10 @@ func (manualController *InteractionController) registerPendingInteraction(comman
 
 	// Execution exist, and Finally register pending command in existing execution
 	// Question: is it ever the case that the same exact step is executed in parallel branches? Then this code would not work
-	execution[interaction.StepId] = interaction
+	execution[interaction.StepId] = manual.InteractionStorageEntry{
+		CommandData: interaction,
+		Channel:     manualChan,
+	}
 
 	return nil
 }
@@ -181,27 +213,27 @@ func (manualController *InteractionController) getAllPendingInteractions() []man
 	allPendingInteractions := []manual.InteractionCommandData{}
 	for _, interactions := range manualController.InteractionStorage {
 		for _, interaction := range interactions {
-			allPendingInteractions = append(allPendingInteractions, interaction)
+			allPendingInteractions = append(allPendingInteractions, interaction.CommandData)
 		}
 	}
 	return allPendingInteractions
 }
 
-func (manualController *InteractionController) getPendingInteraction(commandMetadata execution.Metadata) (manual.InteractionCommandData, error) {
+func (manualController *InteractionController) getPendingInteraction(commandMetadata execution.Metadata) (manual.InteractionStorageEntry, error) {
 	executionCommands, ok := manualController.InteractionStorage[commandMetadata.ExecutionId.String()]
 	if !ok {
 		err := fmt.Errorf("no pending commands found for execution %s", commandMetadata.ExecutionId.String())
-		return manual.InteractionCommandData{}, err
+		return manual.InteractionStorageEntry{}, err
 	}
-	commandData, ok := executionCommands[commandMetadata.StepId]
+	interaction, ok := executionCommands[commandMetadata.StepId]
 	if !ok {
 		err := fmt.Errorf("no pending commands found for execution %s -> step %s",
 			commandMetadata.ExecutionId.String(),
 			commandMetadata.StepId,
 		)
-		return manual.InteractionCommandData{}, err
+		return manual.InteractionStorageEntry{}, err
 	}
-	return commandData, nil
+	return interaction, nil
 }
 
 func (manualController *InteractionController) removeInteractionFromPending(commandMetadata execution.Metadata) error {

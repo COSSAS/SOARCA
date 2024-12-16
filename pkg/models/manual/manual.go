@@ -23,6 +23,11 @@ type InteractionCommandData struct {
 	OutArgs       cacao.Variables   `bson:"out_args" json:"out_args" validate:"required"`                    // Map of cacao variables handled in the step out args with current values and definitions
 }
 
+type InteractionStorageEntry struct {
+	CommandData InteractionCommandData
+	Channel     chan InteractionResponse
+}
+
 // Object passed by the manual capability to the Interaction module
 type InteractionCommand struct {
 	Metadata execution.Metadata
