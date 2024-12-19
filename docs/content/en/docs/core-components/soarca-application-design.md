@@ -28,16 +28,20 @@ protocol /playbook #lightgreen
 protocol /trigger #lightgreen
 protocol /status #lightgreen
 protocol /reporter #lightgreen
+protocol /manual #lightgreen
 protocol /step #red
 protocol /trusted/variables #red
 
+class reporter::cache #orange
+class core::decomposer #lightgreen
+class core::executor  #lightgreen
+class interaction::interaction  #lightgreen
 class internal::controller  #lightgreen
 class internal::database  #lightgreen
 class internal::logger  #lightgreen
-class core::decomposer #lightgreen
-class core::executor  #lightgreen
 class api::playbook #lightgreen
 class api::trigger #lightgreen
+class core::capability::manual #lightgreen
 class core::capability::http #lightgreen
 class core::capability::ssh #lightgreen
 class core::capability::openC2 #lightgreen
@@ -45,13 +49,10 @@ class core::capability::fin #lightgreen
 class core::capability::powershell #lightgreen
 class api::status #lightgreen
 class api::reporter #lightgreen
-
+class api::manual #lightgreen
 class api::step #red
 class api::variables #red
 
-class api::reporter #lightgreen
-
-class reporter::cache #orange
 
 
 "/step" *-- api::step 
@@ -59,12 +60,13 @@ class reporter::cache #orange
 "/trigger" *-- api::trigger
 "/status" *-- api::status
 "/reporter" *-- api::reporter
+"/manual" *-- api::manual
 "/trusted/variables" *-- api::variables
 
-api *-down- controller
-controller -* database
-logger *- controller
-controller -down-* core
+api *-down- internal::controller
+internal::controller -* database
+logger *- internal::controller
+internal::controller -down-* core
 
 api::reporter -down-> reporter::cache
 
@@ -74,6 +76,7 @@ reporter::cache <-- core::executor
 api::playbook --> internal::database
 api::trigger --> core::decomposer
 api::trigger --> internal::database
+api::manual --> interaction::interaction
 
 core::decomposer -down-> core::executor
 core::executor --> core::capability::openC2
@@ -81,6 +84,8 @@ core::executor --> core::capability::fin
 core::executor --> core::capability::http
 core::executor --> core::capability::ssh
 core::executor --> core::capability::powershell
+core::executor --> core::capability::manual
+interaction::interaction <-- core::capability::manual
 @enduml
 ```
 
