@@ -12,7 +12,7 @@ resources:
 SOARCA is build on top of the [CACAO Security Playbook Version 2.0](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html) standard.
 
 {{% alert title="Warning" color="warning" %}}
-SOARCA v1.0 only implements a part of the CACAO v2 spec. Only `start`, `end`, and `action` steps are supported at this time.
+SOARCA v1.0 only implements a part of the CACAO v2 spec. Only `start`, `end`, `action`, and `if/else` steps are supported at this time.
 {{% /alert %}}
 
 A CACAO playbook is a structured document that outlines a series of orchestrated actions to address specific security events, incidents, or other security-related activities. These playbooks allow for the automation of security steps.

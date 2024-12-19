@@ -1,4 +1,62 @@
 definitions:
+  api.Error:
+    properties:
+      downstream-call:
+        example: '{"some" : "json"}'
+        type: string
+      message:
+        example: missing argument in call
+        type: string
+      original-call:
+        example: /example/route
+        type: string
+      status:
+        example: 400
+        type: integer
+    required:
+    - message
+    - original-call
+    - status
+    type: object
+  api.Execution:
+    properties:
+      execution_id:
+        example: 2c855cd6-bbce-402f-a143-3d6eec346c08
+        type: string
+      payload:
+        example: playbook--0cec398c-db69-4f17-bde4-8ecbcc4a8879
+        type: string
+    required:
+    - execution_id
+    - payload
+    type: object
+  api.PlaybookExecutionReport:
+    properties:
+      description:
+        type: string
+      ended:
+        type: string
+      execution_id:
+        type: string
+      name:
+        type: string
+      playbook_id:
+        type: string
+      request_interval:
+        type: integer
+      started:
+        type: string
+      status:
+        type: string
+      status_text:
+        type: string
+      step_results:
+        additionalProperties:
+          $ref: '#/definitions/api.StepExecutionReport'
+        type: object
+      type:
+        type: string
+    type: object
   api.PlaybookMeta:
     properties:
       description:
@@ -16,14 +74,67 @@ definitions:
       valid_until:
         type: string
     type: object
+  api.Status:
+    properties:
+      mode:
+        type: string
+      runtime:
+        type: string
+      time:
+        type: string
+      uptime:
+        $ref: '#/definitions/api.Uptime'
+      version:
+        type: string
+    type: object
+  api.StepExecutionReport:
+    properties:
+      automated_execution:
+        type: boolean
+      commands_b64:
+        items:
+          type: string
+        type: array
+      description:
+        type: string
+      ended:
+        type: string
+      executed_by:
+        type: string
+      execution_id:
+        type: string
+      name:
+        type: string
+      started:
+        type: string
+      status:
+        type: string
+      status_text:
+        type: string
+      step_id:
+        type: string
+      variables:
+        additionalProperties:
+          $ref: '#/definitions/cacao.Variable'
+        type: object
+    type: object
+  api.Uptime:
+    properties:
+      milliseconds:
+        type: integer
+      since:
+        type: string
+    type: object
+  cacao.Addresses:
+    additionalProperties:
+      items:
+        type: string
+      type: array
+    type: object
   cacao.AgentTarget:
     properties:
       address:
-        additionalProperties:
-          items:
-            type: string
-          type: array
-        type: object
+        $ref: '#/definitions/cacao.Addresses'
       agent_target_extensions:
         $ref: '#/definitions/cacao.Extensions'
       authentication_info:
@@ -56,6 +167,10 @@ definitions:
     - name
     - type
     type: object
+  cacao.AgentTargets:
+    additionalProperties:
+      $ref: '#/definitions/cacao.AgentTarget'
+    type: object
   cacao.AuthenticationInformation:
     properties:
       description:
@@ -84,6 +199,14 @@ definitions:
         type: string
     required:
     - type
+    type: object
+  cacao.AuthenticationInformations:
+    additionalProperties:
+      $ref: '#/definitions/cacao.AuthenticationInformation'
+    type: object
+  cacao.Cases:
+    additionalProperties:
+      type: string
     type: object
   cacao.CivicLocation:
     properties:
@@ -127,11 +250,7 @@ definitions:
       description:
         type: string
       headers:
-        additionalProperties:
-          items:
-            type: string
-          type: array
-        type: object
+        $ref: '#/definitions/cacao.Headers'
       playbook_activity:
         type: string
       type:
@@ -213,6 +332,10 @@ definitions:
     - id
     - type
     type: object
+  cacao.DataMarkings:
+    additionalProperties:
+      $ref: '#/definitions/cacao.DataMarking'
+    type: object
   cacao.ExtensionDefinition:
     properties:
       created_by:
@@ -223,6 +346,8 @@ definitions:
         items:
           $ref: '#/definitions/cacao.ExternalReferences'
         type: array
+      id:
+        type: string
       name:
         type: string
       schema:
@@ -236,6 +361,10 @@ definitions:
     - schema
     - type
     - version
+    type: object
+  cacao.ExtensionDefinitions:
+    additionalProperties:
+      $ref: '#/definitions/cacao.ExtensionDefinition'
     type: object
   cacao.Extensions:
     additionalProperties: true
@@ -257,83 +386,139 @@ definitions:
     required:
     - name
     type: object
+  cacao.Headers:
+    additionalProperties:
+      items:
+        type: string
+      type: array
+    type: object
   cacao.Playbook:
     properties:
       agent_definitions:
-        additionalProperties:
-          $ref: '#/definitions/cacao.AgentTarget'
-        type: object
+        allOf:
+        - $ref: '#/definitions/cacao.AgentTargets'
+        description: Map of agent definitions used by the workflow steps
       authentication_info_definitions:
-        additionalProperties:
-          $ref: '#/definitions/cacao.AuthenticationInformation'
-        type: object
+        allOf:
+        - $ref: '#/definitions/cacao.AuthenticationInformations'
+        description: Map of authentication information objects
       created:
+        description: Timestamp of the creation of the playbook
+        example: "2024-01-01T09:00:00.000Z"
         type: string
       created_by:
+        description: UUID referring to identity
+        example: identity--96abab60-238a-44ff-8962-5806aa60cbce
         type: string
       data_marking_definitions:
-        additionalProperties:
-          $ref: '#/definitions/cacao.DataMarking'
-        type: object
+        allOf:
+        - $ref: '#/definitions/cacao.DataMarkings'
+        description: Map of datamarking definitions
       derived_from:
+        description: Playbook id that this playbook is derived from
+        example:
+        - '["playbook--77c4c428-6304-4950-93ff-83c5224cb67a"]'
         items:
           type: string
         type: array
       description:
+        description: A descriptive text to indicate what your playbook does
+        example: This is an example investigation playbook
         type: string
       extension_definitions:
-        additionalProperties:
-          $ref: '#/definitions/cacao.ExtensionDefinition'
-        type: object
+        allOf:
+        - $ref: '#/definitions/cacao.ExtensionDefinitions'
+        description: Map of extension definitions used by the workflow steps
       external_references:
+        description: List of external reference objects
         items:
           $ref: '#/definitions/cacao.ExternalReferences'
         type: array
       id:
+        description: Used by SOARCA so refer to the object while loading it from the
+          database
+        example: playbook--77c4c428-6304-4950-93ff-83c5fd4cb67a
         type: string
       impact:
+        description: A priority number ranging 0 - 100
+        example: 100
         type: integer
       labels:
+        description: List of labels to label playbook
         items:
           type: string
         type: array
       markings:
+        description: List of datamarking identifiers
+        example:
+        - '[marking-statement--6424867b-0440-4885-bd0b-604d51786d06]'
         items:
           type: string
         type: array
       modified:
+        description: Timestamp of the last modification of the playbook
+        example: "2024-01-01T09:00:00.000Z"
         type: string
       name:
+        description: An indicative name of the playbook
+        example: Investigation playbook
         type: string
       playbook_extensions:
-        $ref: '#/definitions/cacao.Extensions'
+        allOf:
+        - $ref: '#/definitions/cacao.Extensions'
+        description: Map of extensions used by the playbook
       playbook_types:
+        description: Should be of the CACAO playbook-type-ov
+        example:
+        - investigation
         items:
           type: string
         type: array
       playbook_variables:
-        $ref: '#/definitions/cacao.Variables'
+        allOf:
+        - $ref: '#/definitions/cacao.Variables'
+        description: Map of variables that are global to the playbook
       priority:
+        description: A priority number ranging 0 - 100
+        example: 100
         type: integer
       severity:
+        description: A priority number ranging 0 - 100
+        example: 100
         type: integer
       spec_version:
+        description: Indicate the specification version cacao-2.0 is the only supported
+          version at this time
+        example: cacao-2.0
         type: string
       target_definitions:
-        additionalProperties:
-          $ref: '#/definitions/cacao.AgentTarget'
-        type: object
+        allOf:
+        - $ref: '#/definitions/cacao.AgentTargets'
+        description: Map of target definitions used by the workflow steps
       type:
+        description: Must be playbook
+        example: playbook
         type: string
       valid_from:
+        description: Timestamp from when the playbook is valid
+        example: "2024-01-01T09:00:00.000Z"
         type: string
       valid_until:
+        description: Timestamp until when the playbook is valid
+        example: "2124-01-01T09:00:00.000Z"
         type: string
       workflow:
-        $ref: '#/definitions/cacao.Workflow'
+        allOf:
+        - $ref: '#/definitions/cacao.Workflow'
+        description: Map of workflow steps keyed by the step id
       workflow_exception:
+        description: Step that marks the actions that need to be taken when an exception
+          occurs
+        example: end--37bea005-4a36-4a77-bd1f-79a6e4682a13
         type: string
       workflow_start:
+        description: Start step of the playbook MUST be of step type START
+        example: start--07bea005-4a36-4a77-bd1f-79a6e4682a13
         type: string
     required:
     - created
@@ -353,9 +538,7 @@ definitions:
       authentication_info:
         type: string
       cases:
-        additionalProperties:
-          type: string
-        type: object
+        $ref: '#/definitions/cacao.Cases'
       commands:
         items:
           $ref: '#/definitions/cacao.Command'
@@ -422,16 +605,28 @@ definitions:
   cacao.Variable:
     properties:
       constant:
+        description: Indicate if it's a constant
+        example: false
         type: boolean
       description:
+        description: A description of the variable
+        example: some string
         type: string
       external:
+        description: Indicate if it's external
+        example: false
         type: boolean
       name:
+        description: The name of the variable in the style __variable_name__
+        example: __example_string__
         type: string
       type:
+        description: Type of the variable should be OASIS  variable-type-ov
+        example: string
         type: string
       value:
+        description: The value of the that the variable will evaluate to
+        example: this is a value
         type: string
     required:
     - type
@@ -446,6 +641,8 @@ definitions:
     type: object
 info:
   contact: {}
+  title: SOARCA API
+  version: 1.0.0
 paths:
   /playbook/:
     get:
@@ -459,6 +656,10 @@ paths:
             items:
               $ref: '#/definitions/cacao.Playbook'
             type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
       summary: gets all the UUIDs for the stored playbooks
       tags:
       - playbook
@@ -480,6 +681,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/cacao.Playbook'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
       summary: submit playbook via the api
       tags:
       - playbook
@@ -499,6 +704,10 @@ paths:
       responses:
         "200":
           description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
       summary: delete playbook by Id
       tags:
       - playbook
@@ -519,6 +728,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/cacao.Playbook'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
       summary: get CACAO playbook by its ID
       tags:
       - playbook
@@ -545,6 +758,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/cacao.Playbook'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
       summary: update playbook
       tags:
       - playbook
@@ -560,9 +777,85 @@ paths:
             items:
               $ref: '#/definitions/api.PlaybookMeta'
             type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
       summary: gets all the meta information for the stored playbooks
       tags:
       - playbook
+  /reporter:
+    get:
+      description: return all stored executions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/api.PlaybookExecutionReport'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: gets all the UUIDs for the executions that can be retireved
+      tags:
+      - reporter
+  /reporter/{id}:
+    get:
+      description: return execution information
+      parameters:
+      - description: execution identifier
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.PlaybookExecutionReport'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: gets information about an ongoing playbook execution
+      tags:
+      - reporter
+  /status:
+    get:
+      description: return SOARCA status
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Status'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: gets the SOARCA status
+      tags:
+      - status
+  /status/ping:
+    get:
+      description: return SOARCA status
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: ping to see if SOARCA is up returns pong
+      tags:
+      - ping pong
   /trigger/playbook:
     post:
       consumes:
@@ -579,8 +872,45 @@ paths:
       - application/json
       responses:
         "200":
-          description: '{"execution_id":"uuid","payload":"playbook--uuid"}'
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Execution'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
       summary: trigger a playbook by supplying a cacao playbook payload
+      tags:
+      - trigger
+  /trigger/playbook/{id}:
+    post:
+      consumes:
+      - application/json
+      description: trigger playbook by id
+      parameters:
+      - description: playbook ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: playbook
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/cacao.Variables'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Execution'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: trigger a playbook by id that is stored in SOARCA
       tags:
       - trigger
 swagger: "2.0"

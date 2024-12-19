@@ -9,7 +9,7 @@ weight: 2
 
 # Endpoint description
 
-We will use HTTP status codes <https://en.wikipedia.org/wiki/List_of_HTTP_status_codes>
+We will use HTTP status codes https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
 
 ```plantuml
 @startuml

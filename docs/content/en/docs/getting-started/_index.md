@@ -9,7 +9,7 @@ date: 2024-03-18
 
 ## Prerequisites
 
-Before you begin, you might need to install the following tools (Linux Ubuntu 22.04 adapt for your needs): 
+Before you begin, you might need to install the following tools (Linux Ubuntu 22.04 adapt for your needs):
 
 - [golang](https://go.dev/doc/install)
 - go gin `go get -u github.com/gin-gonic/gin`
@@ -34,9 +34,6 @@ cd docker/soarca && sudo docker compose up -d
 {{< /tab >}}
 {{< /tabpane >}}
 
-
-
-
 {{% alert title="Tip" %}}
 Output will be similar to:
 {{< tabpane langEqualsHeader=false  >}}
@@ -53,17 +50,18 @@ swag init
 {{< /tabpane >}}
 {{% /alert %}}
 
-Compiled binary files can be found under `/bin`. 
+Compiled binary files can be found under `/bin`.
 
 ### Playbook execution
 
 You can use the following commands to execute the example playbooks via the terminal while SOARCA is running assuming on localhost. Alternatively you can go to `http://localhost:8080/swagger/index.html` and use the trigger/playbook endpoint.
 
-
 Example playbooks:
 {{< tabpane langEqualsHeader=false  >}}
 {{< tab header="ssh" lang="sh" >}}
+
 # make sure an ssh server is running on adres 192.168.0.10
+
 curl -X POST -H "Content-Type: application/json" -d @./example/ssh-playbook.json localhost:8080/trigger/playbook
 {{< /tab >}}
 {{< tab header="http" lang="sh" >}}
@@ -74,7 +72,6 @@ curl -X POST -H "Content-Type: application/json" -d @./example/openc2-playbook.j
 {{< /tab >}}
 {{< /tabpane >}}
 
-
 ## Configuration
 
 SOARCA reads its configuration from the environment variables or a `.env` file. An example of a `.env` is given below:
@@ -82,6 +79,8 @@ SOARCA reads its configuration from the environment variables or a `.env` file. 
 {{< tabpane langEqualsHeader=false  >}}
 {{< tab header="`.env`" lang="txt" >}}
 PORT: 8080
+SOARCA_ALLOWED_ORIGINS: "*"
+GIN_MODE: "release"
 MONGODB_URI: "mongodb://localhost:27017"
 DATABASE_NAME: "soarca"
 DB_USERNAME: "root"
@@ -98,11 +97,14 @@ LOG_FORMAT: "json"
 ENABLE_FINS: false
 MQTT_BROKER: "localhost"
 MQTT_PORT: 1883
-VALIDATION_SCHEMA_URL: ""
+
+HTTP_SKIP_CERT_VALIDATION: false
 {{< /tab >}}
 {{< /tabpane >}}
 
-### Docker hub 
+
+For more custom and advanced deployment instructions go [here](/docs/installation-configuration/_index.md).
+### Docker hub
 
 `docker pull cossas/soarca`
 
@@ -114,23 +116,3 @@ make build
 cp .env.example .env
 ./build/soarca
 ```
-
-### Configuring SOARCA
-
-|variable |content |description
-|---|---|---|
-|PORT |port  |Set the exposed port of SOARCA the default is `8080`
-|DATABASE |true \| false   | Set if you want to run with external database default is `false`
-|MONGODB_URI |uri  |Set the Mongo DB uri default is `mongodb://localhost:27017`
-|DATABASE_NAME |name  |Set the Mongo DB database name when using docker default is `soarca`
-|DB_USERNAME |user  |Set the Mongo DB database user when using docker default is `root`
-|DB_PASSWORD |password  |Set the Mongo DB database users password when using docker default is `rootpassword`. IT IS RECOMMENDED TO CHANGE THIS IN PRODUCTION!
-|MAX_REPORTERS |number  |Set the maximum number of downstream reporters default is `5` 
-|LOG_GLOBAL_LEVEL |[Log levels]  |One of the specified log levels. Defaults to `info`
-|LOG_MODE |development \| production  |If production is chosen the `LOG_GLOBAL_LEVEL` is used for all modules defaults to `production`
-|LOG_FILE_PATH |filepath  |Path to the logfile you want to use for all logging. Defaults to `""` (empty string)
-|LOG_FORMAT |text \| json  |The logging can be in plain text format or in JSON format. Defaults to `json`
-|MQTT_BROKER | dns name or ip | The broker address for SOARCA to connect to, for communication with fins default is `localhost`
-|MQTT_PORT   | port | The broker address for SOARCA to connect to, for communication with fins default is `1883`
-|ENABLE_FINS| true \| false | Enable fins in SOARCA defaults to `false`
-|VALIDATION_SCHEMA_URL|url| Set a custom validation schema to be used to validate playbooks defaul is `""` to use internal. NOTE: changing this heavily impacts performance. 
