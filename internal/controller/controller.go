@@ -202,6 +202,8 @@ func validateCertificates(certFile string, keyFile string) error {
 	if os.IsNotExist(err) {
 		return fmt.Errorf("certificate file not found: %s", certFile)
 	}
+
+	_, err = os.Stat(keyFile)
 	if os.IsNotExist(err) {
 		_, err = os.Stat(keyFile)
 		return fmt.Errorf("key file not found: %s", keyFile)
