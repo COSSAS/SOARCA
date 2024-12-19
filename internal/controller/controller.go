@@ -4,9 +4,9 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	net_http "net/http"
 	"os"
 	"reflect"
-  p
 	"soarca/internal/database/memory"
 	"soarca/internal/logger"
 	"soarca/pkg/core/capability"
@@ -180,7 +180,18 @@ func Initialize() error {
 	}
 
 	port := utils.GetEnv("PORT", "8080")
-	err = app.Run(":" + port)
+	enableTLS, _ := strconv.ParseBool(utils.GetEnv("ENABLE_TLS", "false"))
+	certFile := utils.GetEnv("CERT_FILE", "./certs/server.crt")
+	keyFile := utils.GetEnv("CERT_KEY_FILE", "./certs/server.key")
+
+	if enableTLS {
+		if certFile == "" || keyFile == "" {
+			err := fmt.Errorf("TLS enabled but certificate or key file not provided")
+			log.Error(err)
+			return err
+		}
+	}
+	err = runServer(app, port, enableTLS, certFile, keyFile)
 	if err != nil {
 		log.Error("failed to run gin")
 	}
@@ -198,32 +209,32 @@ func createHTTPServer(app *gin.Engine, port string) *net_http.Server {
 		},
 	}
 }
+
 func validateCertificates(certFile string, keyFile string) error {
 	_, err := os.Stat(certFile)
 	if os.IsNotExist(err) {
 		return fmt.Errorf("certificate file not found: %s", certFile)
 	}
 	if os.IsNotExist(err) {
-		server := createHTTPServer(app, config)
 		_, err = os.Stat(keyFile)
 		return fmt.Errorf("key file not found: %s", keyFile)
 	}
 	return nil
 }
 
-func runServer(app *gin.Engine, port string, enableTlS bool, certFile string, certKey string) error {
+func runServer(app *gin.Engine, port string, enableTlS bool, certFile string, keyFile string) error {
 	server := createHTTPServer(app, port)
 	if enableTlS {
-		err := validateCertificates(certFile, certKey)
+		err := validateCertificates(certFile, keyFile)
 		if err != nil {
 			return fmt.Errorf("TLS configuration error: %w", err)
 		}
 
-		log.Infof("Starting HTTPS server on port %s", config.Port)
-		return server.ListenAndServeTLS(config.CertFile, config.KeyFile)
+		log.Infof("Starting HTTPS server on port %s", port)
+		return server.ListenAndServeTLS(certFile, keyFile)
 	}
 
-	log.Infof("Starting HTTP server on port %s", config.Port)
+	log.Infof("Starting HTTP server on port %s", port)
 	return server.ListenAndServe()
 }
 
