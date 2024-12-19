@@ -177,19 +177,7 @@ func Initialize() error {
 		return err
 	}
 
-	port := utils.GetEnv("PORT", "8080")
-	enableTLS, _ := strconv.ParseBool(utils.GetEnv("ENABLE_TLS", "false"))
-	certFile := utils.GetEnv("CERT_FILE", "./certs/server.crt")
-	keyFile := utils.GetEnv("CERT_KEY_FILE", "./certs/server.key")
-
-	if enableTLS {
-		if certFile == "" || keyFile == "" {
-			err := fmt.Errorf("TLS enabled but certificate or key file not provided")
-			log.Error(err)
-			return err
-		}
-	}
-	err = run(app, port, enableTLS, certFile, keyFile)
+	err = run(app)
 	if err != nil {
 		log.Error("failed to run gin")
 	}
@@ -211,9 +199,14 @@ func validateCertificates(certFile string, keyFile string) error {
 	return nil
 }
 
-func run(app *gin.Engine, port string, enableTlS bool, certFile string, keyFile string) error {
-	port = ":" + port
-	if enableTlS {
+func run(app *gin.Engine) error {
+	port := utils.GetEnv("PORT", "8080")
+
+	enableTLS, _ := strconv.ParseBool(utils.GetEnv("ENABLE_TLS", "false"))
+	certFile := utils.GetEnv("CERT_FILE", "./certs/server.crt")
+	keyFile := utils.GetEnv("CERT_KEY_FILE", "./certs/server.key")
+
+	if enableTLS {
 		err := validateCertificates(certFile, keyFile)
 		if err != nil {
 			return fmt.Errorf("TLS configuration error: %w", err)
@@ -224,7 +217,7 @@ func run(app *gin.Engine, port string, enableTlS bool, certFile string, keyFile 
 	}
 
 	log.Infof("Starting HTTP server on port %s", port)
-	return app.Run(port)
+	return app.Run(":" + port)
 }
 
 func initializeCore(app *gin.Engine) error {
