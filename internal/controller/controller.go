@@ -1,10 +1,8 @@
 package controller
 
 import (
-	"crypto/tls"
 	"errors"
 	"fmt"
-	net_http "net/http"
 	"os"
 	"reflect"
 	"soarca/internal/database/memory"
@@ -191,23 +189,12 @@ func Initialize() error {
 			return err
 		}
 	}
-	err = runServer(app, port, enableTLS, certFile, keyFile)
+	err = run(app, port, enableTLS, certFile, keyFile)
 	if err != nil {
 		log.Error("failed to run gin")
 	}
 	log.Info("exit")
-
 	return err
-}
-
-func createHTTPServer(app *gin.Engine, port string) *net_http.Server {
-	return &net_http.Server{
-		Addr:    ":" + port,
-		Handler: app,
-		TLSConfig: &tls.Config{
-			MinVersion: tls.VersionTLS12,
-		},
-	}
 }
 
 func validateCertificates(certFile string, keyFile string) error {
@@ -222,20 +209,20 @@ func validateCertificates(certFile string, keyFile string) error {
 	return nil
 }
 
-func runServer(app *gin.Engine, port string, enableTlS bool, certFile string, keyFile string) error {
-	server := createHTTPServer(app, port)
+func run(app *gin.Engine, port string, enableTlS bool, certFile string, keyFile string) error {
+	port = ":" + port
 	if enableTlS {
 		err := validateCertificates(certFile, keyFile)
 		if err != nil {
 			return fmt.Errorf("TLS configuration error: %w", err)
 		}
-
 		log.Infof("Starting HTTPS server on port %s", port)
-		return server.ListenAndServeTLS(certFile, keyFile)
+		return app.RunTLS(port, certFile, keyFile)
+
 	}
 
 	log.Infof("Starting HTTP server on port %s", port)
-	return server.ListenAndServe()
+	return app.Run(port)
 }
 
 func initializeCore(app *gin.Engine) error {
