@@ -99,24 +99,11 @@ MQTT_BROKER: "localhost"
 MQTT_PORT: 1883
 
 HTTP_SKIP_CERT_VALIDATION: false
-
-### Integrations
-
-# The Hive
-
-THEHIVE_ACTIVATE: false
-THEHIVE_API_TOKEN: your_token
-THEHIVE_API_BASE_URL: http://your.thehive.instance/api/v1/
-
-# Authentication
-
-AUTH_ENABLED: false  
-OIDC_ISSUER: "https://authentikuri:9443/application/o/soarca/"
-OIDC_CLIENT_ID: "some client ID"
-OIDC_SKIP_TLS_VERIFY: false
 {{< /tab >}}
 {{< /tabpane >}}
 
+
+For more custom and advanced deployment instructions go [here](/docs/installation-configuration/_index.md).
 ### Docker hub
 
 `docker pull cossas/soarca`
