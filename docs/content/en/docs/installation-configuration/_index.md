@@ -15,6 +15,10 @@ After completing the [Getting Started](/docs/getting-started/_index.md) setup fo
 | Variable                   | Content                          | Description                                                                 |
 |----------------------------|-----------------------------------|-----------------------------------------------------------------------------|
 | PORT                       | `8080`                           | Set the exposed port of SOARCA. Default is `8080`.                          |
+| ENABLE_TLS                 | `false`                          | Enable TLS for secure communication. Default is `false`.                    |
+| CERT_FILE                  | `"/certs/server.crt"`            | Path to the TLS certificate file. Default is `"/certs/server.crt"`.         |
+| CERT_KEY_FILE              | `"/certs/server.key"`            | Path to the TLS certificate key file. Default is `"/certs/server.key"`.     |
+| MAX_EXECUTIONS             | `1000`                           | The number of historical executions saved, including the current one. Default is `1000`. |
 | SOARCA_ALLOWED_ORIGINS     | `*`                              | Set allowed origins for cross-origin requests. Default is `*`.              |
 | GIN_MODE                   | `release`                        | Set the GIN mode. Default is `release`.                                     |
 | DATABASE                   | `false`                          | Set if you want to run with an external database. Default is `false`.       |
