@@ -38,7 +38,7 @@ services:
       PORT: 8080
       ENABLE_TLS: "true"
       CERT_FILE: "/app/certs/server.crt"
-      CERT_KEY: "/app/certs/server.key"
+      CERT_KEY_FILE: "/app/certs/server.key"
       SOARCA_ALLOWED_ORIGINS: "*"
       GIN_MODE: "release"
       MONGODB_URI: "mongodb://mongodb_container:27017"
