@@ -193,7 +193,6 @@ func validateCertificates(certFile string, keyFile string) error {
 
 	_, err = os.Stat(keyFile)
 	if os.IsNotExist(err) {
-		_, err = os.Stat(keyFile)
 		return fmt.Errorf("key file not found: %s", keyFile)
 	}
 	return nil
@@ -202,7 +201,6 @@ func validateCertificates(certFile string, keyFile string) error {
 func run(app *gin.Engine) error {
 	port := utils.GetEnv("PORT", "8080")
 	port = ":" + port
-
 	enableTLS, _ := strconv.ParseBool(utils.GetEnv("ENABLE_TLS", "false"))
 	certFile := utils.GetEnv("CERT_FILE", "./certs/server.crt")
 	keyFile := utils.GetEnv("CERT_KEY_FILE", "./certs/server.key")
