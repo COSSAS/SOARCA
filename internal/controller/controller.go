@@ -201,6 +201,7 @@ func validateCertificates(certFile string, keyFile string) error {
 
 func run(app *gin.Engine) error {
 	port := utils.GetEnv("PORT", "8080")
+	port = ":" + port
 
 	enableTLS, _ := strconv.ParseBool(utils.GetEnv("ENABLE_TLS", "false"))
 	certFile := utils.GetEnv("CERT_FILE", "./certs/server.crt")
@@ -217,7 +218,7 @@ func run(app *gin.Engine) error {
 	}
 
 	log.Infof("Starting HTTP server on port %s", port)
-	return app.Run(":" + port)
+	return app.Run(port)
 }
 
 func initializeCore(app *gin.Engine) error {
