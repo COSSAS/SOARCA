@@ -177,14 +177,46 @@ func Initialize() error {
 		return err
 	}
 
-	port := utils.GetEnv("PORT", "8080")
-	err = app.Run(":" + port)
+	err = run(app)
 	if err != nil {
 		log.Error("failed to run gin")
 	}
 	log.Info("exit")
-
 	return err
+}
+
+func validateCertificates(certFile string, keyFile string) error {
+	_, err := os.Stat(certFile)
+	if os.IsNotExist(err) {
+		return fmt.Errorf("certificate file not found: %s", certFile)
+	}
+
+	_, err = os.Stat(keyFile)
+	if os.IsNotExist(err) {
+		return fmt.Errorf("key file not found: %s", keyFile)
+	}
+	return nil
+}
+
+func run(app *gin.Engine) error {
+	port := utils.GetEnv("PORT", "8080")
+	port = ":" + port
+	enableTLS, _ := strconv.ParseBool(utils.GetEnv("ENABLE_TLS", "false"))
+	certFile := utils.GetEnv("CERT_FILE", "./certs/server.crt")
+	keyFile := utils.GetEnv("CERT_KEY_FILE", "./certs/server.key")
+
+	if enableTLS {
+		err := validateCertificates(certFile, keyFile)
+		if err != nil {
+			return fmt.Errorf("TLS configuration error: %w", err)
+		}
+		log.Infof("Starting HTTPS server on port %s", port)
+		return app.RunTLS(port, certFile, keyFile)
+
+	}
+
+	log.Infof("Starting HTTP server on port %s", port)
+	return app.Run(port)
 }
 
 func initializeCore(app *gin.Engine) error {

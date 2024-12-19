@@ -21,3 +21,4 @@ docs/package-lock.json
 docs/.hugo_build.lock
 **.hugo_build.lock
 
+certs
