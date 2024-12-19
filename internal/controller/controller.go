@@ -1,10 +1,12 @@
 package controller
 
 import (
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"os"
 	"reflect"
+  p
 	"soarca/internal/database/memory"
 	"soarca/internal/logger"
 	"soarca/pkg/core/capability"
@@ -185,6 +187,44 @@ func Initialize() error {
 	log.Info("exit")
 
 	return err
+}
+
+func createHTTPServer(app *gin.Engine, port string) *net_http.Server {
+	return &net_http.Server{
+		Addr:    ":" + port,
+		Handler: app,
+		TLSConfig: &tls.Config{
+			MinVersion: tls.VersionTLS12,
+		},
+	}
+}
+func validateCertificates(certFile string, keyFile string) error {
+	_, err := os.Stat(certFile)
+	if os.IsNotExist(err) {
+		return fmt.Errorf("certificate file not found: %s", certFile)
+	}
+	if os.IsNotExist(err) {
+		server := createHTTPServer(app, config)
+		_, err = os.Stat(keyFile)
+		return fmt.Errorf("key file not found: %s", keyFile)
+	}
+	return nil
+}
+
+func runServer(app *gin.Engine, port string, enableTlS bool, certFile string, certKey string) error {
+	server := createHTTPServer(app, port)
+	if enableTlS {
+		err := validateCertificates(certFile, certKey)
+		if err != nil {
+			return fmt.Errorf("TLS configuration error: %w", err)
+		}
+
+		log.Infof("Starting HTTPS server on port %s", config.Port)
+		return server.ListenAndServeTLS(config.CertFile, config.KeyFile)
+	}
+
+	log.Infof("Starting HTTP server on port %s", config.Port)
+	return server.ListenAndServe()
 }
 
 func initializeCore(app *gin.Engine) error {
