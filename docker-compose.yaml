@@ -11,14 +11,34 @@ services:
     volumes:
       - mongodb_data_container:/data/db
 
+  cert-generator:
+    image: alpine
+    container_name: cert-generator
+    volumes:
+      - certs_data_containter:/certs
+    environment:
+      - DOMAIN=localhost
+    command: >
+      sh -c "
+        apk add --no-cache openssl &&
+        cd /certs &&
+        openssl req -x509 -newkey rsa:4096 -keyout server.key -out server.crt -days 365 -nodes -subj '/CN=${DOMAIN}' &&
+        chmod 644 server.key server.crt
+      "
+      
   soarca:
     build:
       dockerfile: Dockerfile
       args:
         VERSION: "${GIT_VERSION}"
     container_name: soarca_server
+    volumes:
+      - certs_data_containter:/app/certs
     environment:
       PORT: 8080
+      ENABLE_TLS: "true"
+      CERT_FILE: "/app/certs/server.crt"
+      CERT_KEY: "/app/certs/server.key"
       SOARCA_ALLOWED_ORIGINS: "*"
       GIN_MODE: "release"
       MONGODB_URI: "mongodb://mongodb_container:27017"
@@ -36,10 +56,11 @@ services:
       - 127.0.0.1:8080:8080
     depends_on:
       - mongodb_container
+      - cert-generator
 
 networks:
   db-net:
 
-
 volumes:
   mongodb_data_container:
+  certs_data_containter:
