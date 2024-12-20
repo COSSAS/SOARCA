@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"soarca/internal/logger"
+	"soarca/pkg/core/executors"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"soarca/pkg/reporter"
@@ -36,22 +37,27 @@ type Executor struct {
 	time       timeUtil.ITime
 }
 
-func (executor *Executor) Execute(meta execution.Metadata, step cacao.Step, variables cacao.Variables) (string, bool, error) {
+func (executor *Executor) Execute(meta execution.Metadata, stepContext executors.Context) (string, bool, error) {
 
-	if step.Type != cacao.StepTypeIfCondition {
+	if !(stepContext.Step.Type == cacao.StepTypeIfCondition || stepContext.Step.Type == cacao.StepTypeWhileCondition) {
 		err := errors.New("the provided step type is not compatible with this executor")
 		log.Error(err)
-		return step.OnFailure, false, err
+		return stepContext.Step.OnFailure, false, err
 	}
 
-	executor.reporter.ReportStepStart(meta.ExecutionId, step, variables, executor.time.Now())
+	executor.reporter.ReportStepStart(meta.ExecutionId, stepContext.Step, stepContext.Variables, executor.time.Now())
 
 	var err error
 	defer func() {
-		executor.reporter.ReportStepEnd(meta.ExecutionId, step, variables, err, executor.time.Now())
+		executor.reporter.ReportStepEnd(meta.ExecutionId, stepContext.Step, stepContext.Variables, err, executor.time.Now())
 	}()
+	nextStepId, branch, err := executor.evaluate(stepContext)
+	return nextStepId, branch, err
+}
 
-	result, err := executor.comparison.Evaluate(step.Condition, variables)
+func (executor *Executor) evaluate(stepContext executors.Context) (string, bool, error) {
+	result, err := executor.comparison.Evaluate(stepContext.Step.Condition,
+		stepContext.Variables)
 	if err != nil {
 		log.Error(err)
 		return "", false, err
@@ -60,17 +66,17 @@ func (executor *Executor) Execute(meta execution.Metadata, step cacao.Step, vari
 	log.Debug("the result was: ", fmt.Sprint(result))
 
 	if result {
-		if step.OnTrue != "" {
-			log.Trace("will return on true step ", step.OnTrue)
-			return step.OnTrue, true, nil
+		if stepContext.Step.OnTrue != "" {
+			log.Trace("will return on true step ", stepContext.Step.OnTrue)
+			return stepContext.Step.OnTrue, true, nil
 		}
 	} else {
-		if step.OnFalse != "" {
-			log.Trace("will return on false step ", step.OnFalse)
-			return step.OnFalse, true, nil
+		if stepContext.Step.OnFalse != "" {
+			log.Trace("will return on false step ", stepContext.Step.OnFalse)
+			return stepContext.Step.OnFalse, true, nil
 		}
 	}
-	log.Trace("will return on completion step ", step.OnCompletion)
+	log.Trace("will return on completion step ", stepContext.Step.OnCompletion)
 
-	return step.OnCompletion, false, nil
+	return stepContext.Step.OnCompletion, false, nil
 }
