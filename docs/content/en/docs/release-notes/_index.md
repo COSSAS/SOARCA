@@ -1,6 +1,6 @@
 ---
 title: Release Notes
-weight: 7
+weight: 9
 description: 
 ---
 
