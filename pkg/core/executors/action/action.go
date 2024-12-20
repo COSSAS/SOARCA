@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"soarca/internal/logger"
 	"soarca/pkg/core/capability"
+	"soarca/pkg/core/executors"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"soarca/pkg/reporter"
@@ -27,17 +28,9 @@ func New(capabilities map[string]capability.ICapability, reporter reporter.IStep
 	return &instance
 }
 
-type PlaybookStepMetadata struct {
-	Step      cacao.Step
-	Targets   map[string]cacao.AgentTarget
-	Auth      map[string]cacao.AuthenticationInformation
-	Agent     cacao.AgentTarget
-	Variables cacao.Variables
-}
-
 type IExecuter interface {
 	Execute(metadata execution.Metadata,
-		step PlaybookStepMetadata) (cacao.Variables, error)
+		step executors.PlaybookStepMetadata) (cacao.Variables, error)
 }
 
 type Executor struct {
@@ -54,7 +47,8 @@ type data struct {
 	agent          cacao.AgentTarget
 }
 
-func (executor *Executor) Execute(meta execution.Metadata, metadata PlaybookStepMetadata) (cacao.Variables, error) {
+func (executor *Executor) Execute(meta execution.Metadata,
+	metadata executors.PlaybookStepMetadata) (cacao.Variables, error) {
 
 	executor.reporter.ReportStepStart(meta.ExecutionId, metadata.Step, metadata.Variables, executor.time.Now())
 
@@ -74,7 +68,8 @@ func (executor *Executor) Execute(meta execution.Metadata, metadata PlaybookStep
 	return returnVariables, err
 }
 
-func (executor *Executor) executeCommandFromArray(meta execution.Metadata, metadata PlaybookStepMetadata) (cacao.Variables, error) {
+func (executor *Executor) executeCommandFromArray(meta execution.Metadata,
+	metadata executors.PlaybookStepMetadata) (cacao.Variables, error) {
 	returnVariables := cacao.NewVariables()
 	for _, command := range metadata.Step.Commands {
 		// NOTE: This assumes we want to run Command for every Target individually.

@@ -1,7 +1,7 @@
 package mock_executor
 
 import (
-	"soarca/pkg/core/executors/action"
+	"soarca/pkg/core/executors"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 
@@ -14,7 +14,7 @@ type Mock_Action_Executor struct {
 
 func (executer *Mock_Action_Executor) Execute(
 	metadata execution.Metadata,
-	details action.PlaybookStepMetadata) (cacao.Variables,
+	details executors.PlaybookStepMetadata) (cacao.Variables,
 	error) {
 	args := executer.Called(metadata, details)
 	return args.Get(0).(cacao.Variables), args.Error(1)

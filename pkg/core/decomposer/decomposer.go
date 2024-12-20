@@ -7,8 +7,6 @@ import (
 
 	"soarca/internal/logger"
 	"soarca/pkg/core/executors"
-	"soarca/pkg/core/executors/action"
-	"soarca/pkg/core/executors/condition"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"soarca/pkg/reporter"
@@ -42,9 +40,9 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
-func New(actionExecutor action.IExecuter,
+func New(actionExecutor executors.IActionExecutor,
 	playbookActionExecutor executors.IPlaybookExecuter,
-	condition condition.IExecuter,
+	condition executors.IConditionExecuter,
 	guid guid.IGuid,
 	reporter reporter.IWorkflowReporter,
 	time timeUtil.ITime) *Decomposer {
@@ -61,9 +59,9 @@ func New(actionExecutor action.IExecuter,
 type Decomposer struct {
 	playbook               cacao.Playbook
 	details                ExecutionDetails
-	actionExecutor         action.IExecuter
+	actionExecutor         executors.IActionExecutor
 	playbookActionExecutor executors.IPlaybookExecuter
-	conditionExecutor      condition.IExecuter
+	conditionExecutor      executors.IConditionExecuter
 	guid                   guid.IGuid
 	reporter               reporter.IWorkflowReporter
 	time                   timeUtil.ITime
@@ -189,7 +187,7 @@ func (decomposer *Decomposer) ExecuteStep(step cacao.Step, scopeVariables cacao.
 
 	switch step.Type {
 	case cacao.StepTypeAction:
-		actionMetadata := action.PlaybookStepMetadata{
+		actionMetadata := executors.PlaybookStepMetadata{
 			Step:      step,
 			Targets:   decomposer.playbook.TargetDefinitions,
 			Auth:      decomposer.playbook.AuthenticationInfoDefinitions,
