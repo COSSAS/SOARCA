@@ -28,7 +28,7 @@ func TestExecutePlaybook(t *testing.T) {
 	mock_reporter := new(mock_reporter.Mock_Reporter)
 	mock_time := new(mock_time.MockTime)
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
@@ -51,7 +51,7 @@ func TestExecutePlaybook(t *testing.T) {
 		ID:            "action--test",
 		Name:          "ssh-tests",
 		StepVariables: cacao.NewVariables(expectedVariables),
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Cases:         map[string]string{},
 		OnCompletion:  "end--test",
 		Agent:         "agent1",
@@ -137,12 +137,12 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 	mock_reporter := new(mock_reporter.Mock_Reporter)
 	mock_time := new(mock_time.MockTime)
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
 
-	expectedCommand2 := cacao.Command{
+	expectedCommand2 := cacao.CommandData{
 		Type:    "ssh2",
 		Command: "ssh pwd",
 	}
@@ -171,7 +171,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 		ID:            "action--test",
 		Name:          "ssh-tests",
 		StepVariables: cacao.NewVariables(expectedVariables),
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Cases:         map[string]string{},
 		OnCompletion:  "action--test2",
 		Agent:         "agent1",
@@ -184,7 +184,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 		ID:            "action--test2",
 		Name:          "ssh-tests",
 		StepVariables: cacao.NewVariables(expectedVariables2),
-		Commands:      []cacao.Command{expectedCommand2},
+		Commands:      []cacao.CommandData{expectedCommand2},
 		Cases:         map[string]string{},
 		Agent:         "agent1",
 		Targets:       []string{"target1"},
@@ -195,7 +195,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 		ID:            "action--test3",
 		Name:          "ssh-tests",
 		StepVariables: cacao.NewVariables(expectedVariables2),
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Agent:         "agent1",
 		// Targets:       []string{"target1"},
 	}
@@ -293,7 +293,7 @@ func TestExecuteEmptyMultiStep(t *testing.T) {
 	mock_reporter := new(mock_reporter.Mock_Reporter)
 	mock_time := new(mock_time.MockTime)
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
@@ -327,7 +327,7 @@ func TestExecuteEmptyMultiStep(t *testing.T) {
 		Name:          "ssh-tests",
 		Agent:         "agent1",
 		StepVariables: cacao.NewVariables(expectedVariables),
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Cases:         map[string]string{},
 		OnCompletion:  "", // Empty
 	}
@@ -375,17 +375,17 @@ func TestFailingStepResultsInFailingPlaybook(t *testing.T) {
 	mock_reporter := new(mock_reporter.Mock_Reporter)
 	mock_time := new(mock_time.MockTime)
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
 
-	expectedCommand2 := cacao.Command{
+	expectedCommand2 := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh pwd",
 	}
 
-	expectedCommand3 := cacao.Command{
+	expectedCommand3 := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh breakeverything.exe",
 	}
@@ -420,7 +420,7 @@ func TestFailingStepResultsInFailingPlaybook(t *testing.T) {
 		ID:            "action--test",
 		Name:          "ssh-tests",
 		StepVariables: cacao.NewVariables(expectedVariables),
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Cases:         map[string]string{},
 		OnCompletion:  "action--test2",
 		Agent:         "agent1",
@@ -432,7 +432,7 @@ func TestFailingStepResultsInFailingPlaybook(t *testing.T) {
 		ID:            "action--test2",
 		Name:          "ssh-tests",
 		StepVariables: cacao.NewVariables(expectedVariables2),
-		Commands:      []cacao.Command{expectedCommand2},
+		Commands:      []cacao.CommandData{expectedCommand2},
 		Cases:         map[string]string{},
 		Agent:         "agent1",
 		Targets:       []string{"target1"},
@@ -443,7 +443,7 @@ func TestFailingStepResultsInFailingPlaybook(t *testing.T) {
 		ID:            "action--test3",
 		Name:          "ssh-tests",
 		StepVariables: cacao.NewVariables(expectedVariables2),
-		Commands:      []cacao.Command{expectedCommand3},
+		Commands:      []cacao.CommandData{expectedCommand3},
 		Agent:         "agent1",
 		Targets:       []string{"target1"},
 		OnCompletion:  "end--test",
@@ -554,7 +554,7 @@ func TestExecuteIllegalMultiStep(t *testing.T) {
 	mock_reporter := new(mock_reporter.Mock_Reporter)
 	mock_time := new(mock_time.MockTime)
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
@@ -577,7 +577,7 @@ func TestExecuteIllegalMultiStep(t *testing.T) {
 		ID:            "action--test",
 		Name:          "ssh-tests",
 		StepVariables: cacao.NewVariables(expectedVariables),
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Cases:         map[string]string{},
 		OnCompletion:  "action-some-non-existing",
 	}
@@ -705,7 +705,7 @@ func TestExecuteIfCondition(t *testing.T) {
 		Value: "testing2",
 	}
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
@@ -743,7 +743,7 @@ func TestExecuteIfCondition(t *testing.T) {
 		Type:          cacao.StepTypeAction,
 		ID:            "action--step-true",
 		Name:          "ssh-tests",
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Targets:       []string{expectedTarget.ID},
 		StepVariables: cacao.NewVariables(expectedVariables),
 		OnCompletion:  endTrue.ID,
@@ -759,7 +759,7 @@ func TestExecuteIfCondition(t *testing.T) {
 		Type:          cacao.StepTypeAction,
 		ID:            "action--step-false",
 		Name:          "ssh-tests",
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Targets:       []string{expectedTarget.ID},
 		StepVariables: cacao.NewVariables(expectedVariables),
 		OnCompletion:  endFalse.ID,
@@ -769,7 +769,7 @@ func TestExecuteIfCondition(t *testing.T) {
 		Type:          cacao.StepTypeAction,
 		ID:            "action--step-completion",
 		Name:          "ssh-tests",
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Targets:       []string{expectedTarget.ID},
 		StepVariables: cacao.NewVariables(expectedVariables),
 		OnCompletion:  end.ID,
@@ -877,7 +877,7 @@ func TestDelayStepExecution(t *testing.T) {
 	mock_reporter := new(mock_reporter.Mock_Reporter)
 	mock_time := new(mock_time.MockTime)
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
@@ -893,7 +893,7 @@ func TestDelayStepExecution(t *testing.T) {
 		ID:            "action--test",
 		Name:          "ssh-tests",
 		StepVariables: cacao.NewVariables(expectedVariables),
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Cases:         map[string]string{},
 		OnCompletion:  "end--test",
 		Agent:         "agent1",
@@ -931,7 +931,7 @@ func TestDelayStepNegativeTimeExecution(t *testing.T) {
 	mock_reporter := new(mock_reporter.Mock_Reporter)
 	mock_time := new(mock_time.MockTime)
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
@@ -947,7 +947,7 @@ func TestDelayStepNegativeTimeExecution(t *testing.T) {
 		ID:            "action--test",
 		Name:          "ssh-tests",
 		StepVariables: cacao.NewVariables(expectedVariables),
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Cases:         map[string]string{},
 		OnCompletion:  "end--test",
 		Agent:         "agent1",

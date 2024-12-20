@@ -42,7 +42,7 @@ func TestHttpGetConnection(t *testing.T) {
 			"url": {"https://httpbin.org/get"},
 		},
 	}
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "GET / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -70,7 +70,7 @@ func TestHttpPostConnection(t *testing.T) {
 			"url": {"https://httpbin.org/post"},
 		},
 	}
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "POST / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -97,7 +97,7 @@ func TestHttpPutConnection(t *testing.T) {
 			"url": {"https://httpbin.org/put"},
 		},
 	}
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "PUT / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -123,7 +123,7 @@ func TestHttpDeleteConnection(t *testing.T) {
 			"url": {"https://httpbin.org/delete"},
 		},
 	}
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "DELETE / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -151,7 +151,7 @@ func TestHttpStatus200(t *testing.T) {
 			"url": {"https://httpbin.org/status/200"},
 		},
 	}
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "GET / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -184,7 +184,7 @@ func TestHttpBearerToken(t *testing.T) {
 		Token: bearerToken,
 		ID:    "d0c7e6a0-f7fe-464e-9935-e6b3443f5b91",
 	}
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "GET / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -232,7 +232,7 @@ func TestHttpBasicAuth(t *testing.T) {
 		ID:       "d0c7e6a0-f7fe-464e-9935-e6b3443f5b91",
 	}
 
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "GET / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -279,7 +279,7 @@ func TestHttpPostWithContentConnection(t *testing.T) {
 		},
 	}
 
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "POST / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -325,7 +325,7 @@ func TestHttpPostWithBase64ContentConnection(t *testing.T) {
 		},
 	}
 
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:       "http-api",
 		Command:    "POST / HTTP/1.1",
 		Headers:    map[string][]string{"accept": {"application/json"}},
@@ -362,7 +362,7 @@ func TestHttpPathDnameParser(t *testing.T) {
 	addresses["dname"] = []string{"soarca.tno.nl"}
 
 	target := cacao.AgentTarget{Address: addresses, Port: strconv.Itoa(80)}
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "POST /url HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -384,7 +384,7 @@ func TestHttpPathDnamePortParser(t *testing.T) {
 	addresses["dname"] = []string{"soarca.tno.nl"}
 
 	target := cacao.AgentTarget{Address: addresses, Port: strconv.Itoa(8080)}
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "POST /url HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -406,7 +406,7 @@ func TestHttpPathDnameRandomPortParser(t *testing.T) {
 	addresses["dname"] = []string{"soarca.tno.nl"}
 
 	target := cacao.AgentTarget{Address: addresses, Port: strconv.Itoa(6464)}
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "POST /url HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -428,7 +428,7 @@ func TestHttpPathIpv4Parser(t *testing.T) {
 	addresses["ipv4"] = []string{"127.0.0.1"}
 
 	target := cacao.AgentTarget{Address: addresses, Port: strconv.Itoa(443)}
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "POST / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -452,7 +452,7 @@ func TestHttpPathParser(t *testing.T) {
 		},
 	}
 
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "POST / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -476,7 +476,7 @@ func TestHttpPathUrlComposition(t *testing.T) {
 		},
 	}
 
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "POST /isp/cst HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -502,7 +502,7 @@ func TestHttpPathBreakingParser(t *testing.T) {
 		},
 	}
 
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "POST / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -520,7 +520,7 @@ func TestHttpPathBreakingParser(t *testing.T) {
 }
 
 func TestMethodExtract(t *testing.T) {
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "POST /api1/newObject HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -533,7 +533,7 @@ func TestMethodExtract(t *testing.T) {
 }
 
 func TestPathExtract(t *testing.T) {
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "POST /api1/newObject HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -546,7 +546,7 @@ func TestPathExtract(t *testing.T) {
 }
 
 func TestVersionExtract(t *testing.T) {
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "POST /api1/newObject HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -559,7 +559,7 @@ func TestVersionExtract(t *testing.T) {
 }
 
 func TestCommandFailedExtract(t *testing.T) {
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "POST /api1/newObject",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -576,7 +576,7 @@ func TestDnameWithInvalidPathParser(t *testing.T) {
 	addresses["dname"] = []string{"soarca.tno.nl/this/path/shouldnt/be/used"}
 
 	target := cacao.AgentTarget{Address: addresses, Port: strconv.Itoa(6464)}
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "POST /url HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -598,7 +598,7 @@ func TestHttpPathIpv4WithRandomPort(t *testing.T) {
 	addresses["ipv4"] = []string{"127.0.0.1"}
 
 	target := cacao.AgentTarget{Address: addresses, Port: strconv.Itoa(6464)}
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "POST /url HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -620,7 +620,7 @@ func TestInvalidDname(t *testing.T) {
 	addresses["dname"] = []string{"https://soarca.tno.nl"}
 
 	target := cacao.AgentTarget{Address: addresses, Port: strconv.Itoa(6464)}
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "POST /url HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -643,7 +643,7 @@ func TestInvalidIpv4(t *testing.T) {
 	addresses["ipv4"] = []string{"https://127.0.0.1"}
 
 	target := cacao.AgentTarget{Address: addresses, Port: strconv.Itoa(6464)}
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "POST /url HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},

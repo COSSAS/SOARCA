@@ -6,7 +6,7 @@ import (
 )
 
 type Context struct {
-	CommandData    cacao.Command
+	CommandData    cacao.CommandData
 	Step           cacao.Step
 	Authentication cacao.AuthenticationInformation
 	Target         cacao.AgentTarget

@@ -29,7 +29,7 @@ func init() {
 
 type HttpOptions struct {
 	Target  *cacao.AgentTarget
-	Command *cacao.Command
+	Command *cacao.CommandData
 	Auth    *cacao.AuthenticationInformation
 }
 
@@ -319,19 +319,19 @@ func validatePort(port string) error {
 	return nil
 }
 
-func GetMethodFrom(command *cacao.Command) (string, error) {
+func GetMethodFrom(command *cacao.CommandData) (string, error) {
 	return extractCommandFieldByIndex(command, 0)
 }
 
-func GetPathFrom(command *cacao.Command) (string, error) {
+func GetPathFrom(command *cacao.CommandData) (string, error) {
 	return extractCommandFieldByIndex(command, 1)
 }
 
-func GetVersionFrom(command *cacao.Command) (string, error) {
+func GetVersionFrom(command *cacao.CommandData) (string, error) {
 	return extractCommandFieldByIndex(command, 2)
 }
 
-func extractCommandFieldByIndex(command *cacao.Command, index int) (string, error) {
+func extractCommandFieldByIndex(command *cacao.CommandData, index int) (string, error) {
 	if command == nil {
 		return "", errors.New("command pointer is empty")
 	}

@@ -32,7 +32,7 @@ func TestExecuteStep(t *testing.T) {
 
 	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId, StepId: stepId}
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
@@ -65,7 +65,7 @@ func TestExecuteStep(t *testing.T) {
 		ID:            stepId,
 		Description:   "",
 		StepVariables: cacao.NewVariables(expectedVariables),
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Agent:         "mock-ssh",
 		Targets:       []string{"target1"},
 	}
@@ -123,7 +123,7 @@ func TestExecuteActionStep(t *testing.T) {
 
 	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId, StepId: stepId}
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
@@ -189,7 +189,7 @@ func TestNonExistingCapabilityStep(t *testing.T) {
 
 	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId, StepId: stepId}
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
@@ -239,12 +239,12 @@ func TestVariableInterpolation(t *testing.T) {
 
 	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId, StepId: stepId}
 
-	inputCommand := cacao.Command{
+	inputCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh __var1__:value",
 	}
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
@@ -390,7 +390,7 @@ func TestVariableInterpolation(t *testing.T) {
 	mock_capability1.AssertExpectations(t)
 	assert.Equal(t, inputCommand.Command, "ssh __var1__:value")
 
-	httpCommand := cacao.Command{
+	httpCommand := cacao.CommandData{
 		Type:       "http-api",
 		Command:    "GET / HTTP1.1",
 		Content:    "__http-api-content__:value",
@@ -398,7 +398,7 @@ func TestVariableInterpolation(t *testing.T) {
 		Headers:    inputHeaders,
 	}
 
-	expectedHttpCommand := cacao.Command{
+	expectedHttpCommand := cacao.CommandData{
 		Type:       "http-api",
 		Command:    "GET / HTTP1.1",
 		Content:    "some content of the body",

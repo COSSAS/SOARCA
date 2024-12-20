@@ -23,7 +23,7 @@ func TestFinExecution(t *testing.T) {
 
 	var metadata = execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId.String(), StepId: stepId.String()}
 
-	command := cacao.Command{Type: "soarca-fin", Command: "test command"}
+	command := cacao.CommandData{Type: "soarca-fin", Command: "test command"}
 	auth := cacao.AuthenticationInformation{}
 	auth.Name = "some auth"
 	auth.Username = "user"

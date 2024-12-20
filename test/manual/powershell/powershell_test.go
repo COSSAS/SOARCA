@@ -14,7 +14,7 @@ import (
 func TestPowershellConnection(t *testing.T) {
 	powershell := powershell.New()
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "powershell",
 		Command: "Get-Acl",
 	}

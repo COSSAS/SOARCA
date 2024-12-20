@@ -25,7 +25,7 @@ func TestGetExecutions(t *testing.T) {
 	mock_time := new(mock_time.MockTime)
 	cacheReporter := cache.New(mock_time, 10)
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
@@ -41,7 +41,7 @@ func TestGetExecutions(t *testing.T) {
 		ID:            "action--test",
 		Name:          "ssh-tests",
 		StepVariables: cacao.NewVariables(expectedVariables),
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Cases:         map[string]string{},
 		OnCompletion:  "end--test",
 		Agent:         "agent1",
@@ -166,7 +166,7 @@ func TestGetExecutionReport(t *testing.T) {
 	mock_time := new(mock_time.MockTime)
 	cacheReporter := cache.New(mock_time, 10)
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
@@ -182,7 +182,7 @@ func TestGetExecutionReport(t *testing.T) {
 		ID:            "action--test",
 		Name:          "ssh-tests",
 		StepVariables: cacao.NewVariables(expectedVariables),
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Cases:         map[string]string{},
 		OnCompletion:  "end--test",
 		Agent:         "agent1",

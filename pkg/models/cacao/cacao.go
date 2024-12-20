@@ -195,7 +195,7 @@ type ExtensionDefinition struct {
 	ExternalReferences []ExternalReferences `bson:"external_references,omitempty" json:"external_references,omitempty"`
 }
 
-type Command struct {
+type CommandData struct {
 	Type             string  `bson:"type"  json:"type" validate:"required"`
 	Command          string  `bson:"command" json:"command" validate:"required"`
 	Description      string  `bson:"description,omitempty" json:"description,omitempty"`
@@ -220,7 +220,7 @@ type Step struct {
 	OnCompletion       string               `bson:"on_completion,omitempty" json:"on_completion,omitempty"`
 	OnSuccess          string               `bson:"on_success,omitempty" json:"on_success,omitempty"`
 	OnFailure          string               `bson:"on_failure,omitempty" json:"on_failure,omitempty"`
-	Commands           []Command            `bson:"commands,omitempty" json:"commands,omitempty"`
+	Commands           []CommandData        `bson:"commands,omitempty" json:"commands,omitempty"`
 	Agent              string               `bson:"agent,omitempty" json:"agent,omitempty"`
 	Targets            []string             `bson:"targets,omitempty" json:"targets,omitempty"`
 	InArgs             []string             `bson:"in_args,omitempty" json:"in_args,omitempty"`

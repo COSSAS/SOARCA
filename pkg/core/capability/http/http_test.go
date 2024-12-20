@@ -30,7 +30,7 @@ func TestHTTPOptionsCorrectlyGenerated(t *testing.T) {
 	target := cacao.AgentTarget{Address: map[cacao.NetAddressType][]string{
 		"url": {"https://httpbin.org/post"},
 	}}
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "POST / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -84,7 +84,7 @@ func TestHTTPOptionsEmptyAuth(t *testing.T) {
 	target := cacao.AgentTarget{Address: map[cacao.NetAddressType][]string{
 		"url": {"https://httpbin.org/post"},
 	}}
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "POST / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -139,7 +139,7 @@ func TestHTTPOptionsEmptyCommand(t *testing.T) {
 	target := cacao.AgentTarget{Address: map[cacao.NetAddressType][]string{
 		"url": {"https://httpbin.org/post"},
 	}}
-	empty_command := new(cacao.Command)
+	empty_command := new(cacao.CommandData)
 
 	var oauth2_info = cacao.AuthenticationInformation{
 		ID:    "6ba7b810-9dad-11d1-80b4-00c04fd430c9",

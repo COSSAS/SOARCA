@@ -23,7 +23,7 @@ func TestHttpConnection(t *testing.T) {
 			"url": {"https://httpbin.org/get"},
 		},
 	}
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "http-api",
 		Command: "GET / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -73,7 +73,7 @@ func TestHttpOAuth2(t *testing.T) {
 		Token: bearerToken,
 		ID:    "d0c7e6a0-f7fe-464e-9935-e6b3443f5b91",
 	}
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "GET / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -120,7 +120,7 @@ func TestHttpBasicAuth(t *testing.T) {
 		ID:       "d0c7e6a0-f7fe-464e-9935-e6b3443f5b91",
 	}
 
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "GET / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -153,7 +153,7 @@ func TestInsecureHTTPConnection(t *testing.T) {
 			"url": {"https://localhost/get"},
 		},
 	}
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "GET / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -180,7 +180,7 @@ func TestInsecureHTTPConnectionWithFailure(t *testing.T) {
 			"url": {"https://localhost/get"},
 		},
 	}
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "GET / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},

@@ -15,7 +15,7 @@ import (
 func TestSshConnection(t *testing.T) {
 	sshCapability := new(ssh.SshCapability)
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ls -la",
 	}
@@ -63,7 +63,7 @@ func TestSshConnection(t *testing.T) {
 func TestSshConnectionToNonExistingServer(t *testing.T) {
 	sshCapability := new(ssh.SshCapability)
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ls -la",
 	}

@@ -40,7 +40,7 @@ type Executor struct {
 }
 
 type data struct {
-	command        cacao.Command
+	command        cacao.CommandData
 	authentication cacao.AuthenticationInformation
 	target         cacao.AgentTarget
 	variables      cacao.Variables
@@ -109,7 +109,7 @@ func (executor *Executor) executeCommandFromArray(meta execution.Metadata,
 	return returnVariables, nil
 }
 
-func interpolateCommand(command cacao.Command, variables cacao.Variables) cacao.Command {
+func interpolateCommand(command cacao.CommandData, variables cacao.Variables) cacao.CommandData {
 	command.Command = variables.Interpolate(command.Command)
 	command.Content = variables.Interpolate(command.Content)
 	command.ContentB64 = variables.Interpolate(command.ContentB64)
