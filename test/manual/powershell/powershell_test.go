@@ -37,7 +37,7 @@ func TestPowershellConnection(t *testing.T) {
 	var stepId = "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
 	var metadata = execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId, StepId: stepId}
 	var data = capability.Context{
-		Command:        expectedCommand,
+		CommandData:    expectedCommand,
 		Authentication: expectedAuthenticationInformation,
 		Target:         expectedTarget,
 	}

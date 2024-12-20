@@ -37,7 +37,7 @@ func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
 	context capability.Context) (cacao.Variables, error) {
 
 	log.Trace(metadata.ExecutionId)
-	return execute(context.Command, context.Authentication, context.Target)
+	return execute(context.CommandData, context.Authentication, context.Target)
 }
 
 func execute(command cacao.Command,

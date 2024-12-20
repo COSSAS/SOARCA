@@ -52,7 +52,7 @@ func TestFinExecution(t *testing.T) {
 	expectedVariableMap := cacao.NewVariables(variable1)
 
 	data := capability.Context{
-		Command:        command,
+		CommandData:    command,
 		Authentication: auth,
 		Target:         target,
 		Variables:      inputVariable,

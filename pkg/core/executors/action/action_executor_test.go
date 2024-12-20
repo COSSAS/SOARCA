@@ -79,7 +79,7 @@ func TestExecuteStep(t *testing.T) {
 	}
 
 	context1 := capability.Context{
-		Command:        expectedCommand,
+		CommandData:    expectedCommand,
 		Authentication: expectedAuth,
 		Target:         expectedTarget,
 		Variables:      cacao.NewVariables(expectedVariables),
@@ -148,7 +148,7 @@ func TestExecuteActionStep(t *testing.T) {
 	}
 
 	context1 := capability.Context{
-		Command:        expectedCommand,
+		CommandData:    expectedCommand,
 		Authentication: expectedAuth,
 		Target:         expectedTarget,
 		Variables:      cacao.NewVariables(expectedVariables),
@@ -366,7 +366,7 @@ func TestVariableInterpolation(t *testing.T) {
 		Name: "cap1",
 	}
 
-	context1 := capability.Context{Command: expectedCommand,
+	context1 := capability.Context{CommandData: expectedCommand,
 		Authentication: expectedAuth,
 		Target:         expectedTarget,
 		Variables:      cacao.NewVariables(var1, var2, var3, varUser, varPassword, varOauth, varPrivateKey, varToken, varUserId, varheader1, varheader2)}
@@ -407,7 +407,7 @@ func TestVariableInterpolation(t *testing.T) {
 	}
 
 	metadataHttp := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId, StepId: stepId}
-	contextHttp := capability.Context{Command: expectedHttpCommand,
+	contextHttp := capability.Context{CommandData: expectedHttpCommand,
 		Authentication: expectedAuth,
 		Target:         expectedTarget,
 		Variables:      cacao.NewVariables(varHttpContent, varheader1, varheader2)}

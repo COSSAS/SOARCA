@@ -152,7 +152,7 @@ func (executor *Executor) executeCommands(metadata execution.Metadata,
 	context := capability.Context{}
 
 	if capability, ok := executor.capabilities[data.agent.Name]; ok {
-		context.Command = interpolateCommand(data.command, data.variables)
+		context.CommandData = interpolateCommand(data.command, data.variables)
 		context.Target = interpolatedTarget(data.target, data.variables)
 		context.Authentication = interpolateAuthentication(data.authentication, data.variables)
 		context.Variables = data.variables

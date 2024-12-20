@@ -65,7 +65,7 @@ func TestOpenC2Request(t *testing.T) {
 
 	mockHttp.On("Request", httpOptions).Return(payloadBytes, nil)
 
-	data := capability.Context{Command: command,
+	data := capability.Context{CommandData: command,
 		Authentication: auth,
 		Target:         target,
 		Variables:      cacao.NewVariables(cacaoVariable)}

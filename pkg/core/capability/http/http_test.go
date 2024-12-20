@@ -58,7 +58,7 @@ func TestHTTPOptionsCorrectlyGenerated(t *testing.T) {
 	mock_http_request.On("Request", httpOptions).Return(payload_byte, nil)
 
 	data := capability.Context{
-		Command:        command,
+		CommandData:    command,
 		Authentication: oauth2_info,
 		Target:         target,
 		Variables:      cacao.NewVariables(variable1),
@@ -113,7 +113,7 @@ func TestHTTPOptionsEmptyAuth(t *testing.T) {
 	mock_http_request.On("Request", httpOptions).Return(payload_byte, nil)
 
 	data := capability.Context{
-		Command:        command,
+		CommandData:    command,
 		Authentication: *empty_auth,
 		Target:         target,
 		Variables:      cacao.NewVariables(variable1),
@@ -168,7 +168,7 @@ func TestHTTPOptionsEmptyCommand(t *testing.T) {
 	mock_http_request.On("Request", httpOptions).Return([]byte{}, expected_error)
 
 	data := capability.Context{
-		Command:        *empty_command,
+		CommandData:    *empty_command,
 		Authentication: oauth2_info,
 		Target:         target,
 		Variables:      cacao.NewVariables(variable1),
