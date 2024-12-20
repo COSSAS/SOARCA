@@ -88,11 +88,11 @@ func (manualHandler *ManualHandler) GetPendingCommands(g *gin.Context) {
 //	@Tags			manual
 //	@Accept			json
 //	@Produce		json
-//	@Param			execution_id	path	string	true	"execution ID"
-//	@Param			step_id			path	string	true	"step ID"
+//	@Param			exec_id	path	string	true	"execution ID"
+//	@Param			step_id	path	string	true	"step ID"
 //	@Success		200		{object}	manual.InteractionCommandData
 //	@failure		400		{object}	api.Error
-//	@Router			/manual/{execution_id}/{step_id} [GET]
+//	@Router			/manual/{exec_id}/{step_id} [GET]
 func (manualHandler *ManualHandler) GetPendingCommand(g *gin.Context) {
 	execution_id := g.Param("execution_id")
 	step_id := g.Param("step_id")
@@ -126,6 +126,8 @@ func (manualHandler *ManualHandler) GetPendingCommand(g *gin.Context) {
 //	@Tags			manual
 //	@Accept			json
 //	@Produce		json
+//	@Param			exec_id				path	string	true	"execution ID"
+//	@Param			step_id				path	string	true	"step ID"
 //	@Param			type				body	string	true	"type"
 //	@Param			outArgs				body	string	true	"execution ID"
 //	@Param			execution_id		body	string	true	"playbook ID"
@@ -135,10 +137,10 @@ func (manualHandler *ManualHandler) GetPendingCommand(g *gin.Context) {
 //	@Param			response_out_args	body	manual.ManualOutArgs	true	"out args"
 //	@Success		200			{object}	api.Execution
 //	@failure		400			{object}	api.Error
-//	@Router			/manual/continue/{execution_id}/{step_id} [POST]
-func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
+//	@Router			/manual/{exec_id}/{step_id} [PATCH]
+func (manualHandler *ManualHandler) PatchContinue(g *gin.Context) {
 
-	paramExecutionId := g.Param("execution_id")
+	paramExecutionId := g.Param("exec_id")
 	paramStepId := g.Param("step_id")
 
 	jsonData, err := io.ReadAll(g.Request.Body)
@@ -146,7 +148,7 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 		log.Error("failed")
 		apiError.SendErrorResponse(g, http.StatusBadRequest,
 			"Failed to read json",
-			"POST /manual/continue/{execution_id}/{step_id}", "")
+			"POST /manual/continue/{exec_id}/{step_id}", "")
 		return
 	}
 
@@ -156,7 +158,7 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 		log.Error("failed to unmarshal JSON")
 		apiError.SendErrorResponse(g, http.StatusBadRequest,
 			"Failed to unmarshal JSON",
-			"POST /manual/continue/{execution_id}/{step_id}", "")
+			"POST /manual/continue/{exec_id}/{step_id}", "")
 		return
 	}
 
