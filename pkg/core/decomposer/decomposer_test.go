@@ -824,8 +824,9 @@ func TestExecuteIfCondition(t *testing.T) {
 
 	mock_condition_executor.On("Execute",
 		metaStepIf,
-		stepIf,
-		cacao.NewVariables(expectedVariables)).Return(stepTrue.ID, true, nil)
+		executors.Context{Step: stepIf,
+			Variables: cacao.NewVariables(expectedVariables)},
+	).Return(stepTrue.ID, true, nil)
 
 	stepTrueDetails := executors.PlaybookStepMetadata{
 		Step:      stepTrue,
@@ -973,5 +974,177 @@ func TestDelayStepNegativeTimeExecution(t *testing.T) {
 
 	_, err := decomposer.ExecuteStep(step1, cacao.NewVariables(expectedVariables))
 	assert.Equal(t, err, nil)
+
+}
+
+func TestExecuteWhileCondition(t *testing.T) {
+
+	mock_action_executor := new(mock_executor.Mock_Action_Executor)
+	mock_playbook_action_executor := new(mock_playbook_action_executor.Mock_PlaybookActionExecutor)
+	mock_condition_executor := new(mock_condition_executor.Mock_Condition)
+	uuid_mock := new(mock_guid.Mock_Guid)
+	mock_reporter := new(mock_reporter.Mock_Reporter)
+	mock_time := new(mock_time.MockTime)
+	expectedVariables := cacao.Variable{
+		Type:  "string",
+		Name:  "__var1__",
+		Value: "testing",
+	}
+
+	// returned from step
+	expectedVariables2 := cacao.Variable{
+		Type:  "string",
+		Name:  "__var2__",
+		Value: "testing2",
+	}
+
+	expectedCommand := cacao.Command{
+		Type:    "ssh",
+		Command: "ssh ls -la",
+	}
+
+	expectedTarget := cacao.AgentTarget{
+		Name:               "sometarget",
+		AuthInfoIdentifier: "id",
+	}
+
+	expectedAgent := cacao.AgentTarget{
+		Type: "soarca",
+		Name: "soarca-ssh",
+	}
+
+	decomposer := New(mock_action_executor,
+		mock_playbook_action_executor,
+		mock_condition_executor,
+		uuid_mock,
+		mock_reporter,
+		mock_time)
+
+	end := cacao.Step{
+		Type: cacao.StepTypeEnd,
+		ID:   "end--test",
+		Name: "end step",
+	}
+
+	endTrue := cacao.Step{
+		Type: cacao.StepTypeEnd,
+		ID:   "end--true",
+		Name: "end branch true step",
+	}
+
+	stepTrue := cacao.Step{
+		Type:          cacao.StepTypeAction,
+		ID:            "action--step-true",
+		Name:          "ssh-tests",
+		Commands:      []cacao.Command{expectedCommand},
+		Targets:       []string{expectedTarget.ID},
+		StepVariables: cacao.NewVariables(expectedVariables),
+		OnCompletion:  endTrue.ID,
+	}
+
+	stepCompletion := cacao.Step{
+		Type:          cacao.StepTypeAction,
+		ID:            "action--step-completion",
+		Name:          "ssh-tests",
+		Commands:      []cacao.Command{expectedCommand},
+		Targets:       []string{expectedTarget.ID},
+		StepVariables: cacao.NewVariables(expectedVariables),
+		OnCompletion:  end.ID,
+	}
+
+	stepWhile := cacao.Step{
+		Type:          cacao.StepTypeWhileCondition,
+		ID:            "while-condition--test",
+		Name:          "while condition",
+		StepVariables: cacao.NewVariables(expectedVariables),
+		Condition:     "__var1__:value = testing",
+		OnTrue:        stepTrue.ID,
+		OnCompletion:  stepCompletion.ID,
+	}
+
+	start := cacao.Step{
+		Type:         cacao.StepTypeStart,
+		ID:           "start--test",
+		Name:         "start step",
+		OnCompletion: stepWhile.ID,
+	}
+
+	playbook := cacao.Playbook{
+		ID:            "test",
+		Type:          "test",
+		Name:          "playbook-test",
+		WorkflowStart: start.ID,
+		Workflow: map[string]cacao.Step{start.ID: start,
+			stepWhile.ID:      stepWhile,
+			stepTrue.ID:       stepTrue,
+			stepCompletion.ID: stepCompletion,
+			end.ID:            end,
+			endTrue.ID:        endTrue},
+		AgentDefinitions:  map[string]cacao.AgentTarget{expectedAgent.ID: expectedAgent},
+		TargetDefinitions: map[string]cacao.AgentTarget{expectedTarget.ID: expectedTarget},
+	}
+
+	layout := "2006-01-02T15:04:05.000Z"
+	str := "2014-11-12T11:45:26.371Z"
+	timeNow, _ := time.Parse(layout, str)
+	mock_time.On("Now").Return(timeNow)
+
+	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	metaStepIf := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: stepWhile.ID}
+
+	uuid_mock.On("New").Return(executionId)
+	mock_reporter.On("ReportWorkflowStart", executionId, playbook, timeNow).Return()
+	mock_time.On("Sleep", time.Millisecond*0).Return()
+
+	mock_condition_executor.On("Execute",
+		metaStepIf,
+		executors.Context{Step: stepWhile,
+			Variables: cacao.NewVariables(expectedVariables)},
+	).Return(stepTrue.ID, true, nil)
+
+	stepTrueDetails := executors.PlaybookStepMetadata{
+		Step:      stepTrue,
+		Targets:   playbook.TargetDefinitions,
+		Auth:      playbook.AuthenticationInfoDefinitions,
+		Agent:     expectedAgent,
+		Variables: cacao.NewVariables(expectedVariables),
+	}
+
+	metaStepTrue := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: stepTrue.ID}
+	mock_time.On("Sleep", time.Millisecond*0).Return()
+
+	mock_action_executor.On("Execute",
+		metaStepTrue,
+		stepTrueDetails).Return(cacao.NewVariables(expectedVariables2), nil)
+
+	mock_condition_executor.On("Execute",
+		metaStepIf,
+		executors.Context{Step: stepWhile,
+			Variables: cacao.NewVariables(expectedVariables, expectedVariables2)},
+	).Return(stepCompletion.ID, false, nil)
+
+	stepCompletionDetails := executors.PlaybookStepMetadata{
+		Step:      stepCompletion,
+		Targets:   playbook.TargetDefinitions,
+		Auth:      playbook.AuthenticationInfoDefinitions,
+		Agent:     expectedAgent,
+		Variables: cacao.NewVariables(expectedVariables, expectedVariables2),
+	}
+
+	metaStepCompletion := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: stepCompletion.ID}
+	mock_time.On("Sleep", time.Millisecond*0).Return()
+
+	mock_action_executor.On("Execute",
+		metaStepCompletion,
+		stepCompletionDetails).Return(cacao.NewVariables(), nil)
+	mock_reporter.On("ReportWorkflowEnd", executionId, playbook, nil, timeNow).Return()
+	details, err := decomposer.Execute(playbook)
+	uuid_mock.AssertExpectations(t)
+	fmt.Println(err)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, details.ExecutionId, executionId)
+	mock_reporter.AssertExpectations(t)
+	mock_condition_executor.AssertExpectations(t)
+	mock_action_executor.AssertExpectations(t)
 
 }

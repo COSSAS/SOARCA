@@ -232,23 +232,23 @@ func (decomposer *Decomposer) executeLoop(step cacao.Step,
 		PlaybookId:  decomposer.details.PlaybookId,
 		StepId:      step.ID,
 	}
+
 	loop := true
 
-	loopVariables := cacao.NewVariables()
-	loopVariables.Merge(variables)
 	for loop {
-
-		stepId, loop, err := decomposer.conditionExecutor.Execute(metadata,
-			executors.Context{Step: step, Variables: loopVariables})
+		stepId, branch, err := decomposer.conditionExecutor.Execute(metadata,
+			executors.Context{Step: step, Variables: variables})
 		if err != nil {
 			return cacao.NewVariables(), err
 		}
+		loop = branch
+
 		if loop {
 			branchVariables, err := decomposer.ExecuteBranch(stepId, variables)
 			if err != nil {
-				return loopVariables, err
+				return variables, err
 			}
-			loopVariables.Merge(branchVariables)
+			variables.Merge(branchVariables)
 		}
 
 	}
