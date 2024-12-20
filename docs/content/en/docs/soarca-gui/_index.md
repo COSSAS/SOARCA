@@ -9,7 +9,7 @@ weight: 7
 
 
 {{% alert title="Warning" color="warning" %}}
-SOARCA-GUI is currently in its **first release**, with ongoing development aimed at expanding its capabilities, improving integration, and enhancing its functionalities. 
+SOARCA-GUI is currently in its **(alpha) first release**, with ongoing development aimed at expanding its capabilities, improving integration, and enhancing its functionalities. 
 
 We warmly welcome contributions to our [repository](https://github.com/COSSAS/SOARCA-GUI). You can find the guidelines for contributing [here](/docs/contribution-guidelines).
 {{% /alert %}}
@@ -18,7 +18,26 @@ SOARCA can now work with a front-end interface called the SOARCA-GUI (written in
 
 Our long-term vision for the SOARCA-GUI includes enabling users to configure SOARCA directly, test integrations using tools like the SOARCA Fin library, and manage these tasks without requiring terminal commands or interventions. Additionally, we plan to introduce functionality for viewing and managing playbooks in a future version of the interface.
 
-The SOARCA-GUI features OIDC-based login for authentication and authorization. Similar to SOARCA, the SOARCA-GUI uses the [gauth](https://github.com/COSSAS/gauth) library as authentication & authorization middleware. This middleware is known to work with [Authentik](https://goauthentik.io/). For more information on setting up authentication for SOARCA, please refer to the documentation [here](/docs/installation-configuration/authentication.md). Authentication only works when enabling OIDC, as such if you want to have authentication you are required to setup Authentik or a different OIDC-providers. Note, that other OIDC-providers have not been tested yet. 
+The SOARCA-GUI features OIDC-based login for authentication and authorization. Similar to SOARCA, the SOARCA-GUI uses the [gauth](https://github.com/COSSAS/gauth) library as authentication & authorization middleware. This middleware is known to work with [Authentik](https://goauthentik.io/). For more information on setting up authentication for SOARCA, please refer to the documentation [here](/docs/installation-configuration/authentication.md). Authentication only works when enabling OIDC, as such if you want to have authentication you are required to setup Authentik or a different OIDC-provider. Note, that other OIDC-providers have not been tested yet. 
 
 
+## Setting up SOARCA-GUI with SOARCA
+
+
+
+
+### Impression of the SOARCA-GUI
+
+#### Login via OIDC-based authentication 
+![core](/SOARCA/images/soarca-gui/login-page.png)
+
+#### Main Dashboard 
+![core](/SOARCA/images/soarca-gui/main-dashboard.png)
+
+#### Dark theme
+The SOARCA-GUI also features dark theme mode for the real hackers. 
+![core](/SOARCA/images/soarca-gui/dashboard-dark.png)
+
+#### Follow CACAO playbook execution progress
+![core](/SOARCA/images/soarca-gui/execution.png)
 
