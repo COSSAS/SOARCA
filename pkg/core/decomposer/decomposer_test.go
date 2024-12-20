@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"soarca/pkg/core/executors/action"
+	"soarca/pkg/core/executors"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"soarca/test/unittest/mocks/mock_executor"
@@ -98,7 +98,7 @@ func TestExecutePlaybook(t *testing.T) {
 
 	uuid_mock.On("New").Return(executionId)
 
-	playbookStepMetadata := action.PlaybookStepMetadata{
+	playbookStepMetadata := executors.PlaybookStepMetadata{
 		Step:      step1,
 		Targets:   playbook.TargetDefinitions,
 		Auth:      playbook.AuthenticationInfoDefinitions,
@@ -241,7 +241,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 
 	firstResult := cacao.Variable{Name: "result", Value: "value"}
 
-	playbookStepMetadata1 := action.PlaybookStepMetadata{
+	playbookStepMetadata1 := executors.PlaybookStepMetadata{
 		Step:      step1,
 		Targets:   playbook.TargetDefinitions,
 		Auth:      playbook.AuthenticationInfoDefinitions,
@@ -259,7 +259,7 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 	mock_reporter.On("ReportWorkflowEnd", executionId, playbook, nil, timeNow).Return()
 	mock_action_executor.On("Execute", metaStep1, playbookStepMetadata1).Return(cacao.NewVariables(firstResult), nil)
 
-	playbookStepMetadata2 := action.PlaybookStepMetadata{
+	playbookStepMetadata2 := executors.PlaybookStepMetadata{
 		Step:      step2,
 		Targets:   playbook.TargetDefinitions,
 		Auth:      playbook.AuthenticationInfoDefinitions,
@@ -492,7 +492,7 @@ func TestFailingStepResultsInFailingPlaybook(t *testing.T) {
 
 	firstResult := cacao.Variable{Name: "result", Value: "value"}
 
-	playbookStepMetadata1 := action.PlaybookStepMetadata{
+	playbookStepMetadata1 := executors.PlaybookStepMetadata{
 		Step:      step1,
 		Targets:   playbook.TargetDefinitions,
 		Auth:      playbook.AuthenticationInfoDefinitions,
@@ -509,7 +509,7 @@ func TestFailingStepResultsInFailingPlaybook(t *testing.T) {
 	mock_time.On("Sleep", time.Millisecond*0).Return()
 	mock_action_executor.On("Execute", metaStep1, playbookStepMetadata1).Return(cacao.NewVariables(firstResult), nil)
 
-	playbookStepMetadata2 := action.PlaybookStepMetadata{
+	playbookStepMetadata2 := executors.PlaybookStepMetadata{
 		Step:      step2,
 		Targets:   playbook.TargetDefinitions,
 		Auth:      playbook.AuthenticationInfoDefinitions,
@@ -518,7 +518,7 @@ func TestFailingStepResultsInFailingPlaybook(t *testing.T) {
 	}
 	mock_action_executor.On("Execute", metaStep2, playbookStepMetadata2).Return(cacao.NewVariables(cacao.Variable{Name: "all", Value: "good"}), nil)
 
-	playbookStepMetadata3 := action.PlaybookStepMetadata{
+	playbookStepMetadata3 := executors.PlaybookStepMetadata{
 		Step:      step3,
 		Targets:   playbook.TargetDefinitions,
 		Auth:      playbook.AuthenticationInfoDefinitions,
@@ -827,7 +827,7 @@ func TestExecuteIfCondition(t *testing.T) {
 		stepIf,
 		cacao.NewVariables(expectedVariables)).Return(stepTrue.ID, true, nil)
 
-	stepTrueDetails := action.PlaybookStepMetadata{
+	stepTrueDetails := executors.PlaybookStepMetadata{
 		Step:      stepTrue,
 		Targets:   playbook.TargetDefinitions,
 		Auth:      playbook.AuthenticationInfoDefinitions,
@@ -842,7 +842,7 @@ func TestExecuteIfCondition(t *testing.T) {
 		metaStepTrue,
 		stepTrueDetails).Return(cacao.NewVariables(expectedVariables2), nil)
 
-	stepCompletionDetails := action.PlaybookStepMetadata{
+	stepCompletionDetails := executors.PlaybookStepMetadata{
 		Step:      stepCompletion,
 		Targets:   playbook.TargetDefinitions,
 		Auth:      playbook.AuthenticationInfoDefinitions,
@@ -909,7 +909,7 @@ func TestDelayStepExecution(t *testing.T) {
 
 	executionId, _ := uuid.Parse("00000000-0000-0000-0000-000000000000")
 	metaStep1 := execution.Metadata{ExecutionId: executionId, PlaybookId: "", StepId: step1.ID}
-	playbookStepMetadata := action.PlaybookStepMetadata{
+	playbookStepMetadata := executors.PlaybookStepMetadata{
 		Step:      step1,
 		Variables: cacao.NewVariables(expectedVariables),
 	}
@@ -963,7 +963,7 @@ func TestDelayStepNegativeTimeExecution(t *testing.T) {
 
 	executionId, _ := uuid.Parse("00000000-0000-0000-0000-000000000000")
 	metaStep1 := execution.Metadata{ExecutionId: executionId, PlaybookId: "", StepId: step1.ID}
-	playbookStepMetadata := action.PlaybookStepMetadata{
+	playbookStepMetadata := executors.PlaybookStepMetadata{
 		Step:      step1,
 		Variables: cacao.NewVariables(expectedVariables),
 	}
