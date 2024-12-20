@@ -14,7 +14,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func TestQueuSimple(t *testing.T) {
+func TestQueue(t *testing.T) {
 	interaction := New([]IInteractionIntegrationNotifier{})
 	testCtx, testCancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
 	defer testCancel()
@@ -29,30 +29,6 @@ func TestQueuSimple(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-
-	// Fetch pending command
-	retrievedCommand, err := interaction.getPendingInteraction(testMetadata)
-	if err != nil {
-		t.Fail()
-	}
-
-	assert.Equal(t,
-		retrievedCommand.CommandData.ExecutionId,
-		testInteractionCommand.Metadata.ExecutionId.String(),
-	)
-	assert.Equal(t,
-		retrievedCommand.CommandData.PlaybookId,
-		testInteractionCommand.Metadata.PlaybookId,
-	)
-	assert.Equal(t,
-		retrievedCommand.CommandData.StepId,
-		testInteractionCommand.Metadata.StepId,
-	)
-	assert.Equal(t,
-		retrievedCommand.CommandData.Command,
-		testInteractionCommand.Context.Command.Command,
-	)
-
 }
 
 func TestQueueFailWithoutTimeout(t *testing.T) {
@@ -66,7 +42,144 @@ func TestQueueFailWithoutTimeout(t *testing.T) {
 	}
 	err := interaction.Queue(testCommand, testCapComms)
 	assert.Equal(t, err, errors.New("manual command does not have a deadline"))
+}
 
+func TestRegisterRetrieveNewPendingInteraction(t *testing.T) {
+	interaction := New([]IInteractionIntegrationNotifier{})
+	testChan := make(chan manualModel.InteractionResponse)
+	defer close(testChan)
+
+	err := interaction.registerPendingInteraction(testInteractionCommand, testChan)
+	if err != nil {
+		t.Fail()
+	}
+	retrievedCommand, err := interaction.getPendingInteraction(testMetadata)
+	if err != nil {
+		t.Fail()
+	}
+
+	//Channel
+	assert.Equal(t,
+		retrievedCommand.Channel,
+		testChan,
+	)
+
+	// Type
+	assert.Equal(t,
+		retrievedCommand.CommandData.Type,
+		testInteractionCommand.Context.Command.Type,
+	)
+	// ExecutionId
+	assert.Equal(t,
+		retrievedCommand.CommandData.ExecutionId,
+		testInteractionCommand.Metadata.ExecutionId.String(),
+	)
+	// PlaybookId
+	assert.Equal(t,
+		retrievedCommand.CommandData.PlaybookId,
+		testInteractionCommand.Metadata.PlaybookId,
+	)
+	// StepId
+	assert.Equal(t,
+		retrievedCommand.CommandData.StepId,
+		testInteractionCommand.Metadata.StepId,
+	)
+	// Description
+	assert.Equal(t,
+		retrievedCommand.CommandData.Description,
+		testInteractionCommand.Context.Command.Description,
+	)
+	// Command
+	assert.Equal(t,
+		retrievedCommand.CommandData.Command,
+		testInteractionCommand.Context.Command.Command,
+	)
+	// CommandB64
+	assert.Equal(t,
+		retrievedCommand.CommandData.CommandBase64,
+		testInteractionCommand.Context.Command.CommandB64,
+	)
+	// Target
+	assert.Equal(t,
+		retrievedCommand.CommandData.Target,
+		testInteractionCommand.Context.Target,
+	)
+	// OutArgs
+	assert.Equal(t,
+		retrievedCommand.CommandData.OutArgs,
+		testInteractionCommand.Context.Variables,
+	)
+}
+
+func TestRegisterRetrieveSameExecutionMultiplePendingInteraction(t *testing.T) {
+	interaction := New([]IInteractionIntegrationNotifier{})
+	testChan := make(chan manualModel.InteractionResponse)
+	defer close(testChan)
+
+	err := interaction.registerPendingInteraction(testInteractionCommand, testChan)
+	if err != nil {
+		t.Fail()
+	}
+
+	testNewInteractionCommandSecond := testInteractionCommand
+	newStepId2 := "test_second_step_id"
+	testNewInteractionCommandSecond.Metadata.StepId = newStepId2
+
+	testNewInteractionCommandThird := testInteractionCommand
+	newStepId3 := "test_third_step_id"
+	testNewInteractionCommandThird.Metadata.StepId = newStepId3
+
+	err = interaction.registerPendingInteraction(testNewInteractionCommandSecond, testChan)
+	if err != nil {
+		t.Fail()
+	}
+	err = interaction.registerPendingInteraction(testNewInteractionCommandThird, testChan)
+	if err != nil {
+		t.Fail()
+	}
+}
+
+func TestRegisterRetrieveExistingExecutionNewPendingInteraction(t *testing.T) {
+	interaction := New([]IInteractionIntegrationNotifier{})
+	testChan := make(chan manualModel.InteractionResponse)
+	defer close(testChan)
+
+	err := interaction.registerPendingInteraction(testInteractionCommand, testChan)
+	if err != nil {
+		t.Fail()
+	}
+
+	testNewInteractionCommand := testInteractionCommand
+	newExecId := "50b6d52c-6efc-4516-a242-dfbc5c89d421"
+	testNewInteractionCommand.Metadata.ExecutionId = uuid.MustParse(newExecId)
+
+	err = interaction.registerPendingInteraction(testNewInteractionCommand, testChan)
+	if err != nil {
+		t.Fail()
+	}
+}
+
+func TestFailOnRegisterSamePendingInteraction(t *testing.T) {
+	interaction := New([]IInteractionIntegrationNotifier{})
+	testChan := make(chan manualModel.InteractionResponse)
+	defer close(testChan)
+
+	err := interaction.registerPendingInteraction(testInteractionCommand, testChan)
+	if err != nil {
+		t.Fail()
+	}
+
+	err = interaction.registerPendingInteraction(testInteractionCommand, testChan)
+	if err == nil {
+		t.Fail()
+	}
+
+	expectedErr := errors.New(
+		"a manual step is already pending for execution " +
+			"61a6c41e-6efc-4516-a242-dfbc5c89d562, step test_step_id. " +
+			"There can only be one pending manual command per action step.",
+	)
+	assert.Equal(t, err, expectedErr)
 }
 
 // ############################################################################
@@ -76,60 +189,60 @@ func TestQueueFailWithoutTimeout(t *testing.T) {
 var testUUIDStr string = "61a6c41e-6efc-4516-a242-dfbc5c89d562"
 var testMetadata = execution.Metadata{
 	ExecutionId: uuid.MustParse(testUUIDStr),
-	PlaybookId:  "dummy_playbook_id",
-	StepId:      "dummy_step_id",
+	PlaybookId:  "test_playbook_id",
+	StepId:      "test_step_id",
 }
 
 var testInteractionCommand = manualModel.InteractionCommand{
 	Metadata: testMetadata,
 	Context: capability.Context{
 		Command: cacao.Command{
-			Type:             "dummy_type",
-			Command:          "dummy_command",
-			Description:      "dummy_description",
-			CommandB64:       "dummy_command_b64",
+			Type:             "test_type",
+			Command:          "test_command",
+			Description:      "test_description",
+			CommandB64:       "test_command_b64",
 			Version:          "1.0",
-			PlaybookActivity: "dummy_activity",
+			PlaybookActivity: "test_activity",
 			Headers:          cacao.Headers{},
-			Content:          "dummy_content",
-			ContentB64:       "dummy_content_b64",
+			Content:          "test_content",
+			ContentB64:       "test_content_b64",
 		},
 		Step: cacao.Step{
-			Type:        "dummy_type",
-			ID:          "dummy_id",
-			Name:        "dummy_name",
-			Description: "dummy_description",
+			Type:        "test_type",
+			ID:          "test_id",
+			Name:        "test_name",
+			Description: "test_description",
 			Timeout:     1,
 			StepVariables: cacao.Variables{
 				"var1": {
 					Type:        "string",
 					Name:        "var1",
-					Description: "dummy variable",
-					Value:       "dummy_value",
+					Description: "test variable",
+					Value:       "test_value",
 					Constant:    false,
 					External:    false,
 				},
 			},
 			Commands: []cacao.Command{
 				{
-					Type:    "dummy_type",
-					Command: "dummy_command",
+					Type:    "test_type",
+					Command: "test_command",
 				},
 			},
 		},
 		Authentication: cacao.AuthenticationInformation{},
 		Target: cacao.AgentTarget{
-			ID:          "dummy_id",
-			Type:        "dummy_type",
-			Name:        "dummy_name",
-			Description: "dummy_description",
+			ID:          "test_id",
+			Type:        "test_type",
+			Name:        "test_name",
+			Description: "test_description",
 		},
 		Variables: cacao.Variables{
 			"var1": {
 				Type:        "string",
 				Name:        "var1",
-				Description: "dummy variable",
-				Value:       "dummy_value",
+				Description: "test variable",
+				Value:       "test_value",
 				Constant:    false,
 				External:    false,
 			},
