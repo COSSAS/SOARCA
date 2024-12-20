@@ -7,11 +7,13 @@ import (
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	manualModel "soarca/pkg/models/manual"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/go-playground/assert/v2"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 func TestQueue(t *testing.T) {
@@ -27,6 +29,7 @@ func TestQueue(t *testing.T) {
 	// Call queue
 	err := interaction.Queue(testInteractionCommand, testCapComms)
 	if err != nil {
+		t.Log(err)
 		t.Fail()
 	}
 }
@@ -44,6 +47,35 @@ func TestQueueFailWithoutTimeout(t *testing.T) {
 	assert.Equal(t, err, errors.New("manual command does not have a deadline"))
 }
 
+func TestQueueExitOnTimeout(t *testing.T) {
+	interaction := New([]IInteractionIntegrationNotifier{})
+	timeout := 30 * time.Millisecond
+	testCtx, testCancel := context.WithTimeout(context.Background(), timeout)
+	defer testCancel()
+
+	hook := NewTestLogHook()
+	log.Logger.AddHook(hook)
+
+	testCapComms := manualModel.ManualCapabilityCommunication{
+		Channel:        make(chan manualModel.InteractionResponse),
+		TimeoutContext: testCtx,
+	}
+
+	err := interaction.Queue(testInteractionCommand, testCapComms)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+
+	// Call queue
+	time.Sleep(50 * time.Millisecond)
+
+	expectedLogEntry := "context canceled due to timeout. exiting goroutine"
+	assert.NotEqual(t, len(hook.Entries), 0)
+	assert.Equal(t, strings.Contains(hook.Entries[0].Message, expectedLogEntry), true)
+
+}
+
 func TestRegisterRetrieveNewPendingInteraction(t *testing.T) {
 	interaction := New([]IInteractionIntegrationNotifier{})
 	testChan := make(chan manualModel.InteractionResponse)
@@ -51,10 +83,12 @@ func TestRegisterRetrieveNewPendingInteraction(t *testing.T) {
 
 	err := interaction.registerPendingInteraction(testInteractionCommand, testChan)
 	if err != nil {
+		t.Log(err)
 		t.Fail()
 	}
 	retrievedCommand, err := interaction.getPendingInteraction(testMetadata)
 	if err != nil {
+		t.Log(err)
 		t.Fail()
 	}
 
@@ -118,6 +152,7 @@ func TestRegisterRetrieveSameExecutionMultiplePendingInteraction(t *testing.T) {
 
 	err := interaction.registerPendingInteraction(testInteractionCommand, testChan)
 	if err != nil {
+		t.Log(err)
 		t.Fail()
 	}
 
@@ -131,12 +166,37 @@ func TestRegisterRetrieveSameExecutionMultiplePendingInteraction(t *testing.T) {
 
 	err = interaction.registerPendingInteraction(testNewInteractionCommandSecond, testChan)
 	if err != nil {
+		t.Log(err)
 		t.Fail()
 	}
 	err = interaction.registerPendingInteraction(testNewInteractionCommandThird, testChan)
 	if err != nil {
+		t.Log(err)
 		t.Fail()
 	}
+}
+
+func TestPostContinue(t *testing.T) {
+
+	// TODO
+
+	interaction := New([]IInteractionIntegrationNotifier{})
+	testCtx, testCancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+	defer testCancel()
+
+	testCapComms := manualModel.ManualCapabilityCommunication{
+		Channel:        make(chan manualModel.InteractionResponse),
+		TimeoutContext: testCtx,
+	}
+
+	// Call queue
+	err := interaction.Queue(testInteractionCommand, testCapComms)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+
+	//val, err := interaction.PostContinue()
 }
 
 func TestRegisterRetrieveExistingExecutionNewPendingInteraction(t *testing.T) {
@@ -146,6 +206,7 @@ func TestRegisterRetrieveExistingExecutionNewPendingInteraction(t *testing.T) {
 
 	err := interaction.registerPendingInteraction(testInteractionCommand, testChan)
 	if err != nil {
+		t.Log(err)
 		t.Fail()
 	}
 
@@ -155,6 +216,7 @@ func TestRegisterRetrieveExistingExecutionNewPendingInteraction(t *testing.T) {
 
 	err = interaction.registerPendingInteraction(testNewInteractionCommand, testChan)
 	if err != nil {
+		t.Log(err)
 		t.Fail()
 	}
 }
@@ -166,11 +228,13 @@ func TestFailOnRegisterSamePendingInteraction(t *testing.T) {
 
 	err := interaction.registerPendingInteraction(testInteractionCommand, testChan)
 	if err != nil {
+		t.Log(err)
 		t.Fail()
 	}
 
 	err = interaction.registerPendingInteraction(testInteractionCommand, testChan)
 	if err == nil {
+		t.Log(err)
 		t.Fail()
 	}
 
@@ -182,9 +246,120 @@ func TestFailOnRegisterSamePendingInteraction(t *testing.T) {
 	assert.Equal(t, err, expectedErr)
 }
 
+func TestFailOnRetrieveUnexistingExecutionInteraction(t *testing.T) {
+	interaction := New([]IInteractionIntegrationNotifier{})
+	testChan := make(chan manualModel.InteractionResponse)
+	defer close(testChan)
+
+	testDifferentMetadata := testMetadata
+	newExecId := "50b6d52c-6efc-4516-a242-dfbc5c89d421"
+	testDifferentMetadata.ExecutionId = uuid.MustParse(newExecId)
+
+	_, err := interaction.getPendingInteraction(testDifferentMetadata)
+	if err == nil {
+		t.Log(err)
+		t.Fail()
+	}
+
+	expectedErr := errors.New(
+		"no pending commands found for execution 50b6d52c-6efc-4516-a242-dfbc5c89d421",
+	)
+	assert.Equal(t, err, expectedErr)
+}
+
+func TestFailOnRetrieveUnexistingCommandInteraction(t *testing.T) {
+	interaction := New([]IInteractionIntegrationNotifier{})
+	testChan := make(chan manualModel.InteractionResponse)
+	defer close(testChan)
+
+	err := interaction.registerPendingInteraction(testInteractionCommand, testChan)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+
+	testDifferentMetadata := testMetadata
+	newStepId := "50b6d52c-6efc-4516-a242-dfbc5c89d421"
+	testDifferentMetadata.StepId = newStepId
+
+	_, err = interaction.getPendingInteraction(testDifferentMetadata)
+	if err == nil {
+		t.Log(err)
+		t.Fail()
+	}
+
+	expectedErr := errors.New(
+		"no pending commands found for execution " +
+			"61a6c41e-6efc-4516-a242-dfbc5c89d562 -> " +
+			"step 50b6d52c-6efc-4516-a242-dfbc5c89d421",
+	)
+	assert.Equal(t, err, expectedErr)
+}
+
+func TestRemovePendingInteraciton(t *testing.T) {
+	interaction := New([]IInteractionIntegrationNotifier{})
+	testChan := make(chan manualModel.InteractionResponse)
+	defer close(testChan)
+
+	err := interaction.registerPendingInteraction(testInteractionCommand, testChan)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+
+	pendingCommand, err := interaction.getPendingInteraction(testMetadata)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+	assert.Equal(t,
+		pendingCommand.CommandData.ExecutionId,
+		testInteractionCommand.Metadata.ExecutionId.String(),
+	)
+	assert.Equal(t,
+		pendingCommand.CommandData.StepId,
+		testInteractionCommand.Metadata.StepId,
+	)
+
+	err = interaction.removeInteractionFromPending(testMetadata)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+
+	_, err = interaction.getPendingInteraction(testMetadata)
+	if err == nil {
+		t.Log(err)
+		t.Fail()
+	}
+
+	expectedErr := errors.New(
+		"no pending commands found for execution " +
+			"61a6c41e-6efc-4516-a242-dfbc5c89d562",
+	)
+	assert.Equal(t, err, expectedErr)
+}
+
 // ############################################################################
 // Utils
 // ############################################################################
+
+type TestHook struct {
+	Entries []*logrus.Entry
+}
+
+func (hook *TestHook) Levels() []logrus.Level {
+	return logrus.AllLevels
+}
+
+func (hook *TestHook) Fire(entry *logrus.Entry) error {
+	hook.Entries = append(hook.Entries, entry)
+	return nil
+}
+
+func NewTestLogHook() *TestHook {
+	return &TestHook{}
+}
 
 var testUUIDStr string = "61a6c41e-6efc-4516-a242-dfbc5c89d562"
 var testMetadata = execution.Metadata{
@@ -218,7 +393,7 @@ var testInteractionCommand = manualModel.InteractionCommand{
 					Type:        "string",
 					Name:        "var1",
 					Description: "test variable",
-					Value:       "test_value",
+					Value:       "test_value_1",
 					Constant:    false,
 					External:    false,
 				},
@@ -240,9 +415,9 @@ var testInteractionCommand = manualModel.InteractionCommand{
 		Variables: cacao.Variables{
 			"var1": {
 				Type:        "string",
-				Name:        "var1",
+				Name:        "var2",
 				Description: "test variable",
-				Value:       "test_value",
+				Value:       "test_value_2",
 				Constant:    false,
 				External:    false,
 			},

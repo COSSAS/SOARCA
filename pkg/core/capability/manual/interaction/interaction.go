@@ -14,7 +14,7 @@ import (
 )
 
 // TODO
-// - write unit tests
+// Add manual capability to action execution, and solve outArgs inconsistencies...
 
 type Empty struct{}
 
@@ -153,17 +153,22 @@ func (manualController *InteractionController) PostContinue(result manual.Manual
 		return http.StatusBadRequest, err
 	}
 
-	// TODO: determine status code
-
-	// If not, it means it was already solved (right?)
+	// If not in there, it means it was already solved (right?)
 	pendingEntry, err := manualController.getPendingInteraction(metadata)
 	if err != nil {
 		log.Warning(err)
 		return http.StatusAlreadyReported, err
 	}
 
-	// If it is, put outArgs back into manualCapabilityChannel
+	// If it is, first check that out args provided match the variables
+	for varName := range result.ResponseOutArgs {
+		if _, ok := pendingEntry.CommandData.OutArgs[varName]; !ok {
+			log.Warning("provided out args do not match command-related variables")
+			return http.StatusBadRequest, err
+		}
+	}
 
+	//Then put outArgs back into manualCapabilityChannel
 	// Copy result and conversion back to interactionResponse format
 	returnedVars := manualController.copyOutArgsToVars(result.ResponseOutArgs)
 	pendingEntry.Channel <- manual.InteractionResponse{
