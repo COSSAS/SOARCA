@@ -11,6 +11,7 @@ import (
 	capabilityController "soarca/pkg/core/capability/fin/controller"
 	"soarca/pkg/core/capability/fin/protocol"
 	"soarca/pkg/core/capability/http"
+	"soarca/pkg/core/capability/manual/interaction"
 	"soarca/pkg/core/capability/openc2"
 	"soarca/pkg/core/capability/powershell"
 	"soarca/pkg/core/capability/ssh"
@@ -64,6 +65,9 @@ var mainController = Controller{}
 var mainCache = cache.Cache{}
 
 const defaultCacheSize int = 10
+
+// One interaction per SOARCA instance
+var mainInteraction = interaction.New(initializeManualIntegration())
 
 func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	ssh := new(ssh.SshCapability)
@@ -255,6 +259,9 @@ func initializeCore(app *gin.Engine) error {
 		return err
 	}
 
+	// TODO: create interaction object
+	err = routes.Manual(app, mainInteraction)
+
 	routes.Logging(app)
 	routes.Swagger(app)
 
@@ -273,6 +280,11 @@ func (controller *Controller) setupAndRunMqtt() error {
 	}
 	go finChannelController.Run()
 	return nil
+}
+
+func initializeManualIntegration() []interaction.IInteractionIntegrationNotifier {
+	// Manual interaction integrations will be initialized here when implemented
+	return []interaction.IInteractionIntegrationNotifier{}
 }
 
 func initializeIntegrationTheHiveReporting() downstreamReporter.IDownStreamReporter {

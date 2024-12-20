@@ -1,6 +1,8 @@
 package manual
 
 import (
+	"encoding/json"
+	"io"
 	"net/http"
 	"reflect"
 	"soarca/internal/logger"
@@ -46,6 +48,12 @@ func init() {
 
 type ManualHandler struct {
 	interactionCapability interaction.IInteractionStorage
+}
+
+func NewManualHandler(interaction interaction.IInteractionStorage) *ManualHandler {
+	instance := ManualHandler{}
+	instance.interactionCapability = interaction
+	return &instance
 }
 
 // manual
@@ -127,18 +135,39 @@ func (manualHandler *ManualHandler) GetPendingCommand(g *gin.Context) {
 //	@Param			response_out_args	body	manual.ManualOutArgs	true	"out args"
 //	@Success		200			{object}	api.Execution
 //	@failure		400			{object}	api.Error
-//	@Router			/manual/continue/ [POST]
+//	@Router			/manual/continue/{execution_id}/{step_id} [POST]
 func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
-	execution_id := g.Param("execution_id")
-	playbook_id := g.Param("playbook_id")
-	step_id := g.Param("step_id")
-	outArgsUpdate := manual.ManualOutArgUpdatePayload{
-		Type:        g.Param("type"),
-		ExecutionId: execution_id,
-		PlaybookId:  playbook_id,
-		StepId:      step_id,
+
+	paramExecutionId := g.Param("execution_id")
+	paramStepId := g.Param("step_id")
+
+	jsonData, err := io.ReadAll(g.Request.Body)
+	if err != nil {
+		log.Error("failed")
+		apiError.SendErrorResponse(g, http.StatusBadRequest,
+			"Failed to read json",
+			"POST /manual/continue/{execution_id}/{step_id}", "")
+		return
 	}
-	status, err := manualHandler.interactionCapability.Continue(outArgsUpdate)
+
+	var outArgsUpdate manual.ManualOutArgUpdatePayload
+	err = json.Unmarshal(jsonData, &outArgsUpdate)
+	if err != nil {
+		log.Error("failed to unmarshal JSON")
+		apiError.SendErrorResponse(g, http.StatusBadRequest,
+			"Failed to unmarshal JSON",
+			"POST /manual/continue/{execution_id}/{step_id}", "")
+		return
+	}
+
+	if (outArgsUpdate.ExecutionId != paramExecutionId) || (outArgsUpdate.StepId != paramStepId) {
+		apiError.SendErrorResponse(g, http.StatusBadRequest,
+			"Mismatch between execution ID and step ID between URL parameters and request body",
+			"POST /manual/continue/{execution_id}/{step_id}", "")
+		return
+	}
+
+	status, err := manualHandler.interactionCapability.PostContinue(outArgsUpdate)
 	if err != nil {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusInternalServerError,
@@ -149,7 +178,7 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 	g.JSON(
 		status,
 		api.Execution{
-			ExecutionId: uuid.MustParse(execution_id),
-			PlaybookId:  playbook_id,
+			ExecutionId: uuid.MustParse(outArgsUpdate.ExecutionId),
+			PlaybookId:  outArgsUpdate.PlaybookId,
 		})
 }

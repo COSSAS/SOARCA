@@ -10,6 +10,9 @@ import (
 	playbook_handler "soarca/pkg/api/playbook"
 	reporter_handler "soarca/pkg/api/reporter"
 	status_handler "soarca/pkg/api/status"
+	"soarca/pkg/core/capability/manual/interaction"
+
+	manual_handler "soarca/pkg/api/manual"
 
 	trigger_handler "soarca/pkg/api/trigger"
 
@@ -42,6 +45,14 @@ func Logging(app *gin.Engine) {
 func Reporter(app *gin.Engine, informer informer.IExecutionInformer) error {
 	log.Trace("Setting up reporter routes")
 	ReporterRoutes(app, informer)
+	return nil
+}
+
+func Manual(app *gin.Engine, interaction interaction.IInteractionStorage) error {
+	log.Trace("Setting up manual routes")
+	manualHandler := manual_handler.NewManualHandler(interaction)
+	ManualRoutes(app, manualHandler)
+
 	return nil
 }
 
@@ -124,5 +135,14 @@ func TriggerRoutes(route *gin.Engine, triggerHandler *trigger_handler.TriggerHan
 	{
 		triggerRoutes.POST("/playbook", triggerHandler.Execute)
 		triggerRoutes.POST("/playbook/:id", triggerHandler.ExecuteById)
+	}
+}
+
+func ManualRoutes(route *gin.Engine, manualHandler *manual_handler.ManualHandler) {
+	manualRoutes := route.Group("/manual")
+	{
+		manualRoutes.GET("./", manualHandler.GetPendingCommands)
+		manualRoutes.GET(":execution_id/:step_id", manualHandler.GetPendingCommand)
+		manualRoutes.POST("/continue", manualHandler.PostContinue)
 	}
 }

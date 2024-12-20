@@ -36,7 +36,7 @@ type IInteractionStorage interface {
 	GetPendingCommands() ([]manual.InteractionCommandData, int, error)
 	// even if step has multiple manual commands, there should always be just one pending manual command per action step
 	GetPendingCommand(metadata execution.Metadata) (manual.InteractionCommandData, int, error)
-	Continue(outArgsResult manual.ManualOutArgUpdatePayload) (int, error)
+	PostContinue(outArgsResult manual.ManualOutArgUpdatePayload) (int, error)
 }
 
 type InteractionController struct {
