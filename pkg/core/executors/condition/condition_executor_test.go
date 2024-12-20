@@ -171,3 +171,42 @@ func TestExecuteConditionWhile(t *testing.T) {
 	mock_stix.AssertExpectations(t)
 	mock_time.AssertExpectations(t)
 }
+
+func TestExecuteConditionWhileFalse(t *testing.T) {
+	mock_stix := new(mock_stix.MockStix)
+	mock_reporter := new(mock_reporter.Mock_Reporter)
+	mock_time := new(mock_time.MockTime)
+
+	conditionExecutior := New(mock_stix, mock_reporter, mock_time)
+
+	executionId := uuid.New()
+
+	meta := execution.Metadata{ExecutionId: executionId,
+		PlaybookId: "1",
+		StepId:     "2"}
+
+	step := cacao.Step{Type: cacao.StepTypeWhileCondition,
+		Condition:    "a = b",
+		OnTrue:       "3",
+		OnCompletion: "4"}
+	vars := cacao.NewVariables()
+
+	layout := "2006-01-02T15:04:05.000Z"
+	str := "2014-11-12T11:45:26.371Z"
+	timeNow, _ := time.Parse(layout, str)
+	mock_time.On("Now").Return(timeNow)
+
+	mock_reporter.On("ReportStepStart", executionId, step, vars, timeNow)
+	mock_stix.On("Evaluate", "a = b", vars).Return(false, nil)
+	mock_reporter.On("ReportStepEnd", executionId, step, vars, nil, timeNow)
+
+	context := executors.Context{Step: step, Variables: vars}
+	nextStepId, goToBranch, err := conditionExecutior.Execute(meta, context)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, false, goToBranch)
+	assert.Equal(t, "4", nextStepId)
+
+	mock_reporter.AssertExpectations(t)
+	mock_stix.AssertExpectations(t)
+	mock_time.AssertExpectations(t)
+}
