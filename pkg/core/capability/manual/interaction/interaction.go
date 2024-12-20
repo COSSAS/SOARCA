@@ -1,6 +1,7 @@
 package interaction
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -60,6 +61,10 @@ func (manualController *InteractionController) Queue(command manual.InteractionC
 	err := manualController.registerPendingInteraction(command, manualComms.Channel)
 	if err != nil {
 		return err
+	}
+
+	if _, ok := manualComms.TimeoutContext.Deadline(); !ok {
+		return errors.New("manual command does not have a deadline")
 	}
 
 	// Copy and type conversion
