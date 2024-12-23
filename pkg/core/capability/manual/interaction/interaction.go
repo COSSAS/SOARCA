@@ -105,7 +105,11 @@ func (manualController *InteractionController) waitInteractionIntegrationRespons
 	for {
 		select {
 		case <-manualComms.TimeoutContext.Done():
-			log.Info("context canceled due to timeout. exiting goroutine")
+			log.Info("context canceled due to response or timeout. exiting goroutine")
+			return
+
+		case <-manualComms.Channel:
+			log.Info("detected activity on manual capability channel. exiting goroutine without consuming the message")
 			return
 
 		case result := <-integrationChannel:
@@ -177,17 +181,34 @@ func (manualController *InteractionController) PostContinue(result manual.Manual
 		return http.StatusAlreadyReported, err
 	}
 
-	// If it is, first check that out args provided match the variables
-	for varName := range result.ResponseOutArgs {
+	// If it is
+	for varName, variable := range result.ResponseOutArgs {
+		// first check that out args provided match the variables
 		if _, ok := pendingEntry.CommandData.OutVariables[varName]; !ok {
 			log.Warning("provided out args do not match command-related variables")
 			return http.StatusBadRequest, err
+		}
+		// then warn if any value outside "value" has changed
+		if pending, ok := pendingEntry.CommandData.OutVariables[varName]; ok {
+			if variable.Constant != pending.Constant {
+				log.Warningf("provided out arg %s is attempting to change 'Constant' property", varName)
+			}
+			if variable.Description != pending.Description {
+				log.Warningf("provided out arg %s is attempting to change 'Description' property", varName)
+			}
+			if variable.External != pending.External {
+				log.Warningf("provided out arg %s is attempting to change 'External' property", varName)
+			}
+			if variable.Type != pending.Type {
+				log.Warningf("provided out arg %s is attempting to change 'Type' property", varName)
+			}
 		}
 	}
 
 	//Then put outArgs back into manualCapabilityChannel
 	// Copy result and conversion back to interactionResponse format
 	returnedVars := manualController.copyOutArgsToVars(result.ResponseOutArgs)
+	log.Info("putting stuff in manual capability channel")
 	pendingEntry.Channel <- manual.InteractionResponse{
 		ResponseError: nil,
 		Payload:       returnedVars,

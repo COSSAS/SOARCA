@@ -2,7 +2,10 @@ package interaction
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"reflect"
 	"soarca/pkg/core/capability"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
@@ -67,10 +70,9 @@ func TestQueueExitOnTimeout(t *testing.T) {
 		t.Fail()
 	}
 
-	// Call queue
 	time.Sleep(50 * time.Millisecond)
 
-	expectedLogEntry := "context canceled due to timeout. exiting goroutine"
+	expectedLogEntry := "context canceled due to response or timeout. exiting goroutine"
 	assert.NotEqual(t, len(hook.Entries), 0)
 	assert.Equal(t, strings.Contains(hook.Entries[0].Message, expectedLogEntry), true)
 
@@ -145,6 +147,99 @@ func TestRegisterRetrieveNewPendingInteraction(t *testing.T) {
 	)
 }
 
+func TestGetAllPendingInteractions(t *testing.T) {
+	interaction := New([]IInteractionIntegrationNotifier{})
+	testChan := make(chan manualModel.InteractionResponse)
+	defer close(testChan)
+
+	err := interaction.registerPendingInteraction(testInteractionCommand, testChan)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+
+	testNewInteractionCommand := testInteractionCommand
+	newExecId := "50b6d52c-6efc-4516-a242-dfbc5c89d421"
+	testNewInteractionCommand.Metadata.ExecutionId = uuid.MustParse(newExecId)
+
+	err = interaction.registerPendingInteraction(testNewInteractionCommand, testChan)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+
+	expectedInteractionsJson := `
+[
+	{
+		"type": "test_type",
+		"execution_id": "61a6c41e-6efc-4516-a242-dfbc5c89d562",
+		"playbook_id": "test_playbook_id",
+		"step_id": "test_step_id",
+		"description": "test_description",
+		"command": "test_command",
+		"commandb64": "test_command_b64",
+		"targets": {
+			"id": "test_id",
+			"type": "test_type",
+			"name": "test_name",
+			"description": "test_description",
+			"location": {},
+			"contact": {}
+		},
+		"out_args": {
+			"var2": {
+				"type": "string",
+				"name": "var2",
+				"description": "test variable",
+				"value": "test_value_2"
+			}
+		}
+	},
+	{
+		"type": "test_type",
+		"execution_id": "50b6d52c-6efc-4516-a242-dfbc5c89d421",
+		"playbook_id": "test_playbook_id",
+		"step_id": "test_step_id",
+		"description": "test_description",
+		"command": "test_command",
+		"commandb64": "test_command_b64",
+		"targets": {
+			"id": "test_id",
+			"type": "test_type",
+			"name": "test_name",
+			"description": "test_description",
+			"location": {},
+			"contact": {}
+		},
+		"out_args": {
+			"var2": {
+				"type": "string",
+				"name": "var2",
+				"description": "test variable",
+				"value": "test_value_2"
+			}
+		}
+	}
+]
+	`
+	var expectedInteractions []manualModel.InteractionCommandData
+	err = json.Unmarshal([]byte(expectedInteractionsJson), &expectedInteractions)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+	t.Log("expected interactions")
+	t.Log(expectedInteractions)
+
+	receivedInteractions := interaction.getAllPendingInteractions()
+
+	if !reflect.DeepEqual(expectedInteractions, receivedInteractions) {
+		err = fmt.Errorf("expected %v, but got %v", expectedInteractions, receivedInteractions)
+		t.Log(err)
+		t.Fail()
+	}
+}
+
 func TestRegisterRetrieveSameExecutionMultiplePendingInteraction(t *testing.T) {
 	interaction := New([]IInteractionIntegrationNotifier{})
 	testChan := make(chan manualModel.InteractionResponse)
@@ -176,9 +271,7 @@ func TestRegisterRetrieveSameExecutionMultiplePendingInteraction(t *testing.T) {
 	}
 }
 
-func TestPostContinue(t *testing.T) {
-
-	// TODO
+func TestCopyOutArgsToVars(t *testing.T) {
 
 	interaction := New([]IInteractionIntegrationNotifier{})
 	testCtx, testCancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
@@ -196,10 +289,119 @@ func TestPostContinue(t *testing.T) {
 		t.Fail()
 	}
 
-	//val, err := interaction.PostContinue()
+	outArg := manualModel.ManualOutArg{
+		Type:        "string",
+		Name:        "var2",
+		Description: "this description will not make it to the returned var",
+		Value:       "now the value is bananas",
+		Constant:    true, // changed but won't be ported
+		External:    true, // changed but won't be ported
+	}
+
+	expectedVariable := cacao.Variable{
+		Type:  "string",
+		Name:  "var2",
+		Value: "now the value is bananas",
+	}
+
+	responseOutArgs := manualModel.ManualOutArgs{"var2": outArg}
+
+	vars := interaction.copyOutArgsToVars(responseOutArgs)
+	assert.Equal(t, expectedVariable.Type, vars["var2"].Type)
+	assert.Equal(t, expectedVariable.Name, vars["var2"].Name)
+	assert.Equal(t, expectedVariable.Value, vars["var2"].Value)
 }
 
-func TestRegisterRetrieveExistingExecutionNewPendingInteraction(t *testing.T) {
+func TestPostContinueWarningsRaised(t *testing.T) {
+
+	interaction := New([]IInteractionIntegrationNotifier{})
+	timeout := 500 * time.Millisecond
+	testCtx, testCancel := context.WithTimeout(context.Background(), timeout)
+
+	defer testCancel()
+
+	hook := NewTestLogHook()
+	log.Logger.AddHook(hook)
+
+	testCapComms := manualModel.ManualCapabilityCommunication{
+		Channel:        make(chan manualModel.InteractionResponse),
+		TimeoutContext: testCtx,
+	}
+	defer close(testCapComms.Channel)
+
+	err := interaction.Queue(testInteractionCommand, testCapComms)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+
+	pending, err := interaction.getPendingInteraction((testMetadata))
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+	fmt.Println(pending)
+
+	outArg := manualModel.ManualOutArg{
+		Type:        "string",
+		Name:        "var2",
+		Description: "this description will not make it to the returned var",
+		Value:       "now the value is bananas",
+		Constant:    true, // changed but won't be ported
+		External:    true, // changed but won't be ported
+	}
+
+	outArgsUpdate := manualModel.ManualOutArgUpdatePayload{
+		Type:            "test-manual-response",
+		ExecutionId:     testMetadata.ExecutionId.String(),
+		PlaybookId:      testMetadata.PlaybookId,
+		StepId:          testMetadata.StepId,
+		ResponseStatus:  true,
+		ResponseOutArgs: manualModel.ManualOutArgs{"var2": outArg},
+	}
+
+	statusCode, err := interaction.PostContinue(outArgsUpdate)
+
+	expectedStatusCode := 200
+	var expectedErr error
+
+	assert.Equal(t, statusCode, expectedStatusCode)
+	assert.Equal(t, err, expectedErr)
+
+	expectedLogEntry1 := "provided out arg var2 is attempting to change 'Constant' property"
+	expectedLogEntry2 := "provided out arg var2 is attempting to change 'Description' property"
+	expectedLogEntry3 := "provided out arg var2 is attempting to change 'External' property"
+	expectedLogs := []string{expectedLogEntry1, expectedLogEntry2, expectedLogEntry3}
+
+	all := true
+	for _, expectedMessage := range expectedLogs {
+		containsAll := true
+		for _, entry := range hook.Entries {
+			if strings.Contains(expectedMessage, entry.Message) {
+				containsAll = true
+				break
+			}
+			if !strings.Contains(expectedMessage, entry.Message) {
+				containsAll = false
+			}
+		}
+		if !containsAll {
+			t.Logf("log message: '%s' not found in logged messages", expectedMessage)
+			all = false
+			break
+		}
+	}
+
+	assert.NotEqual(t, len(hook.Entries), 0)
+	assert.Equal(t, all, true)
+
+}
+
+func TestPostContinueFailOnUnmatchedOutArgs(t *testing.T) {
+
+}
+
+func TestRegisterRetrieveNewExecutionNewPendingInteraction(t *testing.T) {
 	interaction := New([]IInteractionIntegrationNotifier{})
 	testChan := make(chan manualModel.InteractionResponse)
 	defer close(testChan)
@@ -327,7 +529,7 @@ func TestRemovePendingInteraciton(t *testing.T) {
 		t.Fail()
 	}
 
-	_, err = interaction.getPendingInteraction(testMetadata)
+	err = interaction.removeInteractionFromPending(testMetadata)
 	if err == nil {
 		t.Log(err)
 		t.Fail()
