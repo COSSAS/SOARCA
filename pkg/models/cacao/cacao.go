@@ -207,6 +207,8 @@ type Command struct {
 	ContentB64       string  `bson:"content_b64,omitempty" json:"content_b64,omitempty"`
 }
 
+type OutArgs []string
+
 type Step struct {
 	Type               string               `bson:"type" json:"type" validate:"required"`
 	ID                 string               `bson:"id,omitempty" json:"id,omitempty"`
@@ -224,7 +226,7 @@ type Step struct {
 	Agent              string               `bson:"agent,omitempty" json:"agent,omitempty"`
 	Targets            []string             `bson:"targets,omitempty" json:"targets,omitempty"`
 	InArgs             []string             `bson:"in_args,omitempty" json:"in_args,omitempty"`
-	OutArgs            []string             `bson:"out_args,omitempty" json:"out_args,omitempty"`
+	OutArgs            OutArgs              `bson:"out_args,omitempty" json:"out_args,omitempty"`
 	PlaybookID         string               `bson:"playbook_id,omitempty" json:"playbook_id,omitempty"`
 	PlaybookVersion    string               `bson:"playbook_version,omitempty" json:"playbook_version,omitempty"`
 	NextSteps          []string             `bson:"next_steps,omitempty" json:"next_steps,omitempty"`

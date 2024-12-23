@@ -140,7 +140,7 @@ func TestRegisterRetrieveNewPendingInteraction(t *testing.T) {
 	)
 	// OutArgs
 	assert.Equal(t,
-		retrievedCommand.CommandData.OutArgs,
+		retrievedCommand.CommandData.OutVariables,
 		testInteractionCommand.Context.Variables,
 	)
 }
@@ -398,6 +398,7 @@ var testInteractionCommand = manualModel.InteractionCommand{
 					External:    false,
 				},
 			},
+			OutArgs: cacao.OutArgs{"var2"},
 			Commands: []cacao.Command{
 				{
 					Type:    "test_type",
@@ -413,7 +414,7 @@ var testInteractionCommand = manualModel.InteractionCommand{
 			Description: "test_description",
 		},
 		Variables: cacao.Variables{
-			"var1": {
+			"var2": {
 				Type:        "string",
 				Name:        "var2",
 				Description: "test variable",

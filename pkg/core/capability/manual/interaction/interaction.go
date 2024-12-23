@@ -14,7 +14,24 @@ import (
 )
 
 // TODO
-// Add manual capability to action execution, and solve outArgs inconsistencies...
+// Add manual capability to action execution,
+
+// NOTE: current outArgs management for Manual commands:
+//	- The decomposer passes the PlaybookStepMetadata object to the
+//		action executor, which includes Step
+// 	- The action executor calls Execute on the capability (command type)
+//		passing capability.Context,
+// 	- which includes the Step object
+//	- The manual capability calls Queue passing InteractionCommand,
+//		which includes capability.Context
+// 	- Queue() posts a message, which shall include the text of the manual command,
+//		and the varibales (outArgs) expected
+// 	- registerPendingInteraction records the CACAO Variables corresponding to the
+//		outArgs field (in the step. In future, in the command)
+//	- A manual response posts back a map[string]manual.ManualOutArg object,
+//		which is exactly like cacao variables, but with different requested fields.
+// 	- The Interaction object cleans the returned variables to only keep
+//		the name, type, and value (to not overwrite other fields)
 
 type Empty struct{}
 
@@ -162,7 +179,7 @@ func (manualController *InteractionController) PostContinue(result manual.Manual
 
 	// If it is, first check that out args provided match the variables
 	for varName := range result.ResponseOutArgs {
-		if _, ok := pendingEntry.CommandData.OutArgs[varName]; !ok {
+		if _, ok := pendingEntry.CommandData.OutVariables[varName]; !ok {
 			log.Warning("provided out args do not match command-related variables")
 			return http.StatusBadRequest, err
 		}
@@ -199,7 +216,7 @@ func (manualController *InteractionController) registerPendingInteraction(comman
 		Command:       command.Context.Command.Command,
 		CommandBase64: command.Context.Command.CommandB64,
 		Target:        command.Context.Target,
-		OutArgs:       command.Context.Variables,
+		OutVariables:  command.Context.Variables.Select(command.Context.Step.OutArgs),
 	}
 
 	execution, ok := manualController.InteractionStorage[interaction.ExecutionId]
