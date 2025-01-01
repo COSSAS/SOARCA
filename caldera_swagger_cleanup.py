@@ -1,5 +1,6 @@
 import json
 
+
 with open('caldera_api_raw.json', 'r') as fd:
     data = json.load(fd)
 
@@ -38,6 +39,12 @@ for d in data['definitions'].values():
             del p['format']
         if 'pattern' in p and not p['pattern']:
             del p['pattern']
+
+
+# When POSTing a new operation, Operation.Objective is an empty string while the spec
+# specifies it to always be an Operation object. Patch this away.
+del data['definitions']['Operation']['properties']['objective']
+
 
 with open('caldera_api.json', 'w') as fd:
     json.dump(data, fd)

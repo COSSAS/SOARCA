@@ -28,6 +28,7 @@ require (
 	github.com/swaggo/swag v1.16.4
 	go.mongodb.org/mongo-driver v1.17.1
 	golang.org/x/crypto v0.29.0
+	sigs.k8s.io/yaml v1.4.0
 )
 
 require (

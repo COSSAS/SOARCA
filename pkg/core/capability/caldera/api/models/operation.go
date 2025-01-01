@@ -53,9 +53,6 @@ type Operation struct {
 	// obfuscator
 	Obfuscator string `json:"obfuscator,omitempty"`
 
-	// objective
-	Objective *Objective `json:"objective,omitempty"`
-
 	// planner
 	Planner *Planner `json:"planner,omitempty"`
 
@@ -89,10 +86,6 @@ func (m *Operation) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateName(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateObjective(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -164,25 +157,6 @@ func (m *Operation) validateName(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *Operation) validateObjective(formats strfmt.Registry) error {
-	if swag.IsZero(m.Objective) { // not required
-		return nil
-	}
-
-	if m.Objective != nil {
-		if err := m.Objective.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("objective")
-			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("objective")
-			}
-			return err
-		}
-	}
-
-	return nil
-}
-
 func (m *Operation) validatePlanner(formats strfmt.Registry) error {
 	if swag.IsZero(m.Planner) { // not required
 		return nil
@@ -230,10 +204,6 @@ func (m *Operation) ContextValidate(ctx context.Context, formats strfmt.Registry
 	}
 
 	if err := m.contextValidateHostGroup(ctx, formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.contextValidateObjective(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -300,27 +270,6 @@ func (m *Operation) contextValidateHostGroup(ctx context.Context, formats strfmt
 			}
 		}
 
-	}
-
-	return nil
-}
-
-func (m *Operation) contextValidateObjective(ctx context.Context, formats strfmt.Registry) error {
-
-	if m.Objective != nil {
-
-		if swag.IsZero(m.Objective) { // not required
-			return nil
-		}
-
-		if err := m.Objective.ContextValidate(ctx, formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("objective")
-			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("objective")
-			}
-			return err
-		}
 	}
 
 	return nil

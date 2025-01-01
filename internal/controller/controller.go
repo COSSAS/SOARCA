@@ -82,7 +82,7 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	poswershell := powershell.New()
 	capabilities[poswershell.GetType()] = poswershell
 
-	calderaCapability := caldera.New()
+	calderaCapability := caldera.New(nil)
 	capabilities[calderaCapability.GetType()] = calderaCapability
 
 	enableFins, _ := strconv.ParseBool(utils.GetEnv("ENABLE_FINS", "false"))
@@ -139,14 +139,19 @@ func (controller *Controller) setupDatabase() error {
 		password := os.Getenv("DB_PASSWORD")
 
 		if uri == "" || username == "" || password == "" {
-			log.Error("you must set 'MONGODB_URI' or 'DB_USERNAME' or 'DB_PASSWORD' in the environment variable")
+			log.Error(
+				"you must set 'MONGODB_URI' or 'DB_USERNAME' or 'DB_PASSWORD' in the environment variable",
+			)
 			return errors.New("could not obtain required environment settings")
 		}
 		err := mongo.SetupMongodb(uri, username, password)
 		if err != nil {
 			return err
 		}
-		controller.playbookRepo = playbookrepository.SetupPlaybookRepository(mongo.GetCacaoRepo(), mongo.DefaultLimitOpts())
+		controller.playbookRepo = playbookrepository.SetupPlaybookRepository(
+			mongo.GetCacaoRepo(),
+			mongo.DefaultLimitOpts(),
+		)
 	} else {
 		// Use in memory database
 		controller.playbookRepo = memory.New()
@@ -224,7 +229,12 @@ func run(app *gin.Engine) error {
 }
 
 func initializeCore(app *gin.Engine) error {
-	origins := strings.Split(strings.ReplaceAll(utils.GetEnv("SOARCA_ALLOWED_ORIGINS", "*"), " ", ""), ",")
+
+	origins := strings.Split(
+		strings.ReplaceAll(utils.GetEnv("SOARCA_ALLOWED_ORIGINS", "*"), " ", ""),
+		",",
+	)
+
 	routes.Cors(app, origins)
 
 	err := intializeAuthenticationMiddleware(app)

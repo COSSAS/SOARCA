@@ -24,8 +24,8 @@ test: swagger
 	go test ./pkg/... -v
 	go test ./internal/... -v
 
-test-coverage:
-	go test ./test/unittest/... -v -coverprofile=./cover.out -coverpkg ./internal/capability/caldera/...
+test-coverage: swagger
+	go test ./pkg/core/capability/caldera -v -coverprofile=./cover.out -coverpkg ./pkg/core/capability/caldera
 	go tool cover -html=cover.out -o=cover.html
 
 integration-test: swagger
