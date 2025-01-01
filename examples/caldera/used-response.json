@@ -1,0 +1,84 @@
+{
+  "type": "playbook",
+  "spec_version": "cacao-2.0",
+  "id": "playbook--77bbe093-7e90-400c-a7c4-7b3a9396af15",
+  "name": "Caldera example playbook",
+  "description": "This is a SOARCA TNO Read teaming example playbook.",
+  "created_by": "identity--0fc44117-48d3-41b8-8bd4-b8dc334f500d",
+  "created": "2024-10-08T07:49:16.348Z",
+  "modified": "2024-10-08T07:49:16.349Z",
+  "revoked": false,
+  "derived_from": [
+    "playbook--879932d9-fea9-40c1-a5a4-3b3d2eec9835"
+  ],
+  "playbook_variables": {
+    "__ifStepVariable__": {
+      "type": "bool",
+      "description": "Variable used by the if-step",
+      "value": "false",
+      "constant": false,
+      "external": false
+    }
+  },
+  "workflow_start": "start--025c407e-422e-4deb-8863-b3d4a8890f60",
+  "workflow": {
+    "start--025c407e-422e-4deb-8863-b3d4a8890f60": {
+      "on_completion": "action--623a0a80-a4ac-4989-b1da-5e3660b2e4f1",
+      "type": "start"
+    },
+    "action--623a0a80-a4ac-4989-b1da-5e3660b2e4f1": {
+      "name": "Run some Caldera command",
+      "on_completion": "if-condition--f00f0acb-a2ad-4832-b7c2-27d12506c6d7",
+      "type": "action",
+      "commands": [
+        {
+          "type": "caldera-cmd",
+          "command": "id: 80879fa1-765e-48c2-bcd3-6fa3b4b2e7a7"
+        }
+      ],
+      "agent": "caldera--4801fe91-cd09-4da3-a67d-3d69cd9fec7c",
+      "targets": [
+        "security-category--b1ead715-d565-48f8-a6a4-0d5c4a3e643e"
+      ]
+    },
+    "if-condition--f00f0acb-a2ad-4832-b7c2-27d12506c6d7": {
+      "type": "if-condition",
+      "on_completion": "end--080de9ac-65c7-49f0-acd2-b21e92e34036",
+      "condition": "__ifStepVariable__:value",
+      "on_true": "action--3ad2d927-9480-4d05-bcbb-7d40b4da2266"
+    },
+    "action--3ad2d927-9480-4d05-bcbb-7d40b4da2266": {
+      "name": "Run another Caldera command",
+      "on_completion": "end--080de9ac-65c7-49f0-acd2-b21e92e34036",
+      "type": "action",
+      "commands": [
+        {
+          "type": "caldera-cmd",
+          "command": "id: 36eecb80-ede3-442b-8774-956e906aff02"
+        }
+      ],
+      "agent": "caldera--4801fe91-cd09-4da3-a67d-3d69cd9fec7c",
+      "targets": [
+        "security-category--b1ead715-d565-48f8-a6a4-0d5c4a3e643e"
+      ]
+    },
+    "end--080de9ac-65c7-49f0-acd2-b21e92e34036": {
+      "type": "end"
+    }
+  },
+  "agent_definitions": {
+    "caldera--4801fe91-cd09-4da3-a67d-3d69cd9fec7c": {
+      "type": "soarca",
+      "name": "soarca-caldera-cmd"
+    }
+  },
+  "target_definitions": {
+    "security-category--b1ead715-d565-48f8-a6a4-0d5c4a3e643e": {
+      "type": "security-category",
+      "name": "red",
+      "category": [
+        "caldera"
+      ]
+    }
+  }
+}
