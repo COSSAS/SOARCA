@@ -12,7 +12,7 @@ bin/*
 api/*
 **.env
 test/cacao/flatfile-db-example.json
-
+.idea
 
 docs/public
 docs/resources/
