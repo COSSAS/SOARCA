@@ -80,7 +80,9 @@ services:
       THEHIVE_ACTIVATE: false
       THEHIVE_API_TOKEN: your_token
       THEHIVE_API_BASE_URL: http://localhost:9000/api/v1/
-      CALDERA_URL: "http://caldera:8888"
+      CALDERA_HOST: "caldera"
+      CALDERA_PORT: "8888"
+      CALDERA_API: "ADMIN123"
     networks:
       - db-net
       - mqtt-net

@@ -17,7 +17,7 @@ var instanceLock = &sync.Mutex{}
 
 func newCalderaInstance() (*calderaInstance, error) {
 	var config = client.DefaultTransportConfig()
-	config.Host = utils.GetEnv("CALDERA_BASE_URL", "localhost") + ":" + utils.GetEnv("CALDERA_PORT", "8888")
+	config.Host = utils.GetEnv("CALDERA_HOST", "") + ":" + utils.GetEnv("CALDERA_PORT", "")
 	config.Schemes = []string{"http"}
 	var calderaClient = client.NewHTTPClientWithConfig(nil, config)
 	return &calderaInstance{*calderaClient}, nil
@@ -39,6 +39,6 @@ func GetCalderaInstance() (*calderaInstance, error) {
 }
 
 func authenticateCaldera(operation *runtime.ClientOperation) {
-	var apiKey = utils.GetEnv("CALDERA_API_KEY", "ADMIN123")
+	var apiKey = utils.GetEnv("CALDERA_API_KEY", "")
 	operation.AuthInfo = httptransport.APIKeyAuth("KEY", "header", apiKey)
 }

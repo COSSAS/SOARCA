@@ -138,7 +138,9 @@ The environment variables have the following meaning:
 |MQTT_BROKER | dns name or ip | The broker address for SOARCA to connect to, for communication with fins default is `localhost`
 |MQTT_PORT   | port | The broker address for SOARCA to connect to, for communication with fins default is `1883`
 |ENABLE_FINS| true \| false | Enable fins in SOARCA defaults to `false`
-|CALDERA_URL| url | Instance URL which the [Caldera capability](/docs/soarca-extensions/native-capabilities#caldera-capability) may use; leaving this empty will disable the Caldera capability
+|CALDERA_API_KEY| string | API key which the [Caldera capability](/docs/soarca-extensions/native-capabilities#caldera-capability) may use; leaving this empty will disable the Caldera capability
+|CALDERA_PORT| string | Port which the [Caldera capability](/docs/soarca-extensions/native-capabilities#caldera-capability) may use; leaving this empty will disable the Caldera capability
+|CALDERA_HOST| string | Host which the [Caldera capability](/docs/soarca-extensions/native-capabilities#caldera-capability) may use; leaving this empty will disable the Caldera capability
 |VALIDATION_SCHEMA_URL|url| Set a custom validation schema to be used to validate playbooks defaul is `""` to use internal. NOTE: changing this heavily impacts performance. 
 
 ## Obtaining

@@ -82,7 +82,7 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	poswershell := powershell.New()
 	capabilities[poswershell.GetType()] = poswershell
 
-	envs := utils.GetEnvVars([]string{"CALDERA_BASE_URL", "CALDERA_API_KEY", "CALDERA_PORT"})
+	envs := utils.GetEnvVars([]string{"CALDERA_HOST", "CALDERA_API_KEY", "CALDERA_PORT"})
 	if len(envs) == 3 {
 		log.Info("Caldera capability initialized")
 		calderaCapability := caldera.New(nil)
