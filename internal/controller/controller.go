@@ -8,6 +8,7 @@ import (
 	"soarca/internal/database/memory"
 	"soarca/internal/logger"
 	"soarca/pkg/core/capability"
+	"soarca/pkg/core/capability/caldera"
 	"soarca/pkg/core/capability/fin/protocol"
 	"soarca/pkg/core/capability/http"
 	"soarca/pkg/core/capability/openc2"
@@ -80,6 +81,9 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 
 	poswershell := powershell.New()
 	capabilities[poswershell.GetType()] = poswershell
+
+	calderaCapability := caldera.New()
+	capabilities[calderaCapability.GetType()] = calderaCapability
 
 	enableFins, _ := strconv.ParseBool(utils.GetEnv("ENABLE_FINS", "false"))
 
