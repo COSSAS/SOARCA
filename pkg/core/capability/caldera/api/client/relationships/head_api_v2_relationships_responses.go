@@ -13,7 +13,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"soarca/internal/capability/caldera/api/models"
+	"soarca/pkg/core/capability/caldera/api/models"
 )
 
 // HeadAPIV2RelationshipsReader is a Reader for the HeadAPIV2Relationships structure.

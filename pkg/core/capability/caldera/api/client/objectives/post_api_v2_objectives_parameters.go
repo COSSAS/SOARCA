@@ -15,7 +15,7 @@ import (
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 
-	"soarca/internal/capability/caldera/api/models"
+	"soarca/pkg/core/capability/caldera/api/models"
 )
 
 // NewPostAPIV2ObjectivesParams creates a new PostAPIV2ObjectivesParams object,

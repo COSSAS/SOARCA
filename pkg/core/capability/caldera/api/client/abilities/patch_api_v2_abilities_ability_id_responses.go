@@ -13,7 +13,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"soarca/internal/capability/caldera/api/models"
+	"soarca/pkg/core/capability/caldera/api/models"
 )
 
 // PatchAPIV2AbilitiesAbilityIDReader is a Reader for the PatchAPIV2AbilitiesAbilityID structure.

@@ -13,7 +13,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"soarca/internal/capability/caldera/api/models"
+	"soarca/pkg/core/capability/caldera/api/models"
 )
 
 // PostAPIV2OperationsIDEventLogsReader is a Reader for the PostAPIV2OperationsIDEventLogs structure.

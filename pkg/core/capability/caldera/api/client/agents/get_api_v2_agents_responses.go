@@ -13,7 +13,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"soarca/internal/capability/caldera/api/models"
+	"soarca/pkg/core/capability/caldera/api/models"
 )
 
 // GetAPIV2AgentsReader is a Reader for the GetAPIV2Agents structure.

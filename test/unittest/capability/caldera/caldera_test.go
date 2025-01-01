@@ -3,7 +3,7 @@ package caldera
 import (
 	"fmt"
 	"github.com/go-playground/assert/v2"
-	"soarca/internal/capability/caldera"
+	"soarca/pkg/core/capability/caldera"
 	"soarca/models/cacao"
 	"soarca/models/execution"
 	"testing"
