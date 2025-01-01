@@ -104,6 +104,7 @@ func TestSomethingElse(t *testing.T) {
 	_, err5 := connection.CreateAbility(&calderaModels.Ability{})
 	assert.NotEqual(t, err5, nil)
 
-	connection.DeleteAbility("ability-0001")
+	err6 := connection.DeleteAbility("ability-0001")
+	assert.NotEqual(t, err6, nil)
 
 }

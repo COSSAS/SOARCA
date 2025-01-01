@@ -37,7 +37,7 @@ func (m MockCalderaConnection) IsOperationFinished(operationId string) (bool, er
 }
 
 func (m MockCalderaConnection) RequestFacts(operationId string) ([]*models.PartialLink, error) {
-	return make([]*models.PartialLink, 0, 0), nil
+	return make([]*models.PartialLink, 0), nil
 }
 
 type MockBadCalderaConnectionFactory struct{}
@@ -71,5 +71,5 @@ func (m MockBadCalderaConnection) IsOperationFinished(operationId string) (bool,
 }
 
 func (m MockBadCalderaConnection) RequestFacts(operationId string) ([]*models.PartialLink, error) {
-	return make([]*models.PartialLink, 0, 0), errors.New("Error Requesting Facts")
+	return make([]*models.PartialLink, 0), errors.New("Error Requesting Facts")
 }
