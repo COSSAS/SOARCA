@@ -2,16 +2,17 @@ package caldera
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"reflect"
-	"slices"
-	"time"
 	"sigs.k8s.io/yaml"
+	"slices"
 	"strings"
-	
-	"soarca/pkg/core/capability/caldera/api/models"
+	"time"
+
 	"soarca/internal/logger"
 	"soarca/pkg/core/capability"
+	"soarca/pkg/core/capability/caldera/api/models"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 )
@@ -71,7 +72,14 @@ func (c *calderaCapability) Execute(
 		if err != nil {
 			return cacao.NewVariables(), err
 		}
-		ability := ParseYamlAbility(bytes)
+		// First try unmarshalling the ability with json decoding
+		var ability *models.Ability
+		if json.Valid(bytes) {
+			ability = ParseJsonAbility(bytes)
+		} else {
+			// If that fails, try unmarshalling the ability with yaml decoding
+			ability = ParseYamlAbility(bytes)
+		}
 		abilityId, err = connection.CreateAbility(ability)
 		if err != nil {
 			log.Error("Could not create custom Ability")
@@ -156,6 +164,16 @@ func parseFacts(facts CalderaFacts) cacao.Variables {
 		}
 	}
 	return variables
+}
+
+func ParseJsonAbility(bytes []byte) *models.Ability {
+	var ability models.Ability
+	err := json.Unmarshal(bytes, &ability)
+	if err != nil {
+		log.Error("Could not convert ability JSON to a valid Ability object")
+		return &models.Ability{}
+	}
+	return &ability
 }
 
 func ParseYamlAbility(bytes []byte) *models.Ability {

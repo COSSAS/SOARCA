@@ -3,10 +3,10 @@ package caldera_test
 import (
 	"github.com/go-playground/assert/v2"
 	"soarca/pkg/core/capability"
+	"soarca/pkg/core/capability/caldera"
+	calderaModels "soarca/pkg/core/capability/caldera/api/models"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
-	calderaModels "soarca/pkg/core/capability/caldera/api/models"
-	"soarca/pkg/core/capability/caldera"
 	mock_caldera "soarca/test/unittest/mocks/mock_utils/caldera"
 	"testing"
 )
@@ -55,6 +55,17 @@ func TestParseYamlAbility(t *testing.T) {
 	assert.Equal(t, resultingAbility.AbilityID, "9a30740d-3aa8-4c23-8efa-d51215e8a5b9")
 }
 
+func TestParseJsonAbility(t *testing.T) {
+	resultingAbility := caldera.ParseJsonAbility([]byte("{\"ability_id\": \"9a30740d-3aa8-4c23-8efa-d51215e8a5b9\"}"))
+	assert.Equal(t, resultingAbility.AbilityID, "9a30740d-3aa8-4c23-8efa-d51215e8a5b9")
+}
+
+func TestParseJsonAbilityWithException(t *testing.T) {
+	// This should not crash, just produce an empty Ability
+	resultingAbility := caldera.ParseJsonAbility([]byte("  / very %$#% invalid json"))
+	assert.Equal(t, resultingAbility.AbilityID, "")
+}
+
 func TestParseYamlAbilityWithException(t *testing.T) {
 	// This should not crash, just produce an empty Ability
 	resultingAbility := caldera.ParseYamlAbility([]byte("  / very %$#% invalid yaml"))
@@ -82,7 +93,6 @@ func TestGetCalderaInstance(t *testing.T) {
 	_, err := caldera.GetCalderaInstance()
 	assert.Equal(t, err, nil)
 }
-
 
 func TestSomethingElse(t *testing.T) {
 	capability := caldera.New(nil)
