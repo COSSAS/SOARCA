@@ -82,8 +82,14 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	poswershell := powershell.New()
 	capabilities[poswershell.GetType()] = poswershell
 
-	calderaCapability := caldera.New(nil)
-	capabilities[calderaCapability.GetType()] = calderaCapability
+	envs := utils.GetEnvVars([]string{"CALDERA_BASE_URL", "CALDERA_API_KEY", "CALDERA_PORT"})
+	if len(envs) == 3 {
+		log.Info("Caldera capability initialized")
+		calderaCapability := caldera.New(nil)
+		capabilities[calderaCapability.GetType()] = calderaCapability
+	} else if (len(envs) > 0) && (len(envs) < 3) {
+		log.Warning("Caldera capability could not be initialized. Check if all required environment variables are set.")
+	}
 
 	enableFins, _ := strconv.ParseBool(utils.GetEnv("ENABLE_FINS", "false"))
 

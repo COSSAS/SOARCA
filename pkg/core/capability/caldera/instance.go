@@ -1,11 +1,11 @@
-package caldera 
+package caldera
 
 import (
-	"os"
 	"soarca/pkg/core/capability/caldera/api/client"
 	"sync"
-	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/runtime"
+	httptransport "github.com/go-openapi/runtime/client"
+	"soarca/pkg/utils"
 )
 
 type calderaInstance struct {
@@ -16,10 +16,9 @@ var cInstance *calderaInstance
 var instanceLock = &sync.Mutex{}
 
 func newCalderaInstance() (*calderaInstance, error) {
-	scheme, _ := os.LookupEnv("CALDERA_SCHEME")
 	var config = client.DefaultTransportConfig()
-	config.Host, _ = os.LookupEnv("CALDERA_HOST")
-	config.Schemes = []string{scheme}
+	config.Host = utils.GetEnv("CALDERA_BASE_URL", "localhost") + ":" + utils.GetEnv("CALDERA_PORT", "8888")
+	config.Schemes = []string{"http"}
 	var calderaClient = client.NewHTTPClientWithConfig(nil, config)
 	return &calderaInstance{*calderaClient}, nil
 }
@@ -40,5 +39,6 @@ func GetCalderaInstance() (*calderaInstance, error) {
 }
 
 func authenticateCaldera(operation *runtime.ClientOperation) {
-	operation.AuthInfo = httptransport.APIKeyAuth("KEY", "header", "ADMIN123")
+	var apiKey = utils.GetEnv("CALDERA_API_KEY", "ADMIN123")
+	operation.AuthInfo = httptransport.APIKeyAuth("KEY", "header", apiKey)
 }
