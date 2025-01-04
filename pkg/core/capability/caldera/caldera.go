@@ -1,3 +1,4 @@
+// package caldera adds the caldera capability for the soarca core.
 package caldera
 
 import (
@@ -17,6 +18,9 @@ import (
 	"soarca/pkg/models/execution"
 )
 
+// calderaCapability is a struct that implements the ICapability interface for the caldera-cmd capability.
+// It is initiated with an ICalderaConnectionFactory, which dictates which kind of connection to use.
+// By default, it uses the calderaConnectionFactory.
 type calderaCapability struct {
 	Factory ICalderaConnectionFactory
 }
@@ -38,6 +42,9 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
+// New is the constructor method for the calderaCapability.
+// It takes an ICalderaConnectionFactory which determines the kind of connection to use.
+// By default, it uses the calderaConnectionFactory.
 func New(factory ICalderaConnectionFactory) *calderaCapability {
 	if factory == nil {
 		factory = calderaConnectionFactory{}
@@ -45,10 +52,17 @@ func New(factory ICalderaConnectionFactory) *calderaCapability {
 	return &calderaCapability{factory}
 }
 
+// GetType returns the name of the capability.
 func (capability *calderaCapability) GetType() string {
 	return capabilityName
 }
 
+// Execute performs the caldera-cmd capability and handles the business logic of the capability.
+// It takes a execution Metadata object and a capability Context object which describe the details of the step.
+// It first creates an ability if the step defines a custom ability. Afther that, it creates a single action adversary and starts an operation on the defined agents.
+// After that, it waits for the operation to complete and parses the generated facts.
+// It returns the generated facts as cacao Variables.
+// If anything goes wrong, it returns an empty array of variables and the error.
 func (c *calderaCapability) Execute(
 	metadata execution.Metadata,
 	context capability.Context) (cacao.Variables, error) {
@@ -145,6 +159,7 @@ func (c *calderaCapability) Execute(
 	return parseFacts(facts), nil
 }
 
+// cleanup handles the removal of the created artifacts on the caldera server using the same connection.
 func cleanup(cc ICalderaConnection, abilityId string) {
 	if abilityId != "" {
 		err := cc.DeleteAbility(abilityId)
@@ -154,6 +169,8 @@ func cleanup(cc ICalderaConnection, abilityId string) {
 	}
 }
 
+// parseFacts transforms the caldera facts into cacao variables.
+// It adds metadata needed for a cacao variable, which for now is just the type of variable.
 func parseFacts(facts CalderaFacts) cacao.Variables {
 	variables := make(cacao.Variables, len(facts))
 	for name, value := range facts {
@@ -166,6 +183,9 @@ func parseFacts(facts CalderaFacts) cacao.Variables {
 	return variables
 }
 
+// ParseJsonAbility converts a byte array into a caldera Ability.
+// It tries to Unmarshal the byte array as a json struct and casts it to the wanted struct.
+// If it fails to do that, or if the byte array is not a valid json struct, it logs an error and returns an empty caldera Ability struct.
 func ParseJsonAbility(bytes []byte) *models.Ability {
 	var ability models.Ability
 	err := json.Unmarshal(bytes, &ability)
@@ -176,6 +196,9 @@ func ParseJsonAbility(bytes []byte) *models.Ability {
 	return &ability
 }
 
+// ParseYamlAbility converts a byte array into a caldera Ability.
+// It tries to Unmarshal the byte array as a yaml struct and casts it to the wanted struct.
+// If it fails to do that, or if the byte array is not a valid yaml struct, it logs an error and returns an empty caldera Ability struct.
 func ParseYamlAbility(bytes []byte) *models.Ability {
 	var ability models.Ability
 	err := yaml.Unmarshal(bytes, &ability)
