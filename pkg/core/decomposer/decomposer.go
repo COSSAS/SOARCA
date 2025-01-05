@@ -41,8 +41,8 @@ func init() {
 }
 
 func New(actionExecutor executors.IActionExecutor,
-	playbookActionExecutor executors.IPlaybookExecuter,
-	condition executors.IConditionExecuter,
+	playbookActionExecutor executors.IPlaybookExecutor,
+	condition executors.IConditionExecutor,
 	guid guid.IGuid,
 	reporter reporter.IWorkflowReporter,
 	time timeUtil.ITime) *Decomposer {
@@ -60,8 +60,8 @@ type Decomposer struct {
 	playbook               cacao.Playbook
 	details                ExecutionDetails
 	actionExecutor         executors.IActionExecutor
-	playbookActionExecutor executors.IPlaybookExecuter
-	conditionExecutor      executors.IConditionExecuter
+	playbookActionExecutor executors.IPlaybookExecutor
+	conditionExecutor      executors.IConditionExecutor
 	guid                   guid.IGuid
 	reporter               reporter.IWorkflowReporter
 	time                   timeUtil.ITime

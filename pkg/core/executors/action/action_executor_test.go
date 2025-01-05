@@ -25,7 +25,7 @@ func TestExecuteStep(t *testing.T) {
 
 	capabilities := map[string]capability.ICapability{"mock-ssh": mock_ssh, "http-api": mock_http}
 
-	executerObject := New(capabilities, mock_reporter, mock_time)
+	executorObject := New(capabilities, mock_reporter, mock_time)
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	playbookId := "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
 	stepId := "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
@@ -99,7 +99,7 @@ func TestExecuteStep(t *testing.T) {
 		Return(cacao.NewVariables(expectedVariables),
 			nil)
 
-	_, err := executerObject.Execute(metadata,
+	_, err := executorObject.Execute(metadata,
 		actionMetadata)
 
 	assert.Equal(t, err, nil)
@@ -116,7 +116,7 @@ func TestExecuteActionStep(t *testing.T) {
 
 	capabilities := map[string]capability.ICapability{"ssh": mock_ssh, "http-api": mock_http}
 
-	executerObject := New(capabilities, mock_reporter, mock_time)
+	executorObject := New(capabilities, mock_reporter, mock_time)
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	playbookId := "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
 	stepId := "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
@@ -166,7 +166,7 @@ func TestExecuteActionStep(t *testing.T) {
 		variables:      cacao.NewVariables(expectedVariables),
 		agent:          agent}
 
-	_, err := executerObject.executeCommands(metadata,
+	_, err := executorObject.executeCommands(metadata,
 		data)
 
 	assert.Equal(t, err, nil)
@@ -182,7 +182,7 @@ func TestNonExistingCapabilityStep(t *testing.T) {
 
 	capabilities := map[string]capability.ICapability{"ssh": mock_ssh, "http-api": mock_http}
 
-	executerObject := New(capabilities, new(mock_reporter.Mock_Reporter), mock_time)
+	executorObject := New(capabilities, new(mock_reporter.Mock_Reporter), mock_time)
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	playbookId := "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
 	stepId := "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
@@ -218,7 +218,7 @@ func TestNonExistingCapabilityStep(t *testing.T) {
 		target:         expectedTarget,
 		variables:      cacao.NewVariables(expectedVariables),
 		agent:          agent}
-	_, err := executerObject.executeCommands(metadata,
+	_, err := executorObject.executeCommands(metadata,
 		data)
 
 	assert.Equal(t, err, errors.New("capability: non-existing is not available in soarca"))
@@ -232,7 +232,7 @@ func TestVariableInterpolation(t *testing.T) {
 
 	capabilities := map[string]capability.ICapability{"cap1": mock_capability1}
 
-	executerObject := New(capabilities, new(mock_reporter.Mock_Reporter), mock_time)
+	executorObject := New(capabilities, new(mock_reporter.Mock_Reporter), mock_time)
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	playbookId := "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
 	stepId := "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
@@ -383,7 +383,7 @@ func TestVariableInterpolation(t *testing.T) {
 		variables:      cacao.NewVariables(var1, var2, var3, varUser, varPassword, varOauth, varPrivateKey, varToken, varUserId, varheader1, varheader2),
 		agent:          agent}
 
-	_, err := executerObject.executeCommands(metadata,
+	_, err := executorObject.executeCommands(metadata,
 		data1)
 
 	assert.Equal(t, err, nil)
@@ -424,7 +424,7 @@ func TestVariableInterpolation(t *testing.T) {
 		variables:      cacao.NewVariables(varHttpContent, varheader1, varheader2),
 		agent:          agent}
 
-	_, err = executerObject.executeCommands(metadata,
+	_, err = executorObject.executeCommands(metadata,
 		data2)
 
 	assert.Equal(t, err, nil)
