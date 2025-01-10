@@ -351,7 +351,7 @@ func TestPostContinueWarningsRaised(t *testing.T) {
 		External:    true, // changed but won't be ported
 	}
 
-	outArgsUpdate := manualModel.ManualOutArgUpdatePayload{
+	outArgsUpdate := manualModel.ManualOutArgsUpdatePayload{
 		Type:            "test-manual-response",
 		ExecutionId:     testMetadata.ExecutionId.String(),
 		PlaybookId:      testMetadata.PlaybookId,
@@ -469,7 +469,7 @@ func TestFailOnRetrieveUnexistingExecutionInteraction(t *testing.T) {
 	assert.Equal(t, err, expectedErr)
 }
 
-func TestFailOnRetrieveUnexistingCommandInteraction(t *testing.T) {
+func TestFailOnRetrieveNonExistingCommandInteraction(t *testing.T) {
 	interaction := New([]IInteractionIntegrationNotifier{})
 	testChan := make(chan manualModel.InteractionResponse)
 	defer close(testChan)

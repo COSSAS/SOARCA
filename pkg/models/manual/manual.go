@@ -50,7 +50,7 @@ type ManualOutArg struct {
 type ManualOutArgs map[string]ManualOutArg
 
 // The object posted on the manual API Continue() payload
-type ManualOutArgUpdatePayload struct {
+type ManualOutArgsUpdatePayload struct {
 	Type            string        `bson:"type" json:"type" validate:"required" example:"string"`          // The type of this content
 	ExecutionId     string        `bson:"execution_id" json:"execution_id" validate:"required"`           // The id of the execution
 	PlaybookId      string        `bson:"playbook_id" json:"playbook_id" validate:"required"`             // The id of the CACAO playbook executed by the execution
@@ -88,5 +88,5 @@ type InteractionIntegrationCommand struct {
 // to receive
 type InteractionIntegrationResponse struct {
 	ResponseError error
-	Payload       ManualOutArgUpdatePayload
+	Payload       ManualOutArgsUpdatePayload
 }

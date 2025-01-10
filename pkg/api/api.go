@@ -48,12 +48,10 @@ func Reporter(app *gin.Engine, informer informer.IExecutionInformer) error {
 	return nil
 }
 
-func Manual(app *gin.Engine, interaction interaction.IInteractionStorage) error {
+func Manual(app *gin.Engine, interaction interaction.IInteractionStorage) {
 	log.Trace("Setting up manual routes")
 	manualHandler := manual_handler.NewManualHandler(interaction)
 	ManualRoutes(app, manualHandler)
-
-	return nil
 }
 
 func Api(app *gin.Engine,
@@ -141,7 +139,7 @@ func TriggerRoutes(route *gin.Engine, triggerHandler *trigger_handler.TriggerHan
 func ManualRoutes(route *gin.Engine, manualHandler *manual_handler.ManualHandler) {
 	manualRoutes := route.Group("/manual")
 	{
-		manualRoutes.GET("./", manualHandler.GetPendingCommands)
+		manualRoutes.GET("/", manualHandler.GetPendingCommands)
 		manualRoutes.GET(":exec_id/:step_id", manualHandler.GetPendingCommand)
 		manualRoutes.PATCH(":exec_id/:step_id", manualHandler.PatchContinue)
 	}

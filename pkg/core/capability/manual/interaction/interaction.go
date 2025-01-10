@@ -20,8 +20,7 @@ import (
 //	- The decomposer passes the PlaybookStepMetadata object to the
 //		action executor, which includes Step
 // 	- The action executor calls Execute on the capability (command type)
-//		passing capability.Context,
-// 	- which includes the Step object
+//		passing capability.Context, which includes the Step object
 //	- The manual capability calls Queue passing InteractionCommand,
 //		which includes capability.Context
 // 	- Queue() posts a message, which shall include the text of the manual command,
@@ -54,7 +53,7 @@ type IInteractionStorage interface {
 	GetPendingCommands() ([]manual.InteractionCommandData, int, error)
 	// even if step has multiple manual commands, there should always be just one pending manual command per action step
 	GetPendingCommand(metadata execution.Metadata) (manual.InteractionCommandData, int, error)
-	PostContinue(outArgsResult manual.ManualOutArgUpdatePayload) (int, error)
+	PostContinue(outArgsResult manual.ManualOutArgsUpdatePayload) (int, error)
 }
 
 type InteractionController struct {
@@ -166,7 +165,7 @@ func (manualController *InteractionController) GetPendingCommand(metadata execut
 	return interaction.CommandData, http.StatusOK, err
 }
 
-func (manualController *InteractionController) PostContinue(result manual.ManualOutArgUpdatePayload) (int, error) {
+func (manualController *InteractionController) PostContinue(result manual.ManualOutArgsUpdatePayload) (int, error) {
 	log.Trace("completing manual command")
 
 	metadata, err := manualController.makeExecutionMetadataFromPayload(result)
@@ -331,7 +330,7 @@ func (manualController *InteractionController) copyOutArgsToVars(outArgs manual.
 	return vars
 }
 
-func (manualController *InteractionController) makeExecutionMetadataFromPayload(payload manual.ManualOutArgUpdatePayload) (execution.Metadata, error) {
+func (manualController *InteractionController) makeExecutionMetadataFromPayload(payload manual.ManualOutArgsUpdatePayload) (execution.Metadata, error) {
 	executionId, err := uuid.Parse(payload.ExecutionId)
 	if err != nil {
 		return execution.Metadata{}, err

@@ -66,8 +66,8 @@ var mainCache = cache.Cache{}
 
 const defaultCacheSize int = 10
 
-// One interaction per SOARCA instance
-var mainInteraction = interaction.New(initializeManualIntegration())
+// One manual interaction per SOARCA instance
+var mainInteraction = interaction.New(registerManualIntegration())
 
 func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	ssh := new(ssh.SshCapability)
@@ -259,8 +259,8 @@ func initializeCore(app *gin.Engine) error {
 		return err
 	}
 
-	// TODO: create interaction object
-	err = routes.Manual(app, mainInteraction)
+	// Manual capability native routes
+	routes.Manual(app, mainInteraction)
 
 	routes.Logging(app)
 	routes.Swagger(app)
@@ -282,8 +282,11 @@ func (controller *Controller) setupAndRunMqtt() error {
 	return nil
 }
 
-func initializeManualIntegration() []interaction.IInteractionIntegrationNotifier {
+func registerManualIntegration() []interaction.IInteractionIntegrationNotifier {
 	// Manual interaction integrations will be initialized here when implemented
+	// Here we should check ENV variables, see if a manual interaction integration is selected,
+	// And populate the returned array via generating an instance of the notifier associated with
+	// the integration - which should be found in the integration code.
 	return []interaction.IInteractionIntegrationNotifier{}
 }
 

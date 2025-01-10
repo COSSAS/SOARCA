@@ -18,25 +18,18 @@ import (
 )
 
 // Notes:
-
 // A manual command in CACAO is simply the operation:
 // 		{ post_message; wait_for_response (returning a result) }
-
 // The manual API expose general manual executions wide information
 // Thus, we need a ManualHandler that uses an IInteractionStorage, implemented by interactionCapability
 // The API routes will invoke the ManualHandler.interactionCapability interface instance
+// The InteractionCapability manages the manual command infromation and status, like a cache. And interfaces any interactor type (e.g. API, integration)
 
-// Agent and target for the manual command itself make little sense.
-// Unless an agent is the intended system that does post_message, and wait_for_response.
-// But the targets? For the automated execution, there is no need to specify any.
-//
 // It is always either only the internal API, or the internal API and ONE integration for manual.
 // Env variable: can only have one active manual interactor.
 //
 // In light of this, for hierarchical and distributed playbooks executions (via multiple playbook actions),
 // 	there will be ONE manual integration (besides internal API) per every ONE SOARCA instance.
-
-// The InteractionCapability manages the manual command infromation and status, like a cache. And interfaces any interactor type (e.g. API, integration)
 
 var log *logger.Log
 
@@ -94,7 +87,7 @@ func (manualHandler *ManualHandler) GetPendingCommands(g *gin.Context) {
 //	@failure		400		{object}	api.Error
 //	@Router			/manual/{exec_id}/{step_id} [GET]
 func (manualHandler *ManualHandler) GetPendingCommand(g *gin.Context) {
-	execution_id := g.Param("execution_id")
+	execution_id := g.Param("exec_id")
 	step_id := g.Param("step_id")
 	execId, err := uuid.Parse(execution_id)
 	if err != nil {
@@ -139,7 +132,6 @@ func (manualHandler *ManualHandler) GetPendingCommand(g *gin.Context) {
 //	@failure		400			{object}	api.Error
 //	@Router			/manual/{exec_id}/{step_id} [PATCH]
 func (manualHandler *ManualHandler) PatchContinue(g *gin.Context) {
-
 	paramExecutionId := g.Param("exec_id")
 	paramStepId := g.Param("step_id")
 
@@ -152,7 +144,7 @@ func (manualHandler *ManualHandler) PatchContinue(g *gin.Context) {
 		return
 	}
 
-	var outArgsUpdate manual.ManualOutArgUpdatePayload
+	var outArgsUpdate manual.ManualOutArgsUpdatePayload
 	err = json.Unmarshal(jsonData, &outArgsUpdate)
 	if err != nil {
 		log.Error("failed to unmarshal JSON")
@@ -163,6 +155,7 @@ func (manualHandler *ManualHandler) PatchContinue(g *gin.Context) {
 	}
 
 	if (outArgsUpdate.ExecutionId != paramExecutionId) || (outArgsUpdate.StepId != paramStepId) {
+		log.Error("mismatch between execution ID and step ID in url parameters vs request body")
 		apiError.SendErrorResponse(g, http.StatusBadRequest,
 			"Mismatch between execution ID and step ID between URL parameters and request body",
 			"POST /manual/continue/{execution_id}/{step_id}", "")
