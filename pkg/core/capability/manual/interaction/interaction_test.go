@@ -335,13 +335,6 @@ func TestPostContinueWarningsRaised(t *testing.T) {
 		t.Fail()
 	}
 
-	pending, err := interaction.getPendingInteraction((testMetadata))
-	if err != nil {
-		t.Log(err)
-		t.Fail()
-	}
-	fmt.Println(pending)
-
 	outArg := manualModel.ManualOutArg{
 		Type:        "string",
 		Name:        "var2",
@@ -397,8 +390,146 @@ func TestPostContinueWarningsRaised(t *testing.T) {
 
 }
 
-func TestPostContinueFailOnUnmatchedOutArgs(t *testing.T) {
+func TestPostContinueFailOnUnmatchedOutArgsKeyName(t *testing.T) {
+	interaction := New([]IInteractionIntegrationNotifier{})
+	timeout := 500 * time.Millisecond
+	testCtx, testCancel := context.WithTimeout(context.Background(), timeout)
 
+	defer testCancel()
+
+	hook := NewTestLogHook()
+	log.Logger.AddHook(hook)
+
+	testCapComms := manualModel.ManualCapabilityCommunication{
+		Channel:        make(chan manualModel.InteractionResponse),
+		TimeoutContext: testCtx,
+	}
+	defer close(testCapComms.Channel)
+
+	err := interaction.Queue(testInteractionCommand, testCapComms)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+
+	outArg := manualModel.ManualOutArg{
+		Type:  "string",
+		Name:  "testNotExisting",
+		Value: "now the value is bananas",
+	}
+
+	outArgsUpdate := manualModel.ManualOutArgsUpdatePayload{
+		Type:            "test-manual-response",
+		ExecutionId:     testMetadata.ExecutionId.String(),
+		PlaybookId:      testMetadata.PlaybookId,
+		StepId:          testMetadata.StepId,
+		ResponseStatus:  true,
+		ResponseOutArgs: manualModel.ManualOutArgs{"asd": outArg},
+	}
+
+	statusCode, err := interaction.PostContinue(outArgsUpdate)
+
+	expectedStatusCode := 400
+	expectedErr := errors.New("provided out arg key [ asd ] does not match its name property [ testNotExisting ]")
+
+	expectedLogEntry1 := "provided out arg key [ asd ] does not match its name property [ testNotExisting ]"
+	expectedLogs := []string{expectedLogEntry1}
+
+	all := true
+	for _, expectedMessage := range expectedLogs {
+		containsAll := true
+		for _, entry := range hook.Entries {
+			if strings.Contains(expectedMessage, entry.Message) {
+				containsAll = true
+				break
+			}
+			if !strings.Contains(expectedMessage, entry.Message) {
+				containsAll = false
+			}
+		}
+		if !containsAll {
+			t.Logf("log message: '%s' not found in logged messages", expectedMessage)
+			all = false
+			break
+		}
+	}
+
+	assert.Equal(t, statusCode, expectedStatusCode)
+	assert.Equal(t, err, expectedErr)
+
+	assert.NotEqual(t, len(hook.Entries), 0)
+	assert.Equal(t, all, true)
+}
+
+func TestPostContinueFailOnNonexistingVariable(t *testing.T) {
+	interaction := New([]IInteractionIntegrationNotifier{})
+	timeout := 500 * time.Millisecond
+	testCtx, testCancel := context.WithTimeout(context.Background(), timeout)
+
+	defer testCancel()
+
+	hook := NewTestLogHook()
+	log.Logger.AddHook(hook)
+
+	testCapComms := manualModel.ManualCapabilityCommunication{
+		Channel:        make(chan manualModel.InteractionResponse),
+		TimeoutContext: testCtx,
+	}
+	defer close(testCapComms.Channel)
+
+	err := interaction.Queue(testInteractionCommand, testCapComms)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+
+	outArg := manualModel.ManualOutArg{
+		Type:  "string",
+		Name:  "testNotExisting",
+		Value: "now the value is bananas",
+	}
+
+	outArgsUpdate := manualModel.ManualOutArgsUpdatePayload{
+		Type:            "test-manual-response",
+		ExecutionId:     testMetadata.ExecutionId.String(),
+		PlaybookId:      testMetadata.PlaybookId,
+		StepId:          testMetadata.StepId,
+		ResponseStatus:  true,
+		ResponseOutArgs: manualModel.ManualOutArgs{"testNotExisting": outArg},
+	}
+
+	statusCode, err := interaction.PostContinue(outArgsUpdate)
+
+	expectedStatusCode := 400
+	expectedErr := errors.New("provided out args do not match command-related variables")
+
+	expectedLogEntry1 := "provided out args do not match command-related variables"
+	expectedLogs := []string{expectedLogEntry1}
+
+	all := true
+	for _, expectedMessage := range expectedLogs {
+		containsAll := true
+		for _, entry := range hook.Entries {
+			if strings.Contains(expectedMessage, entry.Message) {
+				containsAll = true
+				break
+			}
+			if !strings.Contains(expectedMessage, entry.Message) {
+				containsAll = false
+			}
+		}
+		if !containsAll {
+			t.Logf("log message: '%s' not found in logged messages", expectedMessage)
+			all = false
+			break
+		}
+	}
+
+	assert.Equal(t, statusCode, expectedStatusCode)
+	assert.Equal(t, err, expectedErr)
+
+	assert.NotEqual(t, len(hook.Entries), 0)
+	assert.Equal(t, all, true)
 }
 
 func TestRegisterRetrieveNewExecutionNewPendingInteraction(t *testing.T) {
