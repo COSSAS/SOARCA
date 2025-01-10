@@ -34,7 +34,7 @@ Get all pending manual actions objects that are currently waiting in SOARCA.
 None
 
 ##### Response
-200/OK with payload list of:
+200/OK with body a list of:
 
 
 
@@ -46,7 +46,7 @@ None
 |step_id            |UUID                   |string             |The id of the step executed by the execution
 |description        |description of the step|string             |The description from the workflow step
 |command            |command                |string             |The command for the agent either command 
-|command_is_base64  |true \| false          |bool               |Indicate the command is in base 64
+|commandBase64      |command                |string             |The command in base 64 if present
 |targets            |cacao agent-target     |dictionary         |Map of [cacao agent-target](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256509) with the target(s) of this command
 |out_args          |cacao variables        |dictionary         |Map of [cacao variables](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256555) handled in the step out args with current values and definitions
 
@@ -98,7 +98,7 @@ Get pending manual actions objects that are currently waiting in SOARCA for spec
 None
 
 ##### Response
-200/OK with payload:
+200/OK with body:
 
 
 
@@ -164,8 +164,8 @@ Respond to manual command pending in SOARCA, if out_args are defined they must b
 |execution_id       |UUID                   |string             |The id of the execution
 |playbook_id        |UUID                   |string             |The id of the CACAO playbook executed by the execution
 |step_id            |UUID                   |string             |The id of the step executed by the execution
-|response_status    |enum                   |string             |Can be either `success` or `failed`
-|response_out_args  |cacao variables name and value        |dictionary         |Map of cacao variables's names and values, as per variables handled in the step out args
+|response_status    |true / false           |string             |`true` indicates successfull fulfilment of the manual request. `false` indicates failed satisfaction of request
+|response_out_args  |cacao variables        |dictionary         |Map of cacao variables names to cacao variable struct. Only name, type, and value are mandatory
 
 
 ```plantuml
@@ -179,12 +179,12 @@ Respond to manual command pending in SOARCA, if out_args are defined they must b
         "response_status" : "success | failed",
         "response_out_args":    {
             "<variable-name-1>" : {
-                "type":         "<type>",
+                "type":         "<variable-type>",
                 "name":         "<variable-name>",
-                "description":  "<description>",
                 "value":        "<value>",
-                "constant":     "<true/false>",
-                "external":     "<true/false>"
+                "description":  "<description> (ignored)",
+                "constant":     "<true/false> (ignored)",
+                "external":     "<true/false> (ignored)"
             }
         }
     }

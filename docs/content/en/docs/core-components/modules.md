@@ -346,7 +346,8 @@ class ManualStep
 
 protocol ManualAPI {
     GET     /manual
-    POST    /manual/continue
+    GET    /manual/{exec-id}/{step-id}
+    PATCH    /manual/{exec-id}/{step-id}
 }
 
 interface ICapability{

@@ -55,7 +55,7 @@ type ManualOutArgsUpdatePayload struct {
 	ExecutionId     string        `bson:"execution_id" json:"execution_id" validate:"required"`           // The id of the execution
 	PlaybookId      string        `bson:"playbook_id" json:"playbook_id" validate:"required"`             // The id of the CACAO playbook executed by the execution
 	StepId          string        `bson:"step_id" json:"step_id" validate:"required"`                     // The id of the step executed by the execution
-	ResponseStatus  bool          `bson:"response_status" json:"response_status" validate:"required"`     // Can be either success or failure
+	ResponseStatus  bool          `bson:"response_status" json:"response_status" validate:"required"`     // true indicates success, all good. false indicates request not met.
 	ResponseOutArgs ManualOutArgs `bson:"response_out_args" json:"response_out_args" validate:"required"` // Map of cacao variables expressed as ManualOutArgs, handled in the step out args, with current values and definitions
 }
 

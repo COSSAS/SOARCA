@@ -140,7 +140,7 @@ func (manualHandler *ManualHandler) PatchContinue(g *gin.Context) {
 		log.Error("failed")
 		apiError.SendErrorResponse(g, http.StatusBadRequest,
 			"Failed to read json",
-			"POST /manual/continue/{exec_id}/{step_id}", "")
+			"PATCH /manual/{exec_id}/{step_id}", "")
 		return
 	}
 
@@ -150,7 +150,7 @@ func (manualHandler *ManualHandler) PatchContinue(g *gin.Context) {
 		log.Error("failed to unmarshal JSON")
 		apiError.SendErrorResponse(g, http.StatusBadRequest,
 			"Failed to unmarshal JSON",
-			"POST /manual/continue/{exec_id}/{step_id}", "")
+			"PATCH /manual/{exec_id}/{step_id}", "")
 		return
 	}
 
@@ -158,7 +158,7 @@ func (manualHandler *ManualHandler) PatchContinue(g *gin.Context) {
 		log.Error("mismatch between execution ID and step ID in url parameters vs request body")
 		apiError.SendErrorResponse(g, http.StatusBadRequest,
 			"Mismatch between execution ID and step ID between URL parameters and request body",
-			"POST /manual/continue/{execution_id}/{step_id}", "")
+			"PATCH /manual/{execution_id}/{step_id}", "")
 		return
 	}
 
@@ -167,7 +167,7 @@ func (manualHandler *ManualHandler) PatchContinue(g *gin.Context) {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusInternalServerError,
 			"Failed to post continue ID",
-			"POST /manual/continue", err.Error())
+			"PATCH /manual/{execution_id}/{step_id}", err.Error())
 		return
 	}
 	g.JSON(
