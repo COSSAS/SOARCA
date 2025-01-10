@@ -171,14 +171,14 @@ func TestGetAllPendingInteractions(t *testing.T) {
 	expectedInteractionsJson := `
 [
 	{
-		"type": "test_type",
+		"type": "test_type", 
 		"execution_id": "61a6c41e-6efc-4516-a242-dfbc5c89d562",
 		"playbook_id": "test_playbook_id",
 		"step_id": "test_step_id",
 		"description": "test_description",
 		"command": "test_command",
 		"commandb64": "test_command_b64",
-		"targets": {
+		"target": {
 			"id": "test_id",
 			"type": "test_type",
 			"name": "test_name",
@@ -203,7 +203,7 @@ func TestGetAllPendingInteractions(t *testing.T) {
 		"description": "test_description",
 		"command": "test_command",
 		"commandb64": "test_command_b64",
-		"targets": {
+		"target": {
 			"id": "test_id",
 			"type": "test_type",
 			"name": "test_name",
@@ -232,6 +232,7 @@ func TestGetAllPendingInteractions(t *testing.T) {
 	t.Log(expectedInteractions)
 
 	receivedInteractions := interaction.getAllPendingInteractions()
+	fmt.Println(receivedInteractions)
 
 	if !reflect.DeepEqual(expectedInteractions, receivedInteractions) {
 		err = fmt.Errorf("expected %v, but got %v", expectedInteractions, receivedInteractions)

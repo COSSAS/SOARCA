@@ -20,7 +20,7 @@ type InteractionCommandData struct {
 	Description   string            `bson:"description" json:"description" validate:"required"`              // The description from the workflow step
 	Command       string            `bson:"command" json:"command" validate:"required"`                      // The command for the agent either command
 	CommandBase64 string            `bson:"commandb64,omitempty" json:"commandb64,omitempty"`                // The command in b64 if present
-	Target        cacao.AgentTarget `bson:"targets" json:"targets" validate:"required"`                      // Map of cacao agent-target with the target(s) of this command
+	Target        cacao.AgentTarget `bson:"target" json:"target" validate:"required"`                        // Map of cacao agent-target with the target(s) of this command
 	OutVariables  cacao.Variables   `bson:"out_args" json:"out_args" validate:"required"`                    // Map of cacao variables handled in the step out args with current values and definitions
 }
 
