@@ -182,13 +182,6 @@ func (manualController *InteractionController) PostContinue(result manual.Manual
 
 	// If it is
 	for varName, variable := range result.ResponseOutArgs {
-		// Sanity check that dictionary key matches variable name
-		if varName != variable.Name {
-			err := fmt.Errorf("provided out arg key [ %s ] does not match its name property [ %s ]", varName, variable.Name)
-			log.Error(err)
-			return http.StatusBadRequest, err
-		}
-
 		// first check that out args provided match the variables
 		if _, ok := pendingEntry.CommandData.OutVariables[varName]; !ok {
 			err := errors.New("provided out args do not match command-related variables")

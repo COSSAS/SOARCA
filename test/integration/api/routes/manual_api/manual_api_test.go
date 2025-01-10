@@ -82,7 +82,7 @@ func TestGetPendingCommandCalled(t *testing.T) {
 	mock_interaction_storage.AssertExpectations(t)
 }
 
-func TestPatchContinueCalled(t *testing.T) {
+func TestPostContinueCalled(t *testing.T) {
 	mock_interaction_storage := mock_interaction_storage.MockInteractionStorage{}
 	manualApiHandler := manual_api.NewManualHandler(&mock_interaction_storage)
 
@@ -94,7 +94,7 @@ func TestPatchContinueCalled(t *testing.T) {
 	testExecId := "50b6d52c-6efc-4516-a242-dfbc5c89d421"
 	testStepId := "61a4d52c-6efc-4516-a242-dfbc5c89d312"
 	testPlaybookId := "21a4d52c-6efc-4516-a242-dfbc5c89d312"
-	path := "/manual/" + testExecId + "/" + testStepId
+	path := "/manual/continue"
 
 	testManualResponse := manual_model.ManualOutArgsUpdatePayload{
 		Type:           "manual-step-response",
@@ -117,7 +117,7 @@ func TestPatchContinueCalled(t *testing.T) {
 
 	mock_interaction_storage.On("PostContinue", testManualResponse).Return(200, nil)
 
-	request, err := http.NewRequest("PATCH", path, bytes.NewBuffer(jsonData))
+	request, err := http.NewRequest("POST", path, bytes.NewBuffer(jsonData))
 	if err != nil {
 		t.Fail()
 	}

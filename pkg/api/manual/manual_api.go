@@ -130,17 +130,15 @@ func (manualHandler *ManualHandler) GetPendingCommand(g *gin.Context) {
 //	@Param			response_out_args	body	manual.ManualOutArgs	true	"out args"
 //	@Success		200			{object}	api.Execution
 //	@failure		400			{object}	api.Error
-//	@Router			/manual/{exec_id}/{step_id} [PATCH]
-func (manualHandler *ManualHandler) PatchContinue(g *gin.Context) {
-	paramExecutionId := g.Param("exec_id")
-	paramStepId := g.Param("step_id")
+//	@Router			/manual/continue [POST]
+func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 
 	jsonData, err := io.ReadAll(g.Request.Body)
 	if err != nil {
 		log.Error("failed")
 		apiError.SendErrorResponse(g, http.StatusBadRequest,
 			"Failed to read json",
-			"PATCH /manual/{exec_id}/{step_id}", "")
+			"POST /manual/continue", "")
 		return
 	}
 
@@ -150,15 +148,7 @@ func (manualHandler *ManualHandler) PatchContinue(g *gin.Context) {
 		log.Error("failed to unmarshal JSON")
 		apiError.SendErrorResponse(g, http.StatusBadRequest,
 			"Failed to unmarshal JSON",
-			"PATCH /manual/{exec_id}/{step_id}", "")
-		return
-	}
-
-	if (outArgsUpdate.ExecutionId != paramExecutionId) || (outArgsUpdate.StepId != paramStepId) {
-		log.Error("mismatch between execution ID and step ID in url parameters vs request body")
-		apiError.SendErrorResponse(g, http.StatusBadRequest,
-			"Mismatch between execution ID and step ID between URL parameters and request body",
-			"PATCH /manual/{execution_id}/{step_id}", "")
+			"POST /manual/continue", "")
 		return
 	}
 
@@ -167,7 +157,7 @@ func (manualHandler *ManualHandler) PatchContinue(g *gin.Context) {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusInternalServerError,
 			"Failed to post continue ID",
-			"PATCH /manual/{execution_id}/{step_id}", err.Error())
+			"POST /manual/continue", err.Error())
 		return
 	}
 	g.JSON(

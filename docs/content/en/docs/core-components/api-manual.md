@@ -18,7 +18,7 @@ We will use HTTP status codes https://en.wikipedia.org/wiki/List_of_HTTP_status_
 protocol Manual {
     GET     /manual
     GET     /manual/{execution-id}/{step-id}
-    PATCH    /manual/{execution-id}/{step-id}
+    POST    /manual/continue
 }
 @enduml
 ```
@@ -154,7 +154,7 @@ None
 404/Not found with payload:
 General error
 
-#### PATCH `/manual/<execution-id>/<step-id>`
+#### POST `/manual/continue`
 Respond to manual command pending in SOARCA, if out_args are defined they must be filled in and returned in the payload body. Only value is required in the response of the variable. You can however return the entire object. If the object does not match the original out_arg, the call we be considered as failed.
 
 ##### Call payload

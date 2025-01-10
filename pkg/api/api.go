@@ -141,6 +141,6 @@ func ManualRoutes(route *gin.Engine, manualHandler *manual_handler.ManualHandler
 	{
 		manualRoutes.GET("/", manualHandler.GetPendingCommands)
 		manualRoutes.GET(":exec_id/:step_id", manualHandler.GetPendingCommand)
-		manualRoutes.PATCH(":exec_id/:step_id", manualHandler.PatchContinue)
+		manualRoutes.POST("/continue", manualHandler.PostContinue)
 	}
 }

@@ -346,8 +346,8 @@ class ManualStep
 
 protocol ManualAPI {
     GET     /manual
-    GET    /manual/{exec-id}/{step-id}
-    PATCH    /manual/{exec-id}/{step-id}
+    GET     /manual/{exec-id}/{step-id}
+    POST    /manual/continue
 }
 
 interface ICapability{
@@ -361,7 +361,7 @@ interface ICapabilityInteraction{
 interface IInteracionStorage{
     GetPendingCommands() []CommandData
 	GetPendingCommand(execution.metadata) CommandData
-	Continue(execution.metadata) StatusCode
+	PostContinue(execution.metadata) StatusCode
 }
 
 interface IInteractionIntegrationNotifier {
@@ -420,7 +420,7 @@ else Native ManualAPI flow
 interaction ->> interaction : async wait on integrationChannel
 api -> interaction : GetPendingCommands()
 api -> interaction : GetPendingCommand(execution.metadata)
-api -> interaction : Continue(InteractionResponse)
+api -> interaction : PostContinue(InteractionResponse)
 interaction --> manual : capabilityChannel <- InteractionResponse
 end
 
