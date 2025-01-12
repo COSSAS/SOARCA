@@ -34,3 +34,9 @@ CACAO documentation: [SSH Command](https://docs.oasis-open.org/cacao/security-pl
 The PowerShell capability allows executing commands on systems running an WinRM server.
 
 CACAO documentation: [PowerShell Command](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256499)
+
+## Caldera capability
+
+The Caldera capability allows for interoperability between SOARCA and [Caldera](https://caldera.mitre.org/).
+
+Caldera documentation: [caldera Command](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256493)
