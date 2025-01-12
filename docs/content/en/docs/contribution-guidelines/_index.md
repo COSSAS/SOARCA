@@ -52,7 +52,7 @@ The CI is configured to only allow for certain branch naming namely:
 
 The project has opted to select the [go style guide](https://google.github.io/styleguide/go/) with some exceptions:
 - Receiver name are not one letter https://google.github.io/styleguide/go/decisions#receiver-names so use `info` instead of `i` 
-- Initialisms are CamelCase https://google.github.io/styleguide/go/decisions#receiver-names so use `Xml` instead of `XML`
+- Initialisms are CamelCase https://google.github.io/styleguide/go/decisions#initialisms so use `Xml` instead of `XML`
 
 ## Communication channels
 
