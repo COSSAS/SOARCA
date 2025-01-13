@@ -322,12 +322,12 @@ This example will start an operation that executes the ability with ID `36eecb80
 ```
 
 ### Manual capability 
-This capability executes [manual Commands](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256491) and provides them through the [SOARCA api](/docs/core-components/api-manual).
+This capability executes [manual Commands](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256491) and provides them natively through the [SOARCA api](/docs/core-components/api-manual), though other integrations are possible.
 
 
 The manual capability will allow an operator to interact with a playbook. It could allow one to perform a manual step that could not be automated, enter a variable to the playbook execution or a combination of these operations.
 
-The manual step should provide a timeout SOARCA will by default use a timeout of 10 minutes. If a timeout occurs the step is considered as failed.
+The manual step should provide a timeout. SOARCA will by default use a timeout of 10 minutes. If a timeout occurs, the step is considered as failed.
 
 #### Manual capability architecture
 
@@ -338,11 +338,18 @@ In essence, executing a manual command involves the following actions:
 
 Because the *somewhere* and *somehow* for posting a message can vary, and the *something* that replies can vary too, SOARCA adopts a flexible architecture to accomodate different ways of manual *interactions*. Below a view of the architecture.
 
+When a playbook execution hits an Action step with a Manual command, the manual command will queue the instruction into the *CapabilityInteraction* module. The module does essentially three things: 
+1. it stores the status of the manual command, and handles the SOARCA API interactions with the manual command.
+2. If manual integrations are defined for the SOARCA instance, the *CapabilityInteraction* module notifies the manual integration modules, so that they can handle the manual command in turn.
+3. It waits for the manual command to be satisfied either via SOARCA APIs, or via manual integrations. The first to respond amongst the two, resolves the manual command. The resolution of the command may or may not assign new values to variables in the playbook. Finally the *CapabilityInteraction* module replies to the *ManualCommand* module.
+
+Ultimately the *ManualCommand* then completes its execution, having eventually updated the values for the variables in the outArgs of the command. Timeouts or errors are handled opportunely.
+
 ```plantuml
 @startuml
 set separator ::
 
-class ManualStep 
+class ManualCommand 
 
 protocol ManualAPI {
     GET     /manual
@@ -375,8 +382,8 @@ class Interaction {
 class ThirdPartyManualIntegration
 
 
-ManualStep .up.|> ICapability
-ManualStep -down-> ICapabilityInteraction
+ManualCommand .up.|> ICapability
+ManualCommand -down-> ICapabilityInteraction
 Interaction .up.|> ICapabilityInteraction
 Interaction .up.|> IInteracionStorage
 
@@ -396,7 +403,7 @@ The diagram below displays in some detail the way the manual interactions compon
 
 ```plantuml
 @startuml
-control "ManualStep" as manual
+control "ManualCommand" as manual
 control "Interaction" as interaction
 control "ManualAPI" as api
 control "ThirdPartyManualIntegration" as 3ptool
