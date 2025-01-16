@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"soarca/pkg/core/capability"
+	"soarca/pkg/core/executors"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"soarca/test/unittest/mocks/mock_capability"
@@ -69,7 +70,7 @@ func TestExecuteStep(t *testing.T) {
 		Targets:       []string{"target1"},
 	}
 
-	actionMetadata := PlaybookStepMetadata{
+	actionMetadata := executors.PlaybookStepMetadata{
 		Step:      step,
 		Targets:   map[string]cacao.AgentTarget{expectedTarget.ID: expectedTarget},
 		Auth:      map[string]cacao.AuthenticationInformation{expectedAuth.ID: expectedAuth},

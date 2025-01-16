@@ -7,8 +7,6 @@ import (
 
 	"soarca/internal/logger"
 	"soarca/pkg/core/executors"
-	"soarca/pkg/core/executors/action"
-	"soarca/pkg/core/executors/condition"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"soarca/pkg/reporter"
@@ -42,9 +40,9 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
-func New(actionExecutor action.IExecuter,
+func New(actionExecutor executors.IActionExecutor,
 	playbookActionExecutor executors.IPlaybookExecuter,
-	condition condition.IExecuter,
+	condition executors.IConditionExecuter,
 	guid guid.IGuid,
 	reporter reporter.IWorkflowReporter,
 	time timeUtil.ITime) *Decomposer {
@@ -61,9 +59,9 @@ func New(actionExecutor action.IExecuter,
 type Decomposer struct {
 	playbook               cacao.Playbook
 	details                ExecutionDetails
-	actionExecutor         action.IExecuter
+	actionExecutor         executors.IActionExecutor
 	playbookActionExecutor executors.IPlaybookExecuter
-	conditionExecutor      condition.IExecuter
+	conditionExecutor      executors.IConditionExecuter
 	guid                   guid.IGuid
 	reporter               reporter.IWorkflowReporter
 	time                   timeUtil.ITime
@@ -189,7 +187,7 @@ func (decomposer *Decomposer) ExecuteStep(step cacao.Step, scopeVariables cacao.
 
 	switch step.Type {
 	case cacao.StepTypeAction:
-		actionMetadata := action.PlaybookStepMetadata{
+		actionMetadata := executors.PlaybookStepMetadata{
 			Step:      step,
 			Targets:   decomposer.playbook.TargetDefinitions,
 			Auth:      decomposer.playbook.AuthenticationInfoDefinitions,
@@ -200,16 +198,59 @@ func (decomposer *Decomposer) ExecuteStep(step cacao.Step, scopeVariables cacao.
 	case cacao.StepTypePlaybookAction:
 		return decomposer.playbookActionExecutor.Execute(metadata, step, variables)
 	case cacao.StepTypeIfCondition:
-		stepId, branch, err := decomposer.conditionExecutor.Execute(metadata, step, variables)
+		return decomposer.executeIfCondition(step, variables)
+	case cacao.StepTypeWhileCondition:
+		return decomposer.executeLoop(step, variables)
+	default:
+		// NOTE: This currently silently handles unknown step types. Should we return an error instead?
+		return cacao.NewVariables(), nil //errors.ErrUnsupported
+	}
+}
+
+func (decomposer *Decomposer) executeIfCondition(step cacao.Step,
+	variables cacao.Variables) (cacao.Variables, error) {
+	metadata := execution.Metadata{
+		ExecutionId: decomposer.details.ExecutionId,
+		PlaybookId:  decomposer.details.PlaybookId,
+		StepId:      step.ID,
+	}
+	stepId, branch, err := decomposer.conditionExecutor.Execute(metadata,
+		executors.Context{Step: step, Variables: variables})
+	if err != nil {
+		return cacao.NewVariables(), err
+	}
+	if branch {
+		return decomposer.ExecuteBranch(stepId, variables)
+	}
+	return variables, nil
+}
+
+func (decomposer *Decomposer) executeLoop(step cacao.Step,
+	variables cacao.Variables) (cacao.Variables, error) {
+	metadata := execution.Metadata{
+		ExecutionId: decomposer.details.ExecutionId,
+		PlaybookId:  decomposer.details.PlaybookId,
+		StepId:      step.ID,
+	}
+
+	loop := true
+
+	for loop {
+		stepId, branch, err := decomposer.conditionExecutor.Execute(metadata,
+			executors.Context{Step: step, Variables: variables})
 		if err != nil {
 			return cacao.NewVariables(), err
 		}
-		if branch {
-			return decomposer.ExecuteBranch(stepId, variables)
+		loop = branch
+
+		if loop {
+			branchVariables, err := decomposer.ExecuteBranch(stepId, variables)
+			if err != nil {
+				return variables, err
+			}
+			variables.Merge(branchVariables)
 		}
-		return variables, nil
-	default:
-		// NOTE: This currently silently handles unknown step types. Should we return an error instead?
-		return cacao.NewVariables(), nil
+
 	}
+	return variables, nil
 }
