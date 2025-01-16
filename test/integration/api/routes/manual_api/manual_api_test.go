@@ -7,9 +7,9 @@ import (
 	"net/http/httptest"
 	api_routes "soarca/pkg/api"
 	manual_api "soarca/pkg/api/manual"
+	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"soarca/pkg/models/manual"
-	manual_model "soarca/pkg/models/manual"
 	"soarca/test/unittest/mocks/mock_interaction_storage"
 	"testing"
 
@@ -28,7 +28,7 @@ func TestGetPendingCommandsCalled(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	api_routes.ManualRoutes(app, manualApiHandler)
 
-	mock_interaction_storage.On("GetPendingCommands").Return([]manual_model.InteractionCommandData{}, 200, nil)
+	mock_interaction_storage.On("GetPendingCommands").Return([]manual.CommandInfo{}, 200, nil)
 
 	request, err := http.NewRequest("GET", "/manual/", nil)
 	if err != nil {
@@ -60,7 +60,7 @@ func TestGetPendingCommandCalled(t *testing.T) {
 		ExecutionId: uuid.MustParse(testExecId), StepId: testStepId,
 	}
 
-	testEmptyResponsePendingCommand := manual.InteractionCommandData{}
+	testEmptyResponsePendingCommand := manual.CommandInfo{}
 
 	mock_interaction_storage.On("GetPendingCommand", executionMetadata).Return(testEmptyResponsePendingCommand, 200, nil)
 
@@ -96,13 +96,14 @@ func TestPostContinueCalled(t *testing.T) {
 	testPlaybookId := "21a4d52c-6efc-4516-a242-dfbc5c89d312"
 	path := "/manual/continue"
 
-	testManualResponse := manual_model.ManualOutArgsUpdatePayload{
-		Type:           "manual-step-response",
-		ExecutionId:    testExecId,
-		StepId:         testStepId,
-		PlaybookId:     testPlaybookId,
-		ResponseStatus: true,
-		ResponseOutArgs: manual_model.ManualOutArgs{
+	testManualResponse := manual.InteractionResponse{
+		Metadata: execution.Metadata{
+			ExecutionId: uuid.MustParse(testExecId),
+			StepId:      testStepId,
+			PlaybookId:  testPlaybookId,
+		},
+		ResponseStatus: "success",
+		OutArgsVariables: cacao.Variables{
 			"testvar": {
 				Type:  "string",
 				Name:  "testvar",

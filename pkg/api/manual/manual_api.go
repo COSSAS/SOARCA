@@ -8,6 +8,7 @@ import (
 	"soarca/internal/logger"
 	"soarca/pkg/core/capability/manual/interaction"
 	"soarca/pkg/models/api"
+	apiModel "soarca/pkg/models/api"
 	"soarca/pkg/models/execution"
 	"soarca/pkg/models/manual"
 
@@ -142,7 +143,7 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 		return
 	}
 
-	var outArgsUpdate manual.ManualOutArgsUpdatePayload
+	var outArgsUpdate apiModel.ManualOutArgsUpdatePayload
 	err = json.Unmarshal(jsonData, &outArgsUpdate)
 	if err != nil {
 		log.Error("failed to unmarshal JSON")
@@ -152,7 +153,28 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 		return
 	}
 
-	status, err := manualHandler.interactionCapability.PostContinue(outArgsUpdate)
+	// Create object to pass to interaction capability
+	executionId, err := uuid.Parse(outArgsUpdate.ExecutionId)
+	if err != nil {
+		log.Error(err)
+		apiError.SendErrorResponse(g, http.StatusBadRequest,
+			"Failed to parse execution ID",
+			"POST /manual/continue", err.Error())
+		return
+	}
+
+	interactionResponse := manual.InteractionResponse{
+		Metadata: execution.Metadata{
+			StepId:      outArgsUpdate.StepId,
+			ExecutionId: executionId,
+			PlaybookId:  outArgsUpdate.PlaybookId,
+		},
+		OutArgsVariables: outArgsUpdate.ResponseOutArgs,
+		ResponseStatus:   outArgsUpdate.ResponseStatus,
+		ResponseError:    nil,
+	}
+
+	status, err := manualHandler.interactionCapability.PostContinue(interactionResponse)
 	if err != nil {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusInternalServerError,

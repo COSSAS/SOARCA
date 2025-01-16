@@ -44,7 +44,11 @@ func (manual *ManualCapability) Execute(
 	metadata execution.Metadata,
 	commandContext capability.Context) (cacao.Variables, error) {
 
-	command := manualModel.InteractionCommand{Metadata: metadata, Context: commandContext}
+	command := manualModel.CommandInfo{
+		Metadata:         metadata,
+		Context:          commandContext,
+		OutArgsVariables: commandContext.Variables.Select(commandContext.Step.OutArgs),
+	}
 
 	timeout := manual.getTimeoutValue(commandContext.Step.Timeout)
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -82,7 +86,7 @@ func (manual *ManualCapability) awaitUserInput(channel chan manualModel.Interact
 			return cacao.NewVariables(), err
 		case response := <-channel:
 			log.Trace("received response from api")
-			cacaoVars := response.Payload
+			cacaoVars := response.OutArgsVariables
 			return cacaoVars, response.ResponseError
 
 		}

@@ -11,7 +11,7 @@ type MockInteraction struct {
 	mock.Mock
 }
 
-func (mock *MockInteraction) Queue(command manual.InteractionCommand,
+func (mock *MockInteraction) Queue(command manual.CommandInfo,
 	manualComms manual.ManualCapabilityCommunication) error {
 	args := mock.Called(command, manualComms)
 	return args.Error(0)

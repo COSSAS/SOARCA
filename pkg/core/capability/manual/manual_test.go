@@ -23,7 +23,7 @@ func TestManualExecution(t *testing.T) {
 	meta := execution.Metadata{}
 	commandContext := capability.Context{}
 
-	command := manualModel.InteractionCommand{}
+	command := manualModel.CommandInfo{}
 
 	// Capture the channel passed to Queue
 
@@ -45,7 +45,7 @@ func TestManualExecution(t *testing.T) {
 	// Simulate the response after ensuring the channel is captured
 	time.Sleep(100 * time.Millisecond)
 	capturedComm.Channel <- manualModel.InteractionResponse{
-		Payload: cacao.NewVariables(),
+		OutArgsVariables: cacao.NewVariables(),
 	}
 
 	// Wait for the Execute method to complete

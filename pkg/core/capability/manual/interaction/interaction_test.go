@@ -40,7 +40,7 @@ func TestQueue(t *testing.T) {
 func TestQueueFailWithoutTimeout(t *testing.T) {
 	interaction := New([]IInteractionIntegrationNotifier{})
 
-	testCommand := manualModel.InteractionCommand{}
+	testCommand := manualModel.CommandInfo{}
 
 	testCapComms := manualModel.ManualCapabilityCommunication{
 		Channel:        make(chan manualModel.InteractionResponse),
@@ -100,50 +100,45 @@ func TestRegisterRetrieveNewPendingInteraction(t *testing.T) {
 		testChan,
 	)
 
-	// Type
-	assert.Equal(t,
-		retrievedCommand.CommandData.Type,
-		testInteractionCommand.Context.Command.Type,
-	)
 	// ExecutionId
 	assert.Equal(t,
-		retrievedCommand.CommandData.ExecutionId,
+		retrievedCommand.CommandInfo.Metadata.ExecutionId.String(),
 		testInteractionCommand.Metadata.ExecutionId.String(),
 	)
 	// PlaybookId
 	assert.Equal(t,
-		retrievedCommand.CommandData.PlaybookId,
+		retrievedCommand.CommandInfo.Metadata.PlaybookId,
 		testInteractionCommand.Metadata.PlaybookId,
 	)
 	// StepId
 	assert.Equal(t,
-		retrievedCommand.CommandData.StepId,
+		retrievedCommand.CommandInfo.Metadata.StepId,
 		testInteractionCommand.Metadata.StepId,
 	)
 	// Description
 	assert.Equal(t,
-		retrievedCommand.CommandData.Description,
+		retrievedCommand.CommandInfo.Context.Command.Description,
 		testInteractionCommand.Context.Command.Description,
 	)
 	// Command
 	assert.Equal(t,
-		retrievedCommand.CommandData.Command,
+		retrievedCommand.CommandInfo.Context.Command.Command,
 		testInteractionCommand.Context.Command.Command,
 	)
 	// CommandB64
 	assert.Equal(t,
-		retrievedCommand.CommandData.CommandBase64,
+		retrievedCommand.CommandInfo.Context.Command.CommandB64,
 		testInteractionCommand.Context.Command.CommandB64,
 	)
 	// Target
 	assert.Equal(t,
-		retrievedCommand.CommandData.Target,
+		retrievedCommand.CommandInfo.Context.Target,
 		testInteractionCommand.Context.Target,
 	)
 	// OutArgs
 	assert.Equal(t,
-		retrievedCommand.CommandData.OutVariables,
-		testInteractionCommand.Context.Variables,
+		retrievedCommand.CommandInfo.OutArgsVariables,
+		testInteractionCommand.OutArgsVariables,
 	)
 }
 
@@ -222,7 +217,7 @@ func TestGetAllPendingInteractions(t *testing.T) {
 	}
 ]
 	`
-	var expectedInteractions []manualModel.InteractionCommandData
+	var expectedInteractions []manualModel.InteractionResponse
 	err = json.Unmarshal([]byte(expectedInteractionsJson), &expectedInteractions)
 	if err != nil {
 		t.Log(err)
@@ -290,7 +285,7 @@ func TestCopyOutArgsToVars(t *testing.T) {
 		t.Fail()
 	}
 
-	outArg := manualModel.ManualOutArg{
+	outArg := cacao.Variable{
 		Type:        "string",
 		Name:        "var2",
 		Description: "this description will not make it to the returned var",
@@ -305,9 +300,9 @@ func TestCopyOutArgsToVars(t *testing.T) {
 		Value: "now the value is bananas",
 	}
 
-	responseOutArgs := manualModel.ManualOutArgs{"var2": outArg}
+	responseOutArgs := cacao.Variables{"var2": outArg}
 
-	vars := interaction.copyOutArgsToVars(responseOutArgs)
+	vars := responseOutArgs
 	assert.Equal(t, expectedVariable.Type, vars["var2"].Type)
 	assert.Equal(t, expectedVariable.Name, vars["var2"].Name)
 	assert.Equal(t, expectedVariable.Value, vars["var2"].Value)
@@ -336,7 +331,7 @@ func TestPostContinueWarningsRaised(t *testing.T) {
 		t.Fail()
 	}
 
-	outArg := manualModel.ManualOutArg{
+	outArg := cacao.Variable{
 		Type:        "string",
 		Name:        "var2",
 		Description: "this description will not make it to the returned var",
@@ -345,13 +340,11 @@ func TestPostContinueWarningsRaised(t *testing.T) {
 		External:    true, // changed but won't be ported
 	}
 
-	outArgsUpdate := manualModel.ManualOutArgsUpdatePayload{
-		Type:            "test-manual-response",
-		ExecutionId:     testMetadata.ExecutionId.String(),
-		PlaybookId:      testMetadata.PlaybookId,
-		StepId:          testMetadata.StepId,
-		ResponseStatus:  true,
-		ResponseOutArgs: manualModel.ManualOutArgs{"var2": outArg},
+	outArgsUpdate := manualModel.InteractionResponse{
+		Metadata:         testMetadata,
+		ResponseStatus:   "success",
+		ResponseError:    nil,
+		OutArgsVariables: cacao.Variables{"var2": outArg},
 	}
 
 	statusCode, err := interaction.PostContinue(outArgsUpdate)
@@ -413,19 +406,17 @@ func TestPostContinueFailOnNonexistingVariable(t *testing.T) {
 		t.Fail()
 	}
 
-	outArg := manualModel.ManualOutArg{
+	outArg := cacao.Variable{
 		Type:  "string",
 		Name:  "testNotExisting",
 		Value: "now the value is bananas",
 	}
 
-	outArgsUpdate := manualModel.ManualOutArgsUpdatePayload{
-		Type:            "test-manual-response",
-		ExecutionId:     testMetadata.ExecutionId.String(),
-		PlaybookId:      testMetadata.PlaybookId,
-		StepId:          testMetadata.StepId,
-		ResponseStatus:  true,
-		ResponseOutArgs: manualModel.ManualOutArgs{"testNotExisting": outArg},
+	outArgsUpdate := manualModel.InteractionResponse{
+		Metadata:         testMetadata,
+		ResponseStatus:   "success",
+		ResponseError:    nil,
+		OutArgsVariables: cacao.Variables{"testNotExisting": outArg},
 	}
 
 	statusCode, err := interaction.PostContinue(outArgsUpdate)
@@ -576,11 +567,11 @@ func TestRemovePendingInteraciton(t *testing.T) {
 		t.Fail()
 	}
 	assert.Equal(t,
-		pendingCommand.CommandData.ExecutionId,
+		pendingCommand.CommandInfo.Metadata.ExecutionId.String(),
 		testInteractionCommand.Metadata.ExecutionId.String(),
 	)
 	assert.Equal(t,
-		pendingCommand.CommandData.StepId,
+		pendingCommand.CommandInfo.Metadata.StepId,
 		testInteractionCommand.Metadata.StepId,
 	)
 
@@ -631,8 +622,18 @@ var testMetadata = execution.Metadata{
 	StepId:      "test_step_id",
 }
 
-var testInteractionCommand = manualModel.InteractionCommand{
+var testInteractionCommand = manualModel.CommandInfo{
 	Metadata: testMetadata,
+	OutArgsVariables: cacao.Variables{
+		"var1": {
+			Type:        "string",
+			Name:        "var1",
+			Description: "test variable",
+			Value:       "",
+			Constant:    false,
+			External:    false,
+		},
+	},
 	Context: capability.Context{
 		Command: cacao.Command{
 			Type:             "test_type",
