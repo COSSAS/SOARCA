@@ -313,10 +313,10 @@ func TestPostContinueWarningsRaised(t *testing.T) {
 	assert.Equal(t, statusCode, expectedStatusCode)
 	assert.Equal(t, err, expectedErr)
 
-	expectedLogEntry1 := "provided out arg var2 is attempting to change 'Constant' property"
-	expectedLogEntry2 := "provided out arg var2 is attempting to change 'Description' property"
-	expectedLogEntry3 := "provided out arg var2 is attempting to change 'External' property"
-	expectedLogEntry4 := "provided out arg var2 is attempting to change 'Type' property"
+	expectedLogEntry1 := "provided out arg var2 has different value for 'Constant' property of intended out arg. This different value is ignored."
+	expectedLogEntry2 := "provided out arg var2 has a different value for 'Description' property of intended out arg. This different value is ignored."
+	expectedLogEntry3 := "provided out arg var2 has a different value for 'External' property of intended out arg. This different value is ignored."
+	expectedLogEntry4 := "provided out arg var2 has a different value for 'Type' property of intended out arg. This different value is ignored."
 	expectedLogs := []string{expectedLogEntry1, expectedLogEntry2, expectedLogEntry3, expectedLogEntry4}
 
 	all := true

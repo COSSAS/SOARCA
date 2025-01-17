@@ -170,16 +170,16 @@ func (manualController *InteractionController) PostContinue(response manual.Inte
 		// then warn if any value outside "value" has changed
 		if pending, ok := pendingEntry.CommandInfo.OutArgsVariables[varName]; ok {
 			if variable.Constant != pending.Constant {
-				log.Warningf("provided out arg %s is attempting to change 'Constant' property", varName)
+				log.Warningf("provided out arg %s has different value for 'Constant' property of intended out arg. This different value is ignored.", varName)
 			}
 			if variable.Description != pending.Description {
-				log.Warningf("provided out arg %s is attempting to change 'Description' property", varName)
+				log.Warningf("provided out arg %s has a different value for 'Description' property of intended out arg. This different value is ignored.", varName)
 			}
 			if variable.External != pending.External {
-				log.Warningf("provided out arg %s is attempting to change 'External' property", varName)
+				log.Warningf("provided out arg %s has a different value for 'External' property of intended out arg. This different value is ignored.", varName)
 			}
 			if variable.Type != pending.Type {
-				log.Warningf("provided out arg %s is attempting to change 'Type' property", varName)
+				log.Warningf("provided out arg %s has a different value for 'Type' property of intended out arg. This different value is ignored.", varName)
 			}
 		}
 	}
