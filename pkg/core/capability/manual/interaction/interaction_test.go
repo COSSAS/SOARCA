@@ -72,7 +72,7 @@ func TestQueueExitOnTimeout(t *testing.T) {
 
 	time.Sleep(50 * time.Millisecond)
 
-	expectedLogEntry := "context canceled due to response or timeout. exiting goroutine"
+	expectedLogEntry := "manual command timed out. deregistering associated pending command"
 	assert.NotEqual(t, len(hook.Entries), 0)
 	assert.Equal(t, strings.Contains(hook.Entries[0].Message, expectedLogEntry), true)
 
