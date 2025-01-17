@@ -23,7 +23,11 @@ func TestManualExecution(t *testing.T) {
 	meta := execution.Metadata{}
 	commandContext := capability.Context{}
 
-	command := manualModel.CommandInfo{}
+	command := manualModel.CommandInfo{
+		Metadata:         execution.Metadata{},
+		Context:          capability.Context{},
+		OutArgsVariables: cacao.NewVariables(),
+	}
 
 	// Capture the channel passed to Queue
 

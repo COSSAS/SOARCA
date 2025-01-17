@@ -163,76 +163,34 @@ func TestGetAllPendingInteractions(t *testing.T) {
 		t.Fail()
 	}
 
-	expectedInteractionsJson := `
-[
-	{
-		"type": "test_type", 
-		"execution_id": "61a6c41e-6efc-4516-a242-dfbc5c89d562",
-		"playbook_id": "test_playbook_id",
-		"step_id": "test_step_id",
-		"description": "test_description",
-		"command": "test_command",
-		"commandb64": "test_command_b64",
-		"target": {
-			"id": "test_id",
-			"type": "test_type",
-			"name": "test_name",
-			"description": "test_description",
-			"location": {},
-			"contact": {}
-		},
-		"out_args": {
-			"var2": {
-				"type": "string",
-				"name": "var2",
-				"description": "test variable",
-				"value": "test_value_2"
-			}
-		}
-	},
-	{
-		"type": "test_type",
-		"execution_id": "50b6d52c-6efc-4516-a242-dfbc5c89d421",
-		"playbook_id": "test_playbook_id",
-		"step_id": "test_step_id",
-		"description": "test_description",
-		"command": "test_command",
-		"commandb64": "test_command_b64",
-		"target": {
-			"id": "test_id",
-			"type": "test_type",
-			"name": "test_name",
-			"description": "test_description",
-			"location": {},
-			"contact": {}
-		},
-		"out_args": {
-			"var2": {
-				"type": "string",
-				"name": "var2",
-				"description": "test variable",
-				"value": "test_value_2"
-			}
-		}
-	}
-]
-	`
-	var expectedInteractions []manualModel.InteractionResponse
-	err = json.Unmarshal([]byte(expectedInteractionsJson), &expectedInteractions)
-	if err != nil {
-		t.Log(err)
-		t.Fail()
-	}
-	t.Log("expected interactions")
-	t.Log(expectedInteractions)
+	expectedInteractions := []manualModel.CommandInfo{testInteractionCommand, testNewInteractionCommand}
 
 	receivedInteractions := interaction.getAllPendingInteractions()
-	fmt.Println(receivedInteractions)
-
-	if !reflect.DeepEqual(expectedInteractions, receivedInteractions) {
-		err = fmt.Errorf("expected %v, but got %v", expectedInteractions, receivedInteractions)
+	receivedInteractionsJson, err := json.MarshalIndent(receivedInteractions, "", "  ")
+	if err != nil {
+		t.Log("failed to marshal received interactions")
 		t.Log(err)
 		t.Fail()
+	}
+	fmt.Println("received interactions")
+	fmt.Println(string(receivedInteractionsJson))
+
+	for i, receivedInteraction := range receivedInteractions {
+		if expectedInteractions[i].Metadata != receivedInteraction.Metadata {
+			err = fmt.Errorf("expected %v, but got %v", expectedInteractions, receivedInteractions)
+			t.Log(err)
+			t.Fail()
+		}
+		if !reflect.DeepEqual(expectedInteractions[i].OutArgsVariables, receivedInteraction.OutArgsVariables) {
+			err = fmt.Errorf("expected %v, but got %v", expectedInteractions, receivedInteractions)
+			t.Log(err)
+			t.Fail()
+		}
+		if !reflect.DeepEqual(expectedInteractions[i].Context, receivedInteraction.Context) {
+			err = fmt.Errorf("expected %v, but got %v", expectedInteractions[i].Context, receivedInteraction.Context)
+			t.Log(err)
+			t.Fail()
+		}
 	}
 }
 
@@ -332,7 +290,7 @@ func TestPostContinueWarningsRaised(t *testing.T) {
 	}
 
 	outArg := cacao.Variable{
-		Type:        "string",
+		Type:        "banana",
 		Name:        "var2",
 		Description: "this description will not make it to the returned var",
 		Value:       "now the value is bananas",
@@ -358,7 +316,8 @@ func TestPostContinueWarningsRaised(t *testing.T) {
 	expectedLogEntry1 := "provided out arg var2 is attempting to change 'Constant' property"
 	expectedLogEntry2 := "provided out arg var2 is attempting to change 'Description' property"
 	expectedLogEntry3 := "provided out arg var2 is attempting to change 'External' property"
-	expectedLogs := []string{expectedLogEntry1, expectedLogEntry2, expectedLogEntry3}
+	expectedLogEntry4 := "provided out arg var2 is attempting to change 'Type' property"
+	expectedLogs := []string{expectedLogEntry1, expectedLogEntry2, expectedLogEntry3, expectedLogEntry4}
 
 	all := true
 	for _, expectedMessage := range expectedLogs {
@@ -625,9 +584,9 @@ var testMetadata = execution.Metadata{
 var testInteractionCommand = manualModel.CommandInfo{
 	Metadata: testMetadata,
 	OutArgsVariables: cacao.Variables{
-		"var1": {
+		"var2": {
 			Type:        "string",
-			Name:        "var1",
+			Name:        "var2",
 			Description: "test variable",
 			Value:       "",
 			Constant:    false,

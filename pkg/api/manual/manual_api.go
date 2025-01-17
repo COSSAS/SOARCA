@@ -1,7 +1,9 @@
 package manual
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"reflect"
@@ -66,7 +68,7 @@ func (manualHandler *ManualHandler) GetPendingCommands(g *gin.Context) {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusInternalServerError,
 			"Failed get pending manual commands",
-			"GET /manual/", err.Error())
+			"GET /manual/", "")
 		return
 	}
 	g.JSON(status,
@@ -94,7 +96,7 @@ func (manualHandler *ManualHandler) GetPendingCommand(g *gin.Context) {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusBadRequest,
 			"Failed to parse execution ID",
-			"GET /manual/"+execution_id+"/"+step_id, err.Error())
+			"GET /manual/"+execution_id+"/"+step_id, "")
 		return
 	}
 
@@ -104,7 +106,7 @@ func (manualHandler *ManualHandler) GetPendingCommand(g *gin.Context) {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusInternalServerError,
 			"Failed to provide pending manual command",
-			"GET /manual/"+execution_id+"/"+step_id, err.Error())
+			"GET /manual/"+execution_id+"/"+step_id, "")
 		return
 	}
 	g.JSON(status,
@@ -143,7 +145,9 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 	}
 
 	var outArgsUpdate api.ManualOutArgsUpdatePayload
-	err = json.Unmarshal(jsonData, &outArgsUpdate)
+	decoder := json.NewDecoder(bytes.NewReader(jsonData))
+	decoder.DisallowUnknownFields()
+	err = decoder.Decode(&outArgsUpdate)
 	if err != nil {
 		log.Error("failed to unmarshal JSON")
 		apiError.SendErrorResponse(g, http.StatusBadRequest,
@@ -152,13 +156,26 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 		return
 	}
 
+	fmt.Println("Printing parsed body!")
+	fmt.Println(outArgsUpdate)
+
+	for varName, variable := range outArgsUpdate.ResponseOutArgs {
+		if varName != variable.Name {
+			log.Error("variable name mismatch")
+			apiError.SendErrorResponse(g, http.StatusBadRequest,
+				"Variable name mismatch",
+				"POST /manual/continue", "")
+			return
+		}
+	}
+
 	// Create object to pass to interaction capability
 	executionId, err := uuid.Parse(outArgsUpdate.ExecutionId)
 	if err != nil {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusBadRequest,
 			"Failed to parse execution ID",
-			"POST /manual/continue", err.Error())
+			"POST /manual/continue", "")
 		return
 	}
 
@@ -178,7 +195,7 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusInternalServerError,
 			"Failed to post continue ID",
-			"POST /manual/continue", err.Error())
+			"POST /manual/continue", "")
 		return
 	}
 	g.JSON(

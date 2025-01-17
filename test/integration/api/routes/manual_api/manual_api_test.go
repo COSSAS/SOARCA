@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	api_routes "soarca/pkg/api"
 	manual_api "soarca/pkg/api/manual"
+	apiModel "soarca/pkg/models/api"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"soarca/pkg/models/manual"
@@ -96,6 +97,21 @@ func TestPostContinueCalled(t *testing.T) {
 	testPlaybookId := "21a4d52c-6efc-4516-a242-dfbc5c89d312"
 	path := "/manual/continue"
 
+	testManualUpdatePayload := apiModel.ManualOutArgsUpdatePayload{
+		Type:           "manual-step-response",
+		ExecutionId:    testExecId,
+		StepId:         testStepId,
+		PlaybookId:     testPlaybookId,
+		ResponseStatus: "success",
+		ResponseOutArgs: cacao.Variables{
+			"testvar": {
+				Type:  "string",
+				Name:  "testvar",
+				Value: "testing!",
+			},
+		},
+	}
+
 	testManualResponse := manual.InteractionResponse{
 		Metadata: execution.Metadata{
 			ExecutionId: uuid.MustParse(testExecId),
@@ -111,7 +127,7 @@ func TestPostContinueCalled(t *testing.T) {
 			},
 		},
 	}
-	jsonData, err := json.Marshal(testManualResponse)
+	jsonData, err := json.Marshal(testManualUpdatePayload)
 	if err != nil {
 		t.Fatalf("Error marshalling JSON: %v", err)
 	}
