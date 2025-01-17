@@ -305,12 +305,10 @@ func TestPostContinueWarningsRaised(t *testing.T) {
 		OutArgsVariables: cacao.Variables{"var2": outArg},
 	}
 
-	statusCode, err := interaction.PostContinue(outArgsUpdate)
+	err = interaction.PostContinue(outArgsUpdate)
 
-	expectedStatusCode := 200
-	var expectedErr error
+	var expectedErr error = nil
 
-	assert.Equal(t, statusCode, expectedStatusCode)
 	assert.Equal(t, err, expectedErr)
 
 	expectedLogEntry1 := "provided out arg var2 has different value for 'Constant' property of intended out arg. This different value is ignored."
@@ -378,9 +376,8 @@ func TestPostContinueFailOnNonexistingVariable(t *testing.T) {
 		OutArgsVariables: cacao.Variables{"testNotExisting": outArg},
 	}
 
-	statusCode, err := interaction.PostContinue(outArgsUpdate)
+	err = interaction.PostContinue(outArgsUpdate)
 
-	expectedStatusCode := 400
 	expectedErr := errors.New("provided out args do not match command-related variables")
 
 	expectedLogEntry1 := "provided out args do not match command-related variables"
@@ -405,7 +402,6 @@ func TestPostContinueFailOnNonexistingVariable(t *testing.T) {
 		}
 	}
 
-	assert.Equal(t, statusCode, expectedStatusCode)
 	assert.Equal(t, err, expectedErr)
 
 	assert.NotEqual(t, len(hook.Entries), 0)

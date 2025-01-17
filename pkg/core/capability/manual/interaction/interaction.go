@@ -3,11 +3,12 @@ package interaction
 import (
 	"errors"
 	"fmt"
-	"net/http"
 	"reflect"
 	"soarca/internal/logger"
+	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"soarca/pkg/models/manual"
+	ctxModel "soarca/pkg/models/utils/context"
 )
 
 // TODO
@@ -47,10 +48,10 @@ type ICapabilityInteraction interface {
 }
 
 type IInteractionStorage interface {
-	GetPendingCommands() ([]manual.CommandInfo, int, error)
+	GetPendingCommands() ([]manual.CommandInfo, error)
 	// even if step has multiple manual commands, there should always be just one pending manual command per action step
-	GetPendingCommand(metadata execution.Metadata) (manual.CommandInfo, int, error)
-	PostContinue(response manual.InteractionResponse) (int, error)
+	GetPendingCommand(metadata execution.Metadata) (manual.CommandInfo, error)
+	PostContinue(response manual.InteractionResponse) error
 }
 
 type InteractionController struct {
@@ -67,8 +68,6 @@ func New(manualIntegrations []IInteractionIntegrationNotifier) *InteractionContr
 }
 
 // TODO:
-// - Change registration of command data to only keep InteractionCommand object, move InteractionCommandData to api model
-// - Add interactionintegration channel in interaction storage entry
 // - Add check on timeoutcontext.Done() for timeout (vs completion), and remove entry from pending in that case
 // - Change waitInteractionIntegrationResponse to be waitResponse
 // - Put result := <- interactionintegrationchannel into a separate function
@@ -98,38 +97,32 @@ func (manualController *InteractionController) Queue(command manual.CommandInfo,
 		go notifier.Notify(integrationCommand, integrationChannel)
 	}
 
-	// Async idle wait on interaction integration channel
-	go manualController.waitInteractionIntegrationResponse(manualComms, integrationChannel)
+	// Async idle wait on command-specific channel closure
+	go manualController.handleManualCommandResponse(command, manualComms)
 
 	return nil
 }
 
-func (manualController *InteractionController) waitInteractionIntegrationResponse(manualComms manual.ManualCapabilityCommunication, integrationChannel chan manual.InteractionResponse) {
-	defer close(integrationChannel)
-	for {
-		select {
-		case <-manualComms.TimeoutContext.Done():
-			log.Info("context canceled due to response or timeout. exiting goroutine")
-			return
+func (manualController *InteractionController) handleManualCommandResponse(command manual.CommandInfo, manualComms manual.ManualCapabilityCommunication) {
+	select {
+	case <-manualComms.TimeoutContext.Done():
+		if manualComms.TimeoutContext.Err().Error() == ctxModel.ErrorContextTimeout {
+			log.Info("manual command timed out. deregistering associated pending command")
 
-		case <-manualComms.Channel:
-			log.Info("detected activity on manual capability channel. exiting goroutine without consuming the message")
-			return
-
-		case result := <-integrationChannel:
-			// Check register for pending manual command
-			// Remove interaction from pending ones
-			err := manualController.removeInteractionFromPending(result.Metadata)
+			err := manualController.removeInteractionFromPending(command.Metadata)
 			if err != nil {
-				// If it was not there, was already resolved
 				log.Warning(err)
-				// Captured if channel not yet closed
 				log.Warning("manual command not found among pending ones. should be already resolved")
 				return
 			}
-
-			manualComms.Channel <- result
-			return
+		} else if manualComms.TimeoutContext.Err().Error() == ctxModel.ErrorContextCanceled {
+			log.Info("manual command completed. deregistering associated pending command")
+			err := manualController.removeInteractionFromPending(command.Metadata)
+			if err != nil {
+				log.Warning(err)
+				log.Warning("manual command not found among pending ones. should be already resolved")
+				return
+			}
 		}
 	}
 }
@@ -137,69 +130,49 @@ func (manualController *InteractionController) waitInteractionIntegrationRespons
 // ############################################################################
 // IInteractionStorage implementation
 // ############################################################################
-func (manualController *InteractionController) GetPendingCommands() ([]manual.CommandInfo, int, error) {
+func (manualController *InteractionController) GetPendingCommands() ([]manual.CommandInfo, error) {
 	log.Trace("getting pending manual commands")
-	return manualController.getAllPendingInteractions(), http.StatusOK, nil
+	return manualController.getAllPendingInteractions(), nil
 }
 
-func (manualController *InteractionController) GetPendingCommand(metadata execution.Metadata) (manual.CommandInfo, int, error) {
+func (manualController *InteractionController) GetPendingCommand(metadata execution.Metadata) (manual.CommandInfo, error) {
 	log.Trace("getting pending manual command")
 	interaction, err := manualController.getPendingInteraction(metadata)
-	// TODO: determine status code
-	return interaction.CommandInfo, http.StatusOK, err
+	return interaction.CommandInfo, err
 }
 
-func (manualController *InteractionController) PostContinue(response manual.InteractionResponse) (int, error) {
+func (manualController *InteractionController) PostContinue(response manual.InteractionResponse) error {
 	log.Trace("completing manual command")
 
-	// If not in there, it means it was already solved (right?)
+	// If not in there, it means it was already solved, or expired
 	pendingEntry, err := manualController.getPendingInteraction(response.Metadata)
 	if err != nil {
 		log.Warning(err)
-		return http.StatusAlreadyReported, err
+		return err
 	}
 
-	// If it is
-	for varName, variable := range response.OutArgsVariables {
-		// first check that out args provided match the variables
-		if _, ok := pendingEntry.CommandInfo.OutArgsVariables[varName]; !ok {
-			err := errors.New("provided out args do not match command-related variables")
-			log.Warning("provided out args do not match command-related variables")
-			return http.StatusBadRequest, err
-		}
-		// then warn if any value outside "value" has changed
-		if pending, ok := pendingEntry.CommandInfo.OutArgsVariables[varName]; ok {
-			if variable.Constant != pending.Constant {
-				log.Warningf("provided out arg %s has different value for 'Constant' property of intended out arg. This different value is ignored.", varName)
-			}
-			if variable.Description != pending.Description {
-				log.Warningf("provided out arg %s has a different value for 'Description' property of intended out arg. This different value is ignored.", varName)
-			}
-			if variable.External != pending.External {
-				log.Warningf("provided out arg %s has a different value for 'External' property of intended out arg. This different value is ignored.", varName)
-			}
-			if variable.Type != pending.Type {
-				log.Warningf("provided out arg %s has a different value for 'Type' property of intended out arg. This different value is ignored.", varName)
-			}
-		}
+	warnings, err := manualController.validateMatchingOutArgs(pendingEntry, response.OutArgsVariables)
+	if err != nil {
+		return err
 	}
 
 	//Then put outArgs back into manualCapabilityChannel
 	// Copy result and conversion back to interactionResponse format
-	returnedVars := response.OutArgsVariables
 	log.Trace("pushing assigned variables in manual capability channel")
 	pendingEntry.Channel <- manual.InteractionResponse{
+		Metadata:         response.Metadata,
 		ResponseError:    nil,
-		OutArgsVariables: returnedVars,
-	}
-	// de-register the command
-	err = manualController.removeInteractionFromPending(response.Metadata)
-	if err != nil {
-		log.Error(err)
-		return http.StatusInternalServerError, err
+		ResponseStatus:   response.ResponseStatus,
+		OutArgsVariables: response.OutArgsVariables,
 	}
 
-	return http.StatusOK, nil
+	if len(warnings) > 0 {
+		for _, warning := range warnings {
+			log.Warning(warning)
+		}
+	}
+
+	return nil
 }
 
 // ############################################################################
@@ -289,4 +262,32 @@ func (manualController *InteractionController) removeInteractionFromPending(comm
 		delete(manualController.InteractionStorage, commandMetadata.ExecutionId.String())
 	}
 	return nil
+}
+
+func (manualController *InteractionController) validateMatchingOutArgs(pendingEntry manual.InteractionStorageEntry, responseOutArgs cacao.Variables) ([]string, error) {
+	warns := []string{}
+	var err error = nil
+	for varName, variable := range responseOutArgs {
+		// first check that out args provided match the variables
+		if _, ok := pendingEntry.CommandInfo.OutArgsVariables[varName]; !ok {
+			warns = append(warns, fmt.Sprintf("provided out arg %s does not match any intended out arg", varName))
+			err = errors.New("provided out args do not match command-related variables")
+		}
+		// then warn if any value outside "value" has changed
+		if pending, ok := pendingEntry.CommandInfo.OutArgsVariables[varName]; ok {
+			if variable.Constant != pending.Constant {
+				warns = append(warns, fmt.Sprintf("provided out arg %s has different value for 'Constant' property of intended out arg. This different value is ignored.", varName))
+			}
+			if variable.Description != pending.Description {
+				warns = append(warns, fmt.Sprintf("provided out arg %s has different value for 'Description' property of intended out arg. This different value is ignored.", varName))
+			}
+			if variable.External != pending.External {
+				warns = append(warns, fmt.Sprintf("provided out arg %s has different value for 'External' property of intended out arg. This different value is ignored.", varName))
+			}
+			if variable.Type != pending.Type {
+				warns = append(warns, fmt.Sprintf("provided out arg %s has different value for 'Type' property of intended out arg. This different value is ignored.", varName))
+			}
+		}
+	}
+	return warns, err
 }

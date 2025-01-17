@@ -11,17 +11,17 @@ type MockInteractionStorage struct {
 	mock.Mock
 }
 
-func (mock *MockInteractionStorage) GetPendingCommands() ([]manual.CommandInfo, int, error) {
+func (mock *MockInteractionStorage) GetPendingCommands() ([]manual.CommandInfo, error) {
 	args := mock.Called()
-	return args.Get(0).([]manual.CommandInfo), args.Int(1), args.Error(2)
+	return args.Get(0).([]manual.CommandInfo), args.Error(1)
 }
 
-func (mock *MockInteractionStorage) GetPendingCommand(metadata execution.Metadata) (manual.CommandInfo, int, error) {
+func (mock *MockInteractionStorage) GetPendingCommand(metadata execution.Metadata) (manual.CommandInfo, error) {
 	args := mock.Called(metadata)
-	return args.Get(0).(manual.CommandInfo), args.Int(1), args.Error(2)
+	return args.Get(0).(manual.CommandInfo), args.Error(1)
 }
 
-func (mock *MockInteractionStorage) PostContinue(response manual.InteractionResponse) (int, error) {
+func (mock *MockInteractionStorage) PostContinue(response manual.InteractionResponse) error {
 	args := mock.Called(response)
-	return args.Int(0), args.Error(1)
+	return args.Error(0)
 }

@@ -62,7 +62,7 @@ func NewManualHandler(interaction interaction.IInteractionStorage) *ManualHandle
 //	@failure		400		{object}	[]api.InteractionCommandData
 //	@Router			/manual/ [GET]
 func (manualHandler *ManualHandler) GetPendingCommands(g *gin.Context) {
-	commands, status, err := manualHandler.interactionCapability.GetPendingCommands()
+	commands, err := manualHandler.interactionCapability.GetPendingCommands()
 	if err != nil {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusInternalServerError,
@@ -76,7 +76,7 @@ func (manualHandler *ManualHandler) GetPendingCommands(g *gin.Context) {
 		response = append(response, manualHandler.parseCommandInfoToResponse(command))
 	}
 
-	g.JSON(status,
+	g.JSON(http.StatusOK,
 		response)
 }
 
@@ -106,7 +106,7 @@ func (manualHandler *ManualHandler) GetPendingCommand(g *gin.Context) {
 	}
 
 	executionMetadata := execution.Metadata{ExecutionId: execId, StepId: step_id}
-	commandData, status, err := manualHandler.interactionCapability.GetPendingCommand(executionMetadata)
+	commandData, err := manualHandler.interactionCapability.GetPendingCommand(executionMetadata)
 	if err != nil {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusInternalServerError,
@@ -117,7 +117,7 @@ func (manualHandler *ManualHandler) GetPendingCommand(g *gin.Context) {
 
 	commandInfo := manualHandler.parseCommandInfoToResponse(commandData)
 
-	g.JSON(status, commandInfo)
+	g.JSON(http.StatusOK, commandInfo)
 }
 
 // manual
@@ -194,7 +194,7 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 		ResponseError:    nil,
 	}
 
-	status, err := manualHandler.interactionCapability.PostContinue(interactionResponse)
+	err = manualHandler.interactionCapability.PostContinue(interactionResponse)
 	if err != nil {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusInternalServerError,
@@ -203,7 +203,7 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 		return
 	}
 	g.JSON(
-		status,
+		http.StatusOK,
 		api.Execution{
 			ExecutionId: uuid.MustParse(outArgsUpdate.ExecutionId),
 			PlaybookId:  outArgsUpdate.PlaybookId,
