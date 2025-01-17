@@ -12,6 +12,7 @@ import (
 	"soarca/pkg/models/execution"
 	"soarca/pkg/models/manual"
 	"soarca/test/unittest/mocks/mock_interaction_storage"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -61,9 +62,13 @@ func TestGetPendingCommandCalled(t *testing.T) {
 		ExecutionId: uuid.MustParse(testExecId), StepId: testStepId,
 	}
 
-	testEmptyResponsePendingCommand := manual.CommandInfo{}
+	testEmptyResponsePendingCommand := apiModel.InteractionCommandData{
+		Type:        "manual-command-info",
+		ExecutionId: "00000000-0000-0000-0000-000000000000",
+	}
+	emptyCommandInfoList := manual.CommandInfo{}
 
-	mock_interaction_storage.On("GetPendingCommand", executionMetadata).Return(testEmptyResponsePendingCommand, 200, nil)
+	mock_interaction_storage.On("GetPendingCommand", executionMetadata).Return(emptyCommandInfoList, 200, nil)
 
 	request, err := http.NewRequest("GET", path, nil)
 	if err != nil {
@@ -71,11 +76,14 @@ func TestGetPendingCommandCalled(t *testing.T) {
 	}
 
 	app.ServeHTTP(recorder, request)
-	expectedData := testEmptyResponsePendingCommand
-	expectedJSON, err := json.Marshal(expectedData)
+
+	expectedJSON, err := json.Marshal(testEmptyResponsePendingCommand)
 	if err != nil {
 		t.Fatalf("Error marshalling expected JSON: %v", err)
 	}
+	t.Log("response:")
+	t.Log(recorder.Body.String())
+
 	expectedString := string(expectedJSON)
 	assert.Equal(t, expectedString, recorder.Body.String())
 	assert.Equal(t, 200, recorder.Code)
@@ -142,6 +150,53 @@ func TestPostContinueCalled(t *testing.T) {
 	app.ServeHTTP(recorder, request)
 	t.Log(recorder.Body.String())
 	assert.Equal(t, 200, recorder.Code)
+
+	mock_interaction_storage.AssertExpectations(t)
+}
+
+func TestPostContinueFailsOnInvalidVariable(t *testing.T) {
+	mock_interaction_storage := mock_interaction_storage.MockInteractionStorage{}
+	manualApiHandler := manual_api.NewManualHandler(&mock_interaction_storage)
+
+	app := gin.New()
+	gin.SetMode(gin.DebugMode)
+
+	recorder := httptest.NewRecorder()
+	api_routes.ManualRoutes(app, manualApiHandler)
+	testExecId := "50b6d52c-6efc-4516-a242-dfbc5c89d421"
+	testStepId := "61a4d52c-6efc-4516-a242-dfbc5c89d312"
+	testPlaybookId := "21a4d52c-6efc-4516-a242-dfbc5c89d312"
+	path := "/manual/continue"
+
+	testManualUpdatePayload := apiModel.ManualOutArgsUpdatePayload{
+		Type:           "manual-step-response",
+		ExecutionId:    testExecId,
+		StepId:         testStepId,
+		PlaybookId:     testPlaybookId,
+		ResponseStatus: "success",
+		ResponseOutArgs: cacao.Variables{
+			"__this_var__": {
+				Type:  "string",
+				Name:  "__is_invalid__",
+				Value: "testing!",
+			},
+		},
+	}
+
+	manualUpdatePayloadJson, err := json.Marshal(testManualUpdatePayload)
+	if err != nil {
+		t.Fatalf("Error marshalling JSON: %v", err)
+	}
+
+	request, err := http.NewRequest("POST", path, bytes.NewBuffer(manualUpdatePayloadJson))
+	if err != nil {
+		t.Fail()
+	}
+
+	app.ServeHTTP(recorder, request)
+	t.Log(recorder.Body.String())
+	assert.Equal(t, 400, recorder.Code)
+	assert.Equal(t, true, strings.Contains(recorder.Body.String(), "Variable name mismatch"))
 
 	mock_interaction_storage.AssertExpectations(t)
 }

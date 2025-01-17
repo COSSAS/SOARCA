@@ -11,6 +11,13 @@ import (
 // Data structures for native SOARCA manual command handling
 // ################################################################################
 
+type ManualResponseStatus string
+
+const (
+	Success ManualResponseStatus = "success"
+	Failure ManualResponseStatus = "failure"
+)
+
 type InteractionStorageEntry struct {
 	CommandInfo CommandInfo
 	Channel     chan InteractionResponse
@@ -33,7 +40,7 @@ type InteractionIntegrationCommand struct {
 // Object returned to the Interaction object in fulfilment of a manual command
 type InteractionResponse struct {
 	Metadata         execution.Metadata
-	ResponseStatus   string
+	ResponseStatus   ManualResponseStatus
 	ResponseError    error
 	OutArgsVariables cacao.Variables
 }

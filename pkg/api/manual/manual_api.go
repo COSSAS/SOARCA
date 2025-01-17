@@ -3,7 +3,6 @@ package manual
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"reflect"
@@ -71,8 +70,14 @@ func (manualHandler *ManualHandler) GetPendingCommands(g *gin.Context) {
 			"GET /manual/", "")
 		return
 	}
+
+	response := []api.InteractionCommandData{}
+	for _, command := range commands {
+		response = append(response, manualHandler.parseCommandInfoToResponse(command))
+	}
+
 	g.JSON(status,
-		commands)
+		response)
 }
 
 // manual
@@ -109,8 +114,10 @@ func (manualHandler *ManualHandler) GetPendingCommand(g *gin.Context) {
 			"GET /manual/"+execution_id+"/"+step_id, "")
 		return
 	}
-	g.JSON(status,
-		commandData)
+
+	commandInfo := manualHandler.parseCommandInfoToResponse(commandData)
+
+	g.JSON(status, commandInfo)
 }
 
 // manual
@@ -155,9 +162,6 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 			"POST /manual/continue", "")
 		return
 	}
-
-	fmt.Println("Printing parsed body!")
-	fmt.Println(outArgsUpdate)
 
 	for varName, variable := range outArgsUpdate.ResponseOutArgs {
 		if varName != variable.Name {
@@ -204,4 +208,29 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 			ExecutionId: uuid.MustParse(outArgsUpdate.ExecutionId),
 			PlaybookId:  outArgsUpdate.PlaybookId,
 		})
+}
+
+// Utility
+
+func (manualHandler *ManualHandler) parseCommandInfoToResponse(commandInfo manual.CommandInfo) api.InteractionCommandData {
+	commandText := commandInfo.Context.Command.Command
+	isBase64 := false
+	if len(commandInfo.Context.Command.CommandB64) > 0 {
+		commandText = commandInfo.Context.Command.CommandB64
+		isBase64 = true
+	}
+
+	response := api.InteractionCommandData{
+		Type:            "manual-command-info",
+		ExecutionId:     commandInfo.Metadata.ExecutionId.String(),
+		PlaybookId:      commandInfo.Metadata.PlaybookId,
+		StepId:          commandInfo.Metadata.StepId,
+		Description:     commandInfo.Context.Command.Description,
+		Command:         commandText,
+		CommandIsBase64: isBase64,
+		Target:          commandInfo.Context.Target,
+		OutVariables:    commandInfo.OutArgsVariables,
+	}
+
+	return response
 }
