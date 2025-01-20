@@ -45,9 +45,7 @@ type ManualHandler struct {
 }
 
 func NewManualHandler(interaction interaction.IInteractionStorage) *ManualHandler {
-	instance := ManualHandler{}
-	instance.interactionCapability = interaction
-	return &instance
+	return &ManualHandler{interactionCapability: interaction}
 }
 
 // manual

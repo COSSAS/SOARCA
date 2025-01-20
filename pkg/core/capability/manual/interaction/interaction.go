@@ -50,6 +50,7 @@ func New(manualIntegrations []IInteractionIntegrationNotifier) *InteractionContr
 
 // TODO:
 // - Create typed error and pass back to API function for Storage interface fcns
+// - Fix documeentation
 
 // ############################################################################
 // ICapabilityInteraction implementation
