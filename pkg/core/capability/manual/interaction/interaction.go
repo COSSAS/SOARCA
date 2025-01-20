@@ -11,25 +11,6 @@ import (
 	ctxModel "soarca/pkg/models/utils/context"
 )
 
-// TODO
-// Add manual capability to action execution,
-
-// NOTE: current outArgs management for Manual commands:
-//	- The decomposer passes the PlaybookStepMetadata object to the
-//		action executor, which includes Step
-// 	- The action executor calls Execute on the capability (command type)
-//		passing capability.Context, which includes the Step object
-//	- The manual capability calls Queue passing InteractionCommand,
-//		which includes capability.Context
-// 	- Queue() posts a message, which shall include the text of the manual command,
-//		and the varibales (outArgs) expected
-// 	- registerPendingInteraction records the CACAO Variables corresponding to the
-//		outArgs field (in the step. In future, in the command)
-//	- A manual response posts back a map[string]manual.ManualOutArg object,
-//		which is exactly like cacao variables, but with different requested fields.
-// 	- The Interaction object cleans the returned variables to only keep
-//		the name, type, and value (to not overwrite other fields)
-
 type Empty struct{}
 
 var component = reflect.TypeOf(Empty{}).PkgPath()
@@ -68,10 +49,6 @@ func New(manualIntegrations []IInteractionIntegrationNotifier) *InteractionContr
 }
 
 // TODO:
-// - Add check on timeoutcontext.Done() for timeout (vs completion), and remove entry from pending in that case
-// - Change waitInteractionIntegrationResponse to be waitResponse
-// - Put result := <- interactionintegrationchannel into a separate function
-// - Just use the one instance of manual capability channel. Do not use interactionintegrationchannel
 // - Create typed error and pass back to API function for Storage interface fcns
 
 // ############################################################################
@@ -112,25 +89,24 @@ func (manualController *InteractionController) handleManualCommandResponse(comma
 		fmt.Sprintf(
 			"goroutine handling command response %s, %s has ended", command.Metadata.ExecutionId.String(), command.Metadata.StepId))
 
-	select {
-	case <-manualComms.TimeoutContext.Done():
-		if manualComms.TimeoutContext.Err().Error() == ctxModel.ErrorContextTimeout {
-			log.Info("manual command timed out. deregistering associated pending command")
+	// Wait for either timeout or response
+	<-manualComms.TimeoutContext.Done()
+	if manualComms.TimeoutContext.Err().Error() == ctxModel.ErrorContextTimeout {
+		log.Info("manual command timed out. deregistering associated pending command")
 
-			err := manualController.removeInteractionFromPending(command.Metadata)
-			if err != nil {
-				log.Warning(err)
-				log.Warning("manual command not found among pending ones. should be already resolved")
-				return
-			}
-		} else if manualComms.TimeoutContext.Err().Error() == ctxModel.ErrorContextCanceled {
-			log.Info("manual command completed. deregistering associated pending command")
-			err := manualController.removeInteractionFromPending(command.Metadata)
-			if err != nil {
-				log.Warning(err)
-				log.Warning("manual command not found among pending ones. should be already resolved")
-				return
-			}
+		err := manualController.removeInteractionFromPending(command.Metadata)
+		if err != nil {
+			log.Warning(err)
+			log.Warning("manual command not found among pending ones. should be already resolved")
+			return
+		}
+	} else if manualComms.TimeoutContext.Err().Error() == ctxModel.ErrorContextCanceled {
+		log.Info("manual command completed. deregistering associated pending command")
+		err := manualController.removeInteractionFromPending(command.Metadata)
+		if err != nil {
+			log.Warning(err)
+			log.Warning("manual command not found among pending ones. should be already resolved")
+			return
 		}
 	}
 }
