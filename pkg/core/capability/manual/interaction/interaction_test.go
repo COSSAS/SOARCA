@@ -386,7 +386,7 @@ func TestPostContinueFailOnNonexistingVariable(t *testing.T) {
 
 	err = interaction.PostContinue(outArgsUpdate)
 
-	expectedErr := errors.New(fmt.Sprintf("provided out arg %s does not match any intended out arg", outArg.Name))
+	expectedErr := fmt.Errorf("provided out arg %s does not match any intended out arg", outArg.Name)
 
 	assert.Equal(t, err, expectedErr)
 }

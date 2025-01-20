@@ -250,7 +250,7 @@ func (manualController *InteractionController) validateMatchingOutArgs(pendingEn
 	for varName, variable := range responseOutArgs {
 		// first check that out args provided match the variables
 		if _, ok := pendingEntry.CommandInfo.OutArgsVariables[varName]; !ok {
-			err = errors.New(fmt.Sprintf("provided out arg %s does not match any intended out arg", varName))
+			err = fmt.Errorf("provided out arg %s does not match any intended out arg", varName)
 		}
 		// then warn if any value outside "value" has changed
 		if pending, ok := pendingEntry.CommandInfo.OutArgsVariables[varName]; ok {
