@@ -386,7 +386,8 @@ func TestPostContinueFailOnNonexistingVariable(t *testing.T) {
 
 	err = interaction.PostContinue(outArgsUpdate)
 
-	expectedErr := fmt.Errorf("provided out arg %s does not match any intended out arg", outArg.Name)
+	expectedErr := manualModel.ErrorNonMatchingOutArgs{
+		Err: fmt.Sprintf("provided out arg %s does not match any intended out arg", outArg.Name)}
 
 	assert.Equal(t, err, expectedErr)
 }
@@ -424,10 +425,10 @@ func TestGetEmptyPendingCommand(t *testing.T) {
 		t.Fail()
 	}
 
-	expectedErr := errors.New(
-		"no pending commands found for execution " +
+	expectedErr := manualModel.ErrorPendingCommandNotFound{
+		Err: "no pending commands found for execution " +
 			"61a6c41e-6efc-4516-a242-dfbc5c89d562",
-	)
+	}
 
 	assert.Equal(t, emptyCommandInfo, manualModel.CommandInfo{})
 	assert.Equal(t, err, expectedErr)
@@ -473,9 +474,9 @@ func TestFailOnRetrieveUnexistingExecutionInteraction(t *testing.T) {
 		t.Fail()
 	}
 
-	expectedErr := errors.New(
-		"no pending commands found for execution 50b6d52c-6efc-4516-a242-dfbc5c89d421",
-	)
+	expectedErr := manualModel.ErrorPendingCommandNotFound{
+		Err: "no pending commands found for execution 50b6d52c-6efc-4516-a242-dfbc5c89d421",
+	}
 	assert.Equal(t, err, expectedErr)
 }
 
@@ -500,11 +501,11 @@ func TestFailOnRetrieveNonExistingCommandInteraction(t *testing.T) {
 		t.Fail()
 	}
 
-	expectedErr := errors.New(
-		"no pending commands found for execution " +
+	expectedErr := manualModel.ErrorPendingCommandNotFound{
+		Err: "no pending commands found for execution " +
 			"61a6c41e-6efc-4516-a242-dfbc5c89d562 -> " +
 			"step 50b6d52c-6efc-4516-a242-dfbc5c89d421",
-	)
+	}
 	assert.Equal(t, err, expectedErr)
 }
 
@@ -545,10 +546,10 @@ func TestRemovePendingInteraciton(t *testing.T) {
 		t.Fail()
 	}
 
-	expectedErr := errors.New(
-		"no pending commands found for execution " +
+	expectedErr := manualModel.ErrorPendingCommandNotFound{
+		Err: "no pending commands found for execution " +
 			"61a6c41e-6efc-4516-a242-dfbc5c89d562",
-	)
+	}
 	assert.Equal(t, err, expectedErr)
 }
 

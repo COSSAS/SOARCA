@@ -49,3 +49,20 @@ type ManualCapabilityCommunication struct {
 	TimeoutContext context.Context
 	Channel        chan InteractionResponse
 }
+
+// Errors #####################################################################
+type ErrorPendingCommandNotFound struct {
+	Err string
+}
+
+type ErrorNonMatchingOutArgs struct {
+	Err string
+}
+
+func (e ErrorPendingCommandNotFound) Error() string {
+	return e.Err
+}
+
+func (e ErrorNonMatchingOutArgs) Error() string {
+	return e.Err
+}

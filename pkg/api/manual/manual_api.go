@@ -3,6 +3,7 @@ package manual
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"reflect"
@@ -107,7 +108,11 @@ func (manualHandler *ManualHandler) GetPendingCommand(g *gin.Context) {
 	commandData, err := manualHandler.interactionCapability.GetPendingCommand(executionMetadata)
 	if err != nil {
 		log.Error(err)
-		apiError.SendErrorResponse(g, http.StatusInternalServerError,
+		code := http.StatusBadRequest
+		if errors.Is(err, manual.ErrorPendingCommandNotFound{}) {
+			code = http.StatusNotFound
+		}
+		apiError.SendErrorResponse(g, code,
 			"Failed to provide pending manual command",
 			"GET /manual/"+execution_id+"/"+step_id, "")
 		return
@@ -195,8 +200,17 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 	err = manualHandler.interactionCapability.PostContinue(interactionResponse)
 	if err != nil {
 		log.Error(err)
-		apiError.SendErrorResponse(g, http.StatusInternalServerError,
-			"Failed to post continue ID",
+		code := http.StatusBadRequest
+		msg := "Failed to post continue ID"
+		if errors.Is(err, manual.ErrorPendingCommandNotFound{}) {
+			code = http.StatusNotFound
+			msg = "Pending command not found"
+		} else if errors.Is(err, manual.ErrorNonMatchingOutArgs{}) {
+			code = http.StatusBadRequest
+			msg = "Provided out args don't match with expected"
+		}
+		apiError.SendErrorResponse(g, code,
+			msg,
 			"POST /manual/continue", "")
 		return
 	}

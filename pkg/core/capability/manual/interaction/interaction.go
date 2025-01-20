@@ -212,16 +212,17 @@ func (manualController *InteractionController) getAllPendingCommandsInfo() []man
 func (manualController *InteractionController) getPendingInteraction(commandMetadata execution.Metadata) (manual.InteractionStorageEntry, error) {
 	executionCommands, ok := manualController.InteractionStorage[commandMetadata.ExecutionId.String()]
 	if !ok {
-		err := fmt.Errorf("no pending commands found for execution %s", commandMetadata.ExecutionId.String())
-		return manual.InteractionStorageEntry{}, err
+		err := fmt.Sprintf("no pending commands found for execution %s", commandMetadata.ExecutionId.String())
+		return manual.InteractionStorageEntry{}, manual.ErrorPendingCommandNotFound{Err: err}
 	}
 	interaction, ok := executionCommands[commandMetadata.StepId]
 	if !ok {
-		err := fmt.Errorf("no pending commands found for execution %s -> step %s",
+		err := fmt.Sprintf("no pending commands found for execution %s -> step %s",
 			commandMetadata.ExecutionId.String(),
 			commandMetadata.StepId,
 		)
-		return manual.InteractionStorageEntry{}, err
+		return manual.InteractionStorageEntry{}, manual.ErrorPendingCommandNotFound{Err: err}
+
 	}
 	return interaction, nil
 }
@@ -251,6 +252,8 @@ func (manualController *InteractionController) validateMatchingOutArgs(pendingEn
 		// first check that out args provided match the variables
 		if _, ok := pendingEntry.CommandInfo.OutArgsVariables[varName]; !ok {
 			err = fmt.Errorf("provided out arg %s does not match any intended out arg", varName)
+			return warns, manual.ErrorNonMatchingOutArgs{Err: err.Error()}
+
 		}
 		// then warn if any value outside "value" has changed
 		if pending, ok := pendingEntry.CommandInfo.OutArgsVariables[varName]; ok {
