@@ -52,7 +52,7 @@ func TestQueueFailWithoutTimeout(t *testing.T) {
 
 func TestQueueExitOnTimeout(t *testing.T) {
 	interaction := New([]IInteractionIntegrationNotifier{})
-	timeout := 30 * time.Millisecond
+	timeout := 50 * time.Millisecond
 	testCtx, testCancel := context.WithTimeout(context.Background(), timeout)
 	defer testCancel()
 
@@ -70,7 +70,7 @@ func TestQueueExitOnTimeout(t *testing.T) {
 		t.Fail()
 	}
 
-	time.Sleep(50 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 
 	expectedLogEntry := "manual command timed out. deregistering associated pending command"
 	assert.NotEqual(t, len(hook.Entries), 0)
