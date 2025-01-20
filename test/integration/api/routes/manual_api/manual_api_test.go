@@ -30,7 +30,7 @@ func TestGetPendingCommandsCalled(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	api_routes.ManualRoutes(app, manualApiHandler)
 
-	mock_interaction_storage.On("GetPendingCommands").Return([]manual.CommandInfo{}, 200, nil)
+	mock_interaction_storage.On("GetPendingCommands").Return([]manual.CommandInfo{}, nil)
 
 	request, err := http.NewRequest("GET", "/manual/", nil)
 	if err != nil {
@@ -68,7 +68,7 @@ func TestGetPendingCommandCalled(t *testing.T) {
 	}
 	emptyCommandInfoList := manual.CommandInfo{}
 
-	mock_interaction_storage.On("GetPendingCommand", executionMetadata).Return(emptyCommandInfoList, 200, nil)
+	mock_interaction_storage.On("GetPendingCommand", executionMetadata).Return(emptyCommandInfoList, nil)
 
 	request, err := http.NewRequest("GET", path, nil)
 	if err != nil {
@@ -140,7 +140,7 @@ func TestPostContinueCalled(t *testing.T) {
 		t.Fatalf("Error marshalling JSON: %v", err)
 	}
 
-	mock_interaction_storage.On("PostContinue", testManualResponse).Return(200, nil)
+	mock_interaction_storage.On("PostContinue", testManualResponse).Return(nil)
 
 	request, err := http.NewRequest("POST", path, bytes.NewBuffer(jsonData))
 	if err != nil {

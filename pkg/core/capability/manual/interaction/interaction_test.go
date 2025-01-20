@@ -269,10 +269,8 @@ func TestCopyOutArgsToVars(t *testing.T) {
 func TestPostContinueWarningsRaised(t *testing.T) {
 
 	interaction := New([]IInteractionIntegrationNotifier{})
-	timeout := 500 * time.Millisecond
+	timeout := 5 * time.Second
 	testCtx, testCancel := context.WithTimeout(context.Background(), timeout)
-
-	defer testCancel()
 
 	hook := NewTestLogHook()
 	log.Logger.AddHook(hook)
@@ -281,7 +279,6 @@ func TestPostContinueWarningsRaised(t *testing.T) {
 		Channel:        make(chan manualModel.InteractionResponse),
 		TimeoutContext: testCtx,
 	}
-	defer close(testCapComms.Channel)
 
 	err := interaction.Queue(testInteractionCommand, testCapComms)
 	if err != nil {
@@ -305,27 +302,38 @@ func TestPostContinueWarningsRaised(t *testing.T) {
 		OutArgsVariables: cacao.Variables{"var2": outArg},
 	}
 
-	err = interaction.PostContinue(outArgsUpdate)
+	// Start a goroutine to read from the channel to avoid blocking
+	go func() {
+		for response := range testCapComms.Channel {
+			log.Trace("Received response:", response)
+		}
+	}()
 
+	err = interaction.PostContinue(outArgsUpdate)
 	var expectedErr error = nil
 
 	assert.Equal(t, err, expectedErr)
 
+	// Simulating Manual Capability closing the channel and the context
+	close(testCapComms.Channel)
+	testCancel()
+	time.Sleep(800 * time.Millisecond)
+
 	expectedLogEntry1 := "provided out arg var2 has different value for 'Constant' property of intended out arg. This different value is ignored."
-	expectedLogEntry2 := "provided out arg var2 has a different value for 'Description' property of intended out arg. This different value is ignored."
-	expectedLogEntry3 := "provided out arg var2 has a different value for 'External' property of intended out arg. This different value is ignored."
-	expectedLogEntry4 := "provided out arg var2 has a different value for 'Type' property of intended out arg. This different value is ignored."
+	expectedLogEntry2 := "provided out arg var2 has different value for 'Description' property of intended out arg. This different value is ignored."
+	expectedLogEntry3 := "provided out arg var2 has different value for 'External' property of intended out arg. This different value is ignored."
+	expectedLogEntry4 := "provided out arg var2 has different value for 'Type' property of intended out arg. This different value is ignored."
 	expectedLogs := []string{expectedLogEntry1, expectedLogEntry2, expectedLogEntry3, expectedLogEntry4}
 
 	all := true
 	for _, expectedMessage := range expectedLogs {
 		containsAll := true
 		for _, entry := range hook.Entries {
-			if strings.Contains(expectedMessage, entry.Message) {
+			if strings.Contains(entry.Message, expectedMessage) {
 				containsAll = true
 				break
 			}
-			if !strings.Contains(expectedMessage, entry.Message) {
+			if !strings.Contains(entry.Message, expectedMessage) {
 				containsAll = false
 			}
 		}
@@ -378,34 +386,9 @@ func TestPostContinueFailOnNonexistingVariable(t *testing.T) {
 
 	err = interaction.PostContinue(outArgsUpdate)
 
-	expectedErr := errors.New("provided out args do not match command-related variables")
-
-	expectedLogEntry1 := "provided out args do not match command-related variables"
-	expectedLogs := []string{expectedLogEntry1}
-
-	all := true
-	for _, expectedMessage := range expectedLogs {
-		containsAll := true
-		for _, entry := range hook.Entries {
-			if strings.Contains(expectedMessage, entry.Message) {
-				containsAll = true
-				break
-			}
-			if !strings.Contains(expectedMessage, entry.Message) {
-				containsAll = false
-			}
-		}
-		if !containsAll {
-			t.Logf("log message: '%s' not found in logged messages", expectedMessage)
-			all = false
-			break
-		}
-	}
+	expectedErr := errors.New(fmt.Sprintf("provided out arg %s does not match any intended out arg", outArg.Name))
 
 	assert.Equal(t, err, expectedErr)
-
-	assert.NotEqual(t, len(hook.Entries), 0)
-	assert.Equal(t, all, true)
 }
 
 func TestRegisterRetrieveNewExecutionNewPendingInteraction(t *testing.T) {

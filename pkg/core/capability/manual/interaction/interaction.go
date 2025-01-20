@@ -72,6 +72,7 @@ func New(manualIntegrations []IInteractionIntegrationNotifier) *InteractionContr
 // - Change waitInteractionIntegrationResponse to be waitResponse
 // - Put result := <- interactionintegrationchannel into a separate function
 // - Just use the one instance of manual capability channel. Do not use interactionintegrationchannel
+// - Create typed error and pass back to API function for Storage interface fcns
 
 // ############################################################################
 // ICapabilityInteraction implementation
@@ -104,6 +105,13 @@ func (manualController *InteractionController) Queue(command manual.CommandInfo,
 }
 
 func (manualController *InteractionController) handleManualCommandResponse(command manual.CommandInfo, manualComms manual.ManualCapabilityCommunication) {
+	log.Trace(
+		fmt.Sprintf(
+			"goroutine handling command response %s, %s has started", command.Metadata.ExecutionId.String(), command.Metadata.StepId))
+	defer log.Trace(
+		fmt.Sprintf(
+			"goroutine handling command response %s, %s has ended", command.Metadata.ExecutionId.String(), command.Metadata.StepId))
+
 	select {
 	case <-manualComms.TimeoutContext.Done():
 		if manualComms.TimeoutContext.Err().Error() == ctxModel.ErrorContextTimeout {
@@ -159,12 +167,7 @@ func (manualController *InteractionController) PostContinue(response manual.Inte
 	//Then put outArgs back into manualCapabilityChannel
 	// Copy result and conversion back to interactionResponse format
 	log.Trace("pushing assigned variables in manual capability channel")
-	pendingEntry.Channel <- manual.InteractionResponse{
-		Metadata:         response.Metadata,
-		ResponseError:    nil,
-		ResponseStatus:   response.ResponseStatus,
-		OutArgsVariables: response.OutArgsVariables,
-	}
+	pendingEntry.Channel <- response
 
 	if len(warnings) > 0 {
 		for _, warning := range warnings {
@@ -270,8 +273,7 @@ func (manualController *InteractionController) validateMatchingOutArgs(pendingEn
 	for varName, variable := range responseOutArgs {
 		// first check that out args provided match the variables
 		if _, ok := pendingEntry.CommandInfo.OutArgsVariables[varName]; !ok {
-			warns = append(warns, fmt.Sprintf("provided out arg %s does not match any intended out arg", varName))
-			err = errors.New("provided out args do not match command-related variables")
+			err = errors.New(fmt.Sprintf("provided out arg %s does not match any intended out arg", varName))
 		}
 		// then warn if any value outside "value" has changed
 		if pending, ok := pendingEntry.CommandInfo.OutArgsVariables[varName]; ok {
