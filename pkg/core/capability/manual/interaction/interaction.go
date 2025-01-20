@@ -117,7 +117,7 @@ func (manualController *InteractionController) handleManualCommandResponse(comma
 // ############################################################################
 func (manualController *InteractionController) GetPendingCommands() ([]manual.CommandInfo, error) {
 	log.Trace("getting pending manual commands")
-	return manualController.getAllPendingInteractions(), nil
+	return manualController.getAllPendingCommandsInfo(), nil
 }
 
 func (manualController *InteractionController) GetPendingCommand(metadata execution.Metadata) (manual.CommandInfo, error) {
@@ -199,7 +199,7 @@ func (manualController *InteractionController) registerPendingInteraction(comman
 	return nil
 }
 
-func (manualController *InteractionController) getAllPendingInteractions() []manual.CommandInfo {
+func (manualController *InteractionController) getAllPendingCommandsInfo() []manual.CommandInfo {
 	allPendingInteractions := []manual.CommandInfo{}
 	for _, interactions := range manualController.InteractionStorage {
 		for _, interaction := range interactions {

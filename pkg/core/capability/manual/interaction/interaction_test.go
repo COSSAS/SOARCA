@@ -165,7 +165,7 @@ func TestGetAllPendingInteractions(t *testing.T) {
 
 	expectedInteractions := []manualModel.CommandInfo{testInteractionCommand, testNewInteractionCommand}
 
-	receivedInteractions := interaction.getAllPendingInteractions()
+	receivedInteractions := interaction.getAllPendingCommandsInfo()
 	receivedInteractionsJson, err := json.MarshalIndent(receivedInteractions, "", "  ")
 	if err != nil {
 		t.Log("failed to marshal received interactions")
@@ -411,6 +411,26 @@ func TestRegisterRetrieveNewExecutionNewPendingInteraction(t *testing.T) {
 		t.Log(err)
 		t.Fail()
 	}
+}
+
+func TestGetEmptyPendingCommand(t *testing.T) {
+	interaction := New([]IInteractionIntegrationNotifier{})
+	testChan := make(chan manualModel.InteractionResponse)
+	defer close(testChan)
+
+	emptyCommandInfo, err := interaction.GetPendingCommand(testMetadata)
+	if err == nil {
+		t.Log(err)
+		t.Fail()
+	}
+
+	expectedErr := errors.New(
+		"no pending commands found for execution " +
+			"61a6c41e-6efc-4516-a242-dfbc5c89d562",
+	)
+
+	assert.Equal(t, emptyCommandInfo, manualModel.CommandInfo{})
+	assert.Equal(t, err, expectedErr)
 }
 
 func TestFailOnRegisterSamePendingInteraction(t *testing.T) {
