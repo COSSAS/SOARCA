@@ -3,6 +3,7 @@ package manual_api_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	api_routes "soarca/pkg/api"
@@ -154,7 +155,7 @@ func TestPostContinueCalled(t *testing.T) {
 	mock_interaction_storage.AssertExpectations(t)
 }
 
-func TestPostContinueFailsOnInvalidVariable(t *testing.T) {
+func TestPostContinueFailsOnNonMatchingOutArg(t *testing.T) {
 	mock_interaction_storage := mock_interaction_storage.MockInteractionStorage{}
 	manualApiHandler := manual_api.NewManualHandler(&mock_interaction_storage)
 
@@ -193,10 +194,11 @@ func TestPostContinueFailsOnInvalidVariable(t *testing.T) {
 		t.Fail()
 	}
 
+	expectedErr := errors.New("Variable name mismatch")
+
 	app.ServeHTTP(recorder, request)
 	t.Log(recorder.Body.String())
 	assert.Equal(t, 400, recorder.Code)
-	assert.Equal(t, true, strings.Contains(recorder.Body.String(), "Variable name mismatch"))
+	assert.Equal(t, true, strings.Contains(recorder.Body.String(), expectedErr.Error()))
 
-	mock_interaction_storage.AssertExpectations(t)
 }

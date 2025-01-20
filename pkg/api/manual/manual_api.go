@@ -168,34 +168,27 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 	}
 
 	// Check if variable names match
-	manualHandler.postContinueVariableNamesMatchCheck(outArgsUpdate.ResponseOutArgs, g)
-
-	// Create object to pass to interaction capability
-	executionId, err := uuid.Parse(outArgsUpdate.ExecutionId)
-	if err != nil {
-		log.Error(err)
+	ok := manualHandler.postContinueVariableNamesMatchCheck(outArgsUpdate.ResponseOutArgs)
+	if !ok {
+		log.Error("variable name mismatch")
 		apiError.SendErrorResponse(g, http.StatusBadRequest,
-			"Failed to parse execution ID",
+			"Variable name mismatch",
 			"POST /manual/continue", "")
 		return
 	}
 
-	interactionResponse := manual.InteractionResponse{
-		Metadata: execution.Metadata{
-			StepId:      outArgsUpdate.StepId,
-			ExecutionId: executionId,
-			PlaybookId:  outArgsUpdate.PlaybookId,
-		},
-		OutArgsVariables: outArgsUpdate.ResponseOutArgs,
-		ResponseStatus:   outArgsUpdate.ResponseStatus,
-		ResponseError:    nil,
+	interactionResponse, err := manualHandler.parseManualResponseToInteractionResponse(outArgsUpdate)
+	if err != nil {
+		apiError.SendErrorResponse(g, http.StatusBadRequest,
+			"Failed to parse response",
+			"POST /manual/continue", err.Error())
 	}
 
 	err = manualHandler.interactionCapability.PostContinue(interactionResponse)
 	if err != nil {
 		log.Error(err)
 		code := http.StatusBadRequest
-		msg := "Failed to post continue ID"
+		msg := "Failed to post the continue request"
 		if errors.Is(err, manual.ErrorPendingCommandNotFound{}) {
 			code = http.StatusNotFound
 			msg = "Pending command not found"
@@ -217,7 +210,6 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 }
 
 // Utility
-
 func (manualHandler *ManualHandler) parseCommandInfoToResponse(commandInfo manual.CommandInfo) api.InteractionCommandData {
 	commandText := commandInfo.Context.Command.Command
 	isBase64 := false
@@ -241,14 +233,32 @@ func (manualHandler *ManualHandler) parseCommandInfoToResponse(commandInfo manua
 	return response
 }
 
-func (ManualHandler *ManualHandler) postContinueVariableNamesMatchCheck(outArgs cacao.Variables, g *gin.Context) {
+func (manualHandler *ManualHandler) parseManualResponseToInteractionResponse(response api.ManualOutArgsUpdatePayload) (manual.InteractionResponse, error) {
+	executionId, err := uuid.Parse(response.ExecutionId)
+	if err != nil {
+		return manual.InteractionResponse{}, err
+	}
+
+	interactionResponse := manual.InteractionResponse{
+		Metadata: execution.Metadata{
+			ExecutionId: executionId,
+			PlaybookId:  response.PlaybookId,
+			StepId:      response.StepId,
+		},
+		ResponseStatus:   response.ResponseStatus,
+		OutArgsVariables: response.ResponseOutArgs,
+		ResponseError:    nil,
+	}
+
+	return interactionResponse, nil
+}
+
+func (ManualHandler *ManualHandler) postContinueVariableNamesMatchCheck(outArgs cacao.Variables) bool {
+	ok := true
 	for varName, variable := range outArgs {
 		if varName != variable.Name {
-			log.Error("variable name mismatch")
-			apiError.SendErrorResponse(g, http.StatusBadRequest,
-				"Variable name mismatch",
-				"POST /manual/continue", "")
-			return
+			ok = false
 		}
 	}
+	return ok
 }
