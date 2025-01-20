@@ -10,6 +10,7 @@ import (
 	"soarca/internal/logger"
 	"soarca/pkg/core/capability/manual/interaction"
 	"soarca/pkg/models/api"
+	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"soarca/pkg/models/manual"
 
@@ -166,15 +167,8 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 		return
 	}
 
-	for varName, variable := range outArgsUpdate.ResponseOutArgs {
-		if varName != variable.Name {
-			log.Error("variable name mismatch")
-			apiError.SendErrorResponse(g, http.StatusBadRequest,
-				"Variable name mismatch",
-				"POST /manual/continue", "")
-			return
-		}
-	}
+	// Check if variable names match
+	manualHandler.postContinueVariableNamesMatchCheck(outArgsUpdate.ResponseOutArgs, g)
 
 	// Create object to pass to interaction capability
 	executionId, err := uuid.Parse(outArgsUpdate.ExecutionId)
@@ -245,4 +239,16 @@ func (manualHandler *ManualHandler) parseCommandInfoToResponse(commandInfo manua
 	}
 
 	return response
+}
+
+func (ManualHandler *ManualHandler) postContinueVariableNamesMatchCheck(outArgs cacao.Variables, g *gin.Context) {
+	for varName, variable := range outArgs {
+		if varName != variable.Name {
+			log.Error("variable name mismatch")
+			apiError.SendErrorResponse(g, http.StatusBadRequest,
+				"Variable name mismatch",
+				"POST /manual/continue", "")
+			return
+		}
+	}
 }
