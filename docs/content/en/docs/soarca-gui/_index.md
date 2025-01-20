@@ -23,16 +23,15 @@ The SOARCA-GUI features OIDC-based login for authentication and authorization. S
 
 ## Setting up SOARCA-GUI with SOARCA
 
-Under deployments in our [repo](https://github.com/COSSAS/SOARCA/tree/development/deployments/docker/soarca), we have provided an example docker compose file for running SOARCA in combination with the SOARCA-GUI. Note, that this setup is quite minimal, since no further authentication has been setup. 
+### Minimal setup
 
+Under deployments in our [repo](https://github.com/COSSAS/SOARCA/tree/development/deployments/docker/soarca), we have provided an example docker compose file for running SOARCA in combination with the SOARCA-GUI. Note, that this setup is quite minimal, since no further authentication has been setup. 
 
 {{< tabpane langEqualsHeader=false  >}}
 {{< tab header="Docker Compose" lang="sh" >}}
 cd docker/soarca && sudo docker compose --profile gui up -d
 {{< /tab >}}
 {{< /tabpane >}}
-
-The SOARCA-GUI interface should now be available at `localhost:8081`
 
 ### Impression of the SOARCA-GUI
 
