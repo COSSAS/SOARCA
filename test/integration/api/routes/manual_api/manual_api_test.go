@@ -155,7 +155,7 @@ func TestPostContinueCalled(t *testing.T) {
 	mock_interaction_storage.AssertExpectations(t)
 }
 
-func TestPostContinueFailsOnNonMatchingOutArg(t *testing.T) {
+func TestPostContinueFailsOnNonMatchingOutArgNames(t *testing.T) {
 	mock_interaction_storage := mock_interaction_storage.MockInteractionStorage{}
 	manualApiHandler := manual_api.NewManualHandler(&mock_interaction_storage)
 

@@ -332,18 +332,18 @@ The manual step should provide a timeout. SOARCA will by default use a timeout o
 #### Manual capability architecture
 
 In essence, executing a manual command involves the following actions:
-1. A message, the `command` of a manual command, is posted *somewhere*, *somehow*, together with the variables expected to be filled.
+1. A message, the `command` of a manual command, is posted *somewhere*, *somehow*, together with the variables of which values is expected to be assigned or updated (if any).
 2. The playbook execution stops, waiting for *something* to respond to the message with the variables values.
-3. The variables are streamed inside the playbook execution and handled accordingly.
+3. Once something replies, the variables are streamed inside the playbook execution and handled accordingly.
 
-Because the *somewhere* and *somehow* for posting a message can vary, and the *something* that replies can vary too, SOARCA adopts a flexible architecture to accomodate different ways of manual *interactions*. Below a view of the architecture.
+It should be possible to post a manual command message anywhere and in any way, and allow anything to respond back. Hence, SOARCA adopts a flexible architecture to accomodate different ways of manual *interactions*. Below a view of the architecture.
 
-When a playbook execution hits an Action step with a Manual command, the manual command will queue the instruction into the *CapabilityInteraction* module. The module does essentially three things: 
-1. it stores the status of the manual command, and handles the SOARCA API interactions with the manual command.
+When a playbook execution hits an Action step with a manual command, the *ManualCapability* will queue the instruction into the *CapabilityInteraction* module. The module does essentially three things: 
+1. it stores the status of the manual command, and implements the SOARCA API interactions with the manual command.
 2. If manual integrations are defined for the SOARCA instance, the *CapabilityInteraction* module notifies the manual integration modules, so that they can handle the manual command in turn.
 3. It waits for the manual command to be satisfied either via SOARCA APIs, or via manual integrations. The first to respond amongst the two, resolves the manual command. The resolution of the command may or may not assign new values to variables in the playbook. Finally the *CapabilityInteraction* module replies to the *ManualCommand* module.
 
-Ultimately the *ManualCommand* then completes its execution, having eventually updated the values for the variables in the outArgs of the command. Timeouts or errors are handled opportunely.
+Ultimately the *ManualCapability* then completes its execution, having eventually updated the values for the variables in the outArgs of the command. Timeouts or errors are handled opportunely.
 
 ```plantuml
 @startuml
@@ -368,11 +368,11 @@ interface ICapabilityInteraction{
 interface IInteracionStorage{
     GetPendingCommands() []CommandData
 	GetPendingCommand(execution.metadata) CommandData
-	PostContinue(execution.metadata) StatusCode
+	PostContinue(execution.metadata) ExecutionInfo
 }
 
 interface IInteractionIntegrationNotifier {
-    Notify(command InteractionIntegrationCommand, channel chan InteractionIntegrationResponse)
+    Notify(command InteractionIntegrationCommand, channel manualCapabilityCommunication.Channel)
 }
 
 class Interaction {
@@ -407,40 +407,103 @@ control "ManualCommand" as manual
 control "Interaction" as interaction
 control "ManualAPI" as api
 control "ThirdPartyManualIntegration" as 3ptool
+participant "Integration" as integration
 
-
-manual -> interaction : Queue(command, capabilityChannel)
+-> manual : ...manual command 
+manual -> interaction : Queue(command, capabilityChannel, timeoutContext)
 manual -> manual : idle wait on capabilityChannel
+activate manual
+
 activate interaction
-interaction -> interaction : save manual command status
-alt Third Party Integration flow
-interaction ->> 3ptool : async Notify(interactionCommand, integrationChannel)
-activate 3ptool
-interaction ->> interaction : async wait on integrationChannel
-
-3ptool <--> Integration : command posting and handling
-3ptool -> 3ptool : post InteractionIntegrationResponse on channel
-3ptool --> interaction : integrationChannel <- InteractionIntegrationResponse
-interaction --> manual : capabilityChannel <- InteractionResponse
-deactivate 3ptool
-else Native ManualAPI flow
-interaction ->> interaction : async wait on integrationChannel
-api -> interaction : GetPendingCommands()
-api -> interaction : GetPendingCommand(execution.metadata)
-api -> interaction : PostContinue(InteractionResponse)
-interaction --> manual : capabilityChannel <- InteractionResponse
-end
-
+interaction -> interaction : save pending manual command
+interaction ->> 3ptool : Notify(command, capabilityChannel, timeoutContext)
+3ptool --> integration : custom handling command posting
 deactivate interaction
+
+alt Command Response
+
+    group Native ManualAPI flow
+        api -> interaction : GetPendingCommands()
+        activate interaction
+        activate api
+        api -> interaction : GetPendingCommand(execution.metadata)
+        api -> interaction : PostContinue(ManualOutArgsUpdate)
+        interaction -> interaction : build InteractionResponse
+        deactivate api
+        interaction --> manual : capabilityChannel <- InteractionResponse
+        manual ->> interaction : timeoutContext.Cancel() event
+        manual -->> 3ptool : timeoutContext.Deadline() event
+        3ptool --> integration : custom handling command timed-out view
+        interaction -> interaction : de-register pending command
+        deactivate interaction
+        deactivate manual
+    end
+else 
+    group Third Party Integration flow
+        activate manual
+        activate integration
+        integration --> 3ptool : custom handling command response
+        deactivate integration
+        activate 3ptool
+        3ptool -> 3ptool : build InteractionResponse
+        3ptool --> manual : capabilityChannel <- InteractionResponse
+        deactivate 3ptool
+        manual ->> interaction : timeoutContext.Cancel() event
+        activate interaction
+        interaction -> interaction : de-register pending command
+        deactivate interaction
+        deactivate 3ptool
+        deactivate manual
+    end
+end
 
 @enduml
 ```
 
 Note that whoever resolves the manual command first, whether via the manualAPI, or a third party integration, then the command results are returned to the workflow execution, and the manual command is removed from the pending list. Hence, if a manual command is resolved e.g. via the manual integration, a postContinue API call for that same command will not go through, as the command will have been resolved already, and hence removed from the registry of pending manual commands.
 
+The diagram below shows instead what happens when a timeout occurs for the manual command.
+
+```plantuml
+@startuml
+control "ManualCommand" as manual
+control "Interaction" as interaction
+control "ManualAPI" as api
+control "ThirdPartyManualIntegration" as 3ptool
+participant "Integration" as integration
+
+-> manual : ...manual command 
+manual -> interaction : Queue(command, capabilityChannel, timeoutContext)
+manual -> manual : idle wait on capabilityChannel
+activate manual
+
+activate interaction
+interaction -> interaction : save pending manual command
+interaction ->> 3ptool : Notify(command, capabilityChannel, timeoutContext)
+3ptool --> integration : custom handling command posting
+deactivate interaction
+
+group Command execution times out
+    manual -> manual : timeoutContext.Deadline()
+    manual -->> interaction : timeoutContext.Deadline() event
+    manual -->> 3ptool : timeoutContext.Deadline() event
+    3ptool --> integration : custom handling command timed-out view
+    activate interaction
+    interaction -> interaction : de-register pending command
+    <- manual : ...continue execution
+    deactivate manual
+    ...
+    api -> interaction : GetPendingCommand(execution.metadata)
+    interaction -> api : no pending command (404) 
+end
+
+
+@enduml
+```
+
 #### Success and failure
 
-In SOARCA the manual step is considered successful if a response is made through the [manual api](/docs/core-components/api-manual). The manual command can specify a timeout but if none is specified SOARCA will use a default timeout of 10 minutes. If a timeout occurs the step is considered as failed and SOARCA will return an error to the decomposer.
+In SOARCA the manual step is considered successful if a response is made through the [manual api](/docs/core-components/api-manual), or an integration. The manual command can specify a timeout, but if none is specified SOARCA will use a default timeout of 10 minutes. If a timeout occurs the step is considered as failed and SOARCA will return an error to the decomposer.
 
 #### Variables
 
