@@ -417,7 +417,7 @@ activate manual
 activate interaction
 interaction -> interaction : save pending manual command
 interaction ->> 3ptool : Notify(command, capabilityChannel, timeoutContext)
-3ptool --> integration : custom handling command posting
+3ptool <--> integration : custom handling command posting
 deactivate interaction
 
 alt Command Response
@@ -432,17 +432,21 @@ alt Command Response
         deactivate api
         interaction --> manual : capabilityChannel <- InteractionResponse
         manual ->> interaction : timeoutContext.Cancel() event
-        manual -->> 3ptool : timeoutContext.Deadline() event
-        3ptool --> integration : custom handling command timed-out view
         interaction -> interaction : de-register pending command
         deactivate interaction
+        manual ->> 3ptool : timeoutContext.Deadline() event
+        activate 3ptool
+        3ptool <--> integration : custom handling command completed
         deactivate manual
+        <- manual : ...continue execution
+        deactivate 3ptool
+        deactivate integration
     end
 else 
     group Third Party Integration flow
+        integration --> 3ptool : custom handling command response
         activate manual
         activate integration
-        integration --> 3ptool : custom handling command response
         deactivate integration
         activate 3ptool
         3ptool -> 3ptool : build InteractionResponse
@@ -452,8 +456,15 @@ else
         activate interaction
         interaction -> interaction : de-register pending command
         deactivate interaction
+        manual ->> 3ptool : timeoutContext.Deadline() event
+        activate 3ptool
+        3ptool <--> integration : custom handling command completed
         deactivate 3ptool
+        activate integration
+        deactivate integration
+        <- manual : ...continue execution
         deactivate manual
+        deactivate integration
     end
 end
 
@@ -485,8 +496,8 @@ deactivate interaction
 
 group Command execution times out
     manual -> manual : timeoutContext.Deadline()
-    manual -->> interaction : timeoutContext.Deadline() event
-    manual -->> 3ptool : timeoutContext.Deadline() event
+    manual ->> interaction : timeoutContext.Deadline() event
+    manual ->> 3ptool : timeoutContext.Deadline() event
     3ptool --> integration : custom handling command timed-out view
     activate interaction
     interaction -> interaction : de-register pending command
