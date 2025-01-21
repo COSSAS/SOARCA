@@ -10,6 +10,7 @@ import (
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	manualModel "soarca/pkg/models/manual"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -154,13 +155,14 @@ func TestGetAllPendingInteractions(t *testing.T) {
 	testChan := make(chan manualModel.InteractionResponse)
 	defer close(testChan)
 
-	err := interaction.registerPendingInteraction(testInteractionCommand, testChan)
+	localTestInteractionCommand := testInteractionCommand
+	err := interaction.registerPendingInteraction(localTestInteractionCommand, testChan)
 	if err != nil {
 		t.Log(err)
 		t.Fail()
 	}
 
-	testNewInteractionCommand := testInteractionCommand
+	testNewInteractionCommand := localTestInteractionCommand
 	newExecId := "50b6d52c-6efc-4516-a242-dfbc5c89d421"
 	testNewInteractionCommand.Metadata.ExecutionId = uuid.MustParse(newExecId)
 
@@ -170,17 +172,25 @@ func TestGetAllPendingInteractions(t *testing.T) {
 		t.Fail()
 	}
 
-	expectedInteractions := []manualModel.CommandInfo{testInteractionCommand, testNewInteractionCommand}
-
+	expectedInteractions := []manualModel.CommandInfo{localTestInteractionCommand, testNewInteractionCommand}
 	receivedInteractions := interaction.getAllPendingCommandsInfo()
+
+	// Sort both slices by ExecutionId
+	sort.Slice(expectedInteractions, func(i, j int) bool {
+		return expectedInteractions[i].Metadata.ExecutionId.String() < expectedInteractions[j].Metadata.ExecutionId.String()
+	})
+	sort.Slice(receivedInteractions, func(i, j int) bool {
+		return receivedInteractions[i].Metadata.ExecutionId.String() < receivedInteractions[j].Metadata.ExecutionId.String()
+	})
+
 	receivedInteractionsJson, err := json.MarshalIndent(receivedInteractions, "", "  ")
 	if err != nil {
 		t.Log("failed to marshal received interactions")
 		t.Log(err)
 		t.Fail()
 	}
-	fmt.Println("received interactions")
-	fmt.Println(string(receivedInteractionsJson))
+	t.Log("received interactions")
+	t.Log(string(receivedInteractionsJson))
 
 	for i, receivedInteraction := range receivedInteractions {
 		if expectedInteractions[i].Metadata != receivedInteraction.Metadata {
@@ -206,17 +216,19 @@ func TestRegisterRetrieveSameExecutionMultiplePendingInteraction(t *testing.T) {
 	testChan := make(chan manualModel.InteractionResponse)
 	defer close(testChan)
 
-	err := interaction.registerPendingInteraction(testInteractionCommand, testChan)
+	localTestInteractionCommand := testInteractionCommand
+
+	err := interaction.registerPendingInteraction(localTestInteractionCommand, testChan)
 	if err != nil {
 		t.Log(err)
 		t.Fail()
 	}
 
-	testNewInteractionCommandSecond := testInteractionCommand
+	testNewInteractionCommandSecond := localTestInteractionCommand
 	newStepId2 := "test_second_step_id"
 	testNewInteractionCommandSecond.Metadata.StepId = newStepId2
 
-	testNewInteractionCommandThird := testInteractionCommand
+	testNewInteractionCommandThird := localTestInteractionCommand
 	newStepId3 := "test_third_step_id"
 	testNewInteractionCommandThird.Metadata.StepId = newStepId3
 
@@ -318,7 +330,7 @@ func TestPostContinueWarningsRaised(t *testing.T) {
 
 	err = interaction.PostContinue(outArgsUpdate)
 	var expectedErr error = nil
-
+	time.Sleep(100 * time.Millisecond)
 	assert.Equal(t, err, expectedErr)
 
 	// Simulating Manual Capability closing the channel and the context
