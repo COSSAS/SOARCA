@@ -336,7 +336,7 @@ func TestPostContinueWarningsRaised(t *testing.T) {
 	// Simulating Manual Capability closing the channel and the context
 	close(testCapComms.Channel)
 	testCancel()
-	time.Sleep(800 * time.Millisecond)
+	time.Sleep(300 * time.Millisecond)
 
 	expectedLogEntry1 := "provided out arg var2 has different value for 'Constant' property of intended out arg. This different value is ignored."
 	expectedLogEntry2 := "provided out arg var2 has different value for 'Description' property of intended out arg. This different value is ignored."
