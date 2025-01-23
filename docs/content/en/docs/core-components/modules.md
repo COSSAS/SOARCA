@@ -16,6 +16,7 @@ The following capability modules are currently defined in SOARCA:
 - http-api
 - openc2-http
 - powershell
+- caldera-cmd
 - manual
 
 The capability will be selected based on the agent in the CACAO playbook step. The agent should be of type `soarca` and have a name corresponding to `soarca-[capability name]`. 
@@ -294,7 +295,7 @@ This example will start an operation that executes the ability with ID `36eecb80
     "workflow": {
         "action--7777c6b6-e275-434e-9e0b-d68f72e691c1": {
             "type": "action",
-            "agent": "soarca--00010001-1000-1000-a000-000100010001",
+            "agent": "soarca--00050001-1000-1000-a000-000100010001",
             "targets": ["security-category--c7e6af1b-9e5a-4055-adeb-26b97e1c4db7"],
             "commands": [
                 {
@@ -305,7 +306,7 @@ This example will start an operation that executes the ability with ID `36eecb80
         }
     },
     "agent_definitions": {
-        "soarca--00010001-1000-1000-a000-000100010001": {
+        "soarca--00050001-1000-1000-a000-000100010001": {
             "type": "soarca",
             "name": "soarca-caldera-cmd"
         }

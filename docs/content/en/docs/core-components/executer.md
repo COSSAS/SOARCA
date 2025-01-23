@@ -67,7 +67,7 @@ class "Ssh" as ssh
 class "OpenC2" as openc2
 class "HttpApi" as api
 class "Manual" as manual
-class "CalderaCmd" as calderacmd
+class "CalderaCmd" as caldera
 class "Fin" as fin
 
 
@@ -77,6 +77,7 @@ ICapability <|.. ssh
 ICapability <|.. openc2
 ICapability <|.. api
 ICapability <|.. manual
+ICapability <|.. caldera 
 ICapability <|.. fin
 
 playbookaction.IExecutor <|.. playbook
