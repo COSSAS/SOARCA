@@ -104,11 +104,21 @@ HTTP_SKIP_CERT_VALIDATION: false
 
 
 For more custom and advanced deployment instructions go [here](/docs/installation-configuration/_index.md).
-### Docker hub
 
-`docker pull cossas/soarca`
+## Obtaining
 
-### Building from Source
+There are several ways to obtain a copy of the SOARCA software.
+
+### Docker Hub 
+
+A prebuilt image can be pulled from the
+[Docker Hub](https://hub.docker.com/r/cossas/soarca):
+
+```bash
+docker pull cossas/soarca
+```
+
+### Building from source
 
 ```bash
 git clone https://github.com/COSSAS/SOARCA.git
