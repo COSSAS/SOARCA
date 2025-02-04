@@ -3,7 +3,7 @@
   "spec_version": "cacao-2.0",
   "id": "playbook--77bbe093-7e90-400c-a7c4-7b3a9396af15",
   "name": "Caldera example playbook of two consecutive caldera steps being executed",
-  "description": "This is a SOARCA TNO Read teaming example playbook.",
+  "description": "This is a SOARCA TNO Red teaming example playbook.",
   "created_by": "identity--0fc44117-48d3-41b8-8bd4-b8dc334f500d",
   "created": "2024-10-08T07:49:16.348Z",
   "modified": "2024-10-08T07:49:16.349Z",
@@ -42,7 +42,7 @@
           "command": "id: 36eecb80-ede3-442b-8774-956e906aff02"
         }
       ],
-      "agent": "caldera--4801fe91-cd09-4da3-a67d-3d69cd9fec7c",
+      "agent": "soarca--00050001-1000-1000-a000-000100010001",
       "targets": [
         "security-category--b1ead715-d565-48f8-a6a4-0d5c4a3e643e"
       ]
@@ -52,7 +52,7 @@
     }
   },
   "agent_definitions": {
-    "caldera--4801fe91-cd09-4da3-a67d-3d69cd9fec7c": {
+    "soarca--00050001-1000-1000-a000-000100010001": {
       "type": "soarca",
       "name": "soarca-caldera-cmd"
     }
