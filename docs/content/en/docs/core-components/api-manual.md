@@ -46,7 +46,7 @@ None
 |step_id            |UUID                   |string             |The id of the step executed by the execution
 |description        |description of the step|string             |The description from the workflow step
 |command            |command                |string             |The command for the agent either command 
-|command_is_base64  |true/false             |bool               |Indicates if the command is in B64
+|command_is_base64  |true \| false             |bool               |Indicates if the command is in Base64
 |target            |cacao agent-target     |object         |Map of [cacao agent-target](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256509) with the target(s) of this command
 |out_args          |cacao variables        |dictionary         |Map of [cacao variables](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256555) handled in the step out args with current values and definitions
 
@@ -110,7 +110,7 @@ None
 |step_id            |UUID                   |string             |The id of the step executed by the execution
 |description        |description of the step|string             |The description from the workflow step
 |command            |command                |string             |The command for the agent either command 
-|command_is_base64  |true/false             |bool               |Indicates if the command is in B64
+|command_is_base64  |true \| false             |bool               |Indicates if the command is in Base64
 |targets            |cacao agent-target     |dictionary         |Map of [cacao agent-target](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256509) with the target(s) of this command
 |out_args          |cacao variables        |dictionary         |Map of [cacao variables](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256555) handled in the step out args with current values and definitions
 
