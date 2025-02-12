@@ -24,8 +24,8 @@ import (
 	"strconv"
 	"strings"
 
-	capabilityController "soarca/pkg/core/capability/controller"
 	finExecutor "soarca/pkg/core/capability/fin"
+	finChannelController "soarca/pkg/core/capability/fin/controller"
 
 	thehive "soarca/pkg/integration/thehive/reporter"
 
@@ -54,7 +54,7 @@ func init() {
 }
 
 type Controller struct {
-	finController capabilityController.IFinController
+	finController finChannelController.IFinController
 	playbookRepo  playbookrepository.IPlaybookRepository
 }
 
@@ -262,15 +262,15 @@ func initializeCore(app *gin.Engine) error {
 
 func (controller *Controller) setupAndRunMqtt() error {
 	broker, port := getMqttDetails()
-	mqttClient := capabilityController.NewClient(protocol.Broker(broker), port)
-	capabilityController := capabilityController.New(*mqttClient)
-	controller.finController = capabilityController
-	err := capabilityController.ConnectAndSubscribe()
+	mqttClient := finChannelController.NewClient(protocol.Broker(broker), port)
+	finChannelController := finChannelController.New(*mqttClient)
+	controller.finController = finChannelController
+	err := finChannelController.ConnectAndSubscribe()
 	if err != nil {
 		log.Error(err)
 		return err
 	}
-	go capabilityController.Run()
+	go finChannelController.Run()
 	return nil
 }
 
