@@ -1,6 +1,7 @@
 package interaction
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"reflect"
@@ -8,7 +9,6 @@ import (
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"soarca/pkg/models/manual"
-	ctxModel "soarca/pkg/models/utils/context"
 )
 
 type Empty struct{}
@@ -92,23 +92,16 @@ func (manualController *InteractionController) handleManualCommandResponse(comma
 
 	// Wait for either timeout or response
 	<-manualComms.TimeoutContext.Done()
-	if manualComms.TimeoutContext.Err().Error() == ctxModel.ErrorContextTimeout {
+	if manualComms.TimeoutContext.Err() == context.DeadlineExceeded {
 		log.Info("manual command timed out. deregistering associated pending command")
-
-		err := manualController.removeInteractionFromPending(command.Metadata)
-		if err != nil {
-			log.Warning(err)
-			log.Warning("manual command not found among pending ones. should be already resolved")
-			return
-		}
-	} else if manualComms.TimeoutContext.Err().Error() == ctxModel.ErrorContextCanceled {
+	} else if manualComms.TimeoutContext.Err() == context.Canceled {
 		log.Info("manual command completed. deregistering associated pending command")
-		err := manualController.removeInteractionFromPending(command.Metadata)
-		if err != nil {
-			log.Warning(err)
-			log.Warning("manual command not found among pending ones. should be already resolved")
-			return
-		}
+	}
+	err := manualController.removeInteractionFromPending(command.Metadata)
+	if err != nil {
+		log.Warning(err)
+		log.Warning("manual command not found among pending ones. should be already resolved")
+		return
 	}
 }
 
