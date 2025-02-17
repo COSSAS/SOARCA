@@ -640,7 +640,7 @@ var testInteractionCommand = manualModel.CommandInfo{
 					External:    false,
 				},
 			},
-			OutArgs: cacao.OutArgs{"var2"},
+			OutArgs: []string{"var2"},
 			Commands: []cacao.Command{
 				{
 					Type:    "test_type",
