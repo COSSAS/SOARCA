@@ -201,10 +201,17 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 			"POST /manual/continue", "")
 		return
 	}
+	executionId, err := uuid.Parse(outArgsUpdate.ExecutionId)
+	if err != nil {
+		apiError.SendErrorResponse(g, http.StatusInternalServerError,
+			"Failed to parse execution ID",
+			"POST /manual/continue", "")
+	}
+
 	g.JSON(
 		http.StatusOK,
 		api.Execution{
-			ExecutionId: uuid.MustParse(outArgsUpdate.ExecutionId),
+			ExecutionId: executionId,
 			PlaybookId:  outArgsUpdate.PlaybookId,
 		})
 }
