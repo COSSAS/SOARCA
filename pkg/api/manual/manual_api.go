@@ -261,11 +261,10 @@ func (manualHandler *ManualHandler) parseManualResponseToInteractionResponse(res
 }
 
 func (ManualHandler *ManualHandler) postContinueVariableNamesMatchCheck(outArgs cacao.Variables) bool {
-	ok := true
 	for varName, variable := range outArgs {
 		if varName != variable.Name {
-			ok = false
+			return false
 		}
 	}
-	return ok
+	return true
 }
