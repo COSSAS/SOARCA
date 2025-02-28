@@ -11,7 +11,6 @@ import (
 	"soarca/internal/logger"
 	"soarca/pkg/core/capability/manual/interaction"
 	"soarca/pkg/models/api"
-	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"soarca/pkg/models/manual"
 
@@ -202,7 +201,9 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 		})
 }
 
+// ############################################################################
 // Utility
+// ############################################################################
 func (manualHandler *ManualHandler) parseCommandInfoToResponse(commandInfo manual.CommandInfo) api.InteractionCommandData {
 	commandText := commandInfo.Context.Command.Command
 	isBase64 := false
@@ -246,15 +247,6 @@ func (manualHandler *ManualHandler) parseManualOutArgsToInteractionResponse(resp
 	return interactionResponse, nil
 }
 
-func (manualHandler *ManualHandler) postContinueVariableNamesMatchCheck(outArgs cacao.Variables) bool {
-	for varName, variable := range outArgs {
-		if varName != variable.Name {
-			return false
-		}
-	}
-	return true
-}
-
 func (manualHandler *ManualHandler) parseManualOutArgsUpdate(jsonData []byte) (api.ManualOutArgsUpdatePayload, error) {
 	decoder := json.NewDecoder(bytes.NewReader(jsonData))
 	decoder.DisallowUnknownFields()
@@ -267,7 +259,14 @@ func (manualHandler *ManualHandler) parseManualOutArgsUpdate(jsonData []byte) (a
 	}
 
 	// Check if variable names match
-	ok := manualHandler.postContinueVariableNamesMatchCheck(outArgsUpdate.ResponseOutArgs)
+	ok := true
+	for varName, variable := range outArgsUpdate.ResponseOutArgs {
+		if varName != variable.Name {
+			ok = false
+			continue
+		}
+	}
+
 	if !ok {
 		errorString := "variable name mismatch"
 		log.Error(errorString)
