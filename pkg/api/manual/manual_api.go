@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"reflect"
@@ -155,29 +156,14 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 		return
 	}
 
-	var outArgsUpdate api.ManualOutArgsUpdatePayload
-	decoder := json.NewDecoder(bytes.NewReader(jsonData))
-	decoder.DisallowUnknownFields()
-	err = decoder.Decode(&outArgsUpdate)
+	outArgsUpdate, err := manualHandler.parseManualOutArgsUpdate(jsonData)
 	if err != nil {
-		log.Error("failed to unmarshal JSON")
 		apiError.SendErrorResponse(g, http.StatusBadRequest,
-			"Failed to unmarshal JSON",
-			"POST /manual/continue", "")
-		return
+			fmt.Sprint(fmt.Errorf("Failed to parse manual out args payload: %w", err)),
+			"POST /manual/continue", err.Error())
 	}
 
-	// Check if variable names match
-	ok := manualHandler.postContinueVariableNamesMatchCheck(outArgsUpdate.ResponseOutArgs)
-	if !ok {
-		log.Error("variable name mismatch")
-		apiError.SendErrorResponse(g, http.StatusBadRequest,
-			"Variable name mismatch",
-			"POST /manual/continue", "")
-		return
-	}
-
-	interactionResponse, err := manualHandler.parseManualResponseToInteractionResponse(outArgsUpdate)
+	interactionResponse, err := manualHandler.parseManualOutArgsToInteractionResponse(outArgsUpdate)
 	if err != nil {
 		apiError.SendErrorResponse(g, http.StatusBadRequest,
 			"Failed to parse response",
@@ -240,7 +226,7 @@ func (manualHandler *ManualHandler) parseCommandInfoToResponse(commandInfo manua
 	return response
 }
 
-func (manualHandler *ManualHandler) parseManualResponseToInteractionResponse(response api.ManualOutArgsUpdatePayload) (manual.InteractionResponse, error) {
+func (manualHandler *ManualHandler) parseManualOutArgsToInteractionResponse(response api.ManualOutArgsUpdatePayload) (manual.InteractionResponse, error) {
 	executionId, err := uuid.Parse(response.ExecutionId)
 	if err != nil {
 		return manual.InteractionResponse{}, err
@@ -260,11 +246,33 @@ func (manualHandler *ManualHandler) parseManualResponseToInteractionResponse(res
 	return interactionResponse, nil
 }
 
-func (ManualHandler *ManualHandler) postContinueVariableNamesMatchCheck(outArgs cacao.Variables) bool {
+func (manualHandler *ManualHandler) postContinueVariableNamesMatchCheck(outArgs cacao.Variables) bool {
 	for varName, variable := range outArgs {
 		if varName != variable.Name {
 			return false
 		}
 	}
 	return true
+}
+
+func (manualHandler *ManualHandler) parseManualOutArgsUpdate(jsonData []byte) (api.ManualOutArgsUpdatePayload, error) {
+	decoder := json.NewDecoder(bytes.NewReader(jsonData))
+	decoder.DisallowUnknownFields()
+	var outArgsUpdate api.ManualOutArgsUpdatePayload
+	err := decoder.Decode(&outArgsUpdate)
+	if err != nil {
+		errorString := "failed to unmarshal JSON"
+		log.Error(errorString)
+		return api.ManualOutArgsUpdatePayload{}, errors.New(errorString)
+	}
+
+	// Check if variable names match
+	ok := manualHandler.postContinueVariableNamesMatchCheck(outArgsUpdate.ResponseOutArgs)
+	if !ok {
+		errorString := "variable name mismatch"
+		log.Error(errorString)
+		return api.ManualOutArgsUpdatePayload{}, errors.New(errorString)
+	}
+
+	return outArgsUpdate, nil
 }
