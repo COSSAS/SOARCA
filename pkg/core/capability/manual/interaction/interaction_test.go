@@ -9,6 +9,7 @@ import (
 	"soarca/pkg/core/capability"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
+	"soarca/pkg/models/manual"
 	manualModel "soarca/pkg/models/manual"
 	"sort"
 	"strings"
@@ -260,87 +261,60 @@ func TestCopyOutArgsToVars(t *testing.T) {
 	assert.Equal(t, expectedVariable.Value, vars["var2"].Value)
 }
 
-func TestPostContinueWarningsRaised(t *testing.T) {
+func TestValidateMatchingOutArgs(t *testing.T) {
 
 	interaction := New([]IInteractionIntegrationNotifier{})
-	timeout := 5 * time.Second
-	testCtx, testCancel := context.WithTimeout(context.Background(), timeout)
 
-	hook := NewTestLogHook()
-	log.Logger.AddHook(hook)
-
-	testCapComms := manualModel.ManualCapabilityCommunication{
-		Channel:        make(chan manualModel.InteractionResponse),
-		TimeoutContext: testCtx,
-	}
-
-	err := interaction.Queue(testInteractionCommand, testCapComms)
-	if err != nil {
-		t.Log(err)
-		t.Fail()
-	}
-
-	outArg := cacao.Variable{
-		Type:        "banana",
-		Name:        "var2",
-		Description: "this description will not make it to the returned var",
+	respOutArg := cacao.Variable{
+		Type:        "pears",
+		Name:        "__var2__",
+		Description: "this description is a description",
 		Value:       "now the value is bananas",
 		Constant:    true, // changed but won't be ported
 		External:    true, // changed but won't be ported
 	}
 
-	outArgsUpdate := manualModel.InteractionResponse{
-		Metadata:         testMetadata,
-		ResponseStatus:   "success",
-		ResponseError:    nil,
-		OutArgsVariables: cacao.Variables{"var2": outArg},
+	respOutArgs := cacao.Variables{"__var2__": respOutArg}
+
+	storedOutArg := cacao.Variable{
+		Type:        "apples",
+		Name:        "__var2__",
+		Description: "this description is a description is a description",
+		Value:       "now the value is bananas",
+		Constant:    false, // different than respOutArg
+		External:    false, // different than respOutArg
+	}
+	storedOutArgs := cacao.Variables{"__var2__": storedOutArg}
+
+	interactionStorageEntry := manual.InteractionStorageEntry{
+		CommandInfo: manualModel.CommandInfo{
+			Metadata:         testMetadata,
+			Context:          capability.Context{},
+			OutArgsVariables: storedOutArgs,
+		},
+		Channel: make(chan manualModel.InteractionResponse),
 	}
 
-	// Start a goroutine to read from the channel to avoid blocking
-	go func() {
-		for response := range testCapComms.Channel {
-			log.Trace("Received response:", response)
-		}
-	}()
-
-	err = interaction.PostContinue(outArgsUpdate)
-	var expectedErr error = nil
-	time.Sleep(100 * time.Millisecond)
-	assert.Equal(t, err, expectedErr)
-
-	// Simulating Manual Capability closing the channel and the context
-	close(testCapComms.Channel)
-	testCancel()
-	time.Sleep(300 * time.Millisecond)
-
-	expectedLogEntry1 := "provided out arg var2 has different value for 'Constant' property of intended out arg. This different value is ignored."
-	expectedLogEntry2 := "provided out arg var2 has different value for 'Description' property of intended out arg. This different value is ignored."
-	expectedLogEntry3 := "provided out arg var2 has different value for 'External' property of intended out arg. This different value is ignored."
-	expectedLogEntry4 := "provided out arg var2 has different value for 'Type' property of intended out arg. This different value is ignored."
+	expectedLogEntry1 := "provided out arg __var2__ has different value for 'Constant' property of intended out arg. This different value is ignored."
+	expectedLogEntry2 := "provided out arg __var2__ has different value for 'Description' property of intended out arg. This different value is ignored."
+	expectedLogEntry3 := "provided out arg __var2__ has different value for 'External' property of intended out arg. This different value is ignored."
+	expectedLogEntry4 := "provided out arg __var2__ has different value for 'Type' property of intended out arg. This different value is ignored."
 	expectedLogs := []string{expectedLogEntry1, expectedLogEntry2, expectedLogEntry3, expectedLogEntry4}
 
-	all := true
-	for _, expectedMessage := range expectedLogs {
-		containsAll := true
-		for _, entry := range hook.Entries {
-			if strings.Contains(entry.Message, expectedMessage) {
-				containsAll = true
-				break
-			}
-			if !strings.Contains(entry.Message, expectedMessage) {
-				containsAll = false
-			}
-		}
-		if !containsAll {
-			t.Logf("log message: '%s' not found in logged messages", expectedMessage)
-			all = false
-			break
-		}
+	warns, err := interaction.validateMatchingOutArgs(interactionStorageEntry, respOutArgs)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
 	}
 
-	assert.NotEqual(t, len(hook.Entries), 0)
-	assert.Equal(t, all, true)
+	sort.Slice(warns, func(i, j int) bool {
+		return warns[i] < warns[j]
+	})
+	sort.Slice(expectedLogs, func(i, j int) bool {
+		return warns[i] < warns[j]
+	})
 
+	assert.Equal(t, expectedLogs, warns)
 }
 
 func TestPostContinueFailOnNonexistingVariable(t *testing.T) {
