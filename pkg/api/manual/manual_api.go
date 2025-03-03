@@ -146,7 +146,7 @@ func (manualHandler *ManualHandler) GetPendingCommand(g *gin.Context) {
 //	@Router			/manual/continue [POST]
 func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 
-	jsonData, err := io.ReadAll(g.Request.Body)
+	byteData, err := io.ReadAll(g.Request.Body)
 	if err != nil {
 		log.Error("failed")
 		apiError.SendErrorResponse(g, http.StatusBadRequest,
@@ -155,7 +155,7 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 		return
 	}
 
-	outArgsUpdate, err := manualHandler.parseManualOutArgsUpdate(jsonData)
+	outArgsUpdate, err := manualHandler.parseManualOutArgsUpdate(byteData)
 	if err != nil {
 		apiError.SendErrorResponse(g, http.StatusBadRequest,
 			fmt.Sprint(fmt.Errorf("Failed to parse manual out args payload: %w", err)),
@@ -204,6 +204,32 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 // ############################################################################
 // Utility
 // ############################################################################
+
+func (manualHandler *ManualHandler) parseManualOutArgsUpdate(postData []byte) (api.ManualOutArgsUpdatePayload, error) {
+	decoder := json.NewDecoder(bytes.NewReader(postData))
+	decoder.DisallowUnknownFields()
+	var outArgsUpdate api.ManualOutArgsUpdatePayload
+	err := decoder.Decode(&outArgsUpdate)
+	if err != nil {
+		errorString := "failed to unmarshal JSON"
+		log.Error(errorString)
+		return api.ManualOutArgsUpdatePayload{}, errors.New(errorString)
+	}
+
+	// Check if variable names match
+	for varName, variable := range outArgsUpdate.ResponseOutArgs {
+		if varName != variable.Name {
+			errorString := fmt.Errorf(
+				"variable name mismatch for variable %s: has different name property: %s",
+				varName, variable.Name)
+			log.Error(errorString)
+			return api.ManualOutArgsUpdatePayload{}, errorString
+		}
+	}
+
+	return outArgsUpdate, nil
+}
+
 func (manualHandler *ManualHandler) parseCommandInfoToResponse(commandInfo manual.CommandInfo) api.InteractionCommandData {
 	commandText := commandInfo.Context.Command.Command
 	isBase64 := false
@@ -245,33 +271,4 @@ func (manualHandler *ManualHandler) parseManualOutArgsToInteractionResponse(resp
 	}
 
 	return interactionResponse, nil
-}
-
-func (manualHandler *ManualHandler) parseManualOutArgsUpdate(jsonData []byte) (api.ManualOutArgsUpdatePayload, error) {
-	decoder := json.NewDecoder(bytes.NewReader(jsonData))
-	decoder.DisallowUnknownFields()
-	var outArgsUpdate api.ManualOutArgsUpdatePayload
-	err := decoder.Decode(&outArgsUpdate)
-	if err != nil {
-		errorString := "failed to unmarshal JSON"
-		log.Error(errorString)
-		return api.ManualOutArgsUpdatePayload{}, errors.New(errorString)
-	}
-
-	// Check if variable names match
-	ok := true
-	for varName, variable := range outArgsUpdate.ResponseOutArgs {
-		if varName != variable.Name {
-			ok = false
-			continue
-		}
-	}
-
-	if !ok {
-		errorString := "variable name mismatch"
-		log.Error(errorString)
-		return api.ManualOutArgsUpdatePayload{}, errors.New(errorString)
-	}
-
-	return outArgsUpdate, nil
 }

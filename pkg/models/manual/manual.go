@@ -14,8 +14,8 @@ import (
 type ManualResponseStatus string
 
 const (
-	Success ManualResponseStatus = "success"
-	Failure ManualResponseStatus = "failure"
+	ManualResponseSuccessStatus ManualResponseStatus = "success"
+	ManualResponseFailureStatus ManualResponseStatus = "failure"
 )
 
 type InteractionStorageEntry struct {

@@ -1,6 +1,7 @@
 package manual
 
 import (
+	"errors"
 	"reflect"
 	"soarca/pkg/core/capability"
 	"soarca/pkg/models/api"
@@ -13,6 +14,51 @@ import (
 	"github.com/go-playground/assert/v2"
 	"github.com/google/uuid"
 )
+
+func TestParseManualOutArgsUpdate(t *testing.T) {
+	manualHandler := NewManualHandler(&mock_interaction_storage.MockInteractionStorage{})
+
+	testExecId := "50b6d52c-6efc-4516-a242-dfbc5c89d421"
+	testStepId := "61a4d52c-6efc-4516-a242-dfbc5c89d312"
+	testPlaybookId := "21a4d52c-6efc-4516-a242-dfbc5c89d312"
+
+	jsonPayload := `{"type":"out-args-update","execution_id":"50b6d52c-6efc-4516-a242-dfbc5c89d421","playbook_id":"21a4d52c-6efc-4516-a242-dfbc5c89d312","step_id":"61a4d52c-6efc-4516-a242-dfbc5c89d312","response_status":"success","response_out_args":{"__test__":{"type":"string","name":"__test__","value":"updated!"}}}`
+	bytesPayload := []byte(jsonPayload)
+
+	outVariable := cacao.Variable{Type: "string", Name: "__test__", Value: "updated!"}
+	outVariables := map[string]cacao.Variable{"__test__": outVariable}
+
+	expectedPayload := api.ManualOutArgsUpdatePayload{
+		Type:            "out-args-update",
+		ExecutionId:     testExecId,
+		PlaybookId:      testPlaybookId,
+		StepId:          testStepId,
+		ResponseStatus:  manual.ManualResponseSuccessStatus,
+		ResponseOutArgs: outVariables,
+	}
+
+	receivedPayload, err := manualHandler.parseManualOutArgsUpdate(bytesPayload)
+	if err != nil {
+		t.Fatalf("failed to parse manual out args update: %v", err)
+	}
+	assert.Equal(t, receivedPayload, expectedPayload)
+}
+
+func TestParseManualOutArgsUpdateFailOnVariablesNames(t *testing.T) {
+	manualHandler := NewManualHandler(&mock_interaction_storage.MockInteractionStorage{})
+
+	jsonPayload := `{"type":"out-args-update","execution_id":"50b6d52c-6efc-4516-a242-dfbc5c89d421","playbook_id":"21a4d52c-6efc-4516-a242-dfbc5c89d312","step_id":"61a4d52c-6efc-4516-a242-dfbc5c89d312","response_status":"success","response_out_args":{"__test__":{"type":"string","name":"__wrong_name__","value":"updated!"}}}`
+	bytesPayload := []byte(jsonPayload)
+
+	expecedErr := errors.New("variable name mismatch for variable __test__: has different name property: __wrong_name__")
+	_, err := manualHandler.parseManualOutArgsUpdate(bytesPayload)
+	if err == nil {
+		t.Log("an error for non-matching variables names should have been raised")
+		t.Fail()
+	}
+
+	assert.Equal(t, err, expecedErr)
+}
 
 func TestParseCommandInfoToResponse(t *testing.T) {
 
@@ -64,8 +110,41 @@ func TestParseCommandInfoToResponse(t *testing.T) {
 }
 
 func TestParseManualOutArgsToInteractionResponse(t *testing.T) {
-	assert.Equal(t, "a", "a")
-}
-func TestParseManualOutArgsUpdate(t *testing.T) {
-	assert.Equal(t, "a", "a")
+	manualHandler := NewManualHandler(&mock_interaction_storage.MockInteractionStorage{})
+
+	testExecId := "50b6d52c-6efc-4516-a242-dfbc5c89d421"
+	testStepId := "61a4d52c-6efc-4516-a242-dfbc5c89d312"
+	testPlaybookId := "21a4d52c-6efc-4516-a242-dfbc5c89d312"
+
+	outVariable := cacao.Variable{Type: "string", Name: "__test__", Value: "updated!"}
+	outVariables := map[string]cacao.Variable{"__test__": outVariable}
+
+	payload := api.ManualOutArgsUpdatePayload{
+		Type:            "out-args-update",
+		ExecutionId:     testExecId,
+		PlaybookId:      testPlaybookId,
+		StepId:          testStepId,
+		ResponseStatus:  manual.ManualResponseFailureStatus,
+		ResponseOutArgs: outVariables,
+	}
+
+	expetedInteractionResponse := manual.InteractionResponse{
+		Metadata: execution.Metadata{
+			PlaybookId:  testPlaybookId,
+			ExecutionId: uuid.MustParse(testExecId),
+			StepId:      testStepId,
+		},
+		ResponseStatus:   manual.ManualResponseFailureStatus,
+		OutArgsVariables: outVariables,
+		ResponseError:    nil,
+	}
+
+	interactionResponse, err := manualHandler.parseManualOutArgsToInteractionResponse(payload)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+
+	assert.Equal(t, expetedInteractionResponse, interactionResponse)
+
 }
