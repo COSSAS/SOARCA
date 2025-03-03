@@ -191,5 +191,4 @@ func TestParseManualOutArgsToInteractionResponseFailOnNonUUID(t *testing.T) {
 	}
 
 	assert.Equal(t, err.Error(), expectedErr)
-
 }
