@@ -322,20 +322,199 @@ This example will start an operation that executes the ability with ID `36eecb80
 ```
 
 ### Manual capability 
-This capability executes [manual Commands](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256491) and provides them through the [SOARCA api](/docs/core-components/api-manual).
+This capability executes [manual Commands](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256491) and provides them natively through the [SOARCA api](/docs/core-components/api-manual), though other integrations are possible.
 
 
-<!-- The manual capability will allow an operator to interact with a playbook. It could allow one to perform a manual step that could not be automated, enter a variable to the playbook execution or a combination of these operations.
+The manual capability will allow an operator to interact with a playbook. It could allow one to perform a manual step that could not be automated, enter a variable to the playbook execution or a combination of these operations.
 
-The main way to interact with the manual step is through SOARCA's [manual api](/docs/core-components/api-manual). The manual step should provide a timeout SOARCA will by default use a timeout of 10 minutes. If a timeout occurs the step is considered as failed. -->
+The manual step should provide a timeout. SOARCA will by default use a timeout of 10 minutes. If a timeout occurs, the step is considered as failed.
+
+#### Manual capability architecture
+
+In essence, executing a manual command involves the following actions:
+1. A message, the `command` of a manual command, is posted *somewhere*, *somehow*, together with the variables of which values is expected to be assigned or updated (if any).
+2. The playbook execution stops, waiting for *something* to respond to the message with the variables values.
+3. Once something replies, the variables are streamed inside the playbook execution and handled accordingly.
+
+It should be possible to post a manual command message anywhere and in any way, and allow anything to respond back. Hence, SOARCA adopts a flexible architecture to accomodate different ways of manual *interactions*. Below a view of the architecture.
+
+When a playbook execution hits an Action step with a manual command, the *ManualCapability* will queue the instruction into the *CapabilityInteraction* module. The module does essentially three things: 
+1. it stores the status of the manual command, and implements the SOARCA API interactions with the manual command.
+2. If manual integrations are defined for the SOARCA instance, the *CapabilityInteraction* module notifies the manual integration modules, so that they can handle the manual command in turn.
+3. It waits for the manual command to be satisfied either via SOARCA APIs, or via manual integrations. The first to respond amongst the two, resolves the manual command. The resolution of the command may or may not assign new values to variables in the playbook. Finally the *CapabilityInteraction* module replies to the *ManualCommand* module.
+
+Ultimately the *ManualCapability* then completes its execution, having eventually updated the values for the variables in the outArgs of the command. Timeouts or errors are handled opportunely.
+
+```plantuml
+@startuml
+set separator ::
+
+class ManualCommand 
+
+protocol ManualAPI {
+    GET     /manual
+    GET     /manual/{exec-id}/{step-id}
+    POST    /manual/continue
+}
+
+interface ICapability{
+   Execute()
+}
+
+interface ICapabilityInteraction{
+    Queue(command InteractionCommand, manualComms ManualCapabilityCommunication)
+}
+
+interface IInteracionStorage{
+    GetPendingCommands() []CommandData
+	GetPendingCommand(execution.metadata) CommandData
+	PostContinue(execution.metadata) ExecutionInfo
+}
+
+interface IInteractionIntegrationNotifier {
+    Notify(command InteractionIntegrationCommand, channel manualCapabilityCommunication.Channel)
+}
+
+class Interaction {
+    notifiers []IInteractionIntegrationNotifier
+    storage map[executionId]map[stepId]InteractionStorageEntry
+}
+class ThirdPartyManualIntegration
 
 
+ManualCommand .up.|> ICapability
+ManualCommand -down-> ICapabilityInteraction
+Interaction .up.|> ICapabilityInteraction
+Interaction .up.|> IInteracionStorage
+
+ManualAPI -down-> IInteracionStorage
+
+Interaction -right-> IInteractionIntegrationNotifier
+ThirdPartyManualIntegration .up.|> IInteractionIntegrationNotifier
 
 
+```
+
+The default and internally-supported way to interact with the manual step is through SOARCA's [manual api](/docs/core-components/api-manual). 
+Besides SOARCA's [manual api](/docs/core-components/api-manual), SOARCA is designed to allow for configuration of additional ways that a manual command should be executed. In particular, there can be *one* manual integration (besides the native manual APIs) per running SOARCA instance.
+Integration's code should implement the *IInteractionIntegrationNotifier* interface, returning the result of the manual command execution in form of an `InteractionIntegrationResponse` object, into the respective channel.
+
+The diagram below displays in some detail the way the manual interactions components work.
+
+```plantuml
+@startuml
+control "ManualCommand" as manual
+control "Interaction" as interaction
+control "ManualAPI" as api
+control "ThirdPartyManualIntegration" as 3ptool
+participant "Integration" as integration
+
+-> manual : ...manual command 
+manual -> interaction : Queue(command, capabilityChannel, timeoutContext)
+manual -> manual : idle wait on capabilityChannel
+activate manual
+
+activate interaction
+interaction -> interaction : save pending manual command
+interaction ->> 3ptool : Notify(command, capabilityChannel, timeoutContext)
+3ptool <--> integration : custom handling command posting
+deactivate interaction
+
+alt Command Response
+
+    group Native ManualAPI flow
+        api -> interaction : GetPendingCommands()
+        activate interaction
+        activate api
+        api -> interaction : GetPendingCommand(execution.metadata)
+        api -> interaction : PostContinue(ManualOutArgsUpdate)
+        interaction -> interaction : build InteractionResponse
+        deactivate api
+        interaction --> manual : capabilityChannel <- InteractionResponse
+        manual ->> interaction : timeoutContext.Cancel() event
+        interaction -> interaction : de-register pending command
+        deactivate interaction
+        manual ->> 3ptool : timeoutContext.Deadline() event
+        activate 3ptool
+        3ptool <--> integration : custom handling command completed
+        deactivate manual
+        <- manual : ...continue execution
+        deactivate 3ptool
+        deactivate integration
+    end
+else 
+    group Third Party Integration flow
+        integration --> 3ptool : custom handling command response
+        activate manual
+        activate integration
+        deactivate integration
+        activate 3ptool
+        3ptool -> 3ptool : build InteractionResponse
+        3ptool --> manual : capabilityChannel <- InteractionResponse
+        deactivate 3ptool
+        manual ->> interaction : timeoutContext.Cancel() event
+        activate interaction
+        interaction -> interaction : de-register pending command
+        deactivate interaction
+        manual ->> 3ptool : timeoutContext.Deadline() event
+        activate 3ptool
+        3ptool <--> integration : custom handling command completed
+        deactivate 3ptool
+        activate integration
+        deactivate integration
+        <- manual : ...continue execution
+        deactivate manual
+        deactivate integration
+    end
+end
+
+@enduml
+```
+
+Note that whoever resolves the manual command first, whether via the manualAPI, or a third party integration, then the command results are returned to the workflow execution, and the manual command is removed from the pending list. Hence, if a manual command is resolved e.g. via the manual integration, a postContinue API call for that same command will not go through, as the command will have been resolved already, and hence removed from the registry of pending manual commands.
+
+The diagram below shows instead what happens when a timeout occurs for the manual command.
+
+```plantuml
+@startuml
+control "ManualCommand" as manual
+control "Interaction" as interaction
+control "ManualAPI" as api
+control "ThirdPartyManualIntegration" as 3ptool
+participant "Integration" as integration
+
+-> manual : ...manual command 
+manual -> interaction : Queue(command, capabilityChannel, timeoutContext)
+manual -> manual : idle wait on capabilityChannel
+activate manual
+
+activate interaction
+interaction -> interaction : save pending manual command
+interaction ->> 3ptool : Notify(command, capabilityChannel, timeoutContext)
+3ptool --> integration : custom handling command posting
+deactivate interaction
+
+group Command execution times out
+    manual -> manual : timeoutContext.Deadline()
+    manual ->> interaction : timeoutContext.Deadline() event
+    manual ->> 3ptool : timeoutContext.Deadline() event
+    3ptool --> integration : custom handling command timed-out view
+    activate interaction
+    interaction -> interaction : de-register pending command
+    <- manual : ...continue execution
+    deactivate manual
+    ...
+    api -> interaction : GetPendingCommand(execution.metadata)
+    interaction -> api : no pending command (404) 
+end
+
+
+@enduml
+```
 
 #### Success and failure
 
-In SOARCA the manual step is considered successful if a response is made through the [manual api](/docs/core-components/api-manual). The manual command can specify a timeout but if none is specified SOARCA will use a default timeout of 10 minutes. If a timeout occurs the step is considered as failed and SOARCA will return an error to the decomposer.
+In SOARCA the manual step is considered successful if a response is made through the [manual api](/docs/core-components/api-manual), or an integration. The manual command can specify a timeout, but if none is specified SOARCA will use a default timeout of 10 minutes. If a timeout occurs the step is considered as failed and SOARCA will return an error to the decomposer.
 
 #### Variables
 

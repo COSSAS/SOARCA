@@ -10,6 +10,7 @@ import (
 	"soarca/pkg/core/capability"
 	"soarca/pkg/core/capability/fin/protocol"
 	"soarca/pkg/core/capability/http"
+	"soarca/pkg/core/capability/manual/interaction"
 	"soarca/pkg/core/capability/openc2"
 	"soarca/pkg/core/capability/powershell"
 	"soarca/pkg/core/capability/ssh"
@@ -63,6 +64,9 @@ var mainController = Controller{}
 var mainCache = cache.Cache{}
 
 const defaultCacheSize int = 10
+
+// One manual interaction per SOARCA instance
+var mainInteraction = interaction.New(registerManualIntegration())
 
 func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	ssh := new(ssh.SshCapability)
@@ -254,6 +258,9 @@ func initializeCore(app *gin.Engine) error {
 		return err
 	}
 
+	// Manual capability native routes
+	routes.Manual(app, mainInteraction)
+
 	routes.Logging(app)
 	routes.Swagger(app)
 
@@ -272,6 +279,14 @@ func (controller *Controller) setupAndRunMqtt() error {
 	}
 	go finChannelController.Run()
 	return nil
+}
+
+func registerManualIntegration() []interaction.IInteractionIntegrationNotifier {
+	// Manual interaction integrations will be initialized here when implemented
+	// Here we should check ENV variables, see if a manual interaction integration is selected,
+	// And populate the returned array via generating an instance of the notifier associated with
+	// the integration - which should be found in the integration code.
+	return []interaction.IInteractionIntegrationNotifier{}
 }
 
 func initializeIntegrationTheHiveReporting() downstreamReporter.IDownStreamReporter {
