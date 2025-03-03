@@ -108,40 +108,15 @@ func TestRegisterRetrieveNewPendingInteraction(t *testing.T) {
 		testChan,
 	)
 
-	// ExecutionId
+	// Execution metadata
 	assert.Equal(t,
-		retrievedCommand.CommandInfo.Metadata.ExecutionId.String(),
-		testInteractionCommand.Metadata.ExecutionId.String(),
+		retrievedCommand.CommandInfo.Metadata,
+		testInteractionCommand.Metadata,
 	)
-	// PlaybookId
+	// Contexts
 	assert.Equal(t,
-		retrievedCommand.CommandInfo.Metadata.PlaybookId,
-		testInteractionCommand.Metadata.PlaybookId,
-	)
-	// StepId
-	assert.Equal(t,
-		retrievedCommand.CommandInfo.Metadata.StepId,
-		testInteractionCommand.Metadata.StepId,
-	)
-	// Description
-	assert.Equal(t,
-		retrievedCommand.CommandInfo.Context.Command.Description,
-		testInteractionCommand.Context.Command.Description,
-	)
-	// Command
-	assert.Equal(t,
-		retrievedCommand.CommandInfo.Context.Command.Command,
-		testInteractionCommand.Context.Command.Command,
-	)
-	// CommandB64
-	assert.Equal(t,
-		retrievedCommand.CommandInfo.Context.Command.CommandB64,
-		testInteractionCommand.Context.Command.CommandB64,
-	)
-	// Target
-	assert.Equal(t,
-		retrievedCommand.CommandInfo.Context.Target,
-		testInteractionCommand.Context.Target,
+		retrievedCommand.CommandInfo.Context,
+		testInteractionCommand.Context,
 	)
 	// OutArgs
 	assert.Equal(t,
