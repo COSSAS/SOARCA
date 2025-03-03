@@ -194,11 +194,11 @@ func TestPostContinueFailsOnNonMatchingOutArgNames(t *testing.T) {
 		t.Fail()
 	}
 
-	expectedErr := errors.New("Variable name mismatch")
+	expectedErr := errors.New("variable name mismatch for variable __this_var__: has different name property: __is_invalid__")
 
 	app.ServeHTTP(recorder, request)
 	t.Log(recorder.Body.String())
 	assert.Equal(t, 400, recorder.Code)
+	mock_interaction_storage.AssertExpectations(t)
 	assert.Equal(t, true, strings.Contains(recorder.Body.String(), expectedErr.Error()))
-
 }

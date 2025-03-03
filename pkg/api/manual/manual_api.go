@@ -160,6 +160,7 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 		apiError.SendErrorResponse(g, http.StatusBadRequest,
 			fmt.Sprint(fmt.Errorf("Failed to parse manual out args payload: %w", err)),
 			"POST /manual/continue", err.Error())
+		return
 	}
 
 	interactionResponse, err := manualHandler.parseManualOutArgsToInteractionResponse(outArgsUpdate)
@@ -167,6 +168,7 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 		apiError.SendErrorResponse(g, http.StatusBadRequest,
 			"Failed to parse response",
 			"POST /manual/continue", err.Error())
+		return
 	}
 
 	err = manualHandler.interactionCapability.PostContinue(interactionResponse)
@@ -191,6 +193,7 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 		apiError.SendErrorResponse(g, http.StatusInternalServerError,
 			"Failed to parse execution ID",
 			"POST /manual/continue", "")
+		return
 	}
 
 	g.JSON(
