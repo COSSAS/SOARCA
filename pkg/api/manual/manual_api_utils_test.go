@@ -60,6 +60,22 @@ func TestParseManualOutArgsUpdateFailOnVariablesNames(t *testing.T) {
 	assert.Equal(t, err, expecedErr)
 }
 
+func TestParseManualOutArgsUpdateFailOnInvalidModel(t *testing.T) {
+	manualHandler := NewManualHandler(&mock_interaction_storage.MockInteractionStorage{})
+
+	jsonPayload := `{"invalidProperty":"out-args-update","execution_id":"50b6d52c-6efc-4516-a242-dfbc5c89d421","playbook_id":"21a4d52c-6efc-4516-a242-dfbc5c89d312","step_id":"61a4d52c-6efc-4516-a242-dfbc5c89d312","response_status":"success","response_out_args":{"__test__":{"type":"string","name":"__wrong_name__","value":"updated!"}}}`
+	bytesPayload := []byte(jsonPayload)
+
+	expectedErr := "failed to unmarshal JSON: json: unknown field \"invalidProperty\""
+	_, err := manualHandler.parseManualOutArgsUpdate(bytesPayload)
+	if err == nil {
+		t.Log("an error for non-matching variables names should have been raised")
+		t.Fail()
+	}
+
+	assert.Equal(t, err.Error(), expectedErr)
+}
+
 func TestParseCommandInfoToResponse(t *testing.T) {
 
 	manualHandler := NewManualHandler(&mock_interaction_storage.MockInteractionStorage{})
@@ -146,5 +162,34 @@ func TestParseManualOutArgsToInteractionResponse(t *testing.T) {
 	}
 
 	assert.Equal(t, expetedInteractionResponse, interactionResponse)
+}
+
+func TestParseManualOutArgsToInteractionResponseFailOnNonUUID(t *testing.T) {
+	manualHandler := NewManualHandler(&mock_interaction_storage.MockInteractionStorage{})
+
+	testExecId := "invalidUUID! 50b6d52c-6efc-4516-a242-dfbc5c89d421"
+	testStepId := "61a4d52c-6efc-4516-a242-dfbc5c89d312"
+	testPlaybookId := "21a4d52c-6efc-4516-a242-dfbc5c89d312"
+
+	outVariable := cacao.Variable{Type: "string", Name: "__test__", Value: "updated!"}
+	outVariables := map[string]cacao.Variable{"__test__": outVariable}
+
+	payload := api.ManualOutArgsUpdatePayload{
+		Type:            "out-args-update",
+		ExecutionId:     testExecId,
+		PlaybookId:      testPlaybookId,
+		StepId:          testStepId,
+		ResponseStatus:  manual.ManualResponseFailureStatus,
+		ResponseOutArgs: outVariables,
+	}
+
+	expectedErr := "invalid UUID length: 49"
+	_, err := manualHandler.parseManualOutArgsToInteractionResponse(payload)
+	if err == nil {
+		t.Log(err)
+		t.Fail()
+	}
+
+	assert.Equal(t, err.Error(), expectedErr)
 
 }

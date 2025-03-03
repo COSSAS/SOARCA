@@ -211,9 +211,9 @@ func (manualHandler *ManualHandler) parseManualOutArgsUpdate(postData []byte) (a
 	var outArgsUpdate api.ManualOutArgsUpdatePayload
 	err := decoder.Decode(&outArgsUpdate)
 	if err != nil {
-		errorString := "failed to unmarshal JSON"
+		errorString := fmt.Errorf("failed to unmarshal JSON: %w", err)
 		log.Error(errorString)
-		return api.ManualOutArgsUpdatePayload{}, errors.New(errorString)
+		return api.ManualOutArgsUpdatePayload{}, errorString
 	}
 
 	// Check if variable names match
