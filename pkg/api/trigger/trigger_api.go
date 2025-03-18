@@ -62,6 +62,7 @@ func NewTriggerHandler(controller decomposer_controller.IController, database da
 //	@failure		400		{object}	api.Error
 //	@Router			/trigger/playbook/{id} [POST]
 func (handler *TriggerHandler) ExecuteById(context *gin.Context) {
+	log.Trace("received execute by ID")
 	id := context.Param("id")
 
 	db := handler.database.GetDatabaseInstance()
@@ -81,6 +82,7 @@ func (handler *TriggerHandler) ExecuteById(context *gin.Context) {
 		}
 		err = MergeVariablesInPlaybook(&playbook, jsonData)
 		if err != nil {
+			log.Error(err)
 			apiError.SendErrorResponse(context, http.StatusBadRequest, fmt.Sprintf("Cannot execute. reason: %s", err), "POST /trigger/playbook/"+id, "")
 			return
 		}
@@ -101,6 +103,7 @@ func (handler *TriggerHandler) ExecuteById(context *gin.Context) {
 //	@failure		400			{object}	api.Error
 //	@Router			/trigger/playbook [POST]
 func (handler *TriggerHandler) Execute(context *gin.Context) {
+	log.Trace("received execute with body")
 	jsonData, err := io.ReadAll(context.Request.Body)
 	if err != nil {
 		log.Error("failed")
@@ -111,6 +114,7 @@ func (handler *TriggerHandler) Execute(context *gin.Context) {
 	}
 	playbook := decoder.DecodeValidate(jsonData)
 	if playbook == nil {
+		log.Error("Failed to decode playbook")
 		apiError.SendErrorResponse(context, http.StatusBadRequest,
 			"Failed to decode playbook",
 			"POST /trigger/playbook", "")
