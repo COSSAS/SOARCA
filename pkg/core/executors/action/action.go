@@ -45,6 +45,7 @@ type data struct {
 	target         cacao.AgentTarget
 	variables      cacao.Variables
 	agent          cacao.AgentTarget
+	step           cacao.Step
 }
 
 func (executor *Executor) Execute(meta execution.Metadata,
@@ -85,6 +86,7 @@ func (executor *Executor) executeCommandFromArray(meta execution.Metadata,
 				target:         target,
 				variables:      metadata.Variables,
 				agent:          metadata.Agent,
+				step:           metadata.Step,
 			}
 
 			outputVariables, err := executor.executeCommands(
@@ -156,6 +158,7 @@ func (executor *Executor) executeCommands(metadata execution.Metadata,
 		context.Target = interpolatedTarget(data.target, data.variables)
 		context.Authentication = interpolateAuthentication(data.authentication, data.variables)
 		context.Variables = data.variables
+		context.Step = data.step
 		returnVariables, err := capability.Execute(metadata, context)
 		return returnVariables, err
 	} else {
