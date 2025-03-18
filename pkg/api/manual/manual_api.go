@@ -52,14 +52,14 @@ func NewManualHandler(interaction interaction.IInteractionStorage) *ManualHandle
 
 // manual
 //
-//	@Summary		get all pending manual commands that still needs values to be returned
+//	@Summary	get all pending manual commands that still needs values to be returned
 //	@Schemes
 //	@Description	get all pending manual commands that still needs values to be returned
 //	@Tags			manual
 //	@Accept			json
 //	@Produce		json
-//	@Success		200		{object}	api.Execution
-//	@failure		400		{object}	[]api.InteractionCommandData
+//	@Success		200	{object}	api.Execution
+//	@failure		400	{object}	[]api.InteractionCommandData
 //	@Router			/manual/ [GET]
 func (manualHandler *ManualHandler) GetPendingCommands(g *gin.Context) {
 	commands, err := manualHandler.interactionCapability.GetPendingCommands()
@@ -82,14 +82,14 @@ func (manualHandler *ManualHandler) GetPendingCommands(g *gin.Context) {
 
 // manual
 //
-//	@Summary		get a specific manual command that still needs a value to be returned
+//	@Summary	get a specific manual command that still needs a value to be returned
 //	@Schemes
 //	@Description	get a specific manual command that still needs a value to be returned
 //	@Tags			manual
 //	@Accept			json
 //	@Produce		json
-//	@Param			exec_id	path	string	true	"execution ID"
-//	@Param			step_id	path	string	true	"step ID"
+//	@Param			exec_id	path		string	true	"execution ID"
+//	@Param			step_id	path		string	true	"step ID"
 //	@Success		200		{object}	api.InteractionCommandData
 //	@failure		400		{object}	api.Error
 //	@Router			/manual/{exec_id}/{step_id} [GET]
@@ -126,23 +126,17 @@ func (manualHandler *ManualHandler) GetPendingCommand(g *gin.Context) {
 
 // manual
 //
-//	@Summary		updates the value of a variable according to the manual interaction
+//	@Summary	updates the value of a variable according to the manual interaction
 //	@Schemes
 //	@Description	updates the value of a variable according to the manual interaction
 //	@Tags			manual
 //	@Accept			json
 //	@Produce		json
-//	@Param			exec_id				path	string			true	"execution ID"
-//	@Param			step_id				path	string			true	"step ID"
-//	@Param			type				body	string			true	"type"
-//	@Param			outArgs				body	string			true	"execution ID"
-//	@Param			execution_id		body	string			true	"playbook ID"
-//	@Param			playbook_id			body	string			true	"playbook ID"
-//	@Param			step_id				body	string			true	"step ID"
-//	@Param			response_status		body	string			true	"response status"
-//	@Param			response_out_args	body	cacao.Variables	true	"out args"
-//	@Success		200			{object}	api.Execution
-//	@failure		400			{object}	api.Error
+//	@Param			exec_id	path		string							true	"execution ID"
+//	@Param			step_id	path		string							true	"step ID"
+//	@Param			data	body		api.ManualOutArgsUpdatePayload	true	"playbook"
+//	@Success		200		{object}	api.Execution
+//	@failure		400		{object}	api.Error
 //	@Router			/manual/continue [POST]
 func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 

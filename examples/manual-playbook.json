@@ -22,6 +22,7 @@
     ],
     "external_references": [
         {
+            "name": "COSSAS",
             "description": "TNO COSSAS"
         }
     ],
@@ -46,6 +47,7 @@
             },
             "on_completion": "end--a6f0b81e-affb-4bca-b4f6-a2d5af908958",
             "type": "action",
+            "timeout": 100000,
             "commands": [
                 {
                     "type": "manual",
@@ -71,16 +73,16 @@
             "name": "soarca-manual-capability"
         },
         "soarca-manual-capability--7b0e98db-fa93-42aa-8511-e871c65131b1": {
-            "type": "soarca-manual-capability",
-            "name": "soarca-manual-capability",
-            "description": "SOARCA's manual command handler"
+            "type": "soarca-manual",
+            "name": "soarca-manual",
+            "description": "SOARCAs manual command handler"
         }
     },
     "target_definitions": {
         "individual--9d1f6217-34d5-435c-b29a-6a1af6b664d9": {
             "type": "individual",
             "name": "Luke Skywalker",
-            "description": "Darth Vader's son",
+            "description": "Darth Vaders son",
             "location": {
                 "name": "Somewhere in a galaxy far far away"
             }

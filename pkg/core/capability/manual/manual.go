@@ -20,7 +20,7 @@ var (
 
 const (
 	manualResultVariableName = "__soarca_manual_result__"
-	manualCapabilityName     = "soarca-manual-http"
+	manualCapabilityName     = "soarca-manual"
 	fallbackTimeout          = time.Minute * 1
 )
 
@@ -51,6 +51,7 @@ func (manual *ManualCapability) Execute(
 	}
 
 	timeout := manual.getTimeoutValue(commandContext.Step.Timeout)
+	log.Trace("timeout is set to: ", timeout)
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
