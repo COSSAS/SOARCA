@@ -20,7 +20,7 @@ var (
 
 const (
 	manualResultVariableName = "__soarca_manual_result__"
-	manualCapabilityName     = "soarca-manual-http"
+	manualCapabilityName     = "soarca-manual"
 	fallbackTimeout          = time.Minute * 1
 )
 
