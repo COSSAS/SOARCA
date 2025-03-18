@@ -7,9 +7,11 @@ import (
 	"reflect"
 	"soarca/internal/database/memory"
 	"soarca/internal/logger"
+
 	"soarca/pkg/core/capability"
 	"soarca/pkg/core/capability/fin/protocol"
 	"soarca/pkg/core/capability/http"
+	"soarca/pkg/core/capability/manual"
 	"soarca/pkg/core/capability/manual/interaction"
 	"soarca/pkg/core/capability/openc2"
 	"soarca/pkg/core/capability/powershell"
@@ -84,6 +86,9 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 
 	poswershell := powershell.New()
 	capabilities[poswershell.GetType()] = poswershell
+
+	man := manual.New(mainInteraction)
+	capabilities[man.GetType()] = &man
 
 	enableFins, _ := strconv.ParseBool(utils.GetEnv("ENABLE_FINS", "false"))
 
