@@ -18,4 +18,4 @@ SOARCA consists of several key components:
 
 SOARCA interacts with many components, the following diagram shows the intended setup for SOARCA and its components. Currently, not all parts are fully implemented. Keep track of the release notes to see what's implemented and what needs some work.
 
-![core detailed](/SOARCA/images/soarca-functional-design.jpg)
+![core detailed](/SOARCA/images/soarca-functional-design.png)
