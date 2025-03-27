@@ -38,19 +38,17 @@ const Sidebar: React.FC<SidebarProps> = ({
     };
     document.addEventListener("click", clickHandler);
     return () => document.removeEventListener("click", clickHandler);
-  }, [sidebarOpen, setSidebarOpen]); // Added dependencies
+  }, [sidebarOpen, setSidebarOpen]);
 
-  // Close if esc key is pressed - UPDATED
   useEffect(() => {
-    const keyHandler = ({ key }: KeyboardEvent) => { // Use `key` instead of `keyCode`
-      if (!sidebarOpen || key !== 'Escape') return; // Compare with 'Escape' string
+    const keyHandler = ({ key }: KeyboardEvent) => {
+      if (!sidebarOpen || key !== 'Escape') return;
       setSidebarOpen(false);
     };
     document.addEventListener("keydown", keyHandler);
     return () => document.removeEventListener("keydown", keyHandler);
-  }, [sidebarOpen, setSidebarOpen]); // Added dependencies
+  }, [sidebarOpen, setSidebarOpen]);
 
-  // Effect to sync sidebarExpanded state with localStorage and body class
   useEffect(() => {
     localStorage.setItem("sidebar-expanded", sidebarExpanded.toString());
     if (sidebarExpanded) {
@@ -127,9 +125,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         }`}
                       onClick={(e) => {
                         e.preventDefault(); // Prevent default anchor behavior
-                        handleClick(); // Toggle the open state via the function passed from SidebarLinkGroup
-                        // Optionally expand the sidebar when a group is clicked
-                        // Consider if this behavior is desired even if already expanded
+                        handleClick();
                         if (!sidebarExpanded) {
                           setSidebarExpanded(true);
                         }
@@ -147,7 +143,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         <div className="flex shrink-0 ml-2">
                           <ChevronDown
                             className={`w-3 h-3 shrink-0 ml-1 fill-current text-gray-400 dark:text-gray-500 ${open && "rotate-180"
-                              } ${!sidebarExpanded && "!opacity-0"}`} // Hide arrow when collapsed
+                              } ${!sidebarExpanded && "!opacity-0"}`}
                           />
                         </div>
                       </div>
