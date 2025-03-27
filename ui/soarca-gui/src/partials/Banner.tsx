@@ -11,8 +11,8 @@ const Banner: React.FC<BannerProps> = () => {
 
   const liteLink: string =
     template === 'laravel'
-      ? 'https://github.com/cruip/laravel-tailwindcss-admin-dashboard-template'
-      : 'https://github.com/cruip/tailwind-dashboard-template';
+      ? ''
+      : '';
 
   return (
     <>
@@ -32,11 +32,10 @@ const Banner: React.FC<BannerProps> = () => {
               <span className="italic px-1.5">or</span>
               <a
                 className="font-medium hover:underline text-emerald-400"
-                href="https://cruip.com/mosaic/"
+                href=""
                 target="_blank"
                 rel="noreferrer"
               >
-                Check Premium Version
               </a>
             </div>
             <button
