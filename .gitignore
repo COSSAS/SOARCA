@@ -13,6 +13,7 @@ api/*
 **.env
 test/cacao/flatfile-db-example.json
 
+**/node_modules/*
 
 docs/public
 docs/resources/
@@ -22,3 +23,4 @@ docs/.hugo_build.lock
 **.hugo_build.lock
 
 certs
+
