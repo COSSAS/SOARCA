@@ -56,8 +56,7 @@ export const navItems: NavItem[] = [
     href: '/users',
     children: [
       {
-        // Note: child icons aren't directly displayed in the sub-menu in this layout
-        icon: cloneIcon(<Users />), // Kept for potential future use/consistency
+        icon: cloneIcon(<Users />),
         label: 'All Users',
         href: '/users/all'
       },
