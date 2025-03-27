@@ -1,110 +1,7 @@
-import React, { useState, useEffect, useRef, ReactElement } from "react";
-import {
-  ChevronDown,
-  X,
-  Home,
-  Users,
-  UserCircle,
-  FolderOpen,
-  Calendar,
-  BookOpen,
-  ShieldCheck,
-  Settings,
-  Puzzle,
-  AlertTriangle,
-  Database
-} from "lucide-react";
-import SidebarLinkGroup from "./SidebarLinkGroup.tsx";
-
-interface NavItem {
-  icon: ReactElement;
-  label: string;
-  href: string;
-  children?: NavItem[];
-}
-
-const navItems: NavItem[] = [
-  {
-    icon: <Home />,
-    label: 'Dashboard',
-    href: '/dashboard'
-  },
-  {
-    icon: <AlertTriangle />,
-    label: 'Incidents',
-    href: '/incidents'
-  },
-  {
-    icon: <ShieldCheck />,
-    label: 'Playbooks',
-    href: '/playbooks'
-  },
-  {
-    icon: <Puzzle />,
-    label: 'Integrations',
-    href: '/integrations'
-  },
-  {
-    icon: <Database />,
-    label: 'Assets',
-    href: '/assets'
-  },
-  {
-    icon: <Users />,
-    label: 'Users',
-    href: '/users',
-    children: [
-      {
-        icon: <Users />,
-        label: 'All Users',
-        href: '/users/all'
-      },
-      {
-        icon: <Users />,
-        label: 'Active Users',
-        href: '/users/active'
-      }
-    ]
-  },
-  {
-    icon: <FolderOpen />,
-    label: 'Projects',
-    href: '/projects'
-  },
-  {
-    icon: <Calendar />,
-    label: 'Calendar',
-    href: '/calendar'
-  },
-  {
-    icon: <BookOpen />,
-    label: 'Documentation',
-    href: '/docs'
-  },
-  {
-    icon: <Settings />,
-    label: 'Settings',
-    href: '/settings',
-    children: [
-      {
-        icon: <UserCircle />,
-        label: 'Profile',
-        href: '/settings/profile'
-      },
-      {
-        icon: <Settings />,
-        label: 'General',
-        href: '/settings/general'
-      },
-      {
-        icon: <Puzzle />,
-        label: 'Integration Settings',
-        href: '/settings/integrations'
-      }
-    ]
-  },
-];
-
+import React, { useState, useEffect, useRef } from "react";
+import { ChevronDown, X } from "lucide-react";
+import SidebarLinkGroup from "./SidebarLinkGroup";
+import { navItems } from "./NavItems.tsx";
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -120,10 +17,12 @@ const Sidebar: React.FC<SidebarProps> = ({
   const trigger = useRef<HTMLButtonElement>(null);
   const sidebar = useRef<HTMLDivElement>(null);
 
-  const storedSidebarExpanded = localStorage.getItem("sidebar-expanded");
+  const storedSidebarExpanded = typeof window !== 'undefined' ? localStorage.getItem("sidebar-expanded") : null;
   const [sidebarExpanded, setSidebarExpanded] = useState(
     storedSidebarExpanded === null ? false : storedSidebarExpanded === "true"
   );
+
+  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
 
   useEffect(() => {
     const clickHandler = ({ target }: MouseEvent) => {
@@ -150,16 +49,15 @@ const Sidebar: React.FC<SidebarProps> = ({
   }, [sidebarOpen, setSidebarOpen]);
 
   useEffect(() => {
-    localStorage.setItem("sidebar-expanded", sidebarExpanded.toString());
-    if (sidebarExpanded) {
-      document.querySelector("body")?.classList.add("sidebar-expanded");
-    } else {
-      document.querySelector("body")?.classList.remove("sidebar-expanded");
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("sidebar-expanded", sidebarExpanded.toString());
+      if (sidebarExpanded) {
+        document.querySelector("body")?.classList.add("sidebar-expanded");
+      } else {
+        document.querySelector("body")?.classList.remove("sidebar-expanded");
+      }
     }
   }, [sidebarExpanded]);
-
-  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-  const iconClasses = "shrink-0 size-5";
 
   return (
     <div className="min-w-fit">
@@ -208,80 +106,91 @@ const Sidebar: React.FC<SidebarProps> = ({
               </span>
             </h3>
             <ul className="mt-3">
-              {navItems.map((item) => (
-                <li key={item.label} className={`px-1 py-1 rounded-lg mb-0.5 last:mb-0 ${currentPath.startsWith(item.href) ? 'bg-gray-100 dark:bg-gray-700/50' : ''}`}>
-                  {item.children ? (
-                    <SidebarLinkGroup activeCondition={currentPath.startsWith(item.href)}>
-                      {(handleClick, open) => (
-                        <>
-                          <a
-                            href="#0"
-                            className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${currentPath.startsWith(item.href)
-                              ? "font-medium"
-                              : "hover:text-gray-900 dark:hover:text-white"
-                              }`}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleClick();
-                              if (!sidebarExpanded) {
-                                setSidebarExpanded(true);
-                              }
-                            }}
-                          >
-                            <div className="flex items-center px-2 py-1">
-                              <div className="flex items-center">
-                                {React.cloneElement(item.icon, { className: iconClasses })}
-                                <span className="text-sm font-medium ml-3 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                                  {item.label}
-                                </span>
+              {navItems.map((item) => {
+                const isActive = currentPath === item.href || currentPath.startsWith(item.href + '/');
+                const isGroupActive = item.children ? currentPath.startsWith(item.href) : false;
+
+                return (
+                  <React.Fragment key={item.label}>
+                    {item.children ? (
+                      <SidebarLinkGroup activeCondition={isGroupActive}>
+                        {(handleClick, open) => (
+                          <>
+                            <a
+                              href="#0"
+                              className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${isGroupActive
+                                ? "font-medium" // Group parent isn't styled like active link, just bolded maybe
+                                : "hover:text-gray-900 dark:hover:text-white"
+                                }`}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleClick();
+                                // Expand sidebar automatically when a group is clicked if it's collapsed
+                                if (!sidebarExpanded) {
+                                  setSidebarExpanded(true);
+                                }
+                              }}
+                            >
+                              <div className="flex items-center justify-between px-2 py-1">
+                                <div className="flex items-center">
+                                  {item.icon}
+                                  <span className="text-sm font-medium ml-3 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                                    {item.label}
+                                  </span>
+                                </div>
+                                <div className="flex shrink-0 ml-2">
+                                  <ChevronDown
+                                    className={`w-3 h-3 shrink-0 ml-1 fill-current text-gray-400 dark:text-gray-500 ${open && "rotate-180"} transition-transform duration-200 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100`}
+                                  />
+                                </div>
                               </div>
-                              <div className="flex shrink-0 ml-2">
-                                <ChevronDown
-                                  className={`w-3 h-3 shrink-0 ml-1 fill-current text-gray-400 dark:text-gray-500 ${open && "rotate-180"} ${!sidebarExpanded && "!opacity-0"}`}
-                                />
-                              </div>
+                            </a>
+                            <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
+                              <ul className={`pl-8 pr-2 mt-1 ${!open && "hidden"}`}>
+                                {item.children?.map(child => {
+                                  const isChildActive = currentPath === child.href;
+                                  return (
+                                    <li key={child.label} className="mb-1 last:mb-0">
+                                      <a
+                                        href={child.href}
+                                        className={`block transition duration-150 truncate rounded px-2 py-1 ${isChildActive
+                                          ? "text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-900/30 font-medium"
+                                          : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50"
+                                          }`}
+                                      >
+                                        <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                                          {child.label}
+                                        </span>
+                                      </a>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
                             </div>
-                          </a>
-                          <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
-                            <ul className={`pl-8 pr-2 mt-1 ${!open && "hidden"}`}>
-                              {item.children?.map(child => (
-                                <li key={child.label} className="mb-1 last:mb-0">
-                                  <a
-                                    href={child.href}
-                                    className={`block transition duration-150 truncate rounded px-2 py-1 ${currentPath === child.href
-                                      ? "text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-900/30 font-medium"
-                                      : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50"
-                                      }`}
-                                  >
-                                    <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                                      {child.label}
-                                    </span>
-                                  </a>
-                                </li>
-                              ))}
-                            </ul>
+                          </>
+                        )}
+                      </SidebarLinkGroup>
+                    ) : (
+                      <li className={`px-1 py-1 rounded-lg mb-0.5 last:mb-0 ${isActive ? 'bg-gray-100 dark:bg-gray-700/50' : ''}`}>
+                        <a
+                          href={item.href}
+                          className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 rounded px-2 py-1 ${isActive
+                            ? "text-violet-600 dark:text-violet-400 font-medium" // Active link styling
+                            : "hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700/50" // Hover for non-active
+                            }`}
+                        >
+                          <div className="flex items-center">
+                            {item.icon}
+                            <span className="text-sm font-medium ml-3 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                              {item.label}
+                            </span>
                           </div>
-                        </>
-                      )}
-                    </SidebarLinkGroup>
-                  ) : (
-                    <a
-                      href={item.href}
-                      className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 rounded px-2 py-1 ${currentPath === item.href
-                        ? "text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-900/30 font-medium"
-                        : "hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700/50"
-                        }`}
-                    >
-                      <div className="flex items-center">
-                        {React.cloneElement(item.icon, { className: iconClasses })}
-                        <span className="text-sm font-medium ml-3 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                          {item.label}
-                        </span>
-                      </div>
-                    </a>
-                  )}
-                </li>
-              ))}
+                        </a>
+                      </li>
+                    )}
+                  </React.Fragment>
+                );
+              })}
             </ul>
           </div>
         </div>
@@ -293,7 +202,10 @@ const Sidebar: React.FC<SidebarProps> = ({
               onClick={() => setSidebarExpanded(!sidebarExpanded)}
             >
               <span className="sr-only">Expand / collapse sidebar</span>
-              <svg className={`w-4 h-4 fill-current ${sidebarExpanded && 'rotate-180'}`} viewBox="0 0 16 16">
+              <svg
+                className={`w-4 h-4 fill-current transition-transform duration-200 ${sidebarExpanded && 'rotate-180'}`}
+                viewBox="0 0 16 16"
+              >
                 <path d="M11.414 7.414l-3-3A.999.999 0 10 7 5.828L9.172 8 7 10.172a.999.999 0 101.414 1.414l3-3a.999.999 0 000-1.414zM4 8a1 1 0 011-1h6a1 1 0 110 2H5a1 1 0 01-1-1z" />
               </svg>
             </button>

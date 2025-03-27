@@ -17,8 +17,7 @@ const SidebarLinkGroup: React.FC<SidebarLinkGroupProps> = ({
 
   return (
     <li
-      className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${activeCondition &&
-        'from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]'
+      className={`px-1 py-1 rounded-lg mb-0.5 last:mb-0 ${activeCondition ? 'bg-gray-100 dark:bg-gray-700/50' : ''
         }`}
     >
       {children(handleClick, open)}
