@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ChevronDown, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, X } from "lucide-react";
 import SidebarLinkGroup from "./SidebarLinkGroup";
 import { navItems } from "./NavItems.tsx";
 
@@ -70,7 +70,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div
         id="sidebar"
         ref={sidebar}
-        className={`flex flex-col absolute z-40 left-0 top-0 lg:static lg:left-auto lg:top-auto lg:translate-x-0 h-[100dvh] overflow-y-scroll lg:overflow-y-auto no-scrollbar w-64 lg:w-20 lg:sidebar-expanded:!w-64 2xl:!w-64 shrink-0 bg-white dark:bg-gray-800 p-4 transition-all duration-200 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-64"
+        className={`group flex flex-col absolute z-40 left-0 top-0 lg:static lg:left-auto lg:top-auto lg:translate-x-0 h-dvh overflow-y-scroll lg:overflow-y-auto no-scrollbar w-64 lg:w-20 lg:hover:w-64 lg:[&.sidebar-expanded]:w-64 2xl:w-64 shrink-0 bg-white dark:bg-gray-800 p-4 transition-all duration-200 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-64"
           } ${variant === "v2"
             ? "border-r border-gray-200 dark:border-gray-700/60"
             : ""
@@ -96,12 +96,12 @@ const Sidebar: React.FC<SidebarProps> = ({
           <div>
             <h3 className="text-xs uppercase text-gray-400 dark:text-gray-500 font-semibold pl-3 mb-3">
               <span
-                className="hidden lg:block lg:sidebar-expanded:hidden 2xl:hidden text-center w-6"
+                className="hidden lg:block lg:opacity-0 lg:group-hover:opacity-0 lg:[&.sidebar-expanded]:opacity-0 2xl:opacity-0 text-center w-6"
                 aria-hidden="true"
               >
                 •••
               </span>
-              <span className="lg:hidden lg:sidebar-expanded:block 2xl:block">
+              <span className="lg:opacity-0 lg:group-hover:opacity-100 lg:[&.sidebar-expanded]:opacity-100 2xl:opacity-100 transition-opacity duration-200">
                 Menu
               </span>
             </h3>
@@ -119,33 +119,30 @@ const Sidebar: React.FC<SidebarProps> = ({
                             <a
                               href="#0"
                               className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${isGroupActive
-                                ? "font-medium" // Group parent isn't styled like active link, just bolded maybe
-                                : "hover:text-gray-900 dark:hover:text-white"
+                                  ? "font-medium"
+                                  : "hover:text-gray-900 dark:hover:text-white"
                                 }`}
                               onClick={(e) => {
                                 e.preventDefault();
                                 handleClick();
-                                // Expand sidebar automatically when a group is clicked if it's collapsed
-                                if (!sidebarExpanded) {
-                                  setSidebarExpanded(true);
-                                }
                               }}
                             >
                               <div className="flex items-center justify-between px-2 py-1">
                                 <div className="flex items-center">
                                   {item.icon}
-                                  <span className="text-sm font-medium ml-3 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                                  <span className="text-sm font-medium ml-3 lg:opacity-0 lg:group-hover:opacity-100 lg:[&.sidebar-expanded]:opacity-100 2xl:opacity-100 transition-opacity duration-200">
                                     {item.label}
                                   </span>
                                 </div>
                                 <div className="flex shrink-0 ml-2">
                                   <ChevronDown
-                                    className={`w-3 h-3 shrink-0 ml-1 fill-current text-gray-400 dark:text-gray-500 ${open && "rotate-180"} transition-transform duration-200 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100`}
+                                    className={`w-3 h-3 shrink-0 ml-1 fill-current text-gray-400 dark:text-gray-500 ${open && "rotate-180"
+                                      } transition-transform duration-200 lg:opacity-0 lg:group-hover:opacity-100 lg:[&.sidebar-expanded]:opacity-100 2xl:opacity-100`}
                                   />
                                 </div>
                               </div>
                             </a>
-                            <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
+                            <div className="lg:hidden lg:group-hover:block lg:[&.sidebar-expanded]:block 2xl:block">
                               <ul className={`pl-8 pr-2 mt-1 ${!open && "hidden"}`}>
                                 {item.children?.map(child => {
                                   const isChildActive = currentPath === child.href;
@@ -154,11 +151,11 @@ const Sidebar: React.FC<SidebarProps> = ({
                                       <a
                                         href={child.href}
                                         className={`block transition duration-150 truncate rounded px-2 py-1 ${isChildActive
-                                          ? "text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-900/30 font-medium"
-                                          : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50"
+                                            ? "text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-900/30 font-medium"
+                                            : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50"
                                           }`}
                                       >
-                                        <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                                        <span className="text-sm lg:opacity-0 lg:group-hover:opacity-100 lg:[&.sidebar-expanded]:opacity-100 2xl:opacity-100 transition-opacity duration-200">
                                           {child.label}
                                         </span>
                                       </a>
@@ -175,13 +172,13 @@ const Sidebar: React.FC<SidebarProps> = ({
                         <a
                           href={item.href}
                           className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 rounded px-2 py-1 ${isActive
-                            ? "text-violet-600 dark:text-violet-400 font-medium" // Active link styling
-                            : "hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700/50" // Hover for non-active
+                              ? "text-violet-600 dark:text-violet-400 font-medium"
+                              : "hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700/50"
                             }`}
                         >
                           <div className="flex items-center">
                             {item.icon}
-                            <span className="text-sm font-medium ml-3 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                            <span className="text-sm font-medium ml-3 lg:opacity-0 lg:group-hover:opacity-100 lg:[&.sidebar-expanded]:opacity-100 2xl:opacity-100 transition-opacity duration-200">
                               {item.label}
                             </span>
                           </div>
@@ -202,12 +199,11 @@ const Sidebar: React.FC<SidebarProps> = ({
               onClick={() => setSidebarExpanded(!sidebarExpanded)}
             >
               <span className="sr-only">Expand / collapse sidebar</span>
-              <svg
-                className={`w-4 h-4 fill-current transition-transform duration-200 ${sidebarExpanded && 'rotate-180'}`}
-                viewBox="0 0 16 16"
-              >
-                <path d="M11.414 7.414l-3-3A.999.999 0 10 7 5.828L9.172 8 7 10.172a.999.999 0 101.414 1.414l3-3a.999.999 0 000-1.414zM4 8a1 1 0 011-1h6a1 1 0 110 2H5a1 1 0 01-1-1z" />
-              </svg>
+              {sidebarExpanded ? (
+                <ChevronLeft className="w-4 h-4 transition-transform duration-200" />
+              ) : (
+                <ChevronRight className="w-4 h-4 transition-transform duration-200" />
+              )}
             </button>
           </div>
         </div>
