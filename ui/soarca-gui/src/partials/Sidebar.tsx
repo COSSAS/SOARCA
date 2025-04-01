@@ -3,7 +3,7 @@ import { ChevronDown, ChevronLeft, ChevronRight, X } from "lucide-react";
 import SidebarLinkGroup from "./SidebarLinkGroup";
 import { navItems } from "./NavItems.tsx";
 
-const soarcaLogoUrlPath = "/assets/logos/soarca-logo.svg";
+const soarcaLogoUrlPath = "/assets/logos/soarca-logo-cropped.svg";
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -14,7 +14,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({
   sidebarOpen,
   setSidebarOpen,
-  variant = "default",
+  variant = "v2",
 }) => {
   const trigger = useRef<HTMLButtonElement>(null);
   const sidebar = useRef<HTMLDivElement>(null);
