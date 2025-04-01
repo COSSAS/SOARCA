@@ -3,6 +3,8 @@ import { ChevronDown, ChevronLeft, ChevronRight, X } from "lucide-react";
 import SidebarLinkGroup from "./SidebarLinkGroup";
 import { navItems } from "./NavItems.tsx";
 
+const soarcaLogoUrlPath = "/assets/logos/soarca-logo.svg";
+
 interface SidebarProps {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
@@ -88,7 +90,8 @@ const Sidebar: React.FC<SidebarProps> = ({
             <X className="w-6 h-6" />
           </button>
           <a href="/" className="block">
-            <div className="w-8 h-8 bg-violet-500 rounded" />
+            {/* Replaced div with img tag for the logo */}
+            <img src={soarcaLogoUrlPath} alt="Soarca Logo" className="w-16 h-16" />
           </a>
         </div>
 
@@ -119,8 +122,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                             <a
                               href="#0"
                               className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${isGroupActive
-                                  ? "font-medium"
-                                  : "hover:text-gray-900 dark:hover:text-white"
+                                ? "font-medium"
+                                : "hover:text-gray-900 dark:hover:text-white"
                                 }`}
                               onClick={(e) => {
                                 e.preventDefault();
@@ -151,8 +154,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                                       <a
                                         href={child.href}
                                         className={`block transition duration-150 truncate rounded px-2 py-1 ${isChildActive
-                                            ? "text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-900/30 font-medium"
-                                            : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50"
+                                          ? "text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-900/30 font-medium"
+                                          : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50"
                                           }`}
                                       >
                                         <span className="text-sm lg:opacity-0 lg:group-hover:opacity-100 lg:[&.sidebar-expanded]:opacity-100 2xl:opacity-100 transition-opacity duration-200">
@@ -172,8 +175,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                         <a
                           href={item.href}
                           className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 rounded px-2 py-1 ${isActive
-                              ? "text-violet-600 dark:text-violet-400 font-medium"
-                              : "hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700/50"
+                            ? "text-violet-600 dark:text-violet-400 font-medium"
+                            : "hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700/50"
                             }`}
                         >
                           <div className="flex items-center">
