@@ -49,7 +49,6 @@ const Header: React.FC<HeaderProps> = ({
           >
             <Menu size={24} />
           </button>
-          <span className="text-xl font-semibold text-gray-800 dark:text-gray-100 hidden md:block">My App</span>
         </div>
 
         <div className="flex items-center space-x-4">
@@ -57,7 +56,7 @@ const Header: React.FC<HeaderProps> = ({
 
           <button
             onClick={handleSearchClick}
-            className="p-2 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600"
+            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none focus:text-violet-600 dark:focus:text-violet-400"
             aria-label="Open search"
           >
             <Search size={20} />
@@ -65,7 +64,7 @@ const Header: React.FC<HeaderProps> = ({
 
           <button
             onClick={handleThemeToggle}
-            className="p-2 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600"
+            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none focus:text-violet-600 dark:focus:text-violet-400"
             aria-label="Toggle theme"
           >
             <Sun className="hidden dark:block" size={20} />
@@ -93,7 +92,6 @@ const Header: React.FC<HeaderProps> = ({
                 aria-hidden="true"
               />
             </button>
-            {/* Example placeholder: {userMenuOpen && ( <UserDropdown onDismiss={() => setUserMenuOpen(false)} /> )} */}
           </div>
         </div>
       </header>
