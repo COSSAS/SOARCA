@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Playbook } from '../types';
-import PlaybookTableRow from './PlaybookTableRow';
-import EditPlaybookModal from './EditPlaybookModal';
-import InventoryControls from './InventoryControls';
+import { Playbook } from '../models/Playbooks.tsx';
+import PlaybookTableRow from './tables/PlaybookTableRow.tsx';
+import EditPlaybookModal from './modals/EditPlaybookModal.tsx';
+import InventoryControls from './InventorControls.tsx';
 
 // Mock Data - Replace with actual API call
 const MOCK_PLAYBOOKS: Playbook[] = [

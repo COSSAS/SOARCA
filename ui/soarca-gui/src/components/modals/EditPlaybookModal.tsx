@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Playbook } from '../types';
+import { Playbook } from '../../models/Playbooks.tsx';
 
 interface EditPlaybookModalProps {
   isOpen: boolean;
