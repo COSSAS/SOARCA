@@ -4,7 +4,7 @@ interface InventoryControlsProps {
   searchTerm: string;
   onSearchChange: (term: string) => void;
   selectedCount: number;
-  onDeleteSelected: () => void; // Add other bulk actions as needed
+  onDeleteSelected: () => void;
   onActivateSelected: () => void;
   onDeactivateSelected: () => void;
 }
@@ -21,11 +21,11 @@ const InventoryControls: React.FC<InventoryControlsProps> = ({
 
   const handleActionClick = (action: () => void) => {
     action();
-    setIsActionDropdownOpen(false); // Close dropdown after action
+    setIsActionDropdownOpen(false);
   };
 
   return (
-    <div className="flex items-center justify-between flex-column md:flex-row flex-wrap space-y-4 md:space-y-0 py-4 bg-white dark:bg-gray-900">
+    <div className="flex items-center justify-between flex-column md:flex-row flex-wrap space-y-4 md:space-y-0 py-4 bg-white dark:bg-gray-900 pl-4">
       <div className="relative">
         <button
           id="dropdownActionButton"
@@ -39,7 +39,6 @@ const InventoryControls: React.FC<InventoryControlsProps> = ({
             <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 4 4 4-4" />
           </svg>
         </button>
-        {/* Dropdown menu */}
         <div
           id="dropdownAction"
           className={`z-10 ${isActionDropdownOpen ? 'block' : 'hidden'} absolute mt-1 bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700 dark:divide-gray-600`}
@@ -87,7 +86,7 @@ const InventoryControls: React.FC<InventoryControlsProps> = ({
           id="table-search-playbooks"
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="block pt-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg w-80 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+          className="block p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg w-80 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 mr-4"
           placeholder="Search for playbooks"
         />
       </div>
