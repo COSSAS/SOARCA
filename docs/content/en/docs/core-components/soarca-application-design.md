@@ -185,23 +185,29 @@ These sequences will show a simplified overview of how the SOARCA components int
 The main flow of the application is the following. Execution will start by processing the JSON formatted CACAO playbook if successful the playbook is handed over to the Decomposer. This is where the playbook is decomposed into its parts and passed step by step to the executor. These operations will block the API until execution is finished. For now, no variables are exposed via the API to the caller.
 
 ```plantuml
-Actor Caller
+actor Caller
 Caller -> Api
-Api -> Trigger : /trigger
+Api -> Trigger : POST /trigger
+participant Reporter
 Trigger -> Decomposer : Trigger playbook as ad-hoc execution
+Trigger <-- Decomposer : execution details
+Api <-- Trigger : execution details
+Caller <-- Api
 loop for each step 
 Decomposer -> Executor : Send step to executor
 Executor -> Executor : select capability (ssh selected)
 Executor -> Ssh : Command
 Executor <-- Ssh : return
 Decomposer <-- Executor
+Reporter <-- Decomposer : Step execution results
 else execution failure (break loop)
 Executor <-- Ssh : error
 Decomposer <-- Executor: error
+Reporter <-- Decomposer : Step execution results
 Decomposer -> Decomposer : stop execution
-
 end 
-Trigger <-- Decomposer : execution details
-Api <-- Trigger : execution details
-Caller <-- Api
+
+Api -> Reporter : GET /reporter/execution-id
+Api <-- Reporter : response data
+
 ```
