@@ -116,10 +116,12 @@ func (protocol *FinProtocol) AwaitResultOrTimeout(command fin.Command, client mq
 				break
 			}
 			log.Info(finMessage)
+
 			// This now accepts any ack, should be changed
-			if finMessage.Type == fin.MessageTypeAck {
+			switch finMessage.Type {
+			case fin.MessageTypeAck:
 				ackReceived = true
-			} else if finMessage.Type == fin.MessageTypeResult {
+			case fin.MessageTypeResult:
 				finResult := fin.Result{}
 				err := fin.Decode(result, &finResult)
 				if err != nil {
