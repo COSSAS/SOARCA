@@ -117,8 +117,9 @@ func TestPingPong(t *testing.T) {
 	}
 
 	assert.Equal(t, http.StatusOK, response.StatusCode)
-	defer response.Body.Close()
 	body, err := io.ReadAll(response.Body)
+	assert.Equal(t, nil, err)
+	err = response.Body.Close()
 	assert.Equal(t, nil, err)
 
 	assert.Equal(t, "pong", string(body))
@@ -147,8 +148,9 @@ func TestStatus(t *testing.T) {
 	}
 
 	assert.Equal(t, http.StatusOK, response.StatusCode)
-	defer response.Body.Close()
 	body, err := io.ReadAll(response.Body)
+	assert.Equal(t, nil, err)
+	err = response.Body.Close()
 	assert.Equal(t, nil, err)
 
 	status := api.Status{}
