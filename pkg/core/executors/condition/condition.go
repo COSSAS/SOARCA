@@ -39,7 +39,7 @@ type Executor struct {
 
 func (executor *Executor) Execute(meta execution.Metadata, stepContext executors.Context) (string, bool, error) {
 
-	if !(stepContext.Step.Type == cacao.StepTypeIfCondition || stepContext.Step.Type == cacao.StepTypeWhileCondition) {
+	if stepContext.Step.Type != cacao.StepTypeIfCondition && stepContext.Step.Type != cacao.StepTypeWhileCondition {
 		err := errors.New("the provided step type is not compatible with this executor")
 		log.Error(err)
 		return stepContext.Step.OnFailure, false, err
