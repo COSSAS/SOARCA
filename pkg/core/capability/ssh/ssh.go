@@ -58,7 +58,7 @@ func execute(command cacao.Command,
 	if err != nil {
 		return cacao.NewVariables(), err
 	}
-	defer client.Close()
+	defer close(client)
 
 	return executeCommand(session, command)
 }
@@ -72,11 +72,15 @@ func executeCommand(session *ssh.Session,
 		log.Error(err)
 		return cacao.NewVariables(), err
 	}
-	defer session.Close()
 	results := cacao.NewVariables(cacao.Variable{Type: cacao.VariableTypeString,
 		Name:  sshResultVariableName,
 		Value: string(response)})
 	log.Trace("Finished ssh execution will return the variables: ", results)
+	sessionErr := session.Close()
+	if sessionErr != nil {
+		log.Error(sessionErr)
+	}
+
 	return results, err
 }
 
@@ -118,7 +122,7 @@ func getSession(config ssh.ClientConfig, target cacao.AgentTarget) (*ssh.Session
 	session, err := client.NewSession()
 	if err != nil {
 		log.Error(err)
-		client.Close()
+		close(client)
 		return nil, nil, err
 	}
 	return session, client, err
@@ -161,4 +165,13 @@ func CheckSshAuthenticationInfo(authentication cacao.AuthenticationInformation) 
 		return errors.New("non supported authentication type")
 	}
 	return nil
+}
+
+func close(client *ssh.Client) {
+	if client != nil {
+		err := client.Close()
+		if err != nil {
+			log.Error(err)
+		}
+	}
 }
