@@ -73,10 +73,12 @@ func (format Format) fromString(name string) Format {
 }
 
 func setFormat(instance *logrus.Logger, format Format) {
-	if format == Text {
+	switch format {
+	case Text:
 		instance.SetFormatter(&logrus.TextFormatter{})
-	} else if format == Json {
+	case Json:
 		instance.SetFormatter(&logrus.JSONFormatter{})
+
 	}
 }
 
