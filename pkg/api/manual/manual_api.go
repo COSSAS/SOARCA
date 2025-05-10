@@ -152,7 +152,7 @@ func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 	outArgsUpdate, err := manualHandler.parseManualOutArgsUpdate(byteData)
 	if err != nil {
 		apiError.SendErrorResponse(g, http.StatusBadRequest,
-			fmt.Sprint(fmt.Errorf("Failed to parse manual out args payload: %w", err)),
+			fmt.Sprint(fmt.Errorf("failed to parse manual out args payload: %w", err)),
 			"POST /manual/continue", err.Error())
 		return
 	}
