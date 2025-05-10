@@ -1,42 +1,28 @@
 package thehive_test
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	thehive "soarca/pkg/integration/thehive/reporter"
 	"soarca/pkg/models/cacao"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 )
 
-// Microsoft Copilot provided code to get .env local file and extract variables values
-func LoadEnv(envVar string) (string, error) {
-	file, err := os.Open(".env")
+func LoadEnv(key string) (string, error) {
+	err := godotenv.Load(".env")
 	if err != nil {
 		return "", err
 	}
-	defer file.Close()
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.HasPrefix(line, envVar+"=") {
-			parts := strings.SplitN(line, "=", 2)
-			if len(parts) == 2 {
-				return strings.Trim(parts[1], `"`), nil
-			}
-		}
+	if value, ok := os.LookupEnv(key); ok {
+		return value, nil
+	} else {
+		return "", fmt.Errorf("key: %s not found in .env file", key)
 	}
-
-	if err := scanner.Err(); err != nil {
-		return "", err
-	}
-
-	return "", fmt.Errorf("variable %s not found", envVar)
 }
 
 func TestTheHiveConnection(t *testing.T) {
