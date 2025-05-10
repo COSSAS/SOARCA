@@ -74,7 +74,7 @@ func (cacheReporter *Cache) getExecution(executionKey uuid.UUID) (cache_report.E
 // Adding executions in FIFO logic
 func (cacheReporter *Cache) addExecutionFIFO(newExecutionEntry cache_report.ExecutionEntry) error {
 
-	if !(len(cacheReporter.fifoRegister) == len(cacheReporter.Cache)) {
+	if len(cacheReporter.fifoRegister) != len(cacheReporter.Cache) {
 		return errors.New("cache fifo register and content are desynchronized")
 	}
 
