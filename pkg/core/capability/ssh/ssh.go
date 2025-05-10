@@ -153,15 +153,17 @@ func CheckSshAuthenticationInfo(authentication cacao.AuthenticationInformation) 
 	if strings.TrimSpace(authentication.Username) == "" {
 		return errors.New("username is empty")
 	}
-	if authentication.Type == "user-auth" {
+
+	switch authentication.Type {
+	case "user-auth":
 		if strings.TrimSpace(authentication.Password) == "" {
 			return errors.New("password is empty")
 		}
-	} else if authentication.Type == "private-key" {
+	case "private-key":
 		if strings.TrimSpace(authentication.PrivateKey) == "" {
 			return errors.New("private key is not set")
 		}
-	} else {
+	default:
 		return errors.New("non supported authentication type")
 	}
 	return nil
