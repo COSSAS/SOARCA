@@ -399,9 +399,12 @@ func (theHiveConnector *TheHiveConnector) sendRequest(method string, url string,
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
 	respbody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	err = resp.Body.Close()
 	if err != nil {
 		return nil, err
 	}
