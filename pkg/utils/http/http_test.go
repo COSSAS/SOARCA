@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"testing"
 
-	b64 "encoding/base64"
 	"soarca/pkg/models/cacao"
 
 	"github.com/go-playground/assert/v2"
@@ -311,7 +310,7 @@ func TestHttpPostWithBase64ContentConnection(t *testing.T) {
 
 	testJsonObj := testJson{Id: "28818819", User: "test", Description: "very interesting description"}
 	requestBody, err := json.Marshal(testJsonObj)
-	base64EncodedBody := b64.StdEncoding.EncodeToString(requestBody)
+	base64EncodedBody := base64.StdEncoding.EncodeToString(requestBody)
 	if err != nil {
 		t.Error("error Marshall JSON: ", err)
 	}
