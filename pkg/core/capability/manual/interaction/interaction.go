@@ -172,7 +172,7 @@ func (manualController *InteractionController) registerPendingInteraction(comman
 	if _, ok := execution[commandInfo.Metadata.StepId]; ok {
 		// Error: there is already a pending manual command for the action step
 		err := fmt.Errorf(
-			"a manual step is already pending for execution %s, step %s. There can only be one pending manual command per action step.",
+			"a manual step is already pending for execution %s, step %s. There can only be one pending manual command per action step",
 			commandInfo.Metadata.ExecutionId.String(), commandInfo.Metadata.StepId)
 		log.Error(err)
 		return err
