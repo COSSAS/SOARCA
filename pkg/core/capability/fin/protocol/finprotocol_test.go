@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/fin"
-	model "soarca/pkg/models/fin"
 	"soarca/pkg/utils/guid"
 	"soarca/test/unittest/mocks/mock_mqtt"
 	"testing"
@@ -40,7 +39,7 @@ func TestTimeoutAndCallbackTimerElaspsed(t *testing.T) {
 	mock_client.On("Subscribe", "testing", uint8(1), mock.Anything).Return(&mock_token)
 	prot.Subscribe(&mock_client)
 
-	expectedCommand := model.NewCommand()
+	expectedCommand := fin.NewCommand()
 	expectedCommand.CommandSubstructure.Context.Timeout = 1
 
 	result, err := prot.AwaitResultOrTimeout(expectedCommand, &mock_client)
@@ -63,7 +62,7 @@ func TestTimeoutAndCallbackHandlerCalled(t *testing.T) {
 
 	prot.Subscribe(&mock_client)
 
-	expectedCommand := model.NewCommand()
+	expectedCommand := fin.NewCommand()
 	expectedCommand.CommandSubstructure.Context.Timeout = 1
 
 	mock_token_ack.On("Wait").Return(true)
