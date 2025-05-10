@@ -5,10 +5,13 @@ import (
 	"testing"
 
 	logger "soarca/internal/logger"
+
+	"github.com/go-playground/assert/v2"
 )
 
 func TestDebugModeLogTrace(t *testing.T) {
-	os.Setenv("LOG_MODE", "development")
+	err := os.Setenv("LOG_MODE", "development")
+	assert.Equal(t, err, nil)
 	log := logger.Logger("testing", logger.Trace, "", logger.Json)
 
 	log.Info("info")
@@ -17,7 +20,8 @@ func TestDebugModeLogTrace(t *testing.T) {
 }
 
 func TestDebugModeLogDebug(t *testing.T) {
-	os.Setenv("LOG_MODE", "development")
+	err := os.Setenv("LOG_MODE", "development")
+	assert.Equal(t, err, nil)
 	log := logger.Logger("testing", logger.Debug, "", logger.Json)
 
 	log.Info("info")
@@ -26,7 +30,8 @@ func TestDebugModeLogDebug(t *testing.T) {
 }
 
 func TestDebugModeLogInfo(t *testing.T) {
-	os.Setenv("LOG_MODE", "development")
+	err := os.Setenv("LOG_MODE", "development")
+	assert.Equal(t, err, nil)
 	log := logger.Logger("testing", logger.Info, "", logger.Json)
 
 	log.Info("info")
@@ -35,7 +40,8 @@ func TestDebugModeLogInfo(t *testing.T) {
 }
 
 func TestDebugModeLogInfoToFile(t *testing.T) {
-	os.Setenv("LOG_MODE", "development")
+	err := os.Setenv("LOG_MODE", "development")
+	assert.Equal(t, err, nil)
 	log := logger.Logger("testing", logger.Info, "test.log", logger.Json)
 
 	log.Info("info")
@@ -44,7 +50,8 @@ func TestDebugModeLogInfoToFile(t *testing.T) {
 }
 
 func TestDebugModeLogInfoMultiple(t *testing.T) {
-	os.Setenv("LOG_MODE", "development")
+	err := os.Setenv("LOG_MODE", "development")
+	assert.Equal(t, err, nil)
 	log := logger.Logger("logger 1", logger.Info, "", logger.Json)
 	log2 := logger.Logger("logger 2", logger.Debug, "", logger.Json)
 
@@ -57,7 +64,8 @@ func TestDebugModeLogInfoMultiple(t *testing.T) {
 }
 
 func TestProductionModeLogInfoMultiple(t *testing.T) {
-	os.Setenv("LOG_MODE", "production")
+	err := os.Setenv("LOG_MODE", "production")
+	assert.Equal(t, err, nil)
 	log := logger.Logger("logger 1", logger.Info, "", logger.Json)
 	log2 := logger.Logger("logger 2", logger.Debug, "", logger.Json)
 
