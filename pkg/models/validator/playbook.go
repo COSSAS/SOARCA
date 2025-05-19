@@ -77,7 +77,7 @@ func checkStepAgentTargetsSafe(playbook *cacao.Playbook, step cacao.Step) error 
 			return errors.New("agent " + step.Agent +
 				"not found in agent_definitions")
 		}
-		err, email := validateTargetAgentEmails(playbook.AgentDefinitions[step.Agent])
+		email, err := validateTargetAgentEmails(playbook.AgentDefinitions[step.Agent])
 		if err != nil {
 			return errors.New("agent " + step.Agent +
 				"has invalid email address: " + email)
@@ -90,7 +90,7 @@ func checkStepAgentTargetsSafe(playbook *cacao.Playbook, step cacao.Step) error 
 				return errors.New("target " + target +
 					"not found in target_definitions")
 			}
-			err, email := validateTargetAgentEmails(playbook.TargetDefinitions[target])
+			email, err := validateTargetAgentEmails(playbook.TargetDefinitions[target])
 			if err != nil {
 				return errors.New("target " + target +
 					"has invalid email address: " + email)
@@ -100,13 +100,13 @@ func checkStepAgentTargetsSafe(playbook *cacao.Playbook, step cacao.Step) error 
 	return nil
 }
 
-func validateTargetAgentEmails(at cacao.AgentTarget) (error, string) {
+func validateTargetAgentEmails(at cacao.AgentTarget) (string, error) {
 	for _, email := range at.Contact.Email {
 		if _, err := mail.ParseAddress(email); err != nil {
-			return err, email
+			return email, err
 		}
 	}
-	return nil, ""
+	return "", nil
 }
 
 func checkStepAuthInfoExist(playbook *cacao.Playbook, s cacao.Step) error {

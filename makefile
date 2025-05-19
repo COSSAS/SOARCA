@@ -15,7 +15,7 @@ swagger:
 
 lint: swagger
 	
-	golangci-lint run  --timeout 5m -v
+	golangci-lint run --max-same-issues 0 --timeout 5m -v  
 
 build: swagger
 	CGO_ENABLED=0 go build -o ./build/soarca $(GOFLAGS) ./cmd/soarca/main.go

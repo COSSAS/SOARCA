@@ -15,13 +15,20 @@ import (
 
 var PB_PATH string = "../../../test/playbooks/"
 
+func close(file *os.File) {
+	err := file.Close()
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
 func TestNotValidCacaoJsonInvalidAgentTargetType(t *testing.T) {
 	jsonFile, err := os.Open(PB_PATH + "invalid_playbook.json")
 	if err != nil {
 		fmt.Println(err)
 		t.Fail()
 	}
-	defer jsonFile.Close()
+	defer close(jsonFile)
 	byteValue, _ := io.ReadAll(jsonFile)
 	errValid := IsValidCacaoJson(byteValue)
 	if errValid == nil {
@@ -40,7 +47,7 @@ func TestValidCacaoJson(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
-	defer jsonFile.Close()
+	defer close(jsonFile)
 	byteValue, _ := io.ReadAll(jsonFile)
 	errValidation := IsValidCacaoJson(byteValue)
 	if errValidation != nil {
@@ -56,7 +63,7 @@ func TestValidWorkflow(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
-	defer jsonFile.Close()
+	defer close(jsonFile)
 	data, _ := io.ReadAll(jsonFile)
 	var playbook cacao.Playbook
 
@@ -73,7 +80,7 @@ func TestIsSafeCacaoWorkflowFailMissingStep(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
-	defer jsonFile.Close()
+	defer close(jsonFile)
 	data, _ := io.ReadAll(jsonFile)
 
 	var playbook cacao.Playbook
@@ -97,7 +104,7 @@ func TestIsSafeCacaoWorkflowFailInfinite(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
-	defer jsonFile.Close()
+	defer close(jsonFile)
 	data, _ := io.ReadAll(jsonFile)
 
 	var playbook cacao.Playbook
@@ -119,7 +126,7 @@ func TestIsSafeCacaoWorkflowFailAgentEmail(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
-	defer jsonFile.Close()
+	defer close(jsonFile)
 	data, _ := io.ReadAll(jsonFile)
 
 	var playbook cacao.Playbook
@@ -141,7 +148,7 @@ func TestIsSafeCacaoWorkflow(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
-	defer jsonFile.Close()
+	defer close(jsonFile)
 	data, _ := io.ReadAll(jsonFile)
 	var playbook cacao.Playbook
 

@@ -34,6 +34,13 @@ const jsonTestPlayBookMeta = `{
 		]
 	}`
 
+func close(file *os.File) {
+	err := file.Close()
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
 func TestGetPlaybookMetas(t *testing.T) {
 	app := gin.New()
 
@@ -79,7 +86,7 @@ func TestGetPlaybooks(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
-	defer jsonFile.Close()
+	defer close(jsonFile)
 	byteValue, _ := io.ReadAll(jsonFile)
 
 	app := gin.New()
@@ -123,7 +130,7 @@ func TestGetPlaybookByID(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
-	defer jsonFile.Close()
+	defer close(jsonFile)
 	byteValue, _ := io.ReadAll(jsonFile)
 
 	app := gin.New()
@@ -155,7 +162,7 @@ func TestPostPlaybook(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
-	defer jsonFile.Close()
+	defer close(jsonFile)
 	byteValue, _ := io.ReadAll(jsonFile)
 
 	app := gin.New()
@@ -194,7 +201,7 @@ func TestDeletePlaybook(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
-	defer jsonFile.Close()
+	defer close(jsonFile)
 	byteValue, _ := io.ReadAll(jsonFile)
 
 	app := gin.New()
@@ -222,7 +229,7 @@ func TestUpdatePlaybook(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
-	defer jsonFile.Close()
+	defer close(jsonFile)
 	byteValue, _ := io.ReadAll(jsonFile)
 
 	app := gin.New()

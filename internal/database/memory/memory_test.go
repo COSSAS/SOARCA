@@ -22,9 +22,9 @@ func TestCreate(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
-	defer jsonFile.Close()
-	byteValue, _ := io.ReadAll(jsonFile)
 
+	byteValue, _ := io.ReadAll(jsonFile)
+	err = jsonFile.Close()
 	if err != nil {
 		fmt.Println("Not valid JSON")
 		t.Fail()
@@ -45,9 +45,9 @@ func TestRead(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
-	defer jsonFile.Close()
-	byteValue, _ := io.ReadAll(jsonFile)
 
+	byteValue, _ := io.ReadAll(jsonFile)
+	err = jsonFile.Close()
 	if err != nil {
 		fmt.Println("Not valid JSON")
 		t.Fail()
@@ -75,8 +75,9 @@ func TestUpdate(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
-	defer jsonFile.Close()
+
 	byteValue, _ := io.ReadAll(jsonFile)
+	err = jsonFile.Close()
 
 	if err != nil {
 		fmt.Println("Not valid JSON")
@@ -117,9 +118,9 @@ func TestDelete(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
-	defer jsonFile.Close()
-	byteValue, _ := io.ReadAll(jsonFile)
 
+	byteValue, _ := io.ReadAll(jsonFile)
+	err = jsonFile.Close()
 	if err != nil {
 		fmt.Println("Not valid JSON")
 		t.Fail()
@@ -154,9 +155,9 @@ func TestGetAllPlaybooks(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
-	defer jsonFile.Close()
-	byteValue, _ := io.ReadAll(jsonFile)
 
+	byteValue, _ := io.ReadAll(jsonFile)
+	err = jsonFile.Close()
 	if err != nil {
 		fmt.Println("Not valid JSON")
 		t.Fail()
@@ -202,9 +203,9 @@ func TestGetAllPlaybookMetas(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
-	defer jsonFile.Close()
-	byteValue, _ := io.ReadAll(jsonFile)
 
+	byteValue, _ := io.ReadAll(jsonFile)
+	err = jsonFile.Close()
 	if err != nil {
 		fmt.Println("Not valid JSON")
 		t.Fail()

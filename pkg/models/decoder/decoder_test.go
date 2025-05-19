@@ -31,11 +31,15 @@ func TestCacaoDecode(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
-	defer jsonFile.Close()
-	byteValue, _ := io.ReadAll(jsonFile)
-
+	byteValue, err := io.ReadAll(jsonFile)
 	if err != nil {
 		fmt.Println("Not valid JSON")
+		t.Fail()
+		return
+	}
+	err = jsonFile.Close()
+	if err != nil {
+		fmt.Println(err)
 		t.Fail()
 		return
 	}

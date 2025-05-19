@@ -66,12 +66,12 @@ func SetupMongodb(uri string, username string, password string) error {
 	log.Trace("Calling SetupMongodb() to start setting up the mongodb database implementation")
 	err := InitMongoClient(uri, username, password)
 	if err != nil {
-		log.Error("Failed to setup MongoClient, error msg: ", err.Error())
+		log.Error("failed to setup MongoClient, error msg: ", err.Error())
 		return err
 	}
 
 	if mongoclient == nil {
-		const error_msg = "Mongoclient is not set properly"
+		const error_msg = "mongoclient is not set properly"
 		log.Error(error_msg)
 		return errors.New(error_msg)
 	}
@@ -152,7 +152,7 @@ func (mongocollection *mongoCollection[T]) Create(data interface{}) error {
 
 	if input_type != comparison_type { // checks if the input type provided is accordance with collection type
 		log.Error("Failed as input object does not match required collection type")
-		return errors.New("Input type for Create function is not in accordance with required type")
+		return errors.New("input type for Create function is not in accordance with required type")
 	}
 	// ctx := context.Background()
 	context, cancel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -229,7 +229,7 @@ func InitMongoClient(mongo_uri string, username string, password string) error {
 
 	if username == "" || password == "" {
 		log.Error("you must set your 'username' or 'password'")
-		return errors.New("Username or password not correctly set")
+		return errors.New("username or password not correctly set")
 	}
 
 	clientOpts := options.Client().ApplyURI(mongo_uri).SetAuth(options.Credential{

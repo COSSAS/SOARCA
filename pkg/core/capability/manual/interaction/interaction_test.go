@@ -9,7 +9,6 @@ import (
 	"soarca/pkg/core/capability"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
-	"soarca/pkg/models/manual"
 	manualModel "soarca/pkg/models/manual"
 	"sort"
 	"strings"
@@ -286,7 +285,7 @@ func TestValidateMatchingOutArgs(t *testing.T) {
 	}
 	storedOutArgs := cacao.Variables{"__var2__": storedOutArg}
 
-	interactionStorageEntry := manual.InteractionStorageEntry{
+	interactionStorageEntry := manualModel.InteractionStorageEntry{
 		CommandInfo: manualModel.CommandInfo{
 			Metadata:         testMetadata,
 			Context:          capability.Context{},
@@ -422,7 +421,7 @@ func TestFailOnRegisterSamePendingInteraction(t *testing.T) {
 	expectedErr := errors.New(
 		"a manual step is already pending for execution " +
 			"61a6c41e-6efc-4516-a242-dfbc5c89d562, step test_step_id. " +
-			"There can only be one pending manual command per action step.",
+			"There can only be one pending manual command per action step",
 	)
 	assert.Equal(t, err, expectedErr)
 }

@@ -72,8 +72,11 @@ func (httpRequest *HttpRequest) Request(httpOptions HttpOptions) ([]byte, error)
 		log.Error(err)
 		return []byte{}, err
 	}
-	defer response.Body.Close()
-	return httpOptions.handleResponse(response)
+	data, err := httpOptions.handleResponse(response)
+	if response.Body.Close() != nil {
+		log.Warning("error closing response body")
+	}
+	return data, err
 }
 
 func (httpOptions *HttpOptions) setupRequest() (*http.Request, error) {
@@ -139,10 +142,10 @@ func verifyAuthInfoMatchesAgentTarget(
 ) error {
 	log.Trace("target id: ", target.AuthInfoIdentifier, " auth info object id: ", authInfo.ID)
 	if target.AuthInfoIdentifier == "" || authInfo.ID == "" {
-		return errors.New("target target.AuthInfoIndentifier or authInfo.ID is empty")
+		return errors.New("target target.AuthInfoIdentifier or authInfo.ID is empty")
 	}
 
-	if !(target.AuthInfoIdentifier == authInfo.ID) {
+	if target.AuthInfoIdentifier != authInfo.ID {
 		return errors.New("target auth info Id does not match auth info object's")
 	}
 	return nil

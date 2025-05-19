@@ -25,13 +25,20 @@ import (
 	"github.com/google/uuid"
 )
 
+func close(file *os.File) {
+	err := file.Close()
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
 func TestTriggerExecutionOfPlaybook(t *testing.T) {
 	jsonFile, err := os.Open("../playbook.json")
 	if err != nil {
 		fmt.Println(err)
 		t.Fail()
 	}
-	defer jsonFile.Close()
+	defer close(jsonFile)
 	byteValue, _ := io.ReadAll(jsonFile)
 
 	app := gin.New()
@@ -66,7 +73,7 @@ func TestExecutionOfPlaybookById(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
-	defer jsonFile.Close()
+	defer close(jsonFile)
 	byteValue, _ := io.ReadAll(jsonFile)
 
 	gin.SetMode(gin.DebugMode)
@@ -101,7 +108,7 @@ func TestExecutionOfPlaybookByIdWithPayloadValidVariables(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
-	defer jsonFile.Close()
+	defer close(jsonFile)
 	byteValue, _ := io.ReadAll(jsonFile)
 
 	gin.SetMode(gin.DebugMode)
@@ -152,7 +159,7 @@ func TestPlaybookByIdVariableNotInPlaybook(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
-	defer jsonFile.Close()
+	defer close(jsonFile)
 	byteValue, _ := io.ReadAll(jsonFile)
 
 	gin.SetMode(gin.DebugMode)
@@ -202,7 +209,7 @@ func TestPlaybookByIdVariableTypeMismatch(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
-	defer jsonFile.Close()
+	defer close(jsonFile)
 	byteValue, _ := io.ReadAll(jsonFile)
 
 	gin.SetMode(gin.DebugMode)
@@ -253,7 +260,7 @@ func TestPlaybookByIdVariableIsNotExternal(t *testing.T) {
 		fmt.Println(err)
 		t.Fail()
 	}
-	defer jsonFile.Close()
+	defer close(jsonFile)
 	byteValue, _ := io.ReadAll(jsonFile)
 
 	gin.SetMode(gin.DebugMode)
