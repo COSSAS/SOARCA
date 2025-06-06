@@ -50,6 +50,36 @@ After completing the [Getting Started](/docs/getting-started/_index.md) setup fo
 | THEHIVE_API_TOKEN    | `your_token`                     | Set the API token for The Hive integration.             |
 | THEHIVE_API_BASE_URL | `http://your.thehive.instance/api/v1/` | Set the base URL for The Hive API. Default is `""`.      |
 
+#### Caldera
+
+SOARCA optionally comes packaged together with Caldera. To use the
+[Caldera capability](/docs/soarca-extensions/native-capabilities#caldera-capability), simply make
+sure you use the right Compose file when running:
+
+```diff
+- cd docker/soarca && docker compose up -d
++ cd docker/soarca && docker compose --profile caldera up -d
+```
+
+{{% alert title="Warning" %}}
+This only works when using Docker Compose to run SOARCA. When building SOARCA from scratch,
+you should supply your own Caldera instance and configure its URL manually.
+{{% /alert %}}
+
+| Variable        | Content                       | Description                                 |
+|-----------------|-------------------------------|---------------------------------------------|
+| CALDERA_HOST    | `http://caldera.mydomain.com` | Specify the host Caldera can be reached at. |
+| CALDERA_PORT    | `8888`                        | Specify the port Caldera can be reached at. |
+| CALDERA_API_KEY | `ADMIN123`                    | Configures the Caldera API key to use.      |
+
+{{% alert title="Warning" %}}
+Note that Caldera in this mode operates with default credentials and settings. This is dangerous
+for a public-facing setup and therefore not production-ready out of the box. You probably want
+to consult the
+[Caldera documentation on configuration](https://caldera.readthedocs.io/en/latest/Server-Configuration.html#configuration-file)
+before deploying to production.
+{{% /alert %}}
+
 -----
 
 ### Authentication
