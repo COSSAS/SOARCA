@@ -38,6 +38,24 @@ services:
         protocol: tcp
         mode: host
 
+  soarca-gui:
+    image: docker.io/cossas/soarca-gui:latest
+    container_name: soarca_gui
+    environment:
+      PORT: 8081
+      SOARCA_URI: "http://soarca_server:8080"
+      GIN_MODE: "release"
+      AUTH_ENABLED: false
+      AUTH_ENABLED_TO_SOARCA: false
+    networks:
+      - soarca-net
+    ports:
+      - 127.0.0.1:8081:8081
+    depends_on:
+      - soarca
+    profiles:
+      - gui
+
   soarca:
     image: docker.io/cossas/soarca:latest
     container_name: soarca_server
@@ -67,6 +85,7 @@ services:
     networks:
       - db-net
       - mqtt-net
+      - soarca-net
     ports:
       - 127.0.0.1:8080:8080
     depends_on:
@@ -76,6 +95,7 @@ services:
 networks:
   db-net:
   mqtt-net:
+  soarca-net:
 
 
 volumes:

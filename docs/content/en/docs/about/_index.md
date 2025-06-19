@@ -1,6 +1,6 @@
 ---
 title: About
-weight: 7
+weight: 20
 description: 
 ---
 

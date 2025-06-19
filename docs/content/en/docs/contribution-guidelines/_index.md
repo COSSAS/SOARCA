@@ -1,6 +1,6 @@
 ---
 title: Contribution Guidelines
-weight: 7
+weight: 8
 description: How to contribute to SOARCA
 ---
 
