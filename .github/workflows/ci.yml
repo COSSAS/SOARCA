@@ -63,10 +63,6 @@ jobs:
         run: docker compose -f "deployments/docker/testing/httpbin-test/docker-compose.yml" up -d --build
       - name: Run tests
         run: |
-          sudo apt update
-          sudo apt install openssh-server -y
-          sudo useradd sshtest
-          echo "sshtest:pdKY77qNxpI5MAizirtjCVOcm0KFKIs" | sudo chpasswd
-          sudo service ssh start
+          docker compose -f "deployments/docker/testing/ssh-test/docker-compose.yml" up -d --build
           make ci-test
 
