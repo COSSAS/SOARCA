@@ -1,0 +1,7 @@
+ services:  
+  ssh_server:
+    container_name: ssh_server
+    build:
+      dockerfile: Dockerfile
+    ports:
+      - 22:22
