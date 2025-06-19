@@ -4,4 +4,4 @@
     build:
       dockerfile: Dockerfile
     ports:
-      - 22:22
+      - 2222:22
