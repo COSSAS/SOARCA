@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@tailwindcss/vite": "^4.0.16",
+    "lucide-react": "^0.484.0",
+    "react-router-dom": "^7.4.0",
+    "tailwindcss": "^4.0.16"
+  }
+}
