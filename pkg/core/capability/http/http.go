@@ -9,7 +9,7 @@ import (
 	"soarca/pkg/utils/http"
 )
 
-// Receive HTTP API command data from decomposer/executer
+// Receive HTTP API command data from decomposer/executor
 // Validate HTTP API call
 // Run HTTP API call
 // Return response

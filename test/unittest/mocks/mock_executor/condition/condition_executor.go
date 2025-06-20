@@ -11,8 +11,8 @@ type Mock_Condition struct {
 	mock.Mock
 }
 
-func (executer *Mock_Condition) Execute(metadata execution.Metadata,
+func (executor *Mock_Condition) Execute(metadata execution.Metadata,
 	context executors.Context) (string, bool, error) {
-	args := executer.Called(metadata, context)
+	args := executor.Called(metadata, context)
 	return args.String(0), args.Bool(1), args.Error(2)
 }

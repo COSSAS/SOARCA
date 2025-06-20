@@ -1,10 +1,10 @@
 ---
-title: Executer
+title: Executor
 weight: 5
 categories: [architecture]
 tags: []
 description: >
-    Design of the SOARCA step executer
+    Design of the SOARCA step executor
 ---
 
 ## Components
