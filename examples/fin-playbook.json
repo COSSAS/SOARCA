@@ -1,0 +1,42 @@
+{
+    "type": "playbook",
+    "spec_version": "cacao-2.0",
+    "id": "playbook--3c9885e6-95cc-49cb-9044-0e1d2c22be4a",
+    "name": "New Playbook1",
+    "created": "2025-06-23T09:41:13.868Z",
+    "modified": "2023-11-01T15:33:31.072Z",
+    "revoked": false,
+    "priority": 0,
+    "severity": 0,
+    "impact": 0,
+    "workflow_start": "start--b6c62023-dbd4-422e-adf9-505277f29a79",
+    "agent_definitions": {
+        "soarca-fin-pong-f896bb3b-bb37-429e-8ece-2d4286cf326d": {
+            "name": "soarca-fin-pong-f896bb3b-bb37-429e-8ece-2d4286cf326d",
+            "type": "net-address"
+        }
+    },
+    "created_by": "identity--112e9923-5c87-4cf2-9685-eda58a162a7a",
+    "description": "This is a template playbook containing only a start and end node",
+    "workflow": {
+        "start--b6c62023-dbd4-422e-adf9-505277f29a79": {
+            "type": "start",
+            "name": "Start",
+            "on_completion": "action--2fd6bca0-24ed-4d74-8eae-da126a84f7c4"
+        },
+        "action--2fd6bca0-24ed-4d74-8eae-da126a84f7c4": {
+            "type": "action",
+            "agent": "soarca-fin-pong-f896bb3b-bb37-429e-8ece-2d4286cf326d",
+            "commands": [
+                {
+                    "type": "pong"
+                }
+            ],
+            "on_completion": "end--156d0625-26cb-458d-997b-c1f8a552cb3c"
+        },
+        "end--156d0625-26cb-458d-997b-c1f8a552cb3c": {
+            "type": "end",
+            "name": "End step"
+        }
+    }
+}
