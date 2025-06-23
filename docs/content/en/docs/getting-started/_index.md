@@ -23,14 +23,14 @@ Before you begin, you might need to install the following tools (Linux Ubuntu 22
 Below, we outline various options to kickstart SOARCA. The latest pre-compiled releases can be found [here](https://github.com/COSSAS/SOARCA/releases).
 
 {{< tabpane langEqualsHeader=false  >}}
+{{< tab header="Docker Compose" lang="sh" >}}
+cd deployments/docker/soarca && sudo docker compose up -d
+{{< /tab >}}
 {{< tab header="make" lang="sh" >}}
 make build && ./build/soarca
 {{< /tab >}}
 {{< tab header="Linux" lang="sh" >}}
 wget https://github.com/COSSAS/SOARCA/releases/download/SOARCA_1.0.0/SOARCA_1.0.0_linux_amd64.tar.gz  && tar -xvf SOARCA* && ./SOARCA
-{{< /tab >}}
-{{< tab header="Docker Compose" lang="sh" >}}
-cd docker/soarca && sudo docker compose up -d
 {{< /tab >}}
 {{< /tabpane >}}
 
