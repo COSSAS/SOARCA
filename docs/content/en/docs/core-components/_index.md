@@ -1,6 +1,6 @@
 ---
-title: Design
-weight: 6
+title: Design - core components
+weight: 5
 description: >
   The design of SOARCA
   

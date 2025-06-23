@@ -4,7 +4,7 @@ description: >
     Extending SOARCA is done by developing a SOARCA-Fin.  
 categories: [extensions, architecture, capabilities]
 tags: [fin]
-weight: 5
+weight: 6
 date: 2023-01-05
 ---
 
