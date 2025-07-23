@@ -73,14 +73,14 @@ func (capability *PowershellCapability) Execute(
 	defer cancel()
 
 	effectiveCommand := ""
-	if capabilityContext.Command.CommandB64 != "" {
-		bytes, err := base64.StdEncoding.DecodeString(capabilityContext.Command.CommandB64)
+	if capabilityContext.CommandData.CommandB64 != "" {
+		bytes, err := base64.StdEncoding.DecodeString(capabilityContext.CommandData.CommandB64)
 		if err != nil {
 			return cacao.NewVariables(), err
 		}
 		effectiveCommand = string(bytes)
 	} else {
-		effectiveCommand = capabilityContext.Command.Command
+		effectiveCommand = capabilityContext.CommandData.Command
 	}
 
 	result, stdErr, _, err := client.RunPSWithContext(ctx, effectiveCommand)

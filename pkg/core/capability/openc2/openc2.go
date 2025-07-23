@@ -45,7 +45,7 @@ func (OpenC2Capability *OpenC2Capability) Execute(
 	log.Trace(metadata.ExecutionId)
 
 	httpOptions := http.HttpOptions{
-		Command: &context.Command,
+		Command: &context.CommandData,
 		Target:  &context.Target,
 		Auth:    &context.Authentication,
 	}

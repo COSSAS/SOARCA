@@ -18,7 +18,7 @@ func TestReportWorkflowStartFirst(t *testing.T) {
 	mock_time := new(mock_time.MockTime)
 	cacheReporter := New(mock_time, 10)
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
@@ -35,7 +35,7 @@ func TestReportWorkflowStartFirst(t *testing.T) {
 		Name:          "ssh-tests",
 		Description:   "test step",
 		StepVariables: cacao.NewVariables(expectedVariables),
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Cases:         map[string]string{},
 		OnCompletion:  "end--test",
 		Agent:         "agent1",
@@ -150,7 +150,7 @@ func TestReportWorkflowStartFifo(t *testing.T) {
 	mock_time := new(mock_time.MockTime)
 	cacheReporter := New(mock_time, 3)
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
@@ -167,7 +167,7 @@ func TestReportWorkflowStartFifo(t *testing.T) {
 		Name:          "ssh-tests",
 		Description:   "step description",
 		StepVariables: cacao.NewVariables(expectedVariables),
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Cases:         map[string]string{},
 		OnCompletion:  "end--test",
 		Agent:         "agent1",
@@ -296,7 +296,7 @@ func TestReportWorkflowEnd(t *testing.T) {
 	mock_time := new(mock_time.MockTime)
 	cacheReporter := New(mock_time, 10)
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
@@ -313,7 +313,7 @@ func TestReportWorkflowEnd(t *testing.T) {
 		Name:          "ssh-tests",
 		Description:   "step 1",
 		StepVariables: cacao.NewVariables(expectedVariables),
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Cases:         map[string]string{},
 		OnCompletion:  "end--test",
 		Agent:         "agent1",
@@ -399,7 +399,7 @@ func TestReportStepStartAndEnd(t *testing.T) {
 	mock_time := new(mock_time.MockTime)
 	cacheReporter := New(mock_time, 10)
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
@@ -415,7 +415,7 @@ func TestReportStepStartAndEnd(t *testing.T) {
 		ID:            "action--test",
 		Name:          "ssh-tests",
 		StepVariables: cacao.NewVariables(expectedVariables),
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Cases:         map[string]string{},
 		OnCompletion:  "end--test",
 		Agent:         "agent1",
@@ -523,11 +523,11 @@ func TestReportStepStartCommandsEncoding(t *testing.T) {
 	mock_time := new(mock_time.MockTime)
 	cacheReporter := New(mock_time, 10)
 
-	expectedCommand1 := cacao.Command{
+	expectedCommand1 := cacao.CommandData{
 		Type:       "manual",
 		CommandB64: b64.StdEncoding.EncodeToString([]byte("do ssh ls -la in the terminal")),
 	}
-	expectedCommand2 := cacao.Command{
+	expectedCommand2 := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
@@ -543,7 +543,7 @@ func TestReportStepStartCommandsEncoding(t *testing.T) {
 		ID:            "action--test",
 		Name:          "ssh-tests",
 		StepVariables: cacao.NewVariables(expectedVariables),
-		Commands:      []cacao.Command{expectedCommand1, expectedCommand2},
+		Commands:      []cacao.CommandData{expectedCommand1, expectedCommand2},
 		Cases:         map[string]string{},
 		OnCompletion:  "end--test",
 		Agent:         "agent1",
@@ -663,7 +663,7 @@ func TestReportStepStartManualCommand(t *testing.T) {
 	mock_time := new(mock_time.MockTime)
 	cacheReporter := New(mock_time, 10)
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "manual",
 		Command: "do ssh ls -la in the terminal",
 	}
@@ -679,7 +679,7 @@ func TestReportStepStartManualCommand(t *testing.T) {
 		ID:            "action--test",
 		Name:          "ssh-tests",
 		StepVariables: cacao.NewVariables(expectedVariables),
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Cases:         map[string]string{},
 		OnCompletion:  "end--test",
 		Agent:         "agent1",
@@ -793,7 +793,7 @@ func TestInvalidStepReportAfterStepEnd(t *testing.T) {
 	mock_time := new(mock_time.MockTime)
 	cacheReporter := New(mock_time, 10)
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
@@ -809,7 +809,7 @@ func TestInvalidStepReportAfterStepEnd(t *testing.T) {
 		ID:            "action--test",
 		Name:          "ssh-tests",
 		StepVariables: cacao.NewVariables(expectedVariables),
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Cases:         map[string]string{},
 		OnCompletion:  "end--test",
 		Agent:         "agent1",
@@ -883,7 +883,7 @@ func TestAcceptedStepReportAfterExecutionEnd(t *testing.T) {
 	mock_time := new(mock_time.MockTime)
 	cacheReporter := New(mock_time, 10)
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
@@ -899,7 +899,7 @@ func TestAcceptedStepReportAfterExecutionEnd(t *testing.T) {
 		ID:            "action--test",
 		Name:          "ssh-tests",
 		StepVariables: cacao.NewVariables(expectedVariables),
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Cases:         map[string]string{},
 		OnCompletion:  "end--test",
 		Agent:         "agent1",

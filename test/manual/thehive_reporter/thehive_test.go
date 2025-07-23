@@ -50,7 +50,7 @@ func TestTheHiveReporting(t *testing.T) {
 	}
 	thr := thehive.NewReporter(thehive.NewConnector(thehive_api_base_uri, thehive_api_tkn))
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
@@ -74,7 +74,7 @@ func TestTheHiveReporting(t *testing.T) {
 		Name:          "ssh-tests",
 		Description:   "test step",
 		StepVariables: cacao.NewVariables(expectedVariables),
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Cases:         map[string]string{},
 		OnCompletion:  "end--test",
 		Agent:         "agent1",

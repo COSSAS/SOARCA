@@ -46,7 +46,7 @@ func (httpCapability *HttpCapability) Execute(
 
 	soarca_http_options := http.HttpOptions{
 		Target:  &context.Target,
-		Command: &context.Command,
+		Command: &context.CommandData,
 		Auth:    &context.Authentication,
 	}
 
