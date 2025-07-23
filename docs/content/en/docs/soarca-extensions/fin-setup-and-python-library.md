@@ -1,5 +1,5 @@
 ---
-title:  Fin Python Library
+title:  Fin Setup and Python Library
 description: >
     Documentation of the Python Fin library
 categories: [extensions, architecture]
@@ -8,9 +8,27 @@ weight: 2
 date: 2024-04-10
 ---
 
-For the documentation about the Fin protocol we refer to documention page of [SOARCA Fin Protocol](https://cossas.github.io/SOARCA/docs/soarca-extensions/fin-protocol/).
+## Quick Start - deployment
 
-## Quick Start
+To deploy SOARCA fins a few things need to happen:
+
+1. Have SOARCA deployed and up
+2. Have a Fin developed
+3. Ability to contact SOARCA API from the Fin location
+
+To deploy the example use:
+
+```bash
+git clone git@github.com:COSSAS/SOARCA-FIN-python-library.git
+cd ~/examples
+pip install -r requirements.txt
+python3 pong_example.py
+```
+Now the example playbook can be from the SOARCA main repo
+
+## Quick Start - development
+
+For the documentation about the Fin protocol we refer to documention page of [SOARCA Fin Protocol](https://cossas.github.io/SOARCA/docs/soarca-extensions/fin-protocol/).
  
 To include the SOARCA Fin library, you can use the following command to install it via pip:
 

@@ -6,7 +6,7 @@ weight: 20
 ---
 
 
-{{% alert title="Warning" color="warning" %}}
+{{% alert title="Note" color="primary" %}}
 SOARCA is currently in its **first release**, with ongoing development aimed at expanding its capabilities, improving integration, and enhancing its functionalities. You can track our progress and upcoming milestones on [GitHub](https://github.com/COSSAS/SOARCA/milestones).
 
 We warmly welcome contributions to our repository. You can find the guidelines for contributing [here](/docs/contribution-guidelines).
