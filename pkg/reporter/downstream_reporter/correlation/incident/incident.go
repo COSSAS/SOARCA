@@ -3,10 +3,10 @@ package incident
 import (
 	"errors"
 	"reflect"
-	"slices"
 	"soarca/internal/logger"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
+	"soarca/pkg/reporter/downstream_reporter/correlation/observable"
 	"time"
 
 	"github.com/google/uuid"
@@ -21,84 +21,57 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
-type ObservableType int
-type MatchReason string
-
-const (
-	SourceAddressIpv4 ObservableType = iota
-	SourcePort
-	DestinationAddressIpv4
-	DestinationPort
-	SourceMac
-	DestinationMac
-	Other
-)
-
-const (
-	SameObservable  MatchReason = "Observable is seen again"
-	LateralMovement MatchReason = "Lateral movement, source of this observation is destination of previous observation"
-)
-
-type Observable struct {
-	Type  ObservableType
-	Name  string
-	Value string
-}
-
-type Observables map[string]Observable
-
 type ICase interface {
-	CheckObservableInCase(cacao.Variable) bool
-	AddIfNotInCase(cacao.Variable)
+	CheckObservableInCase(cacao.Variable) (bool, error)
+	AddIfNotInCase(execution.Metadata, cacao.Variable) (bool, error)
+	GetId() uuid.UUID
+	GetExternalId() string
+	GetObservables() Observables
 }
 
-var ip_v4_source_type_ids = []string{"__SOURCE_IPV4__"}
-var ip_v4_destination_ids = []string{"__DESTINATION_IPV4__"}
-
-func deductObservableType(name string) ObservableType {
-	if slices.Contains(ip_v4_source_type_ids, name) {
-		return SourceAddressIpv4
-	} else if slices.Contains(ip_v4_destination_ids, name) {
-		return DestinationAddressIpv4
-	}
-	return Other
+type StepResult struct {
+	StepId      string
+	Description string
+	State       string
 }
 
-func createObservable(variable cacao.Variable) (Observable, error) {
-
-	if variable.Name == "" {
-		err := errors.New("variable is empty")
-		log.Error(err)
-		return Observable{}, err
-	}
-
-	return Observable{Type: deductObservableType(variable.Name),
-		Name:  variable.Name,
-		Value: variable.Value}, nil
+type Result struct {
+	Meta        execution.Metadata
+	StepResults map[string]StepResult
 }
 
 type Executions map[uuid.UUID]execution.Metadata
+type Observables map[string]observable.Observable
 
 type Case struct {
 	Id            uuid.UUID
-	Executions    Executions
-	Observables   map[string]Observable
+	ExternalId    string
+	Observables   map[string]observable.Observable
 	FirstObserved time.Time
-	// IsClosed      bool
+	Executions    Executions
 	// time          itime.ITime
+	// IsClosed      bool
 }
 
-func New(meta execution.Metadata, variables cacao.Variables) Case {
-	exe := Executions{meta.ExecutionId: meta}
+func New(guid uuid.UUID,
+	meta execution.Metadata,
+	variables cacao.Variables) ICase {
 	observables := Observables{}
-	for _, variable := range variables {
-		if observable, err := createObservable(variable); err == nil {
-			observables[variable.Value] = observable
-		}
-	}
-	thisCase := Case{Id: uuid.New(), Executions: exe,
+	thisCase := Case{Id: guid,
 		Observables: observables}
-	return thisCase
+	for _, variable := range variables {
+		thisCase.AddIfNotInCase(meta, variable)
+	}
+
+	return &thisCase
+}
+
+func (cas *Case) GetId() uuid.UUID {
+	return cas.Id
+}
+
+func (cas *Case) GetExternalId() string {
+	return cas.ExternalId
 }
 
 func (cas *Case) CheckObservableInCase(variable cacao.Variable) (bool, error) {
@@ -113,14 +86,47 @@ func (cas *Case) CheckObservableInCase(variable cacao.Variable) (bool, error) {
 	return false, nil
 }
 
-func (cas *Case) AddIfNotInCase(variable cacao.Variable) (bool, error) {
+func (cas *Case) AddIfNotInCase(meta execution.Metadata,
+	variable cacao.Variable) (bool, error) {
 	if _, ok := cas.Observables[variable.Value]; !ok {
-		observable, err := createObservable(variable)
+		observed, err := observable.CreateObservable(variable)
 		if err != nil {
 			return false, err
 		}
-		cas.Observables[variable.Value] = observable
+		observed.AddExecutionToObservable(meta.ExecutionId, observable.Initial)
+		cas.Observables[variable.Value] = observed
+
 		return true, nil
 	}
 	return false, nil
+}
+
+func (cas *Case) AddExecutionAndStepData(variable cacao.Variable, step cacao.Step, meta execution.Metadata) {
+	newObserved, err := observable.CreateObservable(variable)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	if observed, ok := cas.Observables[variable.Value]; ok {
+
+		err := observed.Match(newObserved, meta.ExecutionId)
+		if err != nil {
+			log.Error(err)
+			return
+		}
+		cas.Observables[variable.Value] = observed
+		cas.Executions[meta.ExecutionId] = meta
+	}
+}
+
+func (cas *Case) GetObservable(value string) (observable.Observable, error) {
+	observable, ok := cas.Observables[value]
+	if !ok {
+		return observable, errors.New("observable is not in case")
+	}
+	return observable, nil
+}
+
+func (cas *Case) GetObservables() Observables {
+	return cas.Observables
 }
