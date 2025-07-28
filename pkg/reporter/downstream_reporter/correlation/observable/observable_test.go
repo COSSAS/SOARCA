@@ -36,3 +36,29 @@ func TestCreate(t *testing.T) {
 	assert.Equal(t, obs.Executions[id2], SameObservable)
 
 }
+
+func TestMatchSame(t *testing.T) {
+	id, err := uuid.NewV7()
+	assert.Equal(t, err, nil)
+	obs := Observable{Type: SourceAddressIpv4, Name: "__SRC_IP__", Value: "10.0.0.1", Executions: Executions{id: Initial}}
+
+	id2, err := uuid.NewV7()
+	assert.Equal(t, err, nil)
+	obs2 := Observable{Type: SourceAddressIpv4, Name: "__SRC_IP__", Value: "10.0.0.1", Executions: Executions{id2: Initial}}
+
+	err = obs.Match(obs2, id2)
+	assert.Equal(t, err, nil)
+
+}
+
+func TestMatchLateral(t *testing.T) {
+	id, err := uuid.NewV7()
+	assert.Equal(t, err, nil)
+	obs := Observable{Type: DestinationAddressIpv4, Name: "__DEST_IP__", Value: "10.0.0.1", Executions: Executions{id: Initial}}
+
+	id2, err := uuid.NewV7()
+	assert.Equal(t, err, nil)
+	obs2 := Observable{Type: SourceAddressIpv4, Name: "__SRC_IP__", Value: "10.0.0.1", Executions: Executions{id2: Initial}}
+	err = obs.Match(obs2, id2)
+	assert.Equal(t, err, nil)
+}

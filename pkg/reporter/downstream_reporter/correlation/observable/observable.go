@@ -44,6 +44,7 @@ const (
 	Initial         MatchReason = "Initial observable"
 	SameObservable  MatchReason = "Observable is seen again"
 	LateralMovement MatchReason = "Lateral movement, source of this observation is destination of previous observation"
+	NoMatch         MatchReason = "Not a match"
 )
 
 type Observable struct {
@@ -90,4 +91,31 @@ func (observable *Observable) AddExecutionToObservable(id uuid.UUID, match Match
 	}
 	observable.Executions[id] = match
 
+}
+
+func (observable *Observable) Match(other Observable, exectuion uuid.UUID) error {
+	if len(other.Executions) > 0 {
+		log.Warning("the other executions will be discarded when updating the base")
+	}
+
+	reason := determineMatchReason(*observable, other)
+	if reason == NoMatch {
+		return errors.New("no match made with observables")
+	}
+	observable.Executions[exectuion] = reason
+	log.Debug("Matched observable: ", observable)
+	return nil
+}
+
+func determineMatchReason(var1 Observable, var2 Observable) MatchReason {
+	// update to STIX engine in the future
+	if var1.Type == var2.Type {
+		return SameObservable
+	} else if var1.Type == SourceAddressIpv4 && var2.Type == DestinationAddressIpv4 {
+		return LateralMovement
+	} else if var1.Type == DestinationAddressIpv4 && var2.Type == SourceAddressIpv4 {
+		return LateralMovement
+	}
+
+	return NoMatch
 }
