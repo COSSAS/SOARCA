@@ -42,7 +42,7 @@ func TestReportWorkflowStart(t *testing.T) {
 	reporter := New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
 	mock_time := new(mock_time.MockTime)
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
@@ -58,7 +58,7 @@ func TestReportWorkflowStart(t *testing.T) {
 		ID:            "action--test",
 		Name:          "ssh-tests",
 		StepVariables: cacao.NewVariables(expectedVariables),
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Cases:         map[string]string{},
 		OnCompletion:  "end--test",
 		Agent:         "agent1",
@@ -121,7 +121,7 @@ func TestReportWorkflowEnd(t *testing.T) {
 	reporter := New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
 	mock_time := new(mock_time.MockTime)
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
@@ -137,7 +137,7 @@ func TestReportWorkflowEnd(t *testing.T) {
 		ID:            "action--test",
 		Name:          "ssh-tests",
 		StepVariables: cacao.NewVariables(expectedVariables),
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Cases:         map[string]string{},
 		OnCompletion:  "end--test",
 		Agent:         "agent1",
@@ -200,7 +200,7 @@ func TestReportStepStart(t *testing.T) {
 	reporter := New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
 	mock_time := new(mock_time.MockTime)
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
@@ -216,7 +216,7 @@ func TestReportStepStart(t *testing.T) {
 		ID:            "action--test",
 		Name:          "ssh-tests",
 		StepVariables: cacao.NewVariables(expectedVariables),
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Cases:         map[string]string{},
 		OnCompletion:  "end--test",
 		Agent:         "agent1",
@@ -244,7 +244,7 @@ func TestReportStepEnd(t *testing.T) {
 	reporter := New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter})
 	mock_time := new(mock_time.MockTime)
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
@@ -260,7 +260,7 @@ func TestReportStepEnd(t *testing.T) {
 		ID:            "action--test",
 		Name:          "ssh-tests",
 		StepVariables: cacao.NewVariables(expectedVariables),
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Cases:         map[string]string{},
 		OnCompletion:  "end--test",
 		Agent:         "agent1",
@@ -290,7 +290,7 @@ func TestMultipleDownstreamReporters(t *testing.T) {
 	reporter := New([]ds_reporter.IDownStreamReporter{&mock_ds_reporter1, &mock_ds_reporter2})
 	mock_time := new(mock_time.MockTime)
 
-	expectedCommand := cacao.Command{
+	expectedCommand := cacao.CommandData{
 		Type:    "ssh",
 		Command: "ssh ls -la",
 	}
@@ -306,7 +306,7 @@ func TestMultipleDownstreamReporters(t *testing.T) {
 		ID:            "action--test",
 		Name:          "ssh-tests",
 		StepVariables: cacao.NewVariables(expectedVariables),
-		Commands:      []cacao.Command{expectedCommand},
+		Commands:      []cacao.CommandData{expectedCommand},
 		Cases:         map[string]string{},
 		OnCompletion:  "end--test",
 		Agent:         "agent1",

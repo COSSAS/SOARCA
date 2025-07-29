@@ -37,10 +37,10 @@ func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
 	context capability.Context) (cacao.Variables, error) {
 
 	log.Trace(metadata.ExecutionId)
-	return execute(context.Command, context.Authentication, context.Target)
+	return execute(context.CommandData, context.Authentication, context.Target)
 }
 
-func execute(command cacao.Command,
+func execute(command cacao.CommandData,
 	authentication cacao.AuthenticationInformation,
 	target cacao.AgentTarget) (cacao.Variables, error) {
 
@@ -64,7 +64,7 @@ func execute(command cacao.Command,
 }
 
 func executeCommand(session *ssh.Session,
-	command cacao.Command) (cacao.Variables, error) {
+	command cacao.CommandData) (cacao.Variables, error) {
 
 	response, err := session.Output(StripSshPrepend(command.Command))
 

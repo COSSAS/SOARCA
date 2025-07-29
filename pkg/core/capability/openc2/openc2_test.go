@@ -35,7 +35,7 @@ func TestOpenC2Request(t *testing.T) {
 		Token: "this-is-a-test",
 	}
 
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "POST / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -65,7 +65,7 @@ func TestOpenC2Request(t *testing.T) {
 
 	mockHttp.On("Request", httpOptions).Return(payloadBytes, nil)
 
-	data := capability.Context{Command: command,
+	data := capability.Context{CommandData: command,
 		Authentication: auth,
 		Target:         target,
 		Variables:      cacao.NewVariables(cacaoVariable)}

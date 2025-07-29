@@ -30,7 +30,7 @@ func TestHTTPOptionsCorrectlyGenerated(t *testing.T) {
 	target := cacao.AgentTarget{Address: map[cacao.NetAddressType][]string{
 		"url": {"https://httpbin.org/post"},
 	}}
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "POST / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -58,7 +58,7 @@ func TestHTTPOptionsCorrectlyGenerated(t *testing.T) {
 	mock_http_request.On("Request", httpOptions).Return(payload_byte, nil)
 
 	data := capability.Context{
-		Command:        command,
+		CommandData:    command,
 		Authentication: oauth2_info,
 		Target:         target,
 		Variables:      cacao.NewVariables(variable1),
@@ -84,7 +84,7 @@ func TestHTTPOptionsEmptyAuth(t *testing.T) {
 	target := cacao.AgentTarget{Address: map[cacao.NetAddressType][]string{
 		"url": {"https://httpbin.org/post"},
 	}}
-	command := cacao.Command{
+	command := cacao.CommandData{
 		Type:    "http-api",
 		Command: "POST / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
@@ -113,7 +113,7 @@ func TestHTTPOptionsEmptyAuth(t *testing.T) {
 	mock_http_request.On("Request", httpOptions).Return(payload_byte, nil)
 
 	data := capability.Context{
-		Command:        command,
+		CommandData:    command,
 		Authentication: *empty_auth,
 		Target:         target,
 		Variables:      cacao.NewVariables(variable1),
@@ -139,7 +139,7 @@ func TestHTTPOptionsEmptyCommand(t *testing.T) {
 	target := cacao.AgentTarget{Address: map[cacao.NetAddressType][]string{
 		"url": {"https://httpbin.org/post"},
 	}}
-	empty_command := new(cacao.Command)
+	empty_command := new(cacao.CommandData)
 
 	var oauth2_info = cacao.AuthenticationInformation{
 		ID:    "6ba7b810-9dad-11d1-80b4-00c04fd430c9",
@@ -168,7 +168,7 @@ func TestHTTPOptionsEmptyCommand(t *testing.T) {
 	mock_http_request.On("Request", httpOptions).Return([]byte{}, expected_error)
 
 	data := capability.Context{
-		Command:        *empty_command,
+		CommandData:    *empty_command,
 		Authentication: oauth2_info,
 		Target:         target,
 		Variables:      cacao.NewVariables(variable1),
