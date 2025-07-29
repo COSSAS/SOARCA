@@ -26,7 +26,7 @@ GUI
 
 Integrations
  - Added ability to integrate deeply into SOARCA
- - Added THE Hive Integration for reporting on workflows
+ - Added The Hive Integration for reporting on workflows
 
 General 
  - Added SOARCA deployments for testing
