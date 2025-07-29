@@ -8,7 +8,7 @@ import (
 	"soarca/pkg/core/executors"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
-	"soarca/pkg/reporter"
+	"soarca/pkg/reporting/reporter"
 	"soarca/pkg/utils/stix/expression/comparison"
 	timeUtil "soarca/pkg/utils/time"
 )

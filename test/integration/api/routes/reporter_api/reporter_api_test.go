@@ -8,7 +8,7 @@ import (
 	api_model "soarca/pkg/models/api"
 	"soarca/pkg/models/cacao"
 	cache_model "soarca/pkg/models/cache"
-	"soarca/pkg/reporter/downstream_reporter/cache"
+	"soarca/pkg/reporting/reporter/downstream_reporter/cache"
 	mock_time "soarca/test/unittest/mocks/mock_utils/time"
 	"testing"
 	"time"
