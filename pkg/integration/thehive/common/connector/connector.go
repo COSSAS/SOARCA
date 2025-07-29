@@ -1,6 +1,7 @@
 package connector
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -16,6 +17,9 @@ import (
 const theHiveV1ApiPath = "thehive/api/v1"
 const theHiveCasePath = "/case"
 const theHiveObservablePath = "/observable"
+
+const POST = "POST"
+const GET = "GET"
 
 // TODOs
 // Fix asynchronous http api calls causing The Hive reporting to be all over the place
@@ -62,18 +66,121 @@ func NewConnector(theHiveEndpoint string, theHiveApiKey string, allowInsecure bo
 
 // ############################### Functions
 
-func (theHiveConnector *TheHiveConnector) CreateCase(thisCase thehive_models.Case) error {
+func (theHiveConnector *TheHiveConnector) CreateCase(thisCase thehive_models.Case) (string, error) {
 	path := theHiveConnector.baseUrl + theHiveCasePath
 
-	method := "POST"
+	request, err := thehive_utils.PrepareRequest(POST, path, theHiveConnector.apiKey, thisCase)
+	if err != nil {
+		log.Error(err)
+		return "", err
+	}
+	response, err := thehive_utils.SendRequest(theHiveConnector.client, request)
+	if err != nil {
+		log.Error(err)
+		return "", err
+	}
+	return thehive_utils.GetIdFromObjectBody(response)
+}
 
-	request, err := thehive_utils.PrepareRequest(method, path, theHiveConnector.apiKey, thisCase)
+func (theHiveConnector *TheHiveConnector) CreateObservable(caseId string, observable thehive_models.Observable) error {
+	path := theHiveConnector.baseUrl + theHiveCasePath + "/" + caseId + theHiveObservablePath
+	request, err := thehive_utils.PrepareRequest(POST, path, theHiveConnector.apiKey, observable)
 	if err != nil {
 		log.Error(err)
 		return err
 	}
-	thehive_utils.SendRequest(theHiveConnector.client, request)
+	response, err := thehive_utils.SendRequest(theHiveConnector.client, request)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+	observableResponse := thehive_models.ObservableResponse{}
+	err = json.Unmarshal(response, &observableResponse)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
 	return nil
+}
+
+func (theHiveConnector *TheHiveConnector) GetAllCases() error {
+
+	q := thehive_models.Query{Name: "listCase"}
+	qs := thehive_models.QueryList{Query: []thehive_models.Query{q}}
+
+	response, err := theHiveConnector.DoQuery(qs)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+	objects := []thehive_models.CaseResponse{}
+	err = json.Unmarshal(response, &objects)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	for _, object := range objects {
+		log.Info(object.ID)
+	}
+
+	return nil
+}
+
+func (theHiveConnector *TheHiveConnector) GetObservableFromCase(caseId string) ([]thehive_models.ObservableResponse, error) {
+	q1 := thehive_models.Query{Name: "getCase", IDOrName: caseId}
+	q2 := thehive_models.Query{Name: "observables"}
+	query := thehive_models.QueryList{Query: []thehive_models.Query{q1, q2}}
+	response, err := theHiveConnector.DoQuery(query)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+	objects := []thehive_models.ObservableResponse{}
+	err = json.Unmarshal(response, &objects)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	for _, object := range objects {
+		log.Info(object.ID)
+	}
+	return objects, nil
+
+}
+
+func (theHiveConnector *TheHiveConnector) DoQuery(query thehive_models.QueryList) ([]byte, error) {
+	path := theHiveConnector.baseUrl + "/query"
+
+	request, err := thehive_utils.PrepareRequest(POST, path, theHiveConnector.apiKey, query)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+	return thehive_utils.SendRequest(theHiveConnector.client, request)
+
+}
+
+func (theHiveConnector *TheHiveConnector) GetCaseById(caseId string) (thehive_models.CaseResponse, error) {
+	path := theHiveConnector.baseUrl + theHiveCasePath + "/" + caseId
+	request, err := thehive_utils.PrepareRequest(GET, path, theHiveConnector.apiKey, nil)
+	if err != nil {
+		log.Error(err)
+		return thehive_models.CaseResponse{}, err
+	}
+	response, err := thehive_utils.SendRequest(theHiveConnector.client, request)
+	if err != nil {
+		log.Error(err)
+		return thehive_models.CaseResponse{}, err
+	}
+	object := thehive_models.CaseResponse{}
+	err = json.Unmarshal(response, &object)
+	if err != nil {
+		log.Error(err)
+		return thehive_models.CaseResponse{}, err
+	}
+	return object, nil
 }
 
 ///

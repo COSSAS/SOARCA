@@ -18,6 +18,14 @@ const (
 	ObservableTypeOther = "other"
 )
 
+type Query struct {
+	Name     string `json:"_name,omitempty"`
+	IDOrName string `json:"idOrName,omitempty"`
+}
+type QueryList struct {
+	Query []Query `json:"query,omitempty"`
+}
+
 type Task struct {
 	Title       string `bson:"title,omitempty" json:"title,omitempty" validate:"required" example:"Task 1"`
 	Group       string `bson:"group,omitempty" json:"group,omitempty" example:"Group 1"`
@@ -60,11 +68,11 @@ type CustomField struct {
 }
 
 type Observable struct {
-	DataType         string   `bson:"dataType,omitempty" json:"dataType,omitempty" validate:"required,min=1,max=64"`
-	Data             []string `bson:"data,omitempty" json:"data,omitempty" validate:"max=4096,dive,min=1,max=4096"`
-	Message          string   `bson:"message,omitempty" json:"message,omitempty" validate:"max=1048576"`
-	StartDate        int64    `bson:"startDate,omitempty" json:"startDate,omitempty"`
-	Attachment       []string `bson:"attachment,omitempty" json:"attachment,omitempty"`
+	DataType  string   `bson:"dataType,omitempty" json:"dataType,omitempty" validate:"required,min=1,max=64"`
+	Data      []string `bson:"data,omitempty" json:"data,omitempty" validate:"max=4096,dive,min=1,max=4096"`
+	Message   string   `bson:"message,omitempty" json:"message,omitempty" validate:"max=1048576"`
+	StartDate int64    `bson:"startDate,omitempty" json:"startDate,omitempty"`
+	// Attachment       Attachment `bson:"attachment,omitempty" json:"attachment,omitempty"`
 	Name             string   `bson:"name" json:"name" validate:"required,min=1,max=128"`
 	ContentType      string   `bson:"contentType" json:"contentType" validate:"required,min=1,max=128"`
 	TLP              int      `bson:"tlp,omitempty" json:"tlp,omitempty" validate:"min=0,max=4"`
@@ -120,4 +128,11 @@ type ExecutionMetadata struct {
 	Step         cacao.Step
 	Variables    cacao.Variables
 	ExecutionErr error
+}
+
+// Observable The Hive
+type Attachment struct {
+	Name        string `json:"name,omitempty"`
+	ContentType string `json:"contentType,omitempty"`
+	ID          string `json:"id,omitempty"`
 }

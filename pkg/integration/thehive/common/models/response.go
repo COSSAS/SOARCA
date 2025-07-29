@@ -55,6 +55,51 @@ type CustomFields struct {
 	Order int    `json:"order,omitempty"`
 }
 type ExtraData interface {
+	// ID   string `json:"_id,omitempty"`
+	// Data string `json:"data,omitempty"`
 }
 
 //
+
+type ObservableResponse struct {
+	ID               string               `json:"_id,omitempty"`
+	Type             string               `json:"_type,omitempty"`
+	CreatedBy        string               `json:"_createdBy,omitempty"`
+	UpdatedBy        string               `json:"_updatedBy,omitempty"`
+	CreatedAt        int64                `json:"_createdAt,omitempty"`
+	UpdatedAt        int64                `json:"_updatedAt,omitempty"`
+	DataType         string               `json:"dataType,omitempty"`
+	Data             string               `json:"data,omitempty"`
+	StartDate        int64                `json:"startDate,omitempty"`
+	Attachment       ObservableAttachment `json:"attachment,omitempty"`
+	Tlp              int                  `json:"tlp,omitempty"`
+	TlpLabel         string               `json:"tlpLabel,omitempty"`
+	Pap              int                  `json:"pap,omitempty"`
+	PapLabel         string               `json:"papLabel,omitempty"`
+	Tags             []string             `json:"tags,omitempty"`
+	Ioc              bool                 `json:"ioc,omitempty"`
+	Sighted          bool                 `json:"sighted,omitempty"`
+	SightedAt        int64                `json:"sightedAt,omitempty"`
+	Reports          Reports              `json:"reports,omitempty"`
+	Message          string               `json:"message,omitempty"`
+	ExtraData        ExtraData            `json:"extraData,omitempty"`
+	IgnoreSimilarity bool                 `json:"ignoreSimilarity,omitempty"`
+}
+
+type ObservableAttachment struct {
+	ID          string    `json:"_id,omitempty"`
+	Type        string    `json:"_type,omitempty"`
+	CreatedBy   string    `json:"_createdBy,omitempty"`
+	UpdatedBy   string    `json:"_updatedBy,omitempty"`
+	CreatedAt   int64     `json:"_createdAt,omitempty"`
+	UpdatedAt   int64     `json:"_updatedAt,omitempty"`
+	Name        string    `json:"name,omitempty"`
+	Hashes      []string  `json:"hashes,omitempty"`
+	Size        int       `json:"size,omitempty"`
+	ContentType string    `json:"contentType,omitempty"`
+	ID0         string    `json:"id,omitempty"`
+	Path        string    `json:"path,omitempty"`
+	ExtraData   ExtraData `json:"extraData,omitempty"`
+}
+type Reports struct {
+}

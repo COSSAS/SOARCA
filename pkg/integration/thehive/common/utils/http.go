@@ -39,7 +39,7 @@ func SendRequest(client *http.Client, req *http.Request) ([]byte, error) {
 		return nil, err
 	}
 
-	log.Debug(fmt.Sprintf("response body: %s", respbody))
+	log.Info(fmt.Sprintf("response body: %s", respbody))
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return nil, fmt.Errorf("received non-2xx status code: %d\nURL: %s: %s", resp.StatusCode, req.Host, respbody)
@@ -51,10 +51,19 @@ func SendRequest(client *http.Client, req *http.Request) ([]byte, error) {
 func PrepareRequest(method string, url string, apiKey string, body interface{}) (*http.Request, error) {
 	log.Trace(fmt.Sprintf("sending request: %s %s", method, url))
 
-	requestBody, err := MarhsalRequestBody(body)
-	if err != nil {
-		return nil, err
+	var requestBody io.Reader
+
+	if body != nil {
+		var err error
+		requestBody, err = MarhsalRequestBody(body)
+		if err != nil {
+			return nil, err
+		}
+
+	} else {
+		requestBody = nil
 	}
+
 	req, err := http.NewRequest(method, url, requestBody)
 	if err != nil {
 		return nil, err
