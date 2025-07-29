@@ -20,7 +20,7 @@ import (
 	"soarca/pkg/core/executors/action"
 	"soarca/pkg/core/executors/condition"
 	"soarca/pkg/core/executors/playbook_action"
-	"soarca/pkg/reporter"
+	"soarca/pkg/reporting/reporter"
 	"soarca/pkg/utils"
 	"soarca/pkg/utils/guid"
 	"soarca/pkg/utils/stix/expression/comparison"
@@ -33,13 +33,13 @@ import (
 	"soarca/pkg/integration/thehive/common/connector"
 	thehive "soarca/pkg/integration/thehive/reporter"
 
-	cache "soarca/pkg/reporter/downstream_reporter/cache"
+	cache "soarca/pkg/reporting/reporter/downstream_reporter/cache"
 
 	httpUtil "soarca/pkg/utils/http"
 
 	timeUtil "soarca/pkg/utils/time"
 
-	downstreamReporter "soarca/pkg/reporter/downstream_reporter"
+	downstreamReporter "soarca/pkg/reporting/reporter/downstream_reporter"
 
 	"github.com/COSSAS/gauth"
 	"github.com/gin-gonic/gin"

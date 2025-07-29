@@ -9,7 +9,7 @@ import (
 
 	"soarca/internal/logger"
 	"soarca/pkg/models/cacao"
-	downstreamReporter "soarca/pkg/reporter/downstream_reporter"
+	downstreamReporter "soarca/pkg/reporting/reporter/downstream_reporter"
 	"soarca/pkg/utils"
 
 	"github.com/google/uuid"
