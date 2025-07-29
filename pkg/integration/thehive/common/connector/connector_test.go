@@ -1,7 +1,6 @@
 package connector
 
 import (
-	"encoding/json"
 	thehive_models "soarca/pkg/integration/thehive/common/models"
 	"testing"
 
@@ -13,19 +12,31 @@ func TestCreateCase(t *testing.T) {
 	host := "http://localhost:9000/thehive/api/v1"
 	api := "f2eAPRxxq8Wej7OodikGkmyeottz0xGy"
 
-	conn := NewConnector(host, api)
+	conn := NewConnector(host, api, true)
 	assert.NotEqual(t, conn, nil)
 
 	caseModel := thehive_models.Case{Title: "test-title", Description: "some description"}
 
-	body, err := conn.sendRequest("POST", host+"/case", caseModel)
+	err := conn.CreateCase(caseModel)
 	assert.Equal(t, err, nil)
 
-	response := thehive_models.CaseResponse{}
+	// response := thehive_models.CaseResponse{}
 
-	err = json.Unmarshal(body, &response)
+}
 
+func TestAddObservableToCase(t *testing.T) {
+
+	host := "http://localhost:9000/thehive/api/v1"
+	api := "f2eAPRxxq8Wej7OodikGkmyeottz0xGy"
+
+	conn := NewConnector(host, api, true)
+	assert.NotEqual(t, conn, nil)
+
+	caseModel := thehive_models.Case{Title: "test-title", Description: "some description"}
+
+	err := conn.CreateCase(caseModel)
 	assert.Equal(t, err, nil)
-	println(response.ID)
+
+	// response := thehive_models.CaseResponse{}
 
 }
