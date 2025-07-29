@@ -25,17 +25,30 @@ type ICorrelation interface {
 }
 
 type ICorrelationIntegration interface {
+	GetExternalCaseId(string) string
 }
 
 type Cases map[uuid.UUID]incident.ICase
 
 type Correlation struct {
-	cases Cases
-	guid  guid.IGuid
+	cases        Cases
+	guid         guid.IGuid
+	integrations ICorrelationIntegration
 }
 
 func New(guid guid.IGuid) Correlation {
 	return Correlation{cases: Cases{}, guid: guid}
+}
+
+func (correlation *Correlation) GetCaseId(meta execution.Metadata, playbook cacao.Playbook) string {
+	internalId, err := correlation.Correlate(meta, playbook.PlaybookVariables)
+	if err != nil {
+		return ""
+	}
+
+	externalId := correlation.integrations.GetExternalCaseId(internalId)
+	return externalId
+
 }
 
 func (correlation *Correlation) Correlate(meta execution.Metadata, variables cacao.Variables) (string, error) {
