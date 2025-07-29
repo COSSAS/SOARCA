@@ -82,7 +82,7 @@ func (theHiveConnector *TheHiveConnector) CreateCase(thisCase thehive_models.Cas
 	return thehive_utils.GetIdFromObjectBody(response)
 }
 
-func (theHiveConnector *TheHiveConnector) CreateObservable(caseId string, observable thehive_models.Observable) error {
+func (theHiveConnector *TheHiveConnector) CreateObservableInCase(caseId string, observable thehive_models.Observable) error {
 	path := theHiveConnector.baseUrl + theHiveCasePath + "/" + caseId + theHiveObservablePath
 	request, err := thehive_utils.PrepareRequest(POST, path, theHiveConnector.apiKey, observable)
 	if err != nil {

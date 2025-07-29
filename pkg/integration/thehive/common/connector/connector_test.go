@@ -39,7 +39,7 @@ func TestAddObservableToCase(t *testing.T) {
 	assert.Equal(t, err, nil)
 	assert.NotEqual(t, caseId, "")
 	observable := thehive_models.Observable{DataType: "ip", Data: []string{"10.0.0.10"}}
-	conn.CreateObservable(caseId, observable)
+	conn.CreateObservableInCase(caseId, observable)
 	assert.Equal(t, err, nil)
 
 	// response := thehive_models.CaseResponse{}
