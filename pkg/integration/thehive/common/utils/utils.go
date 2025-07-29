@@ -23,6 +23,7 @@ func init() {
 // ############################### Utils
 
 func CleanUrlString(url string) string {
+
 	// Replace double slashes in the URL after http(s)://
 	parts := strings.SplitN(url, "//", 2)
 	cleanedPath := strings.ReplaceAll(parts[1], "//", "/")
