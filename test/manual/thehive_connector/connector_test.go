@@ -1,6 +1,7 @@
-package connector
+package connector_test
 
 import (
+	"soarca/pkg/integration/thehive/common/connector"
 	thehive_models "soarca/pkg/integration/thehive/common/models"
 	"testing"
 
@@ -12,7 +13,7 @@ func TestCreateCase(t *testing.T) {
 	host := "http://localhost:9000/thehive/api/v1"
 	api := "f2eAPRxxq8Wej7OodikGkmyeottz0xGy"
 
-	conn := NewConnector(host, api, true)
+	conn := connector.NewConnector(host, api, true)
 	assert.NotEqual(t, conn, nil)
 
 	caseModel := thehive_models.Case{Title: "test-title", Description: "some description"}
@@ -30,7 +31,7 @@ func TestAddObservableToCase(t *testing.T) {
 	host := "http://localhost:9000/thehive/api/v1"
 	api := "f2eAPRxxq8Wej7OodikGkmyeottz0xGy"
 
-	conn := NewConnector(host, api, true)
+	conn := connector.NewConnector(host, api, true)
 	assert.NotEqual(t, conn, nil)
 
 	caseModel := thehive_models.Case{Title: "test-title", Description: "some description"}
@@ -51,7 +52,7 @@ func TestGetAllCases(t *testing.T) {
 	host := "http://localhost:9000/thehive/api/v1"
 	api := "f2eAPRxxq8Wej7OodikGkmyeottz0xGy"
 
-	conn := NewConnector(host, api, true)
+	conn := connector.NewConnector(host, api, true)
 	assert.NotEqual(t, conn, nil)
 
 	// caseModel := thehive_models.Case{Title: "test-title", Description: "some description"}
@@ -72,7 +73,7 @@ func TestGetCaseById(t *testing.T) {
 	host := "http://localhost:9000/thehive/api/v1"
 	api := "f2eAPRxxq8Wej7OodikGkmyeottz0xGy"
 
-	conn := NewConnector(host, api, true)
+	conn := connector.NewConnector(host, api, true)
 	assert.NotEqual(t, conn, nil)
 
 	// caseModel := thehive_models.Case{Title: "test-title", Description: "some description"}
@@ -94,7 +95,7 @@ func TestGetAllObservables(t *testing.T) {
 	host := "http://localhost:9000/thehive/api/v1"
 	api := "f2eAPRxxq8Wej7OodikGkmyeottz0xGy"
 
-	conn := NewConnector(host, api, true)
+	conn := connector.NewConnector(host, api, true)
 	assert.NotEqual(t, conn, nil)
 
 	// caseModel := thehive_models.Case{Title: "test-title", Description: "some description"}
