@@ -11,6 +11,7 @@ import (
 	thehive_models "soarca/pkg/integration/thehive/common/models"
 	thehive_utils "soarca/pkg/integration/thehive/common/utils"
 	"soarca/pkg/models/cacao"
+	"strings"
 	"time"
 )
 
@@ -52,12 +53,20 @@ type TheHiveConnector struct {
 	client  *http.Client
 }
 
+func completePath(host string) string {
+	if strings.Contains(host, theHiveV1ApiPath) {
+		log.Info("using raw user api path: " + host)
+		return host
+	}
+	return thehive_utils.CleanUrlString(host + theHiveV1ApiPath)
+}
+
 func NewConnector(theHiveEndpoint string, theHiveApiKey string, allowInsecure bool) *TheHiveConnector {
 	ids_map := &mappings.SOARCATheHiveMap{}
 	ids_map.ExecutionsCaseMaps = map[string]mappings.ExecutionCaseMap{}
 	return &TheHiveConnector{
 		client:  thehive_utils.SetupClient(allowInsecure),
-		baseUrl: theHiveEndpoint,
+		baseUrl: completePath(theHiveEndpoint),
 		apiKey:  theHiveApiKey,
 		ids_map: ids_map,
 	}
