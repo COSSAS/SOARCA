@@ -30,6 +30,7 @@ import (
 	finExecutor "soarca/pkg/core/capability/fin"
 	finChannelController "soarca/pkg/core/capability/fin/controller"
 
+	"soarca/pkg/integration/thehive/common/connector"
 	thehive "soarca/pkg/integration/thehive/reporter"
 
 	cache "soarca/pkg/reporter/downstream_reporter/cache"
@@ -308,8 +309,10 @@ func initializeIntegrationTheHiveReporting() downstreamReporter.IDownStreamRepor
 		return nil
 	}
 
+	theHiveInsecureConnection, _ := strconv.ParseBool(utils.GetEnv("THEHIVE_ALLOW_INSECURE", "true"))
+
 	log.Info(fmt.Sprintf("creating new The hive connector with API base url at : %s", thehiveApiBaseUrl))
-	theHiveConnector := thehive.NewConnector(thehiveApiBaseUrl, thehiveApiToken)
+	theHiveConnector := connector.NewConnector(thehiveApiBaseUrl, thehiveApiToken, theHiveInsecureConnection)
 	theHiveReporter := thehive.NewReporter(theHiveConnector)
 	return theHiveReporter
 }

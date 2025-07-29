@@ -1,6 +1,9 @@
 package thehive
 
 import (
+	"reflect"
+	"soarca/internal/logger"
+	"soarca/pkg/integration/thehive/common/connector"
 	thehive_models "soarca/pkg/integration/thehive/common/models"
 	"soarca/pkg/models/cacao"
 	"time"
@@ -8,11 +11,20 @@ import (
 	"github.com/google/uuid"
 )
 
-type TheHiveReporter struct {
-	connector ITheHiveConnector
+var (
+	component = reflect.TypeOf(TheHiveReporter{}).PkgPath()
+	log       *logger.Log
+)
+
+func init() {
+	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
-func NewReporter(connector ITheHiveConnector) *TheHiveReporter {
+type TheHiveReporter struct {
+	connector connector.ITheHiveConnector
+}
+
+func NewReporter(connector connector.ITheHiveConnector) *TheHiveReporter {
 	return &TheHiveReporter{connector: connector}
 }
 
