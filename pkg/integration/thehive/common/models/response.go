@@ -1,5 +1,6 @@
 package models
 
+// Case POST response
 type CaseResponse struct {
 	ID                  string         `json:"_id,omitempty"`
 	Type                string         `json:"_type,omitempty"`
@@ -55,3 +56,5 @@ type CustomFields struct {
 }
 type ExtraData interface {
 }
+
+//
