@@ -72,7 +72,9 @@ func (manager *HiveCaseManager) AddToExistingOrCreateNew(meta execution.Metadata
 
 	for id, observable := range observables {
 		log.Info("addiing observable:", id, " to case: ", caseId)
-		manager.connector.CreateObservableInCase(caseId, observable)
+		if err := manager.connector.CreateObservableInCase(caseId, observable); err != nil {
+			log.Error(err)
+		}
 	}
 
 	caseIdVar := cacao.Variable{Type: cacao.VariableTypeString,

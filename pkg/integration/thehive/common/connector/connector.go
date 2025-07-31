@@ -400,7 +400,10 @@ func (theHiveConnector *TheHiveConnector) SetMapping(meta thehive_models.Executi
 	}
 
 	tags := []string{meta.ExecutionId, meta.Playbook.ID}
-	theHiveConnector.UpdateCaseTags(caseId, tags)
+	_, err = theHiveConnector.UpdateCaseTags(caseId, tags)
+	if err != nil {
+		log.Error(err)
+	}
 
 	return err
 }
