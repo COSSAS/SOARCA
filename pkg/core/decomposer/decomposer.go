@@ -9,6 +9,7 @@ import (
 	"soarca/pkg/core/executors"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
+	"soarca/pkg/reporting/cases"
 	"soarca/pkg/reporting/reporter"
 	"soarca/pkg/utils/guid"
 	timeUtil "soarca/pkg/utils/time"
@@ -64,7 +65,12 @@ type Decomposer struct {
 	conditionExecutor      executors.IConditionExecuter
 	guid                   guid.IGuid
 	reporter               reporter.IWorkflowReporter
+	caseManager            cases.ICasesManager
 	time                   timeUtil.ITime
+}
+
+func (decomposer *Decomposer) SetCaseManager(caseManager cases.ICasesManager) {
+	decomposer.caseManager = caseManager
 }
 
 // Execute a Playbook
@@ -100,6 +106,18 @@ func (decomposer *Decomposer) execute(playbook cacao.Playbook) error {
 	decomposer.playbook = playbook
 
 	stepId := playbook.WorkflowStart
+
+	// Start case correlation and get case ID to be used in playbook
+	if decomposer.caseManager != nil {
+		startMetadata := execution.Metadata{ExecutionId: decomposer.details.ExecutionId,
+			PlaybookId: decomposer.playbook.ID,
+			StepId:     stepId}
+
+		caseIdVar := decomposer.caseManager.AddToExistingOrCreateNew(startMetadata, playbook)
+		playbook.PlaybookVariables.InsertOrReplace(caseIdVar)
+		log.Info("case id is set to: ", caseIdVar.Value)
+	}
+
 	variables := cacao.NewVariables()
 	variables.Merge(playbook.PlaybookVariables)
 

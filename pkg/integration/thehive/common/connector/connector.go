@@ -21,6 +21,7 @@ const theHiveObservablePath = "/observable"
 
 const POST = "POST"
 const GET = "GET"
+const PATCH = "PATCH"
 
 // TODOs
 // Fix asynchronous http api calls causing The Hive reporting to be all over the place
@@ -42,6 +43,15 @@ type ITheHiveConnector interface {
 	UpdateEndExecutionCase(executionMetadata thehive_models.ExecutionMetadata, at time.Time) (string, error)
 	UpdateStartStepTaskInCase(executionMetadata thehive_models.ExecutionMetadata, at time.Time) (string, error)
 	UpdateEndStepTaskInCase(executionMetadata thehive_models.ExecutionMetadata, at time.Time) (string, error)
+
+	//
+	GetCaseById(caseId string) (thehive_models.CaseResponse, error)
+	FindCaseOfObservable(data string) ([]thehive_models.CaseResponse, error)
+	GetObservableFromCase(caseId string) ([]thehive_models.ObservableResponse, error)
+	GetAllCases() error
+	CreateObservableInCase(caseId string, observable thehive_models.Observable) error
+	CreateCase(thisCase thehive_models.Case) (string, error)
+	SetMapping(meta thehive_models.ExecutionMetadata, caseId string) error
 }
 
 // ############################### TheHiveConnector object
@@ -159,6 +169,26 @@ func (theHiveConnector *TheHiveConnector) GetObservableFromCase(caseId string) (
 
 }
 
+func (theHiveConnector *TheHiveConnector) FindCaseOfObservable(data string) ([]thehive_models.CaseResponse, error) {
+	q1 := thehive_models.Query{Name: "listObservable"}
+	q2 := thehive_models.Query{Name: "filter", Data: data}
+	q3 := thehive_models.Query{Name: "case"}
+
+	query := thehive_models.QueryList{Query: []thehive_models.Query{q1, q2, q3}}
+	if response, err := theHiveConnector.DoQuery(query); err != nil {
+		return nil, err
+	} else {
+		objects := []thehive_models.CaseResponse{}
+		err = json.Unmarshal(response, &objects)
+		if err != nil {
+			log.Error(err)
+			return nil, err
+		}
+		return objects, nil
+	}
+
+}
+
 func (theHiveConnector *TheHiveConnector) DoQuery(query thehive_models.QueryList) ([]byte, error) {
 	path := theHiveConnector.baseUrl + "/query"
 
@@ -174,6 +204,37 @@ func (theHiveConnector *TheHiveConnector) DoQuery(query thehive_models.QueryList
 func (theHiveConnector *TheHiveConnector) GetCaseById(caseId string) (thehive_models.CaseResponse, error) {
 	path := theHiveConnector.baseUrl + theHiveCasePath + "/" + caseId
 	request, err := thehive_utils.PrepareRequest(GET, path, theHiveConnector.apiKey, nil)
+	if err != nil {
+		log.Error(err)
+		return thehive_models.CaseResponse{}, err
+	}
+	response, err := thehive_utils.SendRequest(theHiveConnector.client, request)
+	if err != nil {
+		log.Error(err)
+		return thehive_models.CaseResponse{}, err
+	}
+	object := thehive_models.CaseResponse{}
+	err = json.Unmarshal(response, &object)
+	if err != nil {
+		log.Error(err)
+		return thehive_models.CaseResponse{}, err
+	}
+	return object, nil
+}
+
+func (theHiveConnector *TheHiveConnector) UpdateCaseTags(caseId string, tags []string) (thehive_models.CaseResponse, error) {
+	path := theHiveConnector.baseUrl + theHiveCasePath + "/" + caseId
+
+	existingCase, err := theHiveConnector.GetCaseById(caseId)
+	if err != nil {
+		log.Error(err)
+	}
+
+	currentTags := existingCase.Tags
+	currentTags = append(currentTags, tags...)
+	newTags := thehive_models.Case{Tags: currentTags}
+
+	request, err := thehive_utils.PrepareRequest(PATCH, path, theHiveConnector.apiKey, newTags)
 	if err != nil {
 		log.Error(err)
 		return thehive_models.CaseResponse{}, err
@@ -327,6 +388,26 @@ func (theHiveConnector *TheHiveConnector) postNewStepTaskInCase(executionId stri
 
 // ######################################## Connector interface
 
+func (theHiveConnector *TheHiveConnector) SetMapping(meta thehive_models.ExecutionMetadata, caseId string) error {
+	if err := theHiveConnector.ids_map.RegisterExecutionInCase(meta.ExecutionId, caseId); err != nil {
+		log.Error("failed to log execution in case")
+		log.Error(err)
+		return err
+	}
+	err := theHiveConnector.populateCase(meta, time.Now())
+	if err != nil {
+		log.Error(err)
+	}
+
+	tags := []string{meta.ExecutionId, meta.Playbook.ID}
+	_, err = theHiveConnector.UpdateCaseTags(caseId, tags)
+	if err != nil {
+		log.Error(err)
+	}
+
+	return err
+}
+
 func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(execMetadata thehive_models.ExecutionMetadata, at time.Time) (string, error) {
 	log.Trace(fmt.Sprintf("posting new case to The Hive. execution ID %s, playbook %+v", execMetadata.ExecutionId, execMetadata.Playbook))
 	url := theHiveConnector.baseUrl + "/case"
@@ -362,6 +443,12 @@ func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(execMetadata theh
 		return "", err
 	}
 
+	err = theHiveConnector.populateCase(execMetadata, at)
+	log.Tracef("case posted with case ID: %s", caseId)
+	return caseId, err
+}
+
+func (theHiveConnector *TheHiveConnector) populateCase(execMetadata thehive_models.ExecutionMetadata, at time.Time) error {
 	// Pre-populate tasks according to playbook steps
 	for _, step := range execMetadata.Playbook.Workflow {
 		if step.Type == cacao.StepTypeStart || step.Type == cacao.StepTypeEnd {
@@ -369,14 +456,14 @@ func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(execMetadata theh
 		}
 		err := theHiveConnector.postNewStepTaskInCase(execMetadata.ExecutionId, step)
 		if err != nil {
-			return "", err
+			return err
 		}
 	}
 
 	executionStartMessage := fmt.Sprintf(
 		"START\nplaybook ID\n\t\t[ %s ]\nexecution ID\n\t\t[ %s ]\nstarted at\n\t\t[ %s ]",
 		execMetadata.Playbook.ID, execMetadata.ExecutionId, at.String())
-	err = theHiveConnector.postCommentInCase(execMetadata.ExecutionId, executionStartMessage)
+	err := theHiveConnector.postCommentInCase(execMetadata.ExecutionId, executionStartMessage)
 	if err != nil {
 		log.Warningf("could not post message to case: %s", err)
 	}
@@ -388,8 +475,7 @@ func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(execMetadata theh
 		log.Warningf("could not report variables in case comment: %s", err)
 	}
 
-	log.Tracef("case posted with case ID: %s", caseId)
-	return string(body), nil
+	return err
 }
 
 func (theHiveConnector *TheHiveConnector) UpdateEndExecutionCase(execMetadata thehive_models.ExecutionMetadata, at time.Time) (string, error) {
@@ -451,10 +537,16 @@ func (theHiveConnector *TheHiveConnector) UpdateStartStepTaskInCase(execMetadata
 	}
 
 	// Must identify valid user in The hive. Cannot be custom string
-	taskAssignee := "soarca@soarca.eu"
+	user, err := theHiveConnector.getUser()
+	if err != nil {
+		log.Error("could nog get user ", err)
+		return "", err
+	}
+	taskAssignee := user.Login
 	if fullyAuto {
 		taskAssignee = "soarca@soarca.eu"
 	}
+
 	task := thehive_models.Task{
 		Status:   thehive_models.TheHiveStatusInProgress,
 		Assignee: taskAssignee,
@@ -526,15 +618,30 @@ func (theHiveConnector *TheHiveConnector) UpdateEndStepTaskInCase(execMetadata t
 // ############################### HTTP interaction
 
 func (theHiveConnector *TheHiveConnector) Hello() string {
-
-	url := theHiveConnector.baseUrl + "/user/current"
-
-	body, err := theHiveConnector.sendRequest("GET", url, nil)
+	user, err := theHiveConnector.getUser()
 	if err != nil {
-		return "error"
+		return err.Error()
 	}
 
-	return (string(body))
+	return user.Login
+}
+
+func (theHiveConnector *TheHiveConnector) getUser() (thehive_models.User, error) {
+
+	url := theHiveConnector.baseUrl + "/user/current"
+	object := thehive_models.User{}
+	response, err := theHiveConnector.sendRequest("GET", url, nil)
+	if err != nil {
+		return object, err
+	}
+
+	err = json.Unmarshal(response, &object)
+	if err != nil {
+		log.Error(err)
+		return object, err
+	}
+
+	return object, err
 }
 
 func (theHiveConnector *TheHiveConnector) sendRequest(method string, url string, body interface{}) ([]byte, error) {

@@ -20,7 +20,9 @@ const (
 
 type Query struct {
 	Name     string `json:"_name,omitempty"`
+	Type     string `json:"_type,omitempty"`
 	IDOrName string `json:"idOrName,omitempty"`
+	Data     string `json:"data,omitempty"`
 }
 type QueryList struct {
 	Query []Query `json:"query,omitempty"`
@@ -87,6 +89,7 @@ type Observable struct {
 	AddTags          []string `bson:"addTags,omitempty" json:"addTags,omitempty" validate:"max=128,dive,min=1,max=128"`
 	RemoveTags       []string `bson:"removeTags,omitempty" json:"removeTags,omitempty" validate:"max=128,dive,min=1,max=128"`
 }
+type Observables map[string]Observable
 
 type MessagePost struct {
 	Message string `bson:"message" json:"message" validate:"required,min=1,max=1048576"`
@@ -135,4 +138,42 @@ type Attachment struct {
 	Name        string `json:"name,omitempty"`
 	ContentType string `json:"contentType,omitempty"`
 	ID          string `json:"id,omitempty"`
+}
+
+// User
+
+type User struct {
+	ID                  string          `json:"_id,omitempty"`
+	CreatedBy           string          `json:"_createdBy,omitempty"`
+	UpdatedBy           string          `json:"_updatedBy,omitempty"`
+	CreatedAt           int64           `json:"_createdAt,omitempty"`
+	UpdatedAt           int64           `json:"_updatedAt,omitempty"`
+	Login               string          `json:"login,omitempty"`
+	Name                string          `json:"name,omitempty"`
+	Email               string          `json:"email,omitempty"`
+	HasKey              bool            `json:"hasKey,omitempty"`
+	HasPassword         bool            `json:"hasPassword,omitempty"`
+	HasMFA              bool            `json:"hasMFA,omitempty"`
+	Locked              bool            `json:"locked,omitempty"`
+	Profile             string          `json:"profile,omitempty"`
+	Permissions         []string        `json:"permissions,omitempty"`
+	Organisation        string          `json:"organisation,omitempty"`
+	Avatar              string          `json:"avatar,omitempty"`
+	Organisations       []Organisations `json:"organisations,omitempty"`
+	Type                string          `json:"type,omitempty"`
+	DefaultOrganisation string          `json:"defaultOrganisation,omitempty"`
+	ExtraData           ExtraData       `json:"extraData,omitempty"`
+}
+type Links struct {
+	ToOrganisation string `json:"toOrganisation,omitempty"`
+	Avatar         string `json:"avatar,omitempty"`
+	LinkType       string `json:"linkType,omitempty"`
+	OtherLinkType  string `json:"otherLinkType,omitempty"`
+}
+type Organisations struct {
+	OrganisationID string  `json:"organisationId,omitempty"`
+	Organisation   string  `json:"organisation,omitempty"`
+	Profile        string  `json:"profile,omitempty"`
+	Avatar         string  `json:"avatar,omitempty"`
+	Links          []Links `json:"links,omitempty"`
 }

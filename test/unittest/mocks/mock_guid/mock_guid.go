@@ -13,3 +13,8 @@ func (guid *Mock_Guid) New() uuid.UUID {
 	args := guid.Called()
 	return args.Get(0).(uuid.UUID)
 }
+
+func (guid *Mock_Guid) NewV7() uuid.UUID {
+	args := guid.Called()
+	return args.Get(0).(uuid.UUID)
+}

@@ -20,6 +20,7 @@ import (
 	"soarca/pkg/core/executors/action"
 	"soarca/pkg/core/executors/condition"
 	"soarca/pkg/core/executors/playbook_action"
+	"soarca/pkg/reporting/cases"
 	"soarca/pkg/reporting/reporter"
 	"soarca/pkg/utils"
 	"soarca/pkg/utils/guid"
@@ -30,6 +31,7 @@ import (
 	finExecutor "soarca/pkg/core/capability/fin"
 	finChannelController "soarca/pkg/core/capability/fin/controller"
 
+	thehiveCases "soarca/pkg/integration/thehive/cases"
 	"soarca/pkg/integration/thehive/common/connector"
 	thehive "soarca/pkg/integration/thehive/reporter"
 
@@ -110,7 +112,7 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 
 	// Reporter integrations
 
-	thehive_reporter := initializeIntegrationTheHiveReporting()
+	thehive_reporter, theHiveCaseManager := initializeIntegrationTheHiveReporting()
 	if thehive_reporter != nil {
 		downstreamReporters = append(downstreamReporters, thehive_reporter)
 	}
@@ -129,6 +131,9 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 		guid,
 		reporter,
 		soarcaTime)
+	if theHiveCaseManager != nil {
+		decompose.SetCaseManager(theHiveCaseManager)
+	}
 	return decompose
 }
 
@@ -295,10 +300,10 @@ func registerManualIntegration() []interaction.IInteractionIntegrationNotifier {
 	return []interaction.IInteractionIntegrationNotifier{}
 }
 
-func initializeIntegrationTheHiveReporting() downstreamReporter.IDownStreamReporter {
+func initializeIntegrationTheHiveReporting() (downstreamReporter.IDownStreamReporter, cases.ICasesManager) {
 	initTheHiveReporter, _ := strconv.ParseBool(utils.GetEnv("THEHIVE_ACTIVATE", "false"))
 	if !initTheHiveReporter {
-		return nil
+		return nil, nil
 	}
 	log.Info("initializing The Hive reporting integration")
 
@@ -306,15 +311,21 @@ func initializeIntegrationTheHiveReporting() downstreamReporter.IDownStreamRepor
 	thehiveApiBaseUrl := utils.GetEnv("THEHIVE_API_BASE_URL", "")
 	if len(thehiveApiBaseUrl) < 1 || len(thehiveApiToken) < 1 {
 		log.Warning("could not initialize The Hive reporting integration. Check to have configured the env variables correctly.")
-		return nil
+		return nil, nil
 	}
 
 	theHiveInsecureConnection, _ := strconv.ParseBool(utils.GetEnv("THEHIVE_ALLOW_INSECURE", "true"))
 
 	log.Info(fmt.Sprintf("creating new The hive connector with API base url at : %s", thehiveApiBaseUrl))
 	theHiveConnector := connector.NewConnector(thehiveApiBaseUrl, thehiveApiToken, theHiveInsecureConnection)
+	caseReporting, _ := strconv.ParseBool(utils.GetEnv("THEHIVE_REPORTER", "false"))
+	if caseReporting {
+		log.Info("enabling the hive reporter")
+		theHiveCases := thehiveCases.NewCaseManager(theHiveConnector)
+		return theHiveCases, theHiveCases
+	}
 	theHiveReporter := thehive.NewReporter(theHiveConnector)
-	return theHiveReporter
+	return theHiveReporter, nil
 }
 
 func intializeAuthenticationMiddleware(app *gin.Engine) error {
