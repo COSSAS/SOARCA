@@ -537,10 +537,16 @@ func (theHiveConnector *TheHiveConnector) UpdateStartStepTaskInCase(execMetadata
 	}
 
 	// Must identify valid user in The hive. Cannot be custom string
-	taskAssignee := "soarca@soarca.eu"
+	user, err := theHiveConnector.getUser()
+	if err != nil {
+		log.Error("could nog get user ", err)
+		return "", err
+	}
+	taskAssignee := user.Login
 	if fullyAuto {
 		taskAssignee = "soarca@soarca.eu"
 	}
+
 	task := thehive_models.Task{
 		Status:   thehive_models.TheHiveStatusInProgress,
 		Assignee: taskAssignee,
@@ -612,15 +618,30 @@ func (theHiveConnector *TheHiveConnector) UpdateEndStepTaskInCase(execMetadata t
 // ############################### HTTP interaction
 
 func (theHiveConnector *TheHiveConnector) Hello() string {
-
-	url := theHiveConnector.baseUrl + "/user/current"
-
-	body, err := theHiveConnector.sendRequest("GET", url, nil)
+	user, err := theHiveConnector.getUser()
 	if err != nil {
-		return "error"
+		return err.Error()
 	}
 
-	return (string(body))
+	return user.Login
+}
+
+func (theHiveConnector *TheHiveConnector) getUser() (thehive_models.User, error) {
+
+	url := theHiveConnector.baseUrl + "/user/current"
+	object := thehive_models.User{}
+	response, err := theHiveConnector.sendRequest("GET", url, nil)
+	if err != nil {
+		return object, err
+	}
+
+	err = json.Unmarshal(response, &object)
+	if err != nil {
+		log.Error(err)
+		return object, err
+	}
+
+	return object, err
 }
 
 func (theHiveConnector *TheHiveConnector) sendRequest(method string, url string, body interface{}) ([]byte, error) {
