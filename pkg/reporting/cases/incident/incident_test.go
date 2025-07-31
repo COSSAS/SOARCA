@@ -73,7 +73,9 @@ func TestDouble(t *testing.T) {
 		StepId:     "SomeStep"}
 
 	var2 := cacao.Variable{Name: "__SOURCE_IPV4__", Type: cacao.VariableTypeIpv4Address, Value: "10.0.0.2"}
-	thisCase.AddIfNotInCase(meta2, var2)
+	added, err := thisCase.AddIfNotInCase(meta2, var2)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, added, true)
 	result, err = thisCase.CheckObservableInCase(var2)
 
 	assert.Equal(t, err, nil)

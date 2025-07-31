@@ -360,9 +360,11 @@ func (theHiveConnector *TheHiveConnector) SetMapping(meta thehive_models.Executi
 	if err := theHiveConnector.ids_map.RegisterExecutionInCase(meta.ExecutionId, caseId); err != nil {
 		return err
 	}
-	theHiveConnector.populateCase(meta, time.Now())
-
-	return nil
+	err := theHiveConnector.populateCase(meta, time.Now())
+	if err != nil {
+		log.Error(err)
+	}
+	return err
 }
 
 func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(execMetadata thehive_models.ExecutionMetadata, at time.Time) (string, error) {

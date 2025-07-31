@@ -61,7 +61,8 @@ func New(guid uuid.UUID,
 	thisCase := Case{Id: guid,
 		Observables: observables}
 	for _, variable := range variables {
-		thisCase.AddIfNotInCase(meta, variable)
+		_, err := thisCase.AddIfNotInCase(meta, variable)
+		log.Error(err)
 	}
 
 	return &thisCase

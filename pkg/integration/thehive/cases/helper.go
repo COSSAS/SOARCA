@@ -8,15 +8,17 @@ import (
 func CreateHiveObservables(variables cacao.Variables) models.Observables {
 	observables := models.Observables{}
 	for _, variable := range variables {
-		varType := "other"
-		if variable.Type == cacao.VariableTypeIpv4Address {
+		varType := ""
+
+		switch variable.Type {
+		case cacao.VariableTypeIpv4Address:
 			varType = "ip"
-		} else if variable.Type == cacao.VariableTypeMacAddress {
+		case cacao.VariableTypeMacAddress:
 			varType = "other"
-		} else {
-			// don't add other variables other then ip and mac to observables
+		default:
 			continue
 		}
+
 		obs := models.Observable{DataType: varType,
 			Data:    []string{variable.Value},
 			Message: variable.Description,

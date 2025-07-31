@@ -46,7 +46,9 @@ func (manager *HiveCaseManager) AddToExistingOrCreateNew(meta execution.Metadata
 				caseId = cases[0].ID
 				exe := thehive_models.ExecutionMetadata{ExecutionId: meta.ExecutionId.String(),
 					Playbook: playbook}
-				manager.connector.SetMapping(exe, meta.ExecutionId.String())
+				if err := manager.connector.SetMapping(exe, meta.ExecutionId.String()); err != nil {
+					log.Error(err)
+				}
 				break // break out of the loop
 			}
 		}

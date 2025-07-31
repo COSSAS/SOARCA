@@ -78,7 +78,11 @@ func (correlation *Correlation) Correlate(meta execution.Metadata, variables cac
 // }
 
 func (correlation *Correlation) addExecutionToCase(item incident.ICase, meta execution.Metadata, variable cacao.Variable) {
-	correlation.cases[item.GetId()].AddIfNotInCase(meta, variable)
+	added, err := correlation.cases[item.GetId()].AddIfNotInCase(meta, variable)
+	if err != nil {
+		log.Error(err)
+	}
+	log.Info(added)
 }
 
 func (correlation *Correlation) createCase(meta execution.Metadata, variables cacao.Variables) uuid.UUID {
