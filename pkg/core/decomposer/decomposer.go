@@ -115,6 +115,7 @@ func (decomposer *Decomposer) execute(playbook cacao.Playbook) error {
 
 		caseIdVar := decomposer.caseManager.AddToExistingOrCreateNew(startMetadata, playbook)
 		playbook.PlaybookVariables.InsertOrReplace(caseIdVar)
+		log.Info("case id is set to: ", caseIdVar.Value)
 	}
 
 	variables := cacao.NewVariables()
