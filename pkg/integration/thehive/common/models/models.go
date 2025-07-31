@@ -20,7 +20,9 @@ const (
 
 type Query struct {
 	Name     string `json:"_name,omitempty"`
+	Type     string `json:"_type,omitempty"`
 	IDOrName string `json:"idOrName,omitempty"`
+	Data     string `json:"data,omitempty"`
 }
 type QueryList struct {
 	Query []Query `json:"query,omitempty"`
@@ -87,6 +89,7 @@ type Observable struct {
 	AddTags          []string `bson:"addTags,omitempty" json:"addTags,omitempty" validate:"max=128,dive,min=1,max=128"`
 	RemoveTags       []string `bson:"removeTags,omitempty" json:"removeTags,omitempty" validate:"max=128,dive,min=1,max=128"`
 }
+type Observables map[string]Observable
 
 type MessagePost struct {
 	Message string `bson:"message" json:"message" validate:"required,min=1,max=1048576"`

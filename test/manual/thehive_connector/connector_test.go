@@ -111,3 +111,25 @@ func TestGetAllObservables(t *testing.T) {
 	// response := thehive_models.CaseResponse{}
 
 }
+
+func TestGetCaseForObservables(t *testing.T) {
+
+	host := "http://localhost:9000/thehive/api/v1"
+	api := "f2eAPRxxq8Wej7OodikGkmyeottz0xGy"
+
+	conn := connector.NewConnector(host, api, true)
+	assert.NotEqual(t, conn, nil)
+
+	// caseModel := thehive_models.Case{Title: "test-title", Description: "some description"}
+
+	caseObj, err := conn.FindCaseOfObservable("10.0.0.10")
+	assert.Equal(t, err, nil)
+	assert.NotEqual(t, caseObj, "")
+	// println(caseObj.ExtraData.Data)
+	// observable := thehive_models.Observable{DataType: "ip", Data: []string{"10.0.0.10"}}
+	// conn.CreateObservable(caseId, observable)
+	// assert.Equal(t, err, nil)
+
+	// response := thehive_models.CaseResponse{}
+
+}

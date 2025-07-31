@@ -42,6 +42,15 @@ type ITheHiveConnector interface {
 	UpdateEndExecutionCase(executionMetadata thehive_models.ExecutionMetadata, at time.Time) (string, error)
 	UpdateStartStepTaskInCase(executionMetadata thehive_models.ExecutionMetadata, at time.Time) (string, error)
 	UpdateEndStepTaskInCase(executionMetadata thehive_models.ExecutionMetadata, at time.Time) (string, error)
+
+	//
+	GetCaseById(caseId string) (thehive_models.CaseResponse, error)
+	FindCaseOfObservable(data string) ([]thehive_models.CaseResponse, error)
+	GetObservableFromCase(caseId string) ([]thehive_models.ObservableResponse, error)
+	GetAllCases() error
+	CreateObservableInCase(caseId string, observable thehive_models.Observable) error
+	CreateCase(thisCase thehive_models.Case) (string, error)
+	SetMapping(meta thehive_models.ExecutionMetadata, caseId string) error
 }
 
 // ############################### TheHiveConnector object
@@ -156,6 +165,26 @@ func (theHiveConnector *TheHiveConnector) GetObservableFromCase(caseId string) (
 		log.Info(object.ID)
 	}
 	return objects, nil
+
+}
+
+func (theHiveConnector *TheHiveConnector) FindCaseOfObservable(data string) ([]thehive_models.CaseResponse, error) {
+	q1 := thehive_models.Query{Name: "listObservable"}
+	q2 := thehive_models.Query{Name: "filter", Data: data}
+	q3 := thehive_models.Query{Name: "case"}
+
+	query := thehive_models.QueryList{Query: []thehive_models.Query{q1, q2, q3}}
+	if response, err := theHiveConnector.DoQuery(query); err != nil {
+		return nil, err
+	} else {
+		objects := []thehive_models.CaseResponse{}
+		err = json.Unmarshal(response, &objects)
+		if err != nil {
+			log.Error(err)
+			return nil, err
+		}
+		return objects, nil
+	}
 
 }
 
@@ -327,6 +356,15 @@ func (theHiveConnector *TheHiveConnector) postNewStepTaskInCase(executionId stri
 
 // ######################################## Connector interface
 
+func (theHiveConnector *TheHiveConnector) SetMapping(meta thehive_models.ExecutionMetadata, caseId string) error {
+	if err := theHiveConnector.ids_map.RegisterExecutionInCase(meta.ExecutionId, caseId); err != nil {
+		return err
+	}
+	theHiveConnector.populateCase(meta, time.Now())
+
+	return nil
+}
+
 func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(execMetadata thehive_models.ExecutionMetadata, at time.Time) (string, error) {
 	log.Trace(fmt.Sprintf("posting new case to The Hive. execution ID %s, playbook %+v", execMetadata.ExecutionId, execMetadata.Playbook))
 	url := theHiveConnector.baseUrl + "/case"
@@ -362,6 +400,12 @@ func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(execMetadata theh
 		return "", err
 	}
 
+	err = theHiveConnector.populateCase(execMetadata, at)
+	log.Tracef("case posted with case ID: %s", caseId)
+	return caseId, err
+}
+
+func (theHiveConnector *TheHiveConnector) populateCase(execMetadata thehive_models.ExecutionMetadata, at time.Time) error {
 	// Pre-populate tasks according to playbook steps
 	for _, step := range execMetadata.Playbook.Workflow {
 		if step.Type == cacao.StepTypeStart || step.Type == cacao.StepTypeEnd {
@@ -369,14 +413,14 @@ func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(execMetadata theh
 		}
 		err := theHiveConnector.postNewStepTaskInCase(execMetadata.ExecutionId, step)
 		if err != nil {
-			return "", err
+			return err
 		}
 	}
 
 	executionStartMessage := fmt.Sprintf(
 		"START\nplaybook ID\n\t\t[ %s ]\nexecution ID\n\t\t[ %s ]\nstarted at\n\t\t[ %s ]",
 		execMetadata.Playbook.ID, execMetadata.ExecutionId, at.String())
-	err = theHiveConnector.postCommentInCase(execMetadata.ExecutionId, executionStartMessage)
+	err := theHiveConnector.postCommentInCase(execMetadata.ExecutionId, executionStartMessage)
 	if err != nil {
 		log.Warningf("could not post message to case: %s", err)
 	}
@@ -388,8 +432,7 @@ func (theHiveConnector *TheHiveConnector) PostNewExecutionCase(execMetadata theh
 		log.Warningf("could not report variables in case comment: %s", err)
 	}
 
-	log.Tracef("case posted with case ID: %s", caseId)
-	return string(body), nil
+	return err
 }
 
 func (theHiveConnector *TheHiveConnector) UpdateEndExecutionCase(execMetadata thehive_models.ExecutionMetadata, at time.Time) (string, error) {
