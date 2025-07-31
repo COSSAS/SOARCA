@@ -39,7 +39,7 @@ func SendRequest(client *http.Client, req *http.Request) ([]byte, error) {
 		return nil, err
 	}
 
-	log.Info(fmt.Sprintf("response body: %s", respbody))
+	log.Trace(fmt.Sprintf("response body: %s", respbody))
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return nil, fmt.Errorf("received non-2xx status code: %d\nURL: %s: %s", resp.StatusCode, req.Host, respbody)
