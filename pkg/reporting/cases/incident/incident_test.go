@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
-	"soarca/pkg/reporter/downstream_reporter/correlation/observable"
+	"soarca/pkg/reporting/cases/observable"
 	"testing"
 	"time"
 

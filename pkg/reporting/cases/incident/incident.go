@@ -6,7 +6,8 @@ import (
 	"soarca/internal/logger"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
-	"soarca/pkg/reporter/downstream_reporter/correlation/observable"
+	"soarca/pkg/reporting/cases/observable"
+
 	"time"
 
 	"github.com/google/uuid"
