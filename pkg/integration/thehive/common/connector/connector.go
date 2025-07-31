@@ -21,6 +21,7 @@ const theHiveObservablePath = "/observable"
 
 const POST = "POST"
 const GET = "GET"
+const PATCH = "PATCH"
 
 // TODOs
 // Fix asynchronous http api calls causing The Hive reporting to be all over the place
@@ -221,6 +222,37 @@ func (theHiveConnector *TheHiveConnector) GetCaseById(caseId string) (thehive_mo
 	return object, nil
 }
 
+func (theHiveConnector *TheHiveConnector) UpdateCaseTags(caseId string, tags []string) (thehive_models.CaseResponse, error) {
+	path := theHiveConnector.baseUrl + theHiveCasePath + "/" + caseId
+
+	existingCase, err := theHiveConnector.GetCaseById(caseId)
+	if err != nil {
+		log.Error(err)
+	}
+
+	currentTags := existingCase.Tags
+	currentTags = append(currentTags, tags...)
+	newTags := thehive_models.Case{Tags: currentTags}
+
+	request, err := thehive_utils.PrepareRequest(PATCH, path, theHiveConnector.apiKey, newTags)
+	if err != nil {
+		log.Error(err)
+		return thehive_models.CaseResponse{}, err
+	}
+	response, err := thehive_utils.SendRequest(theHiveConnector.client, request)
+	if err != nil {
+		log.Error(err)
+		return thehive_models.CaseResponse{}, err
+	}
+	object := thehive_models.CaseResponse{}
+	err = json.Unmarshal(response, &object)
+	if err != nil {
+		log.Error(err)
+		return thehive_models.CaseResponse{}, err
+	}
+	return object, nil
+}
+
 ///
 
 func (theHiveConnector *TheHiveConnector) postCommentInTaskLog(executionId string, step cacao.Step, note string) error {
@@ -358,12 +390,18 @@ func (theHiveConnector *TheHiveConnector) postNewStepTaskInCase(executionId stri
 
 func (theHiveConnector *TheHiveConnector) SetMapping(meta thehive_models.ExecutionMetadata, caseId string) error {
 	if err := theHiveConnector.ids_map.RegisterExecutionInCase(meta.ExecutionId, caseId); err != nil {
+		log.Error("failed to log execution in case")
+		log.Error(err)
 		return err
 	}
 	err := theHiveConnector.populateCase(meta, time.Now())
 	if err != nil {
 		log.Error(err)
 	}
+
+	tags := []string{meta.ExecutionId, meta.Playbook.ID}
+	theHiveConnector.UpdateCaseTags(caseId, tags)
+
 	return err
 }
 

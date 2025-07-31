@@ -40,13 +40,14 @@ func (manager *HiveCaseManager) AddToExistingOrCreateNew(meta execution.Metadata
 	caseId := ""
 	for value := range observables {
 		if cases, err := manager.connector.FindCaseOfObservable(value); err != nil {
+			log.Error(err)
 			continue // continue to the next value
 		} else {
 			if len(cases) > 0 {
 				caseId = cases[0].ID
 				exe := thehive_models.ExecutionMetadata{ExecutionId: meta.ExecutionId.String(),
 					Playbook: playbook}
-				if err := manager.connector.SetMapping(exe, meta.ExecutionId.String()); err != nil {
+				if err := manager.connector.SetMapping(exe, caseId); err != nil {
 					log.Error(err)
 				}
 				break // break out of the loop
