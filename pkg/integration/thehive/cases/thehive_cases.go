@@ -69,6 +69,11 @@ func (manager *HiveCaseManager) AddToExistingOrCreateNew(meta execution.Metadata
 
 	}
 
+	for id, observable := range observables {
+		log.Info("addiing observable:", id, " to case: ", caseId)
+		manager.connector.CreateObservableInCase(caseId, observable)
+	}
+
 	caseIdVar := cacao.Variable{Type: cacao.VariableTypeString,
 		Name:        cases.SOARCA_PLAYBOOK_CASE_ID,
 		Description: "SOARCA case id variable to be used in playbooks.",
