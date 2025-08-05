@@ -60,6 +60,7 @@ services:
     image: docker.io/cossas/soarca:latest
     container_name: soarca_server
     environment:
+      HOST: localhost
       PORT: 8080
       SOARCA_ALLOWED_ORIGINS: "*"
       GIN_MODE: "release"
