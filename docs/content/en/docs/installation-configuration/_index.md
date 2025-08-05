@@ -14,6 +14,7 @@ After completing the [Getting Started](/docs/getting-started/_index.md) setup fo
 
 | Variable                   | Content                          | Description                                                                 |
 |----------------------------|-----------------------------------|-----------------------------------------------------------------------------|
+| HOST                       | `localhost`                      | Set the host of SOARCA so the swagger GUI is correctly pointed to the SOARCA API. Default is `localhost`.                          |
 | PORT                       | `8080`                           | Set the exposed port of SOARCA. Default is `8080`.                          |
 | ENABLE_TLS                 | `false`                          | Enable TLS for secure communication. Default is `false`.                    |
 | CERT_FILE                  | `"/certs/server.crt"`            | Path to the TLS certificate file. Default is `"/certs/server.crt"`.         |
@@ -44,11 +45,13 @@ After completing the [Getting Started](/docs/getting-started/_index.md) setup fo
 
 #### The Hive
 
-| Variable             | Content                          | Description                                             |
-|----------------------|-----------------------------------|---------------------------------------------------------|
-| THEHIVE_ACTIVATE     | `false`                          | Enable integration with The Hive. Default is `false`.   |
-| THEHIVE_API_TOKEN    | `your_token`                     | Set the API token for The Hive integration.             |
-| THEHIVE_API_BASE_URL | `http://your.thehive.instance/api/v1/` | Set the base URL for The Hive API. Default is `""`.      |
+| Variable                   | Content                          | Description                                             |
+|----------------------------|----------------------------------|---------------------------------------------------------|
+| THEHIVE_ACTIVATE           | `false`                          | Enable integration with The Hive. Default is `false`.   |
+| THEHIVE_REPORTER           | `false`                          | Enable case reporting integration with The Hive. Default is `false`.   |
+| THEHIVE_ALLOW_INSECURE     | `true`                           | Allow insecure connection to the hive. Default is `true`.   |
+| THEHIVE_API_TOKEN          | `your_token`                     | Set the API token for The Hive integration.             |
+| THEHIVE_API_BASE_URL       | `http://your.thehive.instance/api/v1/` | Set the base URL for The Hive API. Default is `""`.      |
 
 -----
 
