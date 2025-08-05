@@ -14,11 +14,11 @@ swagger:
 	swag init -g cmd/soarca/main.go -o api
 
 lint: swagger
-	
 	golangci-lint run --max-same-issues 0 --timeout 5m -v  
 
 build: swagger
 	CGO_ENABLED=0 go build -o ./build/soarca $(GOFLAGS) ./cmd/soarca/main.go
+	CGO_ENABLED=0 go build -o ./build/soarca-conversion $(GOFLAGS) ./cmd/soarca-conversion/main.go
 
 test: swagger
 	go test ./pkg/... -v
