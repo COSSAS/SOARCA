@@ -42,12 +42,13 @@ func main() {
 	fmt.Print(banner)
 	log.Info("Version: ", Version)
 	log.Info("Buildtime: ", Buildtime)
+	log.Info("Host: ", Host)
 
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Warning("Failed to read env variable, but will continue")
 	}
-	Host = "localhost:" + utils.GetEnv("PORT", "8080")
+	Host = utils.GetEnv("HOST", "localhost") + ":" + utils.GetEnv("PORT", "8080")
 	api.SwaggerInfo.Host = Host
 
 	// Version is only available here
