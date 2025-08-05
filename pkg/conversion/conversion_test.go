@@ -1,0 +1,31 @@
+package conversion
+
+import (
+	"os"
+	"testing"
+
+	"github.com/go-playground/assert/v2"
+)
+
+func Test_read_format(t *testing.T) {
+	assert.Equal(t, read_format("bpmn"), FormatBpmn)
+	assert.Equal(t, read_format("splunk"), FormatSplunk)
+	assert.Equal(t, read_format("misp"), FormatMisp)
+	assert.Equal(t, read_format(""), FormatUnknown)
+	assert.Equal(t, read_format("cacao"), FormatUnknown)
+	assert.Equal(t, read_format("bpnm"), FormatUnknown)
+	assert.Equal(t, read_format("?"), FormatUnknown)
+}
+func Test_guess_format(t *testing.T) {
+	assert.Equal(t, guess_format("x.bpmn"), FormatBpmn)
+}
+
+func Test_bpmn_format(t *testing.T) {
+	ssh_simple_file, err := os.ReadFile("../../test/conversion/simple_ssh.bpmn")
+	assert.NotEqual(t, err, nil)
+	converted, err := PerformConversion("../../test/conversion/simple_ssh.bpmn", ssh_simple_file, "bpmn")
+	assert.NotEqual(t, err, nil)
+	assert.NotEqual(t, converted.WorkflowStart, nil)
+	assert.NotEqual(t, converted.Workflow, nil)
+	assert.Equal(t, len(converted.Workflow), 2)
+}
