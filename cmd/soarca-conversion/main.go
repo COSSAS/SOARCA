@@ -49,6 +49,10 @@ func main() {
 		log.Error("No source file given: -source=SOURCE_FILE is required")
 		return
 	}
+	if target_filename == "" {
+		target_filename = fmt.Sprintf("%s.json", source_filename)
+		log.Infof("No target file given: defaulting to %s", target_filename)
+	}
 	source_content, err := os.ReadFile(source_filename)
 	if err != nil {
 		log.Errorf("Could not read source file")
