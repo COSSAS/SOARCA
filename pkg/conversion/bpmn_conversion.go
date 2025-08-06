@@ -66,13 +66,21 @@ func (converter BpmnConverter) Convert(input []byte) (*cacao.Playbook, error) {
 		return nil, errors.New("BPMN file does not have any processes")
 	}
 	playbook := cacao.NewPlaybook()
+	playbook.SpecVersion = cacao.CACAO_VERSION_2
+	playbook.Type = "playbook"
+	playbook.ID = fmt.Sprintf("playbook--%s", uuid.New())
+	playbook.CreatedBy = fmt.Sprintf("identity--%s", uuid.New())
+	soarca_name := fmt.Sprintf("soarca--%s", uuid.New())
+	soarca_manual_name := fmt.Sprintf("soarca--%s", uuid.New())
+	converter.translation["soarca"] = soarca_name
+	converter.translation["soarca-manual"] = soarca_manual_name
 	playbook.AgentDefinitions = cacao.NewAgentTargets(
 		cacao.AgentTarget{
-			ID:   fmt.Sprintf("soarca--%s", uuid.New()),
+			ID:   soarca_name,
 			Type: "soarca",
 			Name: "soarca-playbook"},
 		cacao.AgentTarget{
-			ID:          fmt.Sprintf("soarca-manual-capability--%s", uuid.New()),
+			ID:          soarca_manual_name,
 			Type:        "soarca-manual",
 			Name:        "soarca-manual",
 			Description: "SOARCAs manual command handler"})
@@ -211,7 +219,9 @@ func (converter *BpmnConverter) implement(process BpmnProcess, playbook *cacao.P
 func (task BpmnTask) implement(playbook *cacao.Playbook, converter *BpmnConverter) error {
 	name := fmt.Sprintf("action--%s", uuid.New())
 	converter.translation[task.Id] = name
-	step := cacao.Step{Type: "action", Name: task.Name}
+	step := cacao.Step{Type: "action", Name: task.Name, Commands: make([]cacao.Command, 0)}
+	step.Commands = append(step.Commands, cacao.Command{Type: "shell", Command: ""})
+	step.Agent = converter.translation["soarca"]
 	playbook.Workflow[name] = step
 	return nil
 }
