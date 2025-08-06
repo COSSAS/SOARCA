@@ -2,6 +2,7 @@ package conversion
 
 import (
 	"os"
+	"soarca/pkg/models/validator"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
@@ -21,9 +22,10 @@ func Test_guess_format(t *testing.T) {
 }
 
 func Test_bpmn_format(t *testing.T) {
-	ssh_simple_file, err := os.ReadFile("../../test/conversion/simple_ssh.bpmn")
+	content, err := os.ReadFile("../../test/conversion/simple_ssh.bpmn")
 	assert.Equal(t, err, nil)
-	converted, err := PerformConversion("../../test/conversion/simple_ssh.bpmn", ssh_simple_file, "bpmn")
+	converted, err := PerformConversion("../../test/conversion/simple_ssh.bpmn", content, "bpmn")
+	err = validator.IsValidCacaoJson(content)
 	assert.Equal(t, err, nil)
 	assert.NotEqual(t, converted, nil)
 	assert.MatchRegex(t, converted.WorkflowStart, "start--.*")
@@ -36,9 +38,11 @@ func Test_bpmn_format(t *testing.T) {
 	assert.Equal(t, len(converted.Workflow), 4)
 }
 func Test_bpmn_format_control(t *testing.T) {
-	ssh_simple_file, err := os.ReadFile("../../test/conversion/control_gates.bpmn")
+	content, err := os.ReadFile("../../test/conversion/control_gates.bpmn")
 	assert.Equal(t, err, nil)
-	converted, err := PerformConversion("../../test/conversion/control_gates.bpmn", ssh_simple_file, "bpmn")
+	err = validator.IsValidCacaoJson(content)
+	assert.Equal(t, err, nil)
+	converted, err := PerformConversion("../../test/conversion/control_gates.bpmn", content, "bpmn")
 	assert.Equal(t, err, nil)
 	assert.NotEqual(t, converted, nil)
 	assert.MatchRegex(t, converted.WorkflowStart, "start--.*")
