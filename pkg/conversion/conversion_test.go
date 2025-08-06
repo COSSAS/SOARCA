@@ -22,10 +22,16 @@ func Test_guess_format(t *testing.T) {
 
 func Test_bpmn_format(t *testing.T) {
 	ssh_simple_file, err := os.ReadFile("../../test/conversion/simple_ssh.bpmn")
-	assert.NotEqual(t, err, nil)
+	assert.Equal(t, err, nil)
 	converted, err := PerformConversion("../../test/conversion/simple_ssh.bpmn", ssh_simple_file, "bpmn")
-	assert.NotEqual(t, err, nil)
-	assert.NotEqual(t, converted.WorkflowStart, nil)
+	assert.Equal(t, err, nil)
+	assert.NotEqual(t, converted, nil)
+	assert.MatchRegex(t, converted.WorkflowStart, "start--.*")
+	assert.MatchRegex(t, converted.WorkflowException, "end--.*")
 	assert.NotEqual(t, converted.Workflow, nil)
-	assert.Equal(t, len(converted.Workflow), 2)
+	for _, entry := range converted.Workflow {
+		assert.NotEqual(t, entry.Name, nil)
+		assert.NotEqual(t, entry.Type, nil)
+	}
+	assert.Equal(t, len(converted.Workflow), 4)
 }
