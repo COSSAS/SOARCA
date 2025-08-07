@@ -56,14 +56,17 @@ func main() {
 	source_content, err := os.ReadFile(source_filename)
 	if err != nil {
 		log.Errorf("Could not read source file")
+		return
 	}
 	target_content, err := conversion.PerformConversion(source_filename, source_content, format)
 	if err != nil {
 		log.Error(err)
+		return
 	}
 	output_str, err := json.Marshal(target_content)
 	if err != nil {
 		log.Error(err)
+		return
 	}
 	os.WriteFile(target_filename, output_str, 0644)
 

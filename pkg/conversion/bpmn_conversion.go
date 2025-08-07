@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"slices"
 	"soarca/internal/logger"
 	"soarca/pkg/models/cacao"
 
@@ -18,6 +19,7 @@ func init() {
 
 type BpmnConverter struct {
 	translation map[string]string
+	process     *BpmnProcess
 }
 
 type BpmnStartEvent struct {
@@ -35,10 +37,11 @@ type BpmnTask struct {
 }
 
 type BpmnFlow struct {
-	Id        string `xml:"id,attr"`
-	SourceRef string `xml:"sourceRef,attr"`
-	TargetRef string `xml:"targetRef,attr"`
-	Name      string `xml:"name,attr"`
+	Id            string `xml:"id,attr"`
+	SourceRef     string `xml:"sourceRef,attr"`
+	TargetRef     string `xml:"targetRef,attr"`
+	Name          string `xml:"name,attr"`
+	IsAssociation bool
 }
 type BpmnGatewayKind int
 
@@ -51,6 +54,11 @@ type BpmnGateway struct {
 	Id   string `xml:"id,attr"`
 	Name string `xml:"name,attr"`
 	Kind BpmnGatewayKind
+}
+
+type BpmnAnnotation struct {
+	Id   string `xml:"id,attr"`
+	Text string `xml:"text"`
 }
 
 func (converter BpmnConverter) Convert(input []byte) (*cacao.Playbook, error) {
@@ -90,6 +98,7 @@ func (converter BpmnConverter) Convert(input []byte) (*cacao.Playbook, error) {
 			Type: "individual",
 			Name: "CHANGE THIS"})
 	playbook.Workflow = make(cacao.Workflow)
+	converter.process = &definitions.Processes[0]
 	if err := converter.implement(definitions.Processes[0], playbook); err != nil {
 		return nil, err
 	}
@@ -106,11 +115,12 @@ type BpmnDefinitions struct {
 	Processes []BpmnProcess `xml:"process"`
 }
 type BpmnProcess struct {
-	start_task *BpmnStartEvent
-	end_tasks  []BpmnEndEvent
-	flows      []BpmnFlow
-	tasks      []BpmnTask
-	gateways   []BpmnGateway
+	start_task  *BpmnStartEvent
+	end_tasks   []BpmnEndEvent
+	flows       []BpmnFlow
+	tasks       []BpmnTask
+	gateways    []BpmnGateway
+	annotations []BpmnAnnotation
 }
 
 func (p *BpmnProcess) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
@@ -138,6 +148,15 @@ func (p *BpmnProcess) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error
 			case "sequenceFlow":
 				flow := new(BpmnFlow)
 				err = d.DecodeElement(flow, &item_type)
+				flow.IsAssociation = false
+				if err != nil {
+					return err
+				}
+				p.flows = append(p.flows, *flow)
+			case "association":
+				flow := new(BpmnFlow)
+				err = d.DecodeElement(flow, &item_type)
+				flow.IsAssociation = true
 				if err != nil {
 					return err
 				}
@@ -153,6 +172,38 @@ func (p *BpmnProcess) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error
 			case "task":
 				task := new(BpmnTask)
 				task.Kind = "task"
+				err = d.DecodeElement(task, &item_type)
+				if err != nil {
+					return err
+				}
+				p.tasks = append(p.tasks, *task)
+			case "serviceTask":
+				task := new(BpmnTask)
+				task.Kind = "service"
+				err = d.DecodeElement(task, &item_type)
+				if err != nil {
+					return err
+				}
+				p.tasks = append(p.tasks, *task)
+			case "sendTask":
+				task := new(BpmnTask)
+				task.Kind = "send"
+				err = d.DecodeElement(task, &item_type)
+				if err != nil {
+					return err
+				}
+				p.tasks = append(p.tasks, *task)
+			case "userTask":
+				task := new(BpmnTask)
+				task.Kind = "user"
+				err = d.DecodeElement(task, &item_type)
+				if err != nil {
+					return err
+				}
+				p.tasks = append(p.tasks, *task)
+			case "businessRuleTask":
+				task := new(BpmnTask)
+				task.Kind = "business rule"
 				err = d.DecodeElement(task, &item_type)
 				if err != nil {
 					return err
@@ -174,6 +225,15 @@ func (p *BpmnProcess) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error
 					return err
 				}
 				p.gateways = append(p.gateways, *gateway)
+			case "textAnnotation":
+				annotation := new(BpmnAnnotation)
+				err = d.DecodeElement(annotation, &item_type)
+				if err != nil {
+					return err
+				}
+				p.annotations = append(p.annotations, *annotation)
+			case "intermediateThrowEvent", "intermediateCatchEvent":
+				return fmt.Errorf("Throw/catch mechanism is currently not implemented in SOARCA")
 			default:
 				return fmt.Errorf("Unsupported element: %s", item_type.Name.Local)
 			}
@@ -220,12 +280,36 @@ func (task BpmnTask) implement(playbook *cacao.Playbook, converter *BpmnConverte
 	name := fmt.Sprintf("action--%s", uuid.New())
 	converter.translation[task.Id] = name
 	step := cacao.Step{Type: "action", Name: task.Name, Commands: make([]cacao.Command, 0)}
-	step.Commands = append(step.Commands, cacao.Command{Type: "shell", Command: ""})
+	step.Commands = append(step.Commands, cacao.Command{Type: "manual", Command: task.Name})
 	step.Agent = converter.translation["soarca"]
 	playbook.Workflow[name] = step
 	return nil
 }
+
 func (flow BpmnFlow) implement(playbook *cacao.Playbook, converter *BpmnConverter) error {
+	if flow.IsAssociation {
+		return flow.implement_association(playbook, converter)
+	} else {
+		return flow.implement_flow(playbook, converter)
+	}
+}
+
+func (flow BpmnFlow) implement_association(playbook *cacao.Playbook, converter *BpmnConverter) error {
+	source_name, ok := converter.translation[flow.SourceRef]
+	if !ok {
+		return fmt.Errorf("Could not translate source of flow: %s", flow.SourceRef)
+	}
+	source := playbook.Workflow[source_name]
+	target_index := slices.IndexFunc(converter.process.annotations, func(annot BpmnAnnotation) bool { return annot.Id == flow.TargetRef })
+	if target_index < 0 {
+		return fmt.Errorf("Could not find text annotation %s", flow.TargetRef)
+	}
+	target := converter.process.annotations[target_index]
+	source.Condition = target.Text
+	playbook.Workflow[source_name] = source
+	return nil
+}
+func (flow BpmnFlow) implement_flow(playbook *cacao.Playbook, converter *BpmnConverter) error {
 	source_name, ok := converter.translation[flow.SourceRef]
 	if !ok {
 		return fmt.Errorf("Could not translate source of flow: %s", flow.SourceRef)
@@ -247,7 +331,14 @@ func (flow BpmnFlow) implement(playbook *cacao.Playbook, converter *BpmnConverte
 		case "No", "no":
 			entry.OnFalse = target_name
 		default:
-			return fmt.Errorf("Unknown if direction: %s", flow.Name)
+			log.Infof("Unknown flow name %s out of if-condition: picking empty branch", flow.Name)
+			if entry.OnTrue == "" {
+				entry.OnTrue = target_name
+			} else if entry.OnFalse == "" {
+				entry.OnTrue = target_name
+			} else {
+				return fmt.Errorf("Branch out of exclusive gateway with more than two branches: not supported")
+			}
 		}
 	case cacao.StepTypeParallel:
 		entry.NextSteps = append(entry.NextSteps, target_name)
