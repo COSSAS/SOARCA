@@ -1,6 +1,7 @@
 package conversion
 
 import (
+	"encoding/json"
 	"os"
 	"soarca/pkg/models/validator"
 	"testing"
@@ -25,7 +26,9 @@ func Test_bpmn_format(t *testing.T) {
 	content, err := os.ReadFile("../../test/conversion/simple_ssh.bpmn")
 	assert.Equal(t, err, nil)
 	converted, err := PerformConversion("../../test/conversion/simple_ssh.bpmn", content, "bpmn")
-	err = validator.IsValidCacaoJson(content)
+	assert.Equal(t, err, nil)
+	converted_json, err := json.Marshal(converted)
+	err = validator.IsValidCacaoJson(converted_json)
 	assert.Equal(t, err, nil)
 	assert.NotEqual(t, converted, nil)
 	assert.MatchRegex(t, converted.WorkflowStart, "start--.*")
@@ -40,9 +43,10 @@ func Test_bpmn_format(t *testing.T) {
 func Test_bpmn_format_control(t *testing.T) {
 	content, err := os.ReadFile("../../test/conversion/control_gates.bpmn")
 	assert.Equal(t, err, nil)
-	err = validator.IsValidCacaoJson(content)
-	assert.Equal(t, err, nil)
 	converted, err := PerformConversion("../../test/conversion/control_gates.bpmn", content, "bpmn")
+	assert.Equal(t, err, nil)
+	converted_json, err := json.Marshal(converted)
+	err = validator.IsValidCacaoJson(converted_json)
 	assert.Equal(t, err, nil)
 	assert.NotEqual(t, converted, nil)
 	assert.MatchRegex(t, converted.WorkflowStart, "start--.*")
