@@ -11,7 +11,7 @@ GOFLAGS = -ldflags "$(GOLDFLAGS)"
 
 swagger:
 	mkdir -p api
-	swag init -g cmd/soarca/main.go -o api
+	swag init -g main.go -o api -d cmd/soarca/,api
 
 lint: swagger
 	
