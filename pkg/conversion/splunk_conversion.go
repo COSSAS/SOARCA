@@ -8,7 +8,7 @@ import (
 type SplunkConverter struct {
 }
 
-func (SplunkConverter) Convert(input []byte) (*cacao.Playbook, error) {
+func (SplunkConverter) Convert(input []byte, filename string) (*cacao.Playbook, error) {
 	return nil, errors.New("Unimplemented")
 
 }

@@ -4,9 +4,12 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"path"
 	"slices"
 	"soarca/internal/logger"
 	"soarca/pkg/models/cacao"
+	"strings"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -61,7 +64,13 @@ type BpmnAnnotation struct {
 	Text string `xml:"text"`
 }
 
-func (converter BpmnConverter) Convert(input []byte) (*cacao.Playbook, error) {
+func clean_filename(filename string) string {
+	base := path.Base(filename)
+	ext := path.Ext(base)
+	return strings.TrimSuffix(base, ext)
+}
+
+func (converter BpmnConverter) Convert(input []byte, filename string) (*cacao.Playbook, error) {
 	converter.translation = make(map[string]string)
 	var definitions BpmnDefinitions
 	if err := xml.Unmarshal(input, &definitions); err != nil {
@@ -78,8 +87,15 @@ func (converter BpmnConverter) Convert(input []byte) (*cacao.Playbook, error) {
 	playbook.Type = "playbook"
 	playbook.ID = fmt.Sprintf("playbook--%s", uuid.New())
 	playbook.CreatedBy = fmt.Sprintf("identity--%s", uuid.New())
+	playbook.Name = clean_filename(filename)
+	playbook.Created = time.Now().UTC()
+	playbook.Modified = time.Now().UTC()
+	playbook.ValidFrom = time.Now().UTC()
+	playbook.ValidUntil = time.Now().UTC()
+	playbook.Description = fmt.Sprintf("CACAO playbook converted from %s", filename)
 	soarca_name := fmt.Sprintf("soarca--%s", uuid.New())
-	soarca_manual_name := fmt.Sprintf("soarca--%s", uuid.New())
+	playbook.PlaybookTypes = []string{"notification"}
+	soarca_manual_name := fmt.Sprintf("soarca-manual--%s", uuid.New())
 	converter.translation["soarca"] = soarca_name
 	converter.translation["soarca-manual"] = soarca_manual_name
 	playbook.AgentDefinitions = cacao.NewAgentTargets(
