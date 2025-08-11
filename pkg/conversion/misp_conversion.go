@@ -8,7 +8,7 @@ import (
 type MispConverter struct {
 }
 
-func (MispConverter) Convert(input []byte) (*cacao.Playbook, error) {
+func (MispConverter) Convert(input []byte, filename string) (*cacao.Playbook, error) {
 	return nil, errors.New("Unimplemented")
 
 }

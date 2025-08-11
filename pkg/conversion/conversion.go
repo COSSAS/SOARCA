@@ -24,9 +24,9 @@ func PerformConversion(input_filename string, input []byte, format_string string
 	case FormatSplunk:
 		converter = NewSplunkConverter()
 	}
-	return converter.Convert(input)
+	return converter.Convert(input, input_filename)
 }
 
 type IConverter interface {
-	Convert(input []byte) (*cacao.Playbook, error)
+	Convert(input []byte, filename string) (*cacao.Playbook, error)
 }
