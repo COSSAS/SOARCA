@@ -269,6 +269,15 @@ func initializeCore(app *gin.Engine) error {
 		return err
 	}
 
+	if utils.GetEnv("ENABLE_SSH_KMS", "false") == "true" {
+		kms_dir := utils.GetEnv("SSH_KMS_DIR", ".ssh/")
+		err = ssh.InitKeyManagement(kms_dir)
+		if err != nil {
+			log.Error(err)
+			return err
+		}
+	}
+
 	// Manual capability native routes
 	routes.Manual(app, mainInteraction)
 

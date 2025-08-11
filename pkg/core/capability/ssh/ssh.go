@@ -2,6 +2,7 @@ package ssh
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"soarca/pkg/core/capability"
 	"soarca/pkg/models/cacao"
@@ -69,7 +70,7 @@ func executeCommand(session *ssh.Session,
 	response, err := session.Output(StripSshPrepend(command.Command))
 
 	if err != nil {
-		log.Error(err)
+		log.Errorf("Output: %s", err)
 		return cacao.NewVariables(), err
 	}
 	results := cacao.NewVariables(cacao.Variable{Type: cacao.VariableTypeString,
@@ -77,10 +78,11 @@ func executeCommand(session *ssh.Session,
 		Value: string(response)})
 	log.Trace("Finished ssh execution will return the variables: ", results)
 	sessionErr := session.Close()
-	if sessionErr != nil {
-		log.Error(sessionErr)
+	if sessionErr != nil && sessionErr.Error() != "EOF" {
+		// The ssh api is subtle, and it can happen that we get EOF as an error.
+		// This is likely not an error, as the session can also be closed by the host.
+		log.Errorf("Close: %s", sessionErr)
 	}
-
 	return results, err
 }
 
@@ -91,8 +93,22 @@ func getConfig(authentication cacao.AuthenticationInformation) (ssh.ClientConfig
 
 	switch authentication.Type {
 	case "user-auth":
-		config.Auth = []ssh.AuthMethod{
-			ssh.Password(authentication.Password)}
+		if authentication.Password != "" {
+			config.Auth = []ssh.AuthMethod{
+				ssh.Password(authentication.Password)}
+		}
+		if authentication.Kms {
+			if authentication.KmsKeyIdentifier == "" {
+				return config, fmt.Errorf("KMS indicated, but no kms_key_identifier given")
+			}
+			private_key, err := keyManagement.GetPrivate(authentication.KmsKeyIdentifier)
+			if err != nil {
+				return config, err
+			}
+			config.Auth = []ssh.AuthMethod{
+				ssh.PublicKeys(private_key),
+			}
+		}
 		return config, nil
 
 	case "private-key":
@@ -115,13 +131,13 @@ func getSession(config ssh.ClientConfig, target cacao.AgentTarget) (*ssh.Session
 	host := CombinePortAndAddress(target.Address, target.Port)
 	client, err := ssh.Dial("tcp", host, &config)
 	if err != nil {
-		log.Error(err)
+		log.Errorf("Dialing: %s", err)
 		return nil, nil, err
 	}
 
 	session, err := client.NewSession()
 	if err != nil {
-		log.Error(err)
+		log.Errorf("Session: %s", err)
 		close(client)
 		return nil, nil, err
 	}
@@ -156,8 +172,11 @@ func CheckSshAuthenticationInfo(authentication cacao.AuthenticationInformation) 
 
 	switch authentication.Type {
 	case "user-auth":
-		if strings.TrimSpace(authentication.Password) == "" {
-			return errors.New("password is empty")
+		if strings.TrimSpace(authentication.Password) == "" && !authentication.Kms {
+			return errors.New("password is empty and KMS is not indicated")
+		}
+		if authentication.Kms && strings.TrimSpace(authentication.KmsKeyIdentifier) == "" {
+			return errors.New("KMS is indicated but no identifier is given")
 		}
 	case "private-key":
 		if strings.TrimSpace(authentication.PrivateKey) == "" {
@@ -173,7 +192,7 @@ func close(client *ssh.Client) {
 	if client != nil {
 		err := client.Close()
 		if err != nil {
-			log.Error(err)
+			log.Errorf("Closing: %s", err)
 		}
 	}
 }
