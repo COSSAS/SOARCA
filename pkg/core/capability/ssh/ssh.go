@@ -101,7 +101,7 @@ func getConfig(authentication cacao.AuthenticationInformation) (ssh.ClientConfig
 			if authentication.KmsKeyIdentifier == "" {
 				return config, fmt.Errorf("KMS indicated, but no kms_key_identifier given")
 			}
-			private_key, err := keyManagement.GetPrivate(authentication.KmsKeyIdentifier)
+			private_key, err := globalKeyManagement.GetPrivate(authentication.KmsKeyIdentifier)
 			if err != nil {
 				return config, err
 			}
