@@ -7,6 +7,7 @@ import (
 	"slices"
 	"soarca/pkg/utils"
 	"strings"
+	"time"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -20,13 +21,14 @@ type KeyManagement struct {
 	cached_keys    map[string]KeyPair
 }
 
-var keyManagement *KeyManagement
+var globalKeyManagement *KeyManagement
 
-func InitKeyManagement(underlying_dir string) error {
-	keyManagement = &KeyManagement{
+func InitKeyManagement(underlying_dir string) (*KeyManagement, error) {
+	globalKeyManagement = &KeyManagement{
 		underlying_dir: underlying_dir,
 	}
-	return keyManagement.Refresh()
+	err := globalKeyManagement.Refresh()
+	return globalKeyManagement, err
 }
 
 func (management *KeyManagement) GetKeyPair(name string) (*KeyPair, error) {
@@ -67,10 +69,11 @@ func parsePublicKey(filename string) (ssh.PublicKey, error) {
 		return nil, err
 	}
 	file_buffer := make([]byte, 2048)
-	if _, err := file.Read(file_buffer); err != nil {
+	if _, err = file.Read(file_buffer); err != nil {
 		return nil, err
 	}
-	return ssh.ParsePublicKey(file_buffer)
+	key, _, _, _, err := ssh.ParseAuthorizedKey(file_buffer)
+	return key, err
 
 }
 func (management *KeyManagement) Refresh() error {
@@ -89,13 +92,14 @@ func (management *KeyManagement) Refresh() error {
 			if !slices.Contains(filenames, private_filename) {
 				return fmt.Errorf("found public key %s without corresponding private key (%s)", filename, private_filename)
 			}
-			private, err := parsePrivateKey(private_filename)
+			log.Trace("Found public key named ", private_filename)
+			private, err := parsePrivateKey(path.Join(management.underlying_dir, private_filename))
 			if err != nil {
-				return err
+				return fmt.Errorf("Private key parsing error: %s", err)
 			}
-			public, err := parsePublicKey(filename)
+			public, err := parsePublicKey(path.Join(management.underlying_dir, filename))
 			if err != nil {
-				return err
+				return fmt.Errorf("Public key parsing error: %s", err)
 			}
 			management.cached_keys[private_filename] = KeyPair{Public: public, Private: private}
 		}
@@ -142,7 +146,7 @@ func (management *KeyManagement) Insert(public string, private string, name stri
 }
 
 func (management *KeyManagement) insertInternal(public string, private string, name string) error {
-	public_key, err := ssh.ParsePublicKey([]byte(public))
+	public_key, _, _, _, err := ssh.ParseAuthorizedKey([]byte(public))
 	if err != nil {
 		return err
 	}
@@ -154,5 +158,27 @@ func (management *KeyManagement) insertInternal(public string, private string, n
 		private_key, err = ssh.ParsePrivateKeyWithPassphrase([]byte(private), []byte(passphrase))
 	}
 	management.cached_keys[name] = KeyPair{Public: public_key, Private: private_key}
+	return nil
+}
+func (management *KeyManagement) ListAllNames() []string {
+	keys := make([]string, len(management.cached_keys))
+	index := 0
+	for key := range management.cached_keys {
+		keys[index] = key
+		index++
+	}
+	return keys
+}
+func (management *KeyManagement) Revoke(keyname string) error {
+	if _, ok := management.cached_keys[keyname]; !ok {
+		return fmt.Errorf("Unknown key %s", keyname)
+	}
+	public_filename := path.Join(management.underlying_dir, keyname+".pub")
+	private_filename := path.Join(management.underlying_dir, keyname)
+	now := time.Now()
+	suffix := fmt.Sprintf(".revoked_%d-%d_%d-%s-%d", now.Second(), now.Hour(), now.Day(), now.Month().String(), now.Year())
+	os.Rename(public_filename, public_filename+suffix)
+	os.Rename(private_filename, private_filename+suffix)
+	delete(management.cached_keys, keyname)
 	return nil
 }
