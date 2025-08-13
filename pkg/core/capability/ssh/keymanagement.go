@@ -111,7 +111,7 @@ func (management *KeyManagement) Refresh() error {
 func (management *KeyManagement) Insert(public string, private string, name string) error {
 	for key := range management.cached_keys {
 		if key == name {
-			return fmt.Errorf("inserting key with name %s: already present!", name)
+			return fmt.Errorf("inserting key with name %s: already present", name)
 		}
 	}
 	private_filename := path.Clean(name)
