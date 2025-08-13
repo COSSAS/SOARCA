@@ -77,7 +77,7 @@ func (converter BpmnConverter) Convert(input []byte, filename string) (*cacao.Pl
 		return nil, err
 	}
 	if len(definitions.Processes) > 1 {
-		return nil, errors.New("Unsupported: BPMN file with multiple processes")
+		return nil, errors.New("unsupported: BPMN file with multiple processes")
 	}
 	if len(definitions.Processes) == 0 {
 		return nil, errors.New("BPMN file does not have any processes")
@@ -249,9 +249,9 @@ func (p *BpmnProcess) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error
 				}
 				p.annotations = append(p.annotations, *annotation)
 			case "intermediateThrowEvent", "intermediateCatchEvent":
-				return fmt.Errorf("Throw/catch mechanism is currently not implemented in SOARCA")
+				return fmt.Errorf("throw/catch mechanism is currently not implemented in SOARCA")
 			default:
-				return fmt.Errorf("Unsupported element: %s", item_type.Name.Local)
+				return fmt.Errorf("unsupported element: %s", item_type.Name.Local)
 			}
 		case xml.EndElement:
 			if item_type.Name == start_name {
@@ -313,12 +313,12 @@ func (flow BpmnFlow) implement(playbook *cacao.Playbook, converter *BpmnConverte
 func (flow BpmnFlow) implement_association(playbook *cacao.Playbook, converter *BpmnConverter) error {
 	source_name, ok := converter.translation[flow.SourceRef]
 	if !ok {
-		return fmt.Errorf("Could not translate source of flow: %s", flow.SourceRef)
+		return fmt.Errorf("could not translate source of flow: %s", flow.SourceRef)
 	}
 	source := playbook.Workflow[source_name]
 	target_index := slices.IndexFunc(converter.process.annotations, func(annot BpmnAnnotation) bool { return annot.Id == flow.TargetRef })
 	if target_index < 0 {
-		return fmt.Errorf("Could not find text annotation %s", flow.TargetRef)
+		return fmt.Errorf("could not find text annotation %s", flow.TargetRef)
 	}
 	target := converter.process.annotations[target_index]
 	source.Condition = target.Text
@@ -328,16 +328,16 @@ func (flow BpmnFlow) implement_association(playbook *cacao.Playbook, converter *
 func (flow BpmnFlow) implement_flow(playbook *cacao.Playbook, converter *BpmnConverter) error {
 	source_name, ok := converter.translation[flow.SourceRef]
 	if !ok {
-		return fmt.Errorf("Could not translate source of flow: %s", flow.SourceRef)
+		return fmt.Errorf("could not translate source of flow: %s", flow.SourceRef)
 	}
 	target_name, ok := converter.translation[flow.TargetRef]
 	if !ok {
-		return fmt.Errorf("Could not translate target of flow: %s", flow.TargetRef)
+		return fmt.Errorf("could not translate target of flow: %s", flow.TargetRef)
 	}
 	log.Infof("Flow from %s(%s) to %s(%s)", source_name, flow.SourceRef, target_name, flow.TargetRef)
 	entry, ok := playbook.Workflow[source_name]
 	if !ok {
-		return fmt.Errorf("Could not get source of flow: %s", source_name)
+		return fmt.Errorf("could not get source of flow: %s", source_name)
 	}
 	switch entry.Type {
 	case cacao.StepTypeIfCondition:
@@ -353,7 +353,7 @@ func (flow BpmnFlow) implement_flow(playbook *cacao.Playbook, converter *BpmnCon
 			} else if entry.OnFalse == "" {
 				entry.OnTrue = target_name
 			} else {
-				return fmt.Errorf("Branch out of exclusive gateway with more than two branches: not supported")
+				return fmt.Errorf("branch out of exclusive gateway with more than two branches: not supported")
 			}
 		}
 	case cacao.StepTypeParallel:
