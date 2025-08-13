@@ -6,14 +6,14 @@ import (
 )
 
 func PerformConversion(input_filename string, input []byte, format_string string) (*cacao.Playbook, error) {
-	format := FormatUnknown
+	var format TargetFormat
 	if format_string == "" {
 		format = guess_format(input_filename)
 	} else {
 		format = read_format(format_string)
 	}
 	if format == FormatUnknown {
-		return nil, errors.New("Could not deduce input file type")
+		return nil, errors.New("could not deduce input file type")
 	}
 	var converter IConverter
 	switch format {

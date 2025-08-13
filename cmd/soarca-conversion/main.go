@@ -68,6 +68,9 @@ func main() {
 		log.Error(err)
 		return
 	}
-	os.WriteFile(target_filename, output_str, 0644)
+	if err := os.WriteFile(target_filename, output_str, 0644); err != nil {
+		log.Error(err)
+		return
+	}
 
 }

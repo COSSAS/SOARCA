@@ -6,7 +6,7 @@ import (
 	"soarca/pkg/models/validator"
 	"testing"
 
-	"github.com/go-playground/assert/v2"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_read_format(t *testing.T) {
@@ -28,6 +28,7 @@ func Test_bpmn_format(t *testing.T) {
 	converted, err := PerformConversion("../../test/conversion/simple_ssh.bpmn", content, "bpmn")
 	assert.Equal(t, err, nil)
 	converted_json, err := json.Marshal(converted)
+	assert.Nil(t, err)
 	err = validator.IsValidCacaoJson(converted_json)
 	assert.Equal(t, err, nil)
 	assert.NotEqual(t, converted, nil)
