@@ -45,11 +45,9 @@ func addKey(t *testing.T, keyname string) {
 	privkey_path := path.Join(testkey_dir(), "test-key")
 	pubkey_file, err := os.Open(pubkey_path)
 	assert.Nil(t, err)
-	defer pubkey_file.Close()
 
 	privkey_file, err := os.Open(privkey_path)
 	assert.Nil(t, err)
-	defer privkey_file.Close()
 	pubkey_buf := make([]byte, 2048)
 	privkey_buf := make([]byte, 2048)
 	_, err = pubkey_file.Read(pubkey_buf)
@@ -57,6 +55,8 @@ func addKey(t *testing.T, keyname string) {
 	_, err = privkey_file.Read(privkey_buf)
 	assert.Nil(t, err)
 	assert.Nil(t, globalKeyManagement.Insert(string(pubkey_buf), string(privkey_buf), keyname))
+	assert.Nil(t, privkey_file.Close())
+	assert.Nil(t, pubkey_file.Close())
 }
 
 func TestAddKey(t *testing.T) {
@@ -75,8 +75,8 @@ func TestRefresh(t *testing.T) {
 	assert.False(t, slices.Contains(globalKeyManagement.ListAllNames(), testkey+"1"))
 	pubkey_path := path.Join(testkey_dir(), "test-key.pub")
 	privkey_path := path.Join(testkey_dir(), "test-key")
-	copyFile(pubkey_path, path.Join(testdir, testkey+"1.pub"))
-	copyFile(privkey_path, path.Join(testdir, testkey+"1"))
-	globalKeyManagement.Refresh()
+	assert.Nil(t, copyFile(pubkey_path, path.Join(testdir, testkey+"1.pub")))
+	assert.Nil(t, copyFile(privkey_path, path.Join(testdir, testkey+"1")))
+	assert.Nil(t, globalKeyManagement.Refresh())
 	assert.True(t, slices.Contains(globalKeyManagement.ListAllNames(), testkey+"1"))
 }

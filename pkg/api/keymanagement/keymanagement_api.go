@@ -61,7 +61,12 @@ func (handler *KeyManagementHandler) AddKey(context *gin.Context) {
 		SendErrorResponse(context, http.StatusBadRequest, "Failed to marshall json on server side", "POST /keymanagement")
 		return
 	}
-	handler.Manager.Insert(key.Public, key.Private, keyname)
+	if err := handler.Manager.Insert(key.Public, key.Private, keyname); err != nil {
+		log.Trace("Submit key failed to insert: ", err.Error())
+		SendErrorResponse(context, http.StatusBadRequest, "Failed to insert key on server side", "POST /keymanagement")
+		return
+
+	}
 	context.JSON(http.StatusOK, Empty{})
 }
 

@@ -35,7 +35,7 @@ func InitKeyManagement(underlying_dir string) (*KeyManagement, error) {
 func (management *KeyManagement) GetKeyPair(name string) (*KeyPair, error) {
 	keypair, ok := management.cached_keys[name]
 	if !ok {
-		return nil, fmt.Errorf("Could not find keypair for %s", name)
+		return nil, fmt.Errorf("could not find keypair for %s", name)
 	}
 	return &keypair, nil
 }
@@ -96,11 +96,11 @@ func (management *KeyManagement) Refresh() error {
 			log.Trace("Found public key named ", private_filename)
 			private, err := parsePrivateKey(path.Join(management.underlying_dir, private_filename))
 			if err != nil {
-				return fmt.Errorf("Private key parsing error: %s", err)
+				return fmt.Errorf("private key parsing error: %s", err)
 			}
 			public, err := parsePublicKey(path.Join(management.underlying_dir, filename))
 			if err != nil {
-				return fmt.Errorf("Public key parsing error: %s", err)
+				return fmt.Errorf("public key parsing error: %s", err)
 			}
 			management.cached_keys[private_filename] = KeyPair{Public: public, Private: private}
 		}
@@ -111,12 +111,12 @@ func (management *KeyManagement) Refresh() error {
 func (management *KeyManagement) Insert(public string, private string, name string) error {
 	for key := range management.cached_keys {
 		if key == name {
-			return fmt.Errorf("Inserting key with name %s: already present!", name)
+			return fmt.Errorf("inserting key with name %s: already present!", name)
 		}
 	}
 	public_filename := path.Clean(name)
 	if strings.HasPrefix(public_filename, "..") {
-		return fmt.Errorf("Cannot insert key in parent of Key Management directory")
+		return fmt.Errorf("cannot insert key in parent of Key Management directory")
 	}
 	public_filename = path.Join(management.underlying_dir, public_filename)
 	private_filename := public_filename + ".pub"
@@ -147,16 +147,20 @@ func (management *KeyManagement) Insert(public string, private string, name stri
 		return err
 	}
 	if n_read < len(public) {
-		return fmt.Errorf("Write error: did not write whole public key file")
+		return fmt.Errorf("write error: did not write whole public key file")
 	}
 	if _, err := private_file.WriteString(private); err != nil {
 		return err
 	}
 	if n_read < len(private) {
-		return fmt.Errorf("Write error: did not write whole private key file")
+		return fmt.Errorf("write error: did not write whole private key file")
 	}
-	public_file.Close()
-	private_file.Close()
+	if err := public_file.Close(); err != nil {
+		return err
+	}
+	if err := private_file.Close(); err != nil {
+		return err
+	}
 	return management.insertInternal(public, private, name)
 }
 
@@ -171,6 +175,9 @@ func (management *KeyManagement) insertInternal(public string, private string, n
 		private_key, err = ssh.ParsePrivateKey([]byte(private))
 	} else {
 		private_key, err = ssh.ParsePrivateKeyWithPassphrase([]byte(private), []byte(passphrase))
+	}
+	if err != nil {
+		return err
 	}
 	management.cached_keys[name] = KeyPair{Public: public_key, Private: private_key}
 	return nil
@@ -192,7 +199,6 @@ func moveFile(source string, dest string) error {
 	if err != nil {
 		return err
 	}
-	defer source_file.Close()
 	dest_file, err := os.OpenFile(dest, os.O_WRONLY, 0)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -204,19 +210,24 @@ func moveFile(source string, dest string) error {
 			return err
 		}
 	}
-	defer dest_file.Close()
 	if _, err := io.Copy(dest_file, source_file); err != nil {
+		return err
+	}
+	if err := source_file.Close(); err != nil {
+		return err
+	}
+	if err := dest_file.Close(); err != nil {
 		return err
 	}
 	return os.Remove(source)
 }
 func (management *KeyManagement) Revoke(keyname string) error {
 	if _, ok := management.cached_keys[keyname]; !ok {
-		return fmt.Errorf("Unknown key %s", keyname)
+		return fmt.Errorf("unknown key %s", keyname)
 	}
 	if _, err := os.ReadDir(path.Join(management.underlying_dir, revoked_directory)); err != nil {
 		if err := os.Mkdir(path.Join(management.underlying_dir, revoked_directory), 0777); err != nil {
-			return fmt.Errorf("Error while creating directory for revoked keys: %s", err)
+			return fmt.Errorf("error while creating directory for revoked keys: %s", err)
 		}
 	}
 	now := time.Now()
@@ -226,14 +237,14 @@ func (management *KeyManagement) Revoke(keyname string) error {
 	public_target := path.Join(management.underlying_dir, revoked_directory, keyname+".pub"+suffix)
 	log.Infof("Moving %s to %s", public_filename, public_target)
 	if err := moveFile(public_filename, public_target); err != nil {
-		return fmt.Errorf("Error while moving key: %s", err)
+		return fmt.Errorf("error while moving key: %s", err)
 	}
 
 	private_filename := path.Join(management.underlying_dir, keyname)
 	private_target := path.Join(management.underlying_dir, revoked_directory, keyname+suffix)
 	log.Infof("Moving %s to %s", private_filename, private_target)
 	if err := moveFile(private_filename, private_target); err != nil {
-		return fmt.Errorf("Error while moving key: %s", err)
+		return fmt.Errorf("error while moving key: %s", err)
 	}
 
 	delete(management.cached_keys, keyname)
