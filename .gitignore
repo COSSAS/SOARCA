@@ -12,6 +12,7 @@ bin/*
 api/*
 **.env
 test/cacao/flatfile-db-example.json
+pkg/core/capability/ssh/.ssh_test/
 
 
 docs/public

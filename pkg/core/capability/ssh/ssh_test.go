@@ -29,14 +29,14 @@ func TestAuthenticationValidationUserAuth(t *testing.T) {
 func TestAuthenticationValidationUserAuthMissingPassword(t *testing.T) {
 	auth := cacao.AuthenticationInformation{Type: "user-auth", Username: "root"}
 	result := CheckSshAuthenticationInfo(auth)
-	err := errors.New("password is empty")
+	err := errors.New("password is empty and KMS is not indicated")
 	assert.Equal(t, result, err)
 }
 
 func TestAuthenticationValidationUserAuthSpacesAsPassword(t *testing.T) {
 	auth := cacao.AuthenticationInformation{Type: "user-auth", Username: "root", Password: "   "}
 	result := CheckSshAuthenticationInfo(auth)
-	err := errors.New("password is empty")
+	err := errors.New("password is empty and KMS is not indicated")
 	assert.Equal(t, result, err)
 }
 
