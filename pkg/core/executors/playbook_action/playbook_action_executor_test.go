@@ -29,7 +29,7 @@ func TestExecutePlaybook(t *testing.T) {
 	controller := new(mock_decomposer_controller.Mock_Controller)
 	database := new(mock_database_controller.Mock_Controller)
 
-	executerObject := New(controller, database, mock_reporter, mock_time)
+	executorObject := New(controller, database, mock_reporter, mock_time)
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	playbookId := "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
 	stepId := "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
@@ -89,7 +89,7 @@ func TestExecutePlaybook(t *testing.T) {
 
 	mockDecomposer.On("Execute", playbook2).Return(&details, nil)
 
-	results, err := executerObject.Execute(metadata, step, cacao.NewVariables(addedVariables))
+	results, err := executorObject.Execute(metadata, step, cacao.NewVariables(addedVariables))
 
 	mockDecomposer.AssertExpectations(t)
 	mock_reporter.AssertExpectations(t)

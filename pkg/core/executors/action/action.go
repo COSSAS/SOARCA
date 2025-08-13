@@ -28,7 +28,7 @@ func New(capabilities map[string]capability.ICapability, reporter reporter.IStep
 	return &instance
 }
 
-type IExecuter interface {
+type IExecutor interface {
 	Execute(metadata execution.Metadata,
 		step executors.PlaybookStepMetadata) (cacao.Variables, error)
 }
