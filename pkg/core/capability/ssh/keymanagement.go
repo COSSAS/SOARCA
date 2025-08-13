@@ -96,11 +96,11 @@ func (management *KeyManagement) Refresh() error {
 			log.Trace("Found public key named ", private_filename)
 			private, err := parsePrivateKey(path.Join(management.underlying_dir, private_filename))
 			if err != nil {
-				return fmt.Errorf("private key parsing error: %s", err)
+				return fmt.Errorf("private key (%s) parsing error: %s", private_filename, err)
 			}
 			public, err := parsePublicKey(path.Join(management.underlying_dir, filename))
 			if err != nil {
-				return fmt.Errorf("public key parsing error: %s", err)
+				return fmt.Errorf("public key (%s) parsing error: %s", filename, err)
 			}
 			management.cached_keys[private_filename] = KeyPair{Public: public, Private: private}
 		}
@@ -114,12 +114,12 @@ func (management *KeyManagement) Insert(public string, private string, name stri
 			return fmt.Errorf("inserting key with name %s: already present!", name)
 		}
 	}
-	public_filename := path.Clean(name)
-	if strings.HasPrefix(public_filename, "..") {
+	private_filename := path.Clean(name)
+	if strings.HasPrefix(private_filename, "..") {
 		return fmt.Errorf("cannot insert key in parent of Key Management directory")
 	}
-	public_filename = path.Join(management.underlying_dir, public_filename)
-	private_filename := public_filename + ".pub"
+	private_filename = path.Join(management.underlying_dir, private_filename)
+	public_filename := private_filename + ".pub"
 	public_file, err := os.Open(public_filename)
 	if err != nil {
 		if os.IsNotExist(err) {
