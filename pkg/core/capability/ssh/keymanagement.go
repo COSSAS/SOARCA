@@ -2,6 +2,7 @@ package ssh
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"slices"
@@ -108,7 +109,7 @@ func (management *KeyManagement) Refresh() error {
 }
 
 func (management *KeyManagement) Insert(public string, private string, name string) error {
-	for key, _ := range management.cached_keys {
+	for key := range management.cached_keys {
 		if key == name {
 			return fmt.Errorf("Inserting key with name %s: already present!", name)
 		}
@@ -121,11 +122,25 @@ func (management *KeyManagement) Insert(public string, private string, name stri
 	private_filename := public_filename + ".pub"
 	public_file, err := os.Open(public_filename)
 	if err != nil {
-		return err
+		if os.IsNotExist(err) {
+			public_file, err = os.Create(public_filename)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
 	}
 	private_file, err := os.Open(private_filename)
 	if err != nil {
-		return err
+		if os.IsNotExist(err) {
+			private_file, err = os.Create(private_filename)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
 	}
 	n_read, err := public_file.WriteString(public)
 	if err != nil {
@@ -169,16 +184,58 @@ func (management *KeyManagement) ListAllNames() []string {
 	}
 	return keys
 }
+
+const revoked_directory string = ".revoked"
+
+func moveFile(source string, dest string) error {
+	source_file, err := os.Open(source)
+	if err != nil {
+		return err
+	}
+	defer source_file.Close()
+	dest_file, err := os.OpenFile(dest, os.O_WRONLY, 0)
+	if err != nil {
+		if os.IsNotExist(err) {
+			dest_file, err = os.Create(dest)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	defer dest_file.Close()
+	if _, err := io.Copy(dest_file, source_file); err != nil {
+		return err
+	}
+	return os.Remove(source)
+}
 func (management *KeyManagement) Revoke(keyname string) error {
 	if _, ok := management.cached_keys[keyname]; !ok {
 		return fmt.Errorf("Unknown key %s", keyname)
 	}
-	public_filename := path.Join(management.underlying_dir, keyname+".pub")
-	private_filename := path.Join(management.underlying_dir, keyname)
+	if _, err := os.ReadDir(path.Join(management.underlying_dir, revoked_directory)); err != nil {
+		if err := os.Mkdir(path.Join(management.underlying_dir, revoked_directory), 0777); err != nil {
+			return fmt.Errorf("Error while creating directory for revoked keys: %s", err)
+		}
+	}
 	now := time.Now()
 	suffix := fmt.Sprintf(".revoked_%d-%d_%d-%s-%d", now.Second(), now.Hour(), now.Day(), now.Month().String(), now.Year())
-	os.Rename(public_filename, public_filename+suffix)
-	os.Rename(private_filename, private_filename+suffix)
+
+	public_filename := path.Join(management.underlying_dir, keyname+".pub")
+	public_target := path.Join(management.underlying_dir, revoked_directory, keyname+".pub"+suffix)
+	log.Infof("Moving %s to %s", public_filename, public_target)
+	if err := moveFile(public_filename, public_target); err != nil {
+		return fmt.Errorf("Error while moving key: %s", err)
+	}
+
+	private_filename := path.Join(management.underlying_dir, keyname)
+	private_target := path.Join(management.underlying_dir, revoked_directory, keyname+suffix)
+	log.Infof("Moving %s to %s", private_filename, private_target)
+	if err := moveFile(private_filename, private_target); err != nil {
+		return fmt.Errorf("Error while moving key: %s", err)
+	}
+
 	delete(management.cached_keys, keyname)
 	return nil
 }
