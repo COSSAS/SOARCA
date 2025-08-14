@@ -9,9 +9,13 @@ GOLDFLAGS += -X main.Version=$(VERSION)
 GOLDFLAGS += -X main.Buildtime=$(BUILDTIME)
 GOFLAGS = -ldflags "$(GOLDFLAGS)"
 
+# This creates the swagger.json and swagger.yaml files in api/. \
+# These can be copied to docs/static/openapi to provide convenient api documentation
+# The same overview of the build can be viewed at /swagger/index.html, including for local build.
 swagger:
 	mkdir -p api
-	swag init -g main.go -o api -d cmd/soarca/,api
+	swag init -o api -d cmd/soarca/,pkg/models/api,pkg/models/cacao,pkg/models/manual,pkg/api -g main.go
+
 
 lint: swagger
 	
