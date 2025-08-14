@@ -16,6 +16,7 @@ swagger:
 	mkdir -p api
 	swag init -o api -d cmd/soarca/,pkg/models/api,pkg/models/cacao,pkg/models/manual,pkg/api -g main.go
 
+
 lint: swagger
 	
 	golangci-lint run --max-same-issues 0 --timeout 5m -v  
