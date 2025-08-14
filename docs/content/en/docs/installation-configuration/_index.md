@@ -67,3 +67,15 @@ More information on setting up authentication can be found [here](/docs/installa
 | COOKIE_SECRET_KEY      | `SOME_COOKIE_SECRET`                       | Optional: Secret key for cookies. Generate using `openssl rand -base64 32` or `head -c 32 /dev/urandom | base64`. |
 | OIDC_SKIP_TLS_VERIFY   | `true`                                     | Set whether to skip TLS verification. Default is `true`.                                    |
 | AUTH_GROUP             | `soarca_admin`                             | Specify the group users must belong to for authentication against SOARCA.                  |
+
+-----
+
+#### Key management system
+{{% alert title="Note" color="primary" %}}
+More information on the key management system can be found [here](/docs/soarca-extensions/key-management-system).
+{{% /alert %}}
+| Variable               | Content                                    | Description                                                                                 |
+|------------------------|---------------------------------------------|---------------------------------------------------------------------------------------------|
+| ENABLE_SSH_KMS         | `false`                                    | Enable the key management system for SSH|
+| SSH_KMS_DIR            | `deployments/docker/testing/ssh-kms-test/ssh-keystore/`| Set the folder where SSH keys for the key management system are stored|
+
