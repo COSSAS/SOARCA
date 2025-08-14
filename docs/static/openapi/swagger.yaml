@@ -30,6 +30,88 @@ definitions:
     - execution_id
     - payload
     type: object
+  api.InteractionCommandData:
+    properties:
+      command:
+        description: The command for the agent either command
+        type: string
+      commandb64:
+        description: Indicates if the command is in b64
+        type: boolean
+      description:
+        description: The description from the workflow step
+        type: string
+      execution_id:
+        description: The id of the execution
+        type: string
+      out_args:
+        allOf:
+        - $ref: '#/definitions/cacao.Variables'
+        description: Map of cacao variables handled in the step out args with current
+          values and definitions
+      playbook_id:
+        description: The id of the CACAO playbook executed by the execution
+        type: string
+      step_id:
+        description: The id of the step executed by the execution
+        type: string
+      target:
+        allOf:
+        - $ref: '#/definitions/cacao.AgentTarget'
+        description: Map of cacao agent-target with the target(s) of this command
+      type:
+        description: The type of this content
+        example: execution-status
+        type: string
+    required:
+    - command
+    - description
+    - execution_id
+    - out_args
+    - playbook_id
+    - step_id
+    - target
+    - type
+    type: object
+  api.KeyManagementKey:
+    properties:
+      private:
+        type: string
+      public:
+        type: string
+    type: object
+  api.ManualOutArgsUpdatePayload:
+    properties:
+      execution_id:
+        description: The id of the execution
+        type: string
+      playbook_id:
+        description: The id of the CACAO playbook executed by the execution
+        type: string
+      response_out_args:
+        allOf:
+        - $ref: '#/definitions/cacao.Variables'
+        description: Map of cacao variables storing the out args value, handled in
+          the step out args, with current values and definitions
+      response_status:
+        allOf:
+        - $ref: '#/definitions/manual.ManualResponseStatus'
+        description: Indicates status of command
+      step_id:
+        description: The id of the step executed by the execution
+        type: string
+      type:
+        description: The type of this content
+        example: string
+        type: string
+    required:
+    - execution_id
+    - playbook_id
+    - response_out_args
+    - response_status
+    - step_id
+    - type
+    type: object
   api.PlaybookExecutionReport:
     properties:
       description:
@@ -598,6 +680,8 @@ definitions:
       timeout:
         type: integer
       type:
+        description: The uuid of the step (not part of CACAO spec, but included in
+          object for utility)
         type: string
     required:
     - type
@@ -617,7 +701,8 @@ definitions:
         example: false
         type: boolean
       name:
-        description: The name of the variable in the style __variable_name__
+        description: The name of the variable in the style __variable_name__ (not
+          part of CACAO spec, but included in object for utility)
         example: __example_string__
         type: string
       type:
@@ -639,11 +724,185 @@ definitions:
     additionalProperties:
       $ref: '#/definitions/cacao.Step'
     type: object
+  manual.ManualResponseStatus:
+    enum:
+    - success
+    - failure
+    type: string
+    x-enum-varnames:
+    - ManualResponseSuccessStatus
+    - ManualResponseFailureStatus
 info:
   contact: {}
   title: SOARCA API
   version: 1.0.0
 paths:
+  /keymanagement/:
+    get:
+      description: return all keys in the KMS
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: gets all keys from the KMS
+      tags:
+      - keymanagement
+  /keymanagement/:keyname/:
+    delete:
+      description: revokes the key by moving it to .revoked and renaming it
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: json
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: remove key from KMS
+      tags:
+      - keymanagement
+    put:
+      description: adds a key to the KMS; load key into cache and write file
+      parameters:
+      - description: key
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/api.KeyManagementKey'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: json
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: add key to KMS
+      tags:
+      - keymanagement
+  /keymanagement/refresh/:
+    post:
+      description: refresh the KMS and re-parse the underlying directory
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: json
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: refresh the KMS system, which allows the user to include manually added
+        files in the KMS
+      tags:
+      - keymanagement
+  /manual/:
+    get:
+      consumes:
+      - application/json
+      description: get all pending manual commands that still needs values to be returned
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/api.InteractionCommandData'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            items:
+              $ref: '#/definitions/api.InteractionCommandData'
+            type: array
+      summary: get all pending manual commands that still needs values to be returned
+      tags:
+      - manual
+  /manual/{exec_id}/{step_id}:
+    get:
+      consumes:
+      - application/json
+      description: get a specific manual command that still needs a value to be returned
+      parameters:
+      - description: execution ID
+        in: path
+        name: exec_id
+        required: true
+        type: string
+      - description: step ID
+        in: path
+        name: step_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.InteractionCommandData'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: get a specific manual command that still needs a value to be returned
+      tags:
+      - manual
+  /manual/continue:
+    post:
+      consumes:
+      - application/json
+      description: updates the value of a variable according to the manual interaction
+      parameters:
+      - description: execution ID
+        in: path
+        name: exec_id
+        required: true
+        type: string
+      - description: step ID
+        in: path
+        name: step_id
+        required: true
+        type: string
+      - description: playbook
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/api.ManualOutArgsUpdatePayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Execution'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: updates the value of a variable according to the manual interaction
+      tags:
+      - manual
   /playbook/:
     get:
       description: return all stored playbooks default limit:100
