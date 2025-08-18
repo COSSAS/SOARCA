@@ -32,7 +32,7 @@ func TestCreate(t *testing.T) {
 	}
 
 	var workflow = decoder.DecodeValidate(byteValue)
-	mem := New()
+	mem := NewPlaybookDatabase()
 	playbook, err := mem.Create(&byteValue)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, playbook, workflow)
@@ -56,7 +56,7 @@ func TestRead(t *testing.T) {
 
 	var workflow = decoder.DecodeValidate(byteValue)
 
-	mem := New()
+	mem := NewPlaybookDatabase()
 	empty, err := mem.Read(workflow.ID)
 	assert.Equal(t, err, errors.New("playbook is not in repository"))
 	assert.Equal(t, empty, cacao.Playbook{})
@@ -87,7 +87,7 @@ func TestUpdate(t *testing.T) {
 
 	var workflow = decoder.DecodeValidate(byteValue)
 
-	mem := New()
+	mem := NewPlaybookDatabase()
 	empty, err := mem.Update(workflow.ID, nil)
 	assert.Equal(t, err, errors.New("playbook is not in repository"))
 	assert.Equal(t, empty, cacao.Playbook{})
@@ -129,7 +129,7 @@ func TestDelete(t *testing.T) {
 
 	var workflow = decoder.DecodeValidate(byteValue)
 
-	mem := New()
+	mem := NewPlaybookDatabase()
 	err = mem.Delete(workflow.ID)
 	assert.Equal(t, err, nil)
 
@@ -166,7 +166,7 @@ func TestGetAllPlaybooks(t *testing.T) {
 
 	var workflow = decoder.DecodeValidate(byteValue)
 
-	mem := New()
+	mem := NewPlaybookDatabase()
 
 	list := []string{
 		"playbook--f47d4081-21ed-4f21-9d05-6b368d73da30",
@@ -214,7 +214,7 @@ func TestGetAllPlaybookMetas(t *testing.T) {
 
 	var workflow = decoder.DecodeValidate(byteValue)
 
-	mem := New()
+	mem := NewPlaybookDatabase()
 
 	list := []string{
 		"playbook--f47d4081-21ed-4f21-9d05-6b368d73da30",

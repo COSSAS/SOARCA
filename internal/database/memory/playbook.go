@@ -7,15 +7,15 @@ import (
 	"soarca/pkg/models/decoder"
 )
 
-type InMemoryDatabase struct {
+type InMemoryPlaybookDatabase struct {
 	playbooks map[string]cacao.Playbook
 }
 
-func New() *InMemoryDatabase {
-	return &InMemoryDatabase{playbooks: make(map[string]cacao.Playbook)}
+func NewPlaybookDatabase() *InMemoryPlaybookDatabase {
+	return &InMemoryPlaybookDatabase{playbooks: make(map[string]cacao.Playbook)}
 }
 
-func (memory *InMemoryDatabase) GetPlaybooks() ([]cacao.Playbook, error) {
+func (memory *InMemoryPlaybookDatabase) GetPlaybooks() ([]cacao.Playbook, error) {
 	size := len(memory.playbooks)
 	playbookList := make([]cacao.Playbook, 0, size)
 	for _, playbook := range memory.playbooks {
@@ -25,7 +25,7 @@ func (memory *InMemoryDatabase) GetPlaybooks() ([]cacao.Playbook, error) {
 	return playbookList, nil
 }
 
-func (memory *InMemoryDatabase) GetPlaybookMetas() ([]api.PlaybookMeta, error) {
+func (memory *InMemoryPlaybookDatabase) GetPlaybookMetas() ([]api.PlaybookMeta, error) {
 	size := len(memory.playbooks)
 	playbookList := make([]api.PlaybookMeta, 0, size)
 	for _, playbook := range memory.playbooks {
@@ -40,7 +40,7 @@ func (memory *InMemoryDatabase) GetPlaybookMetas() ([]api.PlaybookMeta, error) {
 	return playbookList, nil
 }
 
-func (memory *InMemoryDatabase) Create(json *[]byte) (cacao.Playbook, error) {
+func (memory *InMemoryPlaybookDatabase) Create(json *[]byte) (cacao.Playbook, error) {
 
 	if json == nil {
 		return cacao.Playbook{}, errors.New("empty input")
@@ -57,7 +57,7 @@ func (memory *InMemoryDatabase) Create(json *[]byte) (cacao.Playbook, error) {
 	return memory.playbooks[result.ID], nil
 }
 
-func (memory *InMemoryDatabase) Read(id string) (cacao.Playbook, error) {
+func (memory *InMemoryPlaybookDatabase) Read(id string) (cacao.Playbook, error) {
 	playbook, ok := memory.playbooks[id]
 	if !ok {
 		return cacao.Playbook{}, errors.New("playbook is not in repository")
@@ -65,7 +65,7 @@ func (memory *InMemoryDatabase) Read(id string) (cacao.Playbook, error) {
 	return playbook, nil
 }
 
-func (memory *InMemoryDatabase) Update(id string, json *[]byte) (cacao.Playbook, error) {
+func (memory *InMemoryPlaybookDatabase) Update(id string, json *[]byte) (cacao.Playbook, error) {
 	playbook, err := memory.Read(id)
 	if err != nil {
 		return playbook, err
@@ -78,7 +78,7 @@ func (memory *InMemoryDatabase) Update(id string, json *[]byte) (cacao.Playbook,
 	return *updatePlaybook, nil
 }
 
-func (memory *InMemoryDatabase) Delete(id string) error {
+func (memory *InMemoryPlaybookDatabase) Delete(id string) error {
 	delete(memory.playbooks, id)
 	return nil
 }

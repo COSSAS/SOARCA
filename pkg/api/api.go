@@ -7,12 +7,12 @@ import (
 	"soarca/internal/controller/decomposer_controller"
 	"soarca/internal/controller/informer"
 	"soarca/internal/logger"
-	"soarca/pkg/api/keymanagement"
+	keymanagement_handler "soarca/pkg/api/keymanagement"
 	playbook_handler "soarca/pkg/api/playbook"
 	reporter_handler "soarca/pkg/api/reporter"
 	status_handler "soarca/pkg/api/status"
 	"soarca/pkg/core/capability/manual/interaction"
-	"soarca/pkg/core/capability/ssh"
+	"soarca/pkg/keymanagement"
 
 	manual_handler "soarca/pkg/api/manual"
 
@@ -55,9 +55,9 @@ func Manual(app *gin.Engine, interaction interaction.IInteractionStorage) {
 	manualHandler := manual_handler.NewManualHandler(interaction)
 	ManualRoutes(app, manualHandler)
 }
-func KeyManagement(app *gin.Engine, key_manager *ssh.KeyManagement) {
+func KeyManagement(app *gin.Engine, key_manager *keymanagement.KeyManagement) {
 	log.Trace("Setting up key management routes")
-	keyManagement := keymanagement.NewKeyManagementHandler(key_manager)
+	keyManagement := keymanagement_handler.NewKeyManagementHandler(key_manager)
 	KeyManagementRoutes(app, keyManagement)
 }
 
@@ -152,12 +152,12 @@ func ManualRoutes(route *gin.Engine, manualHandler *manual_handler.ManualHandler
 	}
 }
 
-func KeyManagementRoutes(route *gin.Engine, keyManagementHandler *keymanagement.KeyManagementHandler) {
+func KeyManagementRoutes(route *gin.Engine, keyManagementHandler *keymanagement_handler.KeyManagementHandler) {
 	keyManagementRoutes := route.Group("/keymanagement")
 	{
 		keyManagementRoutes.GET("/", keyManagementHandler.GetKeys)
 		keyManagementRoutes.PUT("/:keyname", keyManagementHandler.AddKey)
-		keyManagementRoutes.POST("/refresh/", keyManagementHandler.Refresh)
+		keyManagementRoutes.PATCH("/:keyname", keyManagementHandler.UpdateKey)
 		keyManagementRoutes.DELETE("/:keyname", keyManagementHandler.RevokeKey)
 	}
 }
