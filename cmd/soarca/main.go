@@ -45,7 +45,7 @@ func main() {
 
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Warning("Failed to read env variable, but will continue")
+		log.Warning("Failed to read env variable, but will continue. Error: ", err)
 	}
 	Host = "localhost:" + utils.GetEnv("PORT", "8080")
 	api.SwaggerInfo.Host = Host

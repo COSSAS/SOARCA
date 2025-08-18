@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"soarca/pkg/core/capability"
+	"soarca/pkg/keymanagement"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"strings"
@@ -21,6 +22,7 @@ const (
 )
 
 type SshCapability struct {
+	Keys *keymanagement.KeyManagement
 }
 
 var component = reflect.TypeOf(SshCapability{}).PkgPath()
@@ -38,30 +40,24 @@ func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
 	context capability.Context) (cacao.Variables, error) {
 
 	log.Trace(metadata.ExecutionId)
-	return execute(context.Command, context.Authentication, context.Target)
-}
 
-func execute(command cacao.Command,
-	authentication cacao.AuthenticationInformation,
-	target cacao.AgentTarget) (cacao.Variables, error) {
-
-	err := CheckSshAuthenticationInfo(authentication)
+	err := CheckSshAuthenticationInfo(context.Authentication)
 
 	if err != nil {
 		log.Error(err)
 		return cacao.NewVariables(), err
 	}
-	config, err := getConfig(authentication)
+	config, err := sshCapability.getConfig(context.Authentication)
 	if err != nil {
 		return cacao.NewVariables(), err
 	}
-	session, client, err := getSession(config, target)
+	session, client, err := getSession(config, context.Target)
 	if err != nil {
 		return cacao.NewVariables(), err
 	}
 	defer close(client)
 
-	return executeCommand(session, command)
+	return executeCommand(session, context.Command)
 }
 
 func executeCommand(session *ssh.Session,
@@ -70,7 +66,7 @@ func executeCommand(session *ssh.Session,
 	response, err := session.Output(StripSshPrepend(command.Command))
 
 	if err != nil {
-		log.Errorf("Output: %s", err)
+		log.Error("Output: ", err)
 		return cacao.NewVariables(), err
 	}
 	results := cacao.NewVariables(cacao.Variable{Type: cacao.VariableTypeString,
@@ -81,12 +77,12 @@ func executeCommand(session *ssh.Session,
 	if sessionErr != nil && sessionErr.Error() != "EOF" {
 		// The ssh api is subtle, and it can happen that we get EOF as an error.
 		// This is likely not an error, as the session can also be closed by the host.
-		log.Errorf("Close: %s", sessionErr)
+		log.Error("Close: ", sessionErr)
 	}
 	return results, err
 }
 
-func getConfig(authentication cacao.AuthenticationInformation) (ssh.ClientConfig, error) {
+func (sshCapability *SshCapability) getConfig(authentication cacao.AuthenticationInformation) (ssh.ClientConfig, error) {
 	config := ssh.ClientConfig{User: authentication.Username,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 		Timeout:         time.Duration(time.Second * 20)}
@@ -101,7 +97,7 @@ func getConfig(authentication cacao.AuthenticationInformation) (ssh.ClientConfig
 			if authentication.KmsKeyIdentifier == "" {
 				return config, fmt.Errorf("KMS indicated, but no kms_key_identifier given")
 			}
-			private_key, err := globalKeyManagement.GetPrivate(authentication.KmsKeyIdentifier)
+			private_key, err := sshCapability.Keys.GetPrivate(authentication.KmsKeyIdentifier)
 			if err != nil {
 				return config, err
 			}
@@ -131,13 +127,13 @@ func getSession(config ssh.ClientConfig, target cacao.AgentTarget) (*ssh.Session
 	host := CombinePortAndAddress(target.Address, target.Port)
 	client, err := ssh.Dial("tcp", host, &config)
 	if err != nil {
-		log.Errorf("Dialing: %s", err)
+		log.Error(err)
 		return nil, nil, err
 	}
 
 	session, err := client.NewSession()
 	if err != nil {
-		log.Errorf("Session: %s", err)
+		log.Error(err)
 		close(client)
 		return nil, nil, err
 	}
@@ -192,7 +188,7 @@ func close(client *ssh.Client) {
 	if client != nil {
 		err := client.Close()
 		if err != nil {
-			log.Errorf("Closing: %s", err)
+			log.Error(err)
 		}
 	}
 }

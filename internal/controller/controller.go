@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	keymanagementrepository "soarca/internal/database/keymanagement"
 	"soarca/internal/database/memory"
 	"soarca/internal/logger"
 
@@ -20,6 +21,7 @@ import (
 	"soarca/pkg/core/executors/action"
 	"soarca/pkg/core/executors/condition"
 	"soarca/pkg/core/executors/playbook_action"
+	"soarca/pkg/keymanagement"
 	"soarca/pkg/reporting/cases"
 	"soarca/pkg/reporting/reporter"
 	"soarca/pkg/utils"
@@ -60,8 +62,10 @@ func init() {
 }
 
 type Controller struct {
-	finController finChannelController.IFinController
-	playbookRepo  playbookrepository.IPlaybookRepository
+	finController     finChannelController.IFinController
+	playbookRepo      playbookrepository.IPlaybookRepository
+	keyManagementRepo keymanagementrepository.IKeyManagementRepository
+	keyManagement     *keymanagement.KeyManagement
 }
 
 var mainController = Controller{}
@@ -74,7 +78,7 @@ const defaultCacheSize int = 10
 var mainInteraction = interaction.New(registerManualIntegration())
 
 func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
-	ssh := new(ssh.SshCapability)
+	ssh := &ssh.SshCapability{Keys: controller.keyManagement}
 	capabilities := map[string]capability.ICapability{ssh.GetType(): ssh}
 
 	skip, _ := strconv.ParseBool(utils.GetEnv("HTTP_SKIP_CERT_VALIDATION", "false"))
@@ -141,6 +145,7 @@ func (controller *Controller) setupDatabase() error {
 	initMongoDatabase, _ := strconv.ParseBool(utils.GetEnv("DATABASE", "false"))
 
 	if initMongoDatabase {
+		log.Info("Setting up mongo database")
 
 		mongo.LoadComponent()
 
@@ -158,11 +163,19 @@ func (controller *Controller) setupDatabase() error {
 			return err
 		}
 		controller.playbookRepo = playbookrepository.SetupPlaybookRepository(mongo.GetCacaoRepo(), mongo.DefaultLimitOpts())
+		controller.keyManagementRepo = keymanagementrepository.SetupKeyManagementRepository(mongo.GetKeyManagementRepo(), mongo.DefaultLimitOpts())
 	} else {
 		// Use in memory database
-		controller.playbookRepo = memory.New()
+		log.Info("Setting up in-memory database")
+		controller.playbookRepo = memory.NewPlaybookDatabase()
+		controller.keyManagementRepo = memory.NewKeyManagementDatabase()
 	}
 
+	return nil
+}
+
+func (controller *Controller) setupKeyManagement() error {
+	controller.keyManagement = keymanagement.InitKeyManagement(controller.keyManagementRepo)
 	return nil
 }
 
@@ -249,6 +262,12 @@ func initializeCore(app *gin.Engine) error {
 		return err
 	}
 
+	err = mainController.setupKeyManagement()
+	if err != nil {
+		log.Error("Failed to setup key management:", err)
+		return err
+	}
+
 	err = routes.Api(app, &mainController, &mainController)
 	if err != nil {
 		log.Error(err)
@@ -269,16 +288,7 @@ func initializeCore(app *gin.Engine) error {
 		return err
 	}
 
-	if utils.GetEnv("ENABLE_SSH_KMS", "false") == "true" {
-		kms_dir := utils.GetEnv("SSH_KMS_DIR", ".ssh/")
-		log.Trace("Setting up key management in directory ", kms_dir)
-		key_manager, err := ssh.InitKeyManagement(kms_dir)
-		if err != nil {
-			log.Error("Failed to set up key management: ", err)
-			return err
-		}
-		routes.KeyManagement(app, key_manager)
-	}
+	routes.KeyManagement(app, mainController.keyManagement)
 
 	// Manual capability native routes
 	routes.Manual(app, mainInteraction)
