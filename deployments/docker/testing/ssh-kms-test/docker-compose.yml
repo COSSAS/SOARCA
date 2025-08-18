@@ -1,17 +1,7 @@
-services:
-  openssh-server:
-    image: lscr.io/linuxserver/openssh-server:latest
-    container_name: openssh-server
-    hostname: openssh-server 
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
-      - USER_NAME=linuxserver.io 
-      - LOG_STDOUT= ssh.log
-    volumes:
-      - ./config:/config
+ services:  
+  ssh_server:
+    container_name: ssh_server
+    build:
+      dockerfile: Dockerfile
     ports:
-      - 2222:2222
-    restart: unless-stopped
-
+      - 2223:22
