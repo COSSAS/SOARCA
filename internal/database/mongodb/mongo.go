@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"time"
 
+	keymanagementrepository "soarca/internal/database/keymanagement"
 	"soarca/internal/database/projections"
 	cacao "soarca/pkg/models/cacao"
 
@@ -18,11 +19,12 @@ const writeErrorDuplicationCode = 11000
 
 var (
 	cacaoPlayBookRepo *mongoCollection[cacao.Playbook]
+	keyManagementRepo *mongoCollection[keymanagementrepository.KeyPairEntry]
 	mongoclient       *mongo.Client
 )
 
 type dbtypes interface {
-	cacao.Playbook // | for other supported types
+	cacao.Playbook | keymanagementrepository.KeyPairEntry // | for other supported types
 }
 
 type mongoCollection[T dbtypes] struct {
@@ -57,6 +59,9 @@ func (mongoOpts mongoFindOptions) GetProjectionByType(interface{}) interface{} {
 func GetCacaoRepo() *mongoCollection[cacao.Playbook] {
 	return cacaoPlayBookRepo
 }
+func GetKeyManagementRepo() *mongoCollection[keymanagementrepository.KeyPairEntry] {
+	return keyManagementRepo
+}
 
 // func GetMongoClient() *mongodbClient {
 // 	return mongoclient
@@ -77,6 +82,7 @@ func SetupMongodb(uri string, username string, password string) error {
 	}
 
 	cacaoPlayBookRepo, err = NewMongoCollection[cacao.Playbook](mongoclient, "soarca", "cacoa_playbook_collection")
+	keyManagementRepo, err = NewMongoCollection[keymanagementrepository.KeyPairEntry](mongoclient, "keymanagement", "keymanagement_collection")
 	return err
 }
 
@@ -220,7 +226,7 @@ func NewMongoCollection[T dbtypes](mongo *mongo.Client, dbName string, colName s
 }
 
 func InitMongoClient(mongo_uri string, username string, password string) error {
-	log.Trace("Trying to setup new MongoClient")
+	log.Trace("Trying to setup new MongoClient at uri ", mongo_uri)
 	var err error
 	if mongo_uri == "" {
 		log.Error("mongo uri not valid, because empty")
@@ -232,6 +238,7 @@ func InitMongoClient(mongo_uri string, username string, password string) error {
 		return errors.New("username or password not correctly set")
 	}
 
+	log.Trace("Logging in to mongo with username ", username, " and password ", password)
 	clientOpts := options.Client().ApplyURI(mongo_uri).SetAuth(options.Credential{
 		Username: username,
 		Password: password,
