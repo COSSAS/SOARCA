@@ -2,14 +2,13 @@ package keymanagement_api
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"reflect"
 	"soarca/internal/logger"
+	apiError "soarca/pkg/api/error"
 	"soarca/pkg/keymanagement"
 	"soarca/pkg/models/api"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -63,19 +62,19 @@ func (handler *KeyManagementHandler) AddKey(context *gin.Context) {
 	keyname := context.Param("keyname")
 	jsonData, err := io.ReadAll(context.Request.Body)
 	if err != nil {
-		log.Trace("Submit key has failed: ", err.Error())
-		SendErrorResponse(context, http.StatusBadRequest, "Failed to read json on server side", "PUT /keymanagement/:keyname")
+		log.Error("Submit key has failed: ", err.Error())
+		apiError.SendErrorResponse(context, http.StatusBadRequest, "Failed to read json on server side", "PUT /keymanagement/:keyname", "")
 		return
 	}
 	var key api.KeyManagementKey
 	if err := json.Unmarshal(jsonData, &key); err != nil {
-		log.Trace("Submit key failed to unmarshal: ", err.Error())
-		SendErrorResponse(context, http.StatusBadRequest, "Failed to marshall json on server side", "PUT /keymanagement/:keyname")
+		log.Error("Submit key failed to unmarshal: ", err.Error())
+		apiError.SendErrorResponse(context, http.StatusBadRequest, "Failed to marshall json on server side", "PUT /keymanagement/:keyname", "")
 		return
 	}
 	if err := handler.Manager.Insert(key.Public, key.Private, key.Passphrase, keyname); err != nil {
-		log.Trace("Submit key failed to insert: ", err.Error())
-		SendErrorResponse(context, http.StatusBadRequest, "Failed to insert key on server side", "PUT /keymanagement/:keyname")
+		log.Error("Submit key failed to insert: ", err.Error())
+		apiError.SendErrorResponse(context, http.StatusBadRequest, "Failed to insert key on server side", "PUT /keymanagement/:keyname", "")
 		return
 
 	}
@@ -98,19 +97,19 @@ func (handler *KeyManagementHandler) UpdateKey(context *gin.Context) {
 	keyname := context.Param("keyname")
 	jsonData, err := io.ReadAll(context.Request.Body)
 	if err != nil {
-		log.Trace("Update key has failed: ", err.Error())
-		SendErrorResponse(context, http.StatusBadRequest, "Failed to read json on server side", "PATCH /keymanagement/:keyname")
+		log.Error("Update key has failed: ", err.Error())
+		apiError.SendErrorResponse(context, http.StatusBadRequest, "Failed to read json on server side", "PATCH /keymanagement/:keyname", "")
 		return
 	}
 	var key api.KeyManagementKey
 	if err := json.Unmarshal(jsonData, &key); err != nil {
-		log.Trace("Update key failed to unmarshal: ", err.Error())
-		SendErrorResponse(context, http.StatusBadRequest, "Failed to marshall json on server side", "PATCH /keymanagement/:keyname")
+		log.Error("Update key failed to unmarshal: ", err.Error())
+		apiError.SendErrorResponse(context, http.StatusBadRequest, "Failed to marshall json on server side", "PATCH /keymanagement/:keyname", "")
 		return
 	}
 	if err := handler.Manager.Update(key.Public, key.Private, key.Passphrase, keyname); err != nil {
-		log.Trace("Update key failed to insert: ", err.Error())
-		SendErrorResponse(context, http.StatusBadRequest, "Failed to update key on server side", "PATCH /keymanagement/:keyname")
+		log.Error("Update key failed to insert: ", err.Error())
+		apiError.SendErrorResponse(context, http.StatusBadRequest, "Failed to update key on server side", "PATCH /keymanagement/:keyname", "")
 		return
 
 	}
@@ -131,18 +130,6 @@ func (handler *KeyManagementHandler) UpdateKey(context *gin.Context) {
 func (handler *KeyManagementHandler) RevokeKey(context *gin.Context) {
 	keyname := context.Param("keyname")
 	handler.Manager.Revoke(keyname)
-	context.JSON(http.StatusOK, gin.H{
-		"status":  200,
-		"message": fmt.Sprintf("Removed key %s from SOARCA listing", keyname),
-	})
+	context.JSON(http.StatusOK, Empty{})
 	log.Trace("Removed key ", keyname)
-}
-
-func SendErrorResponse(context *gin.Context, status int, message string, orginal_call string) {
-	msg := gin.H{
-		"status":        strconv.Itoa(status),
-		"message":       message,
-		"original-call": orginal_call,
-	}
-	context.JSON(status, msg)
 }
