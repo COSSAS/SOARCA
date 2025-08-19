@@ -108,7 +108,7 @@ func (sshCapability *SshCapability) getConfig(authentication cacao.Authenticatio
 			config.Auth = []ssh.AuthMethod{
 				ssh.Password(authentication.Password)}
 		} else {
-			return config, fmt.Errorf("No authentication method given in user-auth")
+			return config, fmt.Errorf("no authentication method given in user-auth")
 		}
 		return config, nil
 
