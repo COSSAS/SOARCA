@@ -74,10 +74,14 @@ func executeCommand(session *ssh.Session,
 		Value: string(response)})
 	log.Trace("Finished ssh execution will return the variables: ", results)
 	sessionErr := session.Close()
-	if sessionErr != nil && sessionErr.Error() != "EOF" {
-		// The ssh api is subtle, and it can happen that we get EOF as an error.
-		// This is likely not an error, as the session can also be closed by the host.
-		log.Error("Close: ", sessionErr)
+	if sessionErr != nil {
+		if sessionErr.Error() != "EOF" {
+			// The ssh api is subtle, and it can happen that we get EOF as an error.
+			// This is likely not an error, as the session can also be closed by the host.
+			log.Debug("SSH session close got EOF")
+		} else {
+			log.Error("Close: ", sessionErr)
+		}
 	}
 	return results, err
 }
@@ -89,10 +93,6 @@ func (sshCapability *SshCapability) getConfig(authentication cacao.Authenticatio
 
 	switch authentication.Type {
 	case "user-auth":
-		if authentication.Password != "" {
-			config.Auth = []ssh.AuthMethod{
-				ssh.Password(authentication.Password)}
-		}
 		if authentication.Kms {
 			if authentication.KmsKeyIdentifier == "" {
 				return config, fmt.Errorf("KMS indicated, but no kms_key_identifier given")
@@ -104,6 +104,11 @@ func (sshCapability *SshCapability) getConfig(authentication cacao.Authenticatio
 			config.Auth = []ssh.AuthMethod{
 				ssh.PublicKeys(private_key),
 			}
+		} else if authentication.Password != "" {
+			config.Auth = []ssh.AuthMethod{
+				ssh.Password(authentication.Password)}
+		} else {
+			return config, fmt.Errorf("No authentication method given in user-auth")
 		}
 		return config, nil
 
