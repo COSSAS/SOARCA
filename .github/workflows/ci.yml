@@ -66,8 +66,8 @@ jobs:
       - name: Start docker container for kms test
         run: |
           docker compose -f "deployments/docker/testing/ssh-kms-test/docker-compose.yml" up -d --build
-          docker compose -f "deployments/docker/testing/ssh-kms-test/docker-compose.yml" cp ssh_server:/test deployments/docker/testing/ssh-kms-test
-          docker compose -f "deployments/docker/testing/ssh-kms-test/docker-compose.yml" cp ssh_server:/test.pub deployments/docker/testing/ssh-kms-test
+          docker compose -f "deployments/docker/testing/ssh-kms-test/docker-compose.yml" cp ssh_kms_server:/test deployments/docker/testing/ssh-kms-test
+          docker compose -f "deployments/docker/testing/ssh-kms-test/docker-compose.yml" cp ssh_kms_server:/test.pub deployments/docker/testing/ssh-kms-test
       - name: Run tests
         run: |
           make ci-test
