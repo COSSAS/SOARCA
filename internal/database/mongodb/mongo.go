@@ -82,8 +82,16 @@ func SetupMongodb(uri string, username string, password string) error {
 	}
 
 	cacaoPlayBookRepo, err = NewMongoCollection[cacao.Playbook](mongoclient, "soarca", "cacoa_playbook_collection")
+	if err != nil {
+		log.Error("failed to setup playbook MongoCollection, error msg: ", err.Error())
+		return err
+	}
 	keyManagementRepo, err = NewMongoCollection[keymanagementrepository.KeyPairEntry](mongoclient, "keymanagement", "keymanagement_collection")
-	return err
+	if err != nil {
+		log.Error("failed to setup kms MongoCollection, error msg: ", err.Error())
+		return err
+	}
+	return nil
 }
 
 // helper function to poperly obtain whether object is already in the database store

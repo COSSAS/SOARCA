@@ -2,7 +2,6 @@ package keymanagement
 
 import (
 	"fmt"
-	"os"
 	"reflect"
 	keymanagementrepository "soarca/internal/database/keymanagement"
 	"soarca/internal/logger"
@@ -28,6 +27,7 @@ func InitKeyManagement(database keymanagementrepository.IKeyManagementRepository
 }
 
 func (management *KeyManagement) GetKeyPair(name string) (*keys.KeyPair, error) {
+	log.Trace("Getting keypair named", name)
 	keypair, ok := management.cached_keys[name]
 	if !ok {
 		keypair, err := management.database.Read(name)
@@ -61,6 +61,7 @@ func (management *KeyManagement) Update(public string, private string, passphras
 }
 
 func (management *KeyManagement) insertInternal(public string, private string, passphrase string, name string) error {
+	log.Trace("Inserting keypair named", name)
 	public_key, _, _, _, err := ssh.ParseAuthorizedKey([]byte(public))
 	if err != nil {
 		return fmt.Errorf("parsing public key: %s", err)
@@ -76,11 +77,11 @@ func (management *KeyManagement) insertInternal(public string, private string, p
 	}
 	keypair := keys.KeyPair{Public: public_key, Private: private_key}
 	management.cached_keys[name] = keypair
-	management.database.Create(name, keypair)
-	return nil
+	return management.database.Create(name, keypair)
 }
 
 func (management *KeyManagement) ListAllNames() []string {
+	log.Trace("Listing all keys")
 	keys := make([]string, len(management.cached_keys))
 	index := 0
 	for key := range management.cached_keys {
@@ -90,7 +91,9 @@ func (management *KeyManagement) ListAllNames() []string {
 	return keys
 }
 
-func (management *KeyManagement) Revoke(keyname string) {
-	management.database.Delete(keyname)
+func (management *KeyManagement) Revoke(keyname string) error {
+	log.Trace("Deleting keypair named", keyname)
+	err := management.database.Delete(keyname)
 	delete(management.cached_keys, keyname)
+	return err
 }
