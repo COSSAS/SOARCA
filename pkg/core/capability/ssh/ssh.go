@@ -2,8 +2,10 @@ package ssh
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"soarca/pkg/core/capability"
+	"soarca/pkg/keymanagement"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"strings"
@@ -20,6 +22,7 @@ const (
 )
 
 type SshCapability struct {
+	Keys *keymanagement.KeyManagement
 }
 
 var component = reflect.TypeOf(SshCapability{}).PkgPath()
@@ -37,30 +40,24 @@ func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
 	context capability.Context) (cacao.Variables, error) {
 
 	log.Trace(metadata.ExecutionId)
-	return execute(context.Command, context.Authentication, context.Target)
-}
 
-func execute(command cacao.Command,
-	authentication cacao.AuthenticationInformation,
-	target cacao.AgentTarget) (cacao.Variables, error) {
-
-	err := CheckSshAuthenticationInfo(authentication)
+	err := CheckSshAuthenticationInfo(context.Authentication)
 
 	if err != nil {
 		log.Error(err)
 		return cacao.NewVariables(), err
 	}
-	config, err := getConfig(authentication)
+	config, err := sshCapability.getConfig(context.Authentication)
 	if err != nil {
 		return cacao.NewVariables(), err
 	}
-	session, client, err := getSession(config, target)
+	session, client, err := getSession(config, context.Target)
 	if err != nil {
 		return cacao.NewVariables(), err
 	}
 	defer close(client)
 
-	return executeCommand(session, command)
+	return executeCommand(session, context.Command)
 }
 
 func executeCommand(session *ssh.Session,
@@ -69,7 +66,7 @@ func executeCommand(session *ssh.Session,
 	response, err := session.Output(StripSshPrepend(command.Command))
 
 	if err != nil {
-		log.Error(err)
+		log.Error("Output: ", err)
 		return cacao.NewVariables(), err
 	}
 	results := cacao.NewVariables(cacao.Variable{Type: cacao.VariableTypeString,
@@ -78,21 +75,41 @@ func executeCommand(session *ssh.Session,
 	log.Trace("Finished ssh execution will return the variables: ", results)
 	sessionErr := session.Close()
 	if sessionErr != nil {
-		log.Error(sessionErr)
+		if sessionErr.Error() != "EOF" {
+			// The ssh api is subtle, and it can happen that we get EOF as an error.
+			// This is likely not an error, as the session can also be closed by the host.
+			log.Debug("SSH session close got EOF")
+		} else {
+			log.Error("Close: ", sessionErr)
+		}
 	}
-
 	return results, err
 }
 
-func getConfig(authentication cacao.AuthenticationInformation) (ssh.ClientConfig, error) {
+func (sshCapability *SshCapability) getConfig(authentication cacao.AuthenticationInformation) (ssh.ClientConfig, error) {
 	config := ssh.ClientConfig{User: authentication.Username,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 		Timeout:         time.Duration(time.Second * 20)}
 
 	switch authentication.Type {
 	case "user-auth":
-		config.Auth = []ssh.AuthMethod{
-			ssh.Password(authentication.Password)}
+		if authentication.Kms {
+			if authentication.KmsKeyIdentifier == "" {
+				return config, fmt.Errorf("KMS indicated, but no kms_key_identifier given")
+			}
+			private_key, err := sshCapability.Keys.GetPrivate(authentication.KmsKeyIdentifier)
+			if err != nil {
+				return config, err
+			}
+			config.Auth = []ssh.AuthMethod{
+				ssh.PublicKeys(private_key),
+			}
+		} else if authentication.Password != "" {
+			config.Auth = []ssh.AuthMethod{
+				ssh.Password(authentication.Password)}
+		} else {
+			return config, fmt.Errorf("no authentication method given in user-auth")
+		}
 		return config, nil
 
 	case "private-key":
@@ -156,8 +173,11 @@ func CheckSshAuthenticationInfo(authentication cacao.AuthenticationInformation) 
 
 	switch authentication.Type {
 	case "user-auth":
-		if strings.TrimSpace(authentication.Password) == "" {
-			return errors.New("password is empty")
+		if strings.TrimSpace(authentication.Password) == "" && !authentication.Kms {
+			return errors.New("password is empty and KMS is not indicated")
+		}
+		if authentication.Kms && strings.TrimSpace(authentication.KmsKeyIdentifier) == "" {
+			return errors.New("KMS is indicated but no identifier is given")
 		}
 	case "private-key":
 		if strings.TrimSpace(authentication.PrivateKey) == "" {
