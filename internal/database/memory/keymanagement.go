@@ -27,7 +27,7 @@ func (database *InMemoryKeyManagementDatabase) Create(name string, keypair keyma
 func (database *InMemoryKeyManagementDatabase) Read(id string) (keymanagement.KeyPair, error) {
 	keypair, ok := database.keys[id]
 	if !ok {
-		return keymanagement.KeyPair{}, fmt.Errorf("Could not find key named %s", id)
+		return keymanagement.KeyPair{}, fmt.Errorf("could not find key named %s", id)
 	}
 	return keypair, nil
 }
