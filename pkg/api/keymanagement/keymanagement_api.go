@@ -111,7 +111,6 @@ func (handler *KeyManagementHandler) UpdateKey(context *gin.Context) {
 		log.Error("Update key failed to insert: ", err.Error())
 		apiError.SendErrorResponse(context, http.StatusBadRequest, "Failed to update key on server side", "PATCH /keymanagement/:keyname", "")
 		return
-
 	}
 	log.Trace("Updated key ", keyname)
 	context.JSON(http.StatusOK, Empty{})
@@ -129,7 +128,11 @@ func (handler *KeyManagementHandler) UpdateKey(context *gin.Context) {
 //	@Router			/keymanagement/:keyname/ [DELETE]
 func (handler *KeyManagementHandler) RevokeKey(context *gin.Context) {
 	keyname := context.Param("keyname")
-	handler.Manager.Revoke(keyname)
+	if err := handler.Manager.Revoke(keyname); err != nil {
+		log.Error("Failed to remove key:", err.Error())
+		apiError.SendErrorResponse(context, http.StatusBadRequest, "Failed to delete key on server side", "DELETE /keymanagement/:keyname", "")
+		return
+	}
 	context.JSON(http.StatusOK, Empty{})
 	log.Trace("Removed key ", keyname)
 }

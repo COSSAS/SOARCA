@@ -25,7 +25,7 @@ func init() {
 func TestRevoke(t *testing.T) {
 	addKey(t, testkey)
 	assert.True(t, slices.Contains(globalKeyManagement.ListAllNames(), testkey))
-	globalKeyManagement.Revoke(testkey)
+	assert.Nil(t, globalKeyManagement.Revoke(testkey))
 	assert.False(t, slices.Contains(globalKeyManagement.ListAllNames(), testkey))
 }
 func addKey(t *testing.T, keyname string) {
