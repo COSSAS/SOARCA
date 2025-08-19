@@ -42,7 +42,12 @@ func NewKeyManagementHandler(manager *keymanagement.KeyManagement) *KeyManagemen
 //	@failure		400	{object}	api.Error
 //	@Router			/keymanagement/ [GET]
 func (handler *KeyManagementHandler) GetKeys(context *gin.Context) {
-	keyInfo := handler.Manager.ListAllNames()
+	keyInfo, err := handler.Manager.ListAllNames()
+	if err != nil {
+		log.Error("Listing keys has failed: ", err.Error())
+		apiError.SendErrorResponse(context, http.StatusBadRequest, "Failed to read keys on server side", "GET /keymanagement/", "")
+		return
+	}
 	log.Trace("Listing all key names")
 	context.JSON(http.StatusOK, keyInfo)
 }

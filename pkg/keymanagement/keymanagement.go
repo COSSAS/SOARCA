@@ -18,23 +18,18 @@ func init() {
 }
 
 type KeyManagement struct {
-	database    keymanagementrepository.IKeyManagementRepository
-	cached_keys map[string]keys.KeyPair
+	database keymanagementrepository.IKeyManagementRepository
 }
 
 func InitKeyManagement(database keymanagementrepository.IKeyManagementRepository) *KeyManagement {
-	return &KeyManagement{database: database, cached_keys: make(map[string]keys.KeyPair)}
+	return &KeyManagement{database: database}
 }
 
 func (management *KeyManagement) GetKeyPair(name string) (*keys.KeyPair, error) {
 	log.Trace("Getting keypair named", name)
-	keypair, ok := management.cached_keys[name]
-	if !ok {
-		keypair, err := management.database.Read(name)
-		if err != nil {
-			return nil, err
-		}
-		return &keypair, nil
+	keypair, err := management.database.Read(name)
+	if err != nil {
+		return nil, err
 	}
 	return &keypair, nil
 }
@@ -76,24 +71,15 @@ func (management *KeyManagement) insertInternal(public string, private string, p
 		return fmt.Errorf("parsing private key: %s", err)
 	}
 	keypair := keys.KeyPair{Public: public_key, Private: private_key}
-	management.cached_keys[name] = keypair
 	return management.database.Create(name, keypair)
 }
 
-func (management *KeyManagement) ListAllNames() []string {
+func (management *KeyManagement) ListAllNames() ([]string, error) {
 	log.Trace("Listing all keys")
-	keys := make([]string, len(management.cached_keys))
-	index := 0
-	for key := range management.cached_keys {
-		keys[index] = key
-		index++
-	}
-	return keys
+	return management.database.GetKeyNames()
 }
 
 func (management *KeyManagement) Revoke(keyname string) error {
 	log.Trace("Deleting keypair named", keyname)
-	err := management.database.Delete(keyname)
-	delete(management.cached_keys, keyname)
-	return err
+	return management.database.Delete(keyname)
 }
