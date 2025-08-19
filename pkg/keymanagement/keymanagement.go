@@ -45,43 +45,17 @@ func (management *KeyManagement) GetPrivate(name string) (ssh.Signer, error) {
 	}
 	return keypair.Private, nil
 }
-func parsePrivateKey(filename string, passphrase string) (ssh.Signer, error) {
-	log.Tracef("Opening private key from path %s", filename)
-	file_buffer, err := os.ReadFile(filename)
-	if err != nil {
-		return nil, err
-	}
-	if passphrase == "" {
-		return ssh.ParsePrivateKey(file_buffer)
-	} else {
-		return ssh.ParsePrivateKeyWithPassphrase(file_buffer, []byte(passphrase))
-	}
-}
-func parsePublicKey(filename string) (ssh.PublicKey, error) {
-	log.Tracef("Opening public key from path %s", filename)
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	file_buffer := make([]byte, 2048)
-	if _, err = file.Read(file_buffer); err != nil {
-		return nil, err
-	}
-	key, _, _, _, err := ssh.ParseAuthorizedKey(file_buffer)
-	return key, err
-
-}
 
 func (management *KeyManagement) Insert(public string, private string, passphrase string, name string) error {
 	if _, err := management.GetKeyPair(name); err == nil {
-		return fmt.Errorf("Key with name already exists: %s (error: %s)", name, err)
+		return fmt.Errorf("key with name already exists: %s (error: %s)", name, err)
 	}
 	return management.insertInternal(public, private, passphrase, name)
 }
 
 func (management *KeyManagement) Update(public string, private string, passphrase string, name string) error {
 	if _, err := management.GetKeyPair(name); err != nil {
-		return fmt.Errorf("No such key exists: %s (error: %s)", name, err)
+		return fmt.Errorf("no such key exists: %s (error: %s)", name, err)
 	}
 	return management.insertInternal(public, private, passphrase, name)
 }
