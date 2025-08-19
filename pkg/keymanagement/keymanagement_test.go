@@ -24,9 +24,9 @@ func init() {
 
 func TestRevoke(t *testing.T) {
 	addKey(t, testkey)
-	assert.True(t, slices.Contains(globalKeyManagement.ListAllNames(), testkey))
+	assert.True(t, slices.Contains(allNames(t), testkey))
 	assert.Nil(t, globalKeyManagement.Revoke(testkey))
-	assert.False(t, slices.Contains(globalKeyManagement.ListAllNames(), testkey))
+	assert.False(t, slices.Contains(allNames(t), testkey))
 }
 func addKey(t *testing.T, keyname string) {
 	pubkey_path := path.Join(testkey_dir(), "test-key.pub")
@@ -47,7 +47,13 @@ func addKey(t *testing.T, keyname string) {
 	assert.Nil(t, pubkey_file.Close())
 }
 
+func allNames(t *testing.T) []string {
+	allnames, err := globalKeyManagement.ListAllNames()
+	assert.Nil(t, err)
+	return allnames
+}
+
 func TestAddKey(t *testing.T) {
 	addKey(t, testkey)
-	assert.True(t, slices.Equal(globalKeyManagement.ListAllNames(), []string{testkey}))
+	assert.True(t, slices.Equal(allNames(t), []string{testkey}))
 }
