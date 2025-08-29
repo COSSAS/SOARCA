@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"soarca/pkg/models/validator"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -11,8 +12,6 @@ import (
 
 func Test_read_format(t *testing.T) {
 	assert.Equal(t, read_format("bpmn"), FormatBpmn)
-	assert.Equal(t, read_format("splunk"), FormatSplunk)
-	assert.Equal(t, read_format("misp"), FormatMisp)
 	assert.Equal(t, read_format(""), FormatUnknown)
 	assert.Equal(t, read_format("cacao"), FormatUnknown)
 	assert.Equal(t, read_format("bpnm"), FormatUnknown)
@@ -32,8 +31,8 @@ func Test_bpmn_format(t *testing.T) {
 	err = validator.IsValidCacaoJson(converted_json)
 	assert.Equal(t, err, nil)
 	assert.NotEqual(t, converted, nil)
-	assert.MatchRegex(t, converted.WorkflowStart, "start--.*")
-	assert.MatchRegex(t, converted.WorkflowException, "end--.*")
+	assert.True(t, strings.HasPrefix(converted.WorkflowStart, "start--"))
+	assert.True(t, strings.HasPrefix(converted.WorkflowException, "end--"))
 	assert.NotEqual(t, converted.Workflow, nil)
 	for _, entry := range converted.Workflow {
 		assert.NotEqual(t, entry.Name, nil)
@@ -50,8 +49,8 @@ func Test_bpmn_format_control(t *testing.T) {
 	err = validator.IsValidCacaoJson(converted_json)
 	assert.Equal(t, err, nil)
 	assert.NotEqual(t, converted, nil)
-	assert.MatchRegex(t, converted.WorkflowStart, "start--.*")
-	assert.MatchRegex(t, converted.WorkflowException, "end--.*")
+	assert.True(t, strings.HasPrefix(converted.WorkflowStart, "start--"))
+	assert.True(t, strings.HasPrefix(converted.WorkflowException, "end--"))
 	assert.NotEqual(t, converted.Workflow, nil)
 	for _, entry := range converted.Workflow {
 		assert.NotEqual(t, entry.Name, nil)

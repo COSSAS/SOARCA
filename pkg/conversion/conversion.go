@@ -19,10 +19,6 @@ func PerformConversion(input_filename string, input []byte, format_string string
 	switch format {
 	case FormatBpmn:
 		converter = NewBpmnConverter()
-	case FormatMisp:
-		converter = NewMispConverter()
-	case FormatSplunk:
-		converter = NewSplunkConverter()
 	}
 	return converter.Convert(input, input_filename)
 }
