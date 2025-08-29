@@ -46,6 +46,7 @@ func Test_bpmn_format_control(t *testing.T) {
 	converted, err := PerformConversion("../../test/conversion/control_gates.bpmn", content, "bpmn")
 	assert.Equal(t, err, nil)
 	converted_json, err := json.Marshal(converted)
+	assert.Equal(t, err, nil)
 	err = validator.IsValidCacaoJson(converted_json)
 	assert.Equal(t, err, nil)
 	assert.NotEqual(t, converted, nil)

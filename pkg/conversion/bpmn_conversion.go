@@ -263,7 +263,9 @@ func (p *BpmnProcess) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error
 
 func (converter *BpmnConverter) implement(process BpmnProcess, playbook *cacao.Playbook) error {
 	log.Info("Implementing start task ", process.start_task.Id)
-	process.start_task.implement(playbook, converter)
+	if err := process.start_task.implement(playbook, converter); err != nil {
+		return err
+	}
 	for _, end := range process.end_tasks {
 		log.Info("Implementing end ", end.Id)
 		if err := end.implement(playbook, converter); err != nil {
