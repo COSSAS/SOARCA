@@ -22,7 +22,6 @@ import (
 
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/cio"
-	"github.com/containerd/containerd/mount"
 )
 
 type JupyterCapability struct {
@@ -124,23 +123,23 @@ func ExecuteContainer(encoded string, metadata execution.Metadata, ctxt capabili
 			return cacao.NewVariables(), err
 		}
 	}
-	cwd, err := os.Getwd()
-	if err != nil {
-		return cacao.NewVariables(), errors.Join(errors.New("cwd:"), err)
-	}
-	rootfs_dir := path.Join(cwd, "lab_fs")
-	rootfs_contents, err := os.ReadDir(rootfs_dir)
-	if err != nil {
-		os.Mkdir(rootfs_dir, 0755)
-	} else if len(rootfs_contents) != 0 {
-		return cacao.NewVariables(), errors.New("Container Root fs is not empty")
-	}
-	nb_mount := mount.Mount{Source: rootfs_dir, Type: "bind", Options: []string{"rbind", "ro"}}
-	log.Info("Mounting ", nb_mount.Source, " to ", nb_mount.Target)
-	if err := nb_mount.Mount(path.Join(cwd, "lab")); err != nil {
-		return cacao.NewVariables(), errors.Join(errors.New("mount:"), err)
-	}
-	task, err := container.NewTask(ctx, cio.NewCreator(), containerd.WithRootFS([]mount.Mount{nb_mount}))
+	// cwd, err := os.Getwd()
+	// if err != nil {
+	// 	return cacao.NewVariables(), errors.Join(errors.New("cwd:"), err)
+	// }
+	// rootfs_dir := path.Join(cwd, "lab_fs")
+	// rootfs_contents, err := os.ReadDir(rootfs_dir)
+	// if err != nil {
+	// 	os.Mkdir(rootfs_dir, 0755)
+	// } else if len(rootfs_contents) != 0 {
+	// 	return cacao.NewVariables(), errors.New("Container Root fs is not empty")
+	// }
+	// nb_mount := mount.Mount{Source: rootfs_dir, Type: "bind", Options: []string{"rbind", "ro"}}
+	// log.Info("Mounting ", nb_mount.Source, " to ", nb_mount.Target)
+	// if err := nb_mount.Mount(path.Join(cwd, "lab")); err != nil {
+	// 	return cacao.NewVariables(), errors.Join(errors.New("mount:"), err)
+	// }
+	task, err := container.NewTask(ctx, cio.NewCreator()) //, containerd.WithRootFS([]mount.Mount{nb_mount}))
 	if err != nil {
 		return cacao.NewVariables(), errors.Join(errors.New("task creation:"), err)
 	}
