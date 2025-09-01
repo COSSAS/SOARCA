@@ -1,0 +1,93 @@
+{
+    "type": "playbook",
+    "spec_version": "cacao-2.0",
+    "id": "playbook--300270f9-0e64-42c8-93cc-0927edbe3ae7",
+    "name": "Example ssh",
+    "description": "This playbook demonstrates ssh functionality",
+    "playbook_types": [
+        "notification"
+    ],
+    "created_by": "identity--96abab60-238a-44ff-8962-5806aa60cbce",
+    "created": "2023-11-20T15:56:00.123456Z",
+    "modified": "2023-11-20T15:56:00.123456Z",
+    "valid_from": "2023-11-20T15:56:00.123456Z",
+    "valid_until": "2123-11-20T15:56:00.123456Z",
+    "priority": 1,
+    "severity": 1,
+    "impact": 1,
+    "labels": [
+        "soarca",
+        "ssh",
+        "example"
+    ],
+    "external_references": [
+        {
+            "name": "TNO COSSAS",
+            "description": "TNO COSSAS",
+            "source": "TNO COSSAS",
+            "url": "https://cossas-project.org"
+        }
+    ],
+    "agent_definitions": {
+        "soarca--00010001-1000-1000-a000-000100010001": {
+            "type": "soarca",
+            "name": "jupyter"
+        }
+    },
+    "target_definitions": {
+        "ssh--1c3900b4-f86b-430d-b415-12312b9e31f4": {
+            "type": "ssh",
+            "name": "jupylab",
+            "address": {
+                "ipv4": [
+                    "127.0.0.1"
+                ]
+            },
+            "port":"8022",
+            "authentication_info": "user-auth--b7ddc2ea-9f6a-4e82-8eaa-be202e942090"
+        }
+    },
+    "authentication_info_definitions": {
+        "user-auth--b7ddc2ea-9f6a-4e82-8eaa-be202e942090": {
+            "type": "user-auth",
+            "username": "jupy",
+            "password": "soarca"
+        }
+    },
+    "workflow_start": "start--9e7d62b2-88ac-4656-94e1-dbd4413ba008",
+    "workflow_exception": "end--a6f0b81e-affb-4bca-b4f6-a2d5af908958",
+    "workflow": {
+        "start--9e7d62b2-88ac-4656-94e1-dbd4413ba008": {
+            "type": "start",
+            "name": "Start jupyter example",
+            "on_completion": "action--eb9372d4-d524-49fc-bf24-be26ea084779"
+        },
+        "action--eb9372d4-d524-49fc-bf24-be26ea084779": {
+            "type": "action",
+            "name": "Execute command",
+            "description": "Execute command specified in variable",
+            "on_completion": "end--a6f0b81e-affb-4bca-b4f6-a2d5af908958",
+            "commands": [
+                {
+                    "type": "jupyter",
+                    "command_b64": "ewogImNlbGxzIjogWwogIHsKICAgImNlbGxfdHlwZSI6ICJjb2RlIiwKICAgImV4ZWN1dGlvbl9jb3VudCI6IG51bGwsCiAgICJpZCI6ICIwMGI1MDU2NiIsCiAgICJtZXRhZGF0YSI6IHsKICAgICJleGVjdXRpb24iOiB7CiAgICAgImlvcHViLmV4ZWN1dGVfaW5wdXQiOiAiMjAyNS0wOC0xNFQxMTo0MTo1Ny42MDM3OTVaIiwKICAgICAiaW9wdWIuc3RhdHVzLmJ1c3kiOiAiMjAyNS0wOC0xNFQxMTo0MTo1Ny42MDM1NjFaIiwKICAgICAiaW9wdWIuc3RhdHVzLmlkbGUiOiAiMjAyNS0wOC0xNFQxMTo0MTo1Ny42MDgwMjhaIiwKICAgICAic2hlbGwuZXhlY3V0ZV9yZXBseSI6ICIyMDI1LTA4LTE0VDExOjQxOjU3LjYwNzI1MloiCiAgICB9CiAgIH0sCiAgICJvdXRwdXRzIjogWwogICAgewogICAgICJuYW1lIjogInN0ZG91dCIsCiAgICAgIm91dHB1dF90eXBlIjogInN0cmVhbSIsCiAgICAgInRleHQiOiBbCiAgICAgICJoZWxsbyB3b3JsZFxuIgogICAgIF0KICAgIH0KICAgXSwKICAgInNvdXJjZSI6IFsKICAgICJwcmludChcInNvYXJjYTo6X19oZWxsb19fPWhlbGxvXCIpIgogICBdCiAgfQogXSwKICJtZXRhZGF0YSI6IHsKICAia2VybmVsc3BlYyI6IHsKICAgImRpc3BsYXlfbmFtZSI6ICJweS12ZW52IiwKICAgImxhbmd1YWdlIjogInB5dGhvbiIsCiAgICJuYW1lIjogInB5dGhvbjMiCiAgfSwKICAibGFuZ3VhZ2VfaW5mbyI6IHsKICAgImNvZGVtaXJyb3JfbW9kZSI6IHsKICAgICJuYW1lIjogImlweXRob24iLAogICAgInZlcnNpb24iOiAzCiAgIH0sCiAgICJmaWxlX2V4dGVuc2lvbiI6ICIucHkiLAogICAibWltZXR5cGUiOiAidGV4dC94LXB5dGhvbiIsCiAgICJuYW1lIjogInB5dGhvbiIsCiAgICJuYmNvbnZlcnRfZXhwb3J0ZXIiOiAicHl0aG9uIiwKICAgInB5Z21lbnRzX2xleGVyIjogImlweXRob24zIiwKICAgInZlcnNpb24iOiAiMy4xMy41IgogIH0KIH0sCiAibmJmb3JtYXQiOiA0LAogIm5iZm9ybWF0X21pbm9yIjogNQp9Cg=="
+                }
+            ],
+            "agent":"soarca--00010001-1000-1000-a000-000100010001", 
+            "step_variables": {
+                "__hello__": {
+                    "type": "string",
+                    "value": "goodbye",
+                    "constant": true
+                }
+            },
+            "targets": [
+                "ssh--1c3900b4-f86b-430d-b415-12312b9e31f4"
+            ]
+        },
+        "end--a6f0b81e-affb-4bca-b4f6-a2d5af908958": {
+            "type": "end",
+            "name": "End Flow"
+        }
+    }
+}

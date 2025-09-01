@@ -11,6 +11,7 @@ import (
 	"soarca/pkg/core/capability"
 	"soarca/pkg/core/capability/fin/protocol"
 	"soarca/pkg/core/capability/http"
+	"soarca/pkg/core/capability/jupyter"
 	"soarca/pkg/core/capability/manual"
 	"soarca/pkg/core/capability/manual/interaction"
 	"soarca/pkg/core/capability/openc2"
@@ -87,11 +88,14 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	openc2 := openc2.New(httpUtil)
 	capabilities[openc2.GetType()] = openc2
 
-	poswershell := powershell.New()
-	capabilities[poswershell.GetType()] = poswershell
+	powershell := powershell.New()
+	capabilities[powershell.GetType()] = powershell
 
 	man := manual.New(mainInteraction)
 	capabilities[man.GetType()] = &man
+
+	jupyter_cap := jupyter.New()
+	capabilities[jupyter_cap.GetType()] = &jupyter_cap
 
 	enableFins, _ := strconv.ParseBool(utils.GetEnv("ENABLE_FINS", "false"))
 

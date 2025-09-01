@@ -50,11 +50,11 @@ func execute(command cacao.Command,
 		log.Error(err)
 		return cacao.NewVariables(), err
 	}
-	config, err := getConfig(authentication)
+	config, err := GetConfig(authentication)
 	if err != nil {
 		return cacao.NewVariables(), err
 	}
-	session, client, err := getSession(config, target)
+	session, client, err := GetSession(config, target)
 	if err != nil {
 		return cacao.NewVariables(), err
 	}
@@ -84,7 +84,7 @@ func executeCommand(session *ssh.Session,
 	return results, err
 }
 
-func getConfig(authentication cacao.AuthenticationInformation) (ssh.ClientConfig, error) {
+func GetConfig(authentication cacao.AuthenticationInformation) (ssh.ClientConfig, error) {
 	config := ssh.ClientConfig{User: authentication.Username,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 		Timeout:         time.Duration(time.Second * 20)}
@@ -111,7 +111,7 @@ func getConfig(authentication cacao.AuthenticationInformation) (ssh.ClientConfig
 
 }
 
-func getSession(config ssh.ClientConfig, target cacao.AgentTarget) (*ssh.Session, *ssh.Client, error) {
+func GetSession(config ssh.ClientConfig, target cacao.AgentTarget) (*ssh.Session, *ssh.Client, error) {
 	host := CombinePortAndAddress(target.Address, target.Port)
 	client, err := ssh.Dial("tcp", host, &config)
 	if err != nil {

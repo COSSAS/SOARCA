@@ -33,12 +33,18 @@ clean:
 	rm -rf build/soarca* build/main
 	rm -rf bin/*
 
-compile: swagger
+.PHONY: jupylab
+jupylab:
+	docker build deployments/docker/jupyter -t jupy-runner:current
+	docker save jupy-runner:current -o build/jupy.tar.gz
+
+
+compile: swagger jupylab
 	echo "Compiling for every OS and Platform"
 	
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/${BINARY_NAME}-${VERSION}-linux-amd64 $(GOFLAGS) cmd/soarca/main.go
 	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o bin/${BINARY_NAME}-${VERSION}-darwin-arm64 $(GOFLAGS) cmd/soarca/main.go
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o bin/${BINARY_NAME}-${VERSION}-windows-amd64 $(GOFLAGS) cmd/soarca/main.go
+	# CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o bin/${BINARY_NAME}-${VERSION}-windows-amd64 $(GOFLAGS) cmd/soarca/main.go
 
 sbom: swagger
 	echo "Generating SBOMs"

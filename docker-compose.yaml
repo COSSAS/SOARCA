@@ -34,9 +34,11 @@ services:
     container_name: soarca_server
     volumes:
       - certs_data_containter:/app/certs
+      - /run/containerd/containerd.sock:/run/containerd/containerd.sock
+      - ./build/jupy.tar.gz:/jupy.tar.gz
     environment:
       PORT: 8080
-      ENABLE_TLS: "true"
+      ENABLE_TLS: "false"
       CERT_FILE: "/app/certs/server.crt"
       CERT_KEY_FILE: "/app/certs/server.key"
       SOARCA_ALLOWED_ORIGINS: "*"
