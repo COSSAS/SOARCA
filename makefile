@@ -1,4 +1,4 @@
-.PHONY: all test integration-test ci-test clean build docker run pre-docker-build swagger sbom
+.PHONY: all test integration-test ci-test clean build docker run pre-docker-build swagger sbom build 
 
 BINARY_NAME=soarca
 DIRECTORY = $(sort $(dir $(wildcard ./test/*/)))
@@ -18,7 +18,7 @@ lint: swagger
 
 build: swagger build/soarca build/soarca-conversion
 
-build/%:
+build/%: $(wildcard **/*.go)
 	CGO_ENABLED=0 go build -o $@ $(GOFLAGS) ./cmd/$(@F)/main.go
 
 test: swagger
