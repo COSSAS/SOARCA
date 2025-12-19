@@ -2,7 +2,7 @@ package conversion
 
 import (
 	"os"
-	"soarca/pkg/conversion"
+	bpmn "soarca/pkg/conversion/bpmn"
 	"soarca/pkg/models/cacao"
 	"testing"
 	"time"
@@ -13,7 +13,7 @@ import (
 func loadPlaybook(t *testing.T, filename string) *cacao.Playbook {
 	input, err := os.ReadFile(filename)
 	assert.Nil(t, err)
-	playbook, err := conversion.NewBpmnConverter().Convert(input, filename)
+	playbook, err := bpmn.NewBpmnConverter().Convert(input, filename)
 	assert.Nil(t, err)
 	return playbook
 }
@@ -27,7 +27,7 @@ func nextSteps(t *testing.T, step cacao.Step, playbook *cacao.Playbook) []cacao.
 }
 func findStep(t *testing.T, step_name string, playbook *cacao.Playbook) cacao.Step {
 	step, ok := playbook.Workflow[step_name]
-	assert.True(t, ok, "Could not find %s", step_name)
+	assert.True(t, ok, "Could not find step", step_name)
 	return step
 }
 func findStepByName[S ~[]cacao.Step](t *testing.T, step_name string, steps S) *cacao.Step {
@@ -36,7 +36,7 @@ func findStepByName[S ~[]cacao.Step](t *testing.T, step_name string, steps S) *c
 			return &step
 		}
 	}
-	assert.Fail(t, "Could not find name %s", step_name)
+	assert.Fail(t, "Could not find step", step_name)
 	return nil
 }
 
@@ -83,5 +83,18 @@ func TestSimpleSshConversion(t *testing.T) {
 	next = nextStep(t, next, playbook)
 	assert.Equal(t, next.Name, "Touch file")
 	next = nextStep(t, next, playbook)
+	assert.True(t, next.Type == cacao.StepTypeEnd)
+}
+func TestCisaGovConversion(t *testing.T) {
+	playbook := loadPlaybook(t, "cisagov_example.bpmn")
+	now := time.Now()
+	assert.True(t, playbook.Created.Before(now))
+	start := startStep(t, playbook)
+	next := nextStep(t, start, playbook)
+	assert.Equal(t, next.Name, "NAC Sends Alert Log to SIEM")
+	findStep(t, "SOC Investigates Case, Resolves Issue and Closes Ticket", playbook)
+	findStep(t, "SOAR Adds System MAC to Block List on NAC", playbook)
+	step := findStep(t, "SOC Contacts System Owner, Resolves Issue and Closes Ticket", playbook)
+	next = nextStep(t, step, playbook)
 	assert.True(t, next.Type == cacao.StepTypeEnd)
 }

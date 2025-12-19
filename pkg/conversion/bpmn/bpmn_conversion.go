@@ -8,8 +8,8 @@ import (
 	"slices"
 	"soarca/internal/logger"
 	"soarca/pkg/models/cacao"
+	util "soarca/pkg/utils/conversion"
 	"strings"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -25,6 +25,15 @@ type BpmnConverter struct {
 	process     *BpmnProcess
 }
 
+/* This structure is somewhat unfortunate; the BPMN process definition is a non-homogeneous list
+** of different playbook componenents, including tasks, the arrows/"flows" between tasks, and
+** gateways (which become if/else constructs in cacao).
+** We could put all of their associated fields and attributes in one process-item type, but this would shift
+** the burden of finding out what fields belong to what kind of element to the developer. This is quite error-prone,
+** and also would be hard to maintain.
+** The current implementation involves this collection of types for different kinds of BPMN process elements, with a
+** custom XML decoding step to collect them.
+ */
 type BpmnStartEvent struct {
 	Id       string `xml:"id,attr"`
 	Outgoing string `xml:"bpmn:outgoing"`
@@ -46,6 +55,7 @@ type BpmnFlow struct {
 	Name          string `xml:"name,attr"`
 	IsAssociation bool
 }
+
 type BpmnGatewayKind int
 
 const (
@@ -82,37 +92,15 @@ func (converter BpmnConverter) Convert(input []byte, filename string) (*cacao.Pl
 	if len(definitions.Processes) == 0 {
 		return nil, errors.New("BPMN file does not have any processes")
 	}
-	playbook := cacao.NewPlaybook()
-	playbook.SpecVersion = cacao.CACAO_VERSION_2
-	playbook.Type = "playbook"
-	playbook.ID = fmt.Sprintf("playbook--%s", uuid.New())
-	playbook.CreatedBy = fmt.Sprintf("identity--%s", uuid.New())
-	playbook.Name = clean_filename(filename)
-	playbook.Created = time.Now().UTC()
-	playbook.Modified = time.Now().UTC()
-	playbook.ValidFrom = time.Now().UTC()
-	playbook.ValidUntil = time.Now().UTC()
+	playbook, soarca_name, soarca_manual_name := util.NewSoarcaPlaybook(clean_filename(filename), []string{"notification"})
 	playbook.Description = fmt.Sprintf("CACAO playbook converted from %s", filename)
-	soarca_name := fmt.Sprintf("soarca--%s", uuid.New())
-	playbook.PlaybookTypes = []string{"notification"}
-	soarca_manual_name := fmt.Sprintf("soarca-manual--%s", uuid.New())
 	converter.translation["soarca"] = soarca_name
 	converter.translation["soarca-manual"] = soarca_manual_name
-	playbook.AgentDefinitions = cacao.NewAgentTargets(
-		cacao.AgentTarget{
-			ID:   soarca_name,
-			Type: "soarca",
-			Name: "soarca-playbook"},
-		cacao.AgentTarget{
-			ID:          soarca_manual_name,
-			Type:        "soarca-manual",
-			Name:        "soarca-manual",
-			Description: "SOARCAs manual command handler"})
 	playbook.TargetDefinitions = cacao.NewAgentTargets(
 		cacao.AgentTarget{
 			ID:   fmt.Sprintf("individual--%s", uuid.New()),
 			Type: "individual",
-			Name: "CHANGE THIS"})
+			Name: ""})
 	playbook.Workflow = make(cacao.Workflow)
 	converter.process = &definitions.Processes[0]
 	if err := converter.implement(definitions.Processes[0], playbook); err != nil {
@@ -139,10 +127,10 @@ type BpmnProcess struct {
 	annotations []BpmnAnnotation
 }
 
-func (p *BpmnProcess) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+func (process *BpmnProcess) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
 	start_name := start.Name
 	for {
-		item, err := d.Token()
+		item, err := decoder.Token()
 		if err != nil {
 			return err
 		}
@@ -150,104 +138,104 @@ func (p *BpmnProcess) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error
 		case xml.StartElement:
 			switch item_type.Name.Local {
 			case "startEvent":
-				err = d.DecodeElement(&p.start_task, &item_type)
+				err = decoder.DecodeElement(&process.start_task, &item_type)
 				if err != nil {
 					return err
 				}
 			case "endEvent":
 				end_task := BpmnEndEvent{}
-				err = d.DecodeElement(&end_task, &item_type)
-				p.end_tasks = append(p.end_tasks, end_task)
+				err = decoder.DecodeElement(&end_task, &item_type)
+				process.end_tasks = append(process.end_tasks, end_task)
 				if err != nil {
 					return err
 				}
 			case "sequenceFlow":
 				flow := new(BpmnFlow)
-				err = d.DecodeElement(flow, &item_type)
+				err = decoder.DecodeElement(flow, &item_type)
 				flow.IsAssociation = false
 				if err != nil {
 					return err
 				}
-				p.flows = append(p.flows, *flow)
+				process.flows = append(process.flows, *flow)
 			case "association":
 				flow := new(BpmnFlow)
-				err = d.DecodeElement(flow, &item_type)
+				err = decoder.DecodeElement(flow, &item_type)
 				flow.IsAssociation = true
 				if err != nil {
 					return err
 				}
-				p.flows = append(p.flows, *flow)
+				process.flows = append(process.flows, *flow)
 			case "scriptTask":
 				task := new(BpmnTask)
 				task.Kind = "script"
-				err = d.DecodeElement(task, &item_type)
+				err = decoder.DecodeElement(task, &item_type)
 				if err != nil {
 					return err
 				}
-				p.tasks = append(p.tasks, *task)
+				process.tasks = append(process.tasks, *task)
 			case "task":
 				task := new(BpmnTask)
 				task.Kind = "task"
-				err = d.DecodeElement(task, &item_type)
+				err = decoder.DecodeElement(task, &item_type)
 				if err != nil {
 					return err
 				}
-				p.tasks = append(p.tasks, *task)
+				process.tasks = append(process.tasks, *task)
 			case "serviceTask":
 				task := new(BpmnTask)
 				task.Kind = "service"
-				err = d.DecodeElement(task, &item_type)
+				err = decoder.DecodeElement(task, &item_type)
 				if err != nil {
 					return err
 				}
-				p.tasks = append(p.tasks, *task)
+				process.tasks = append(process.tasks, *task)
 			case "sendTask":
 				task := new(BpmnTask)
 				task.Kind = "send"
-				err = d.DecodeElement(task, &item_type)
+				err = decoder.DecodeElement(task, &item_type)
 				if err != nil {
 					return err
 				}
-				p.tasks = append(p.tasks, *task)
+				process.tasks = append(process.tasks, *task)
 			case "userTask":
 				task := new(BpmnTask)
 				task.Kind = "user"
-				err = d.DecodeElement(task, &item_type)
+				err = decoder.DecodeElement(task, &item_type)
 				if err != nil {
 					return err
 				}
-				p.tasks = append(p.tasks, *task)
+				process.tasks = append(process.tasks, *task)
 			case "businessRuleTask":
 				task := new(BpmnTask)
 				task.Kind = "business rule"
-				err = d.DecodeElement(task, &item_type)
+				err = decoder.DecodeElement(task, &item_type)
 				if err != nil {
 					return err
 				}
-				p.tasks = append(p.tasks, *task)
+				process.tasks = append(process.tasks, *task)
 			case "exclusiveGateway":
 				gateway := new(BpmnGateway)
-				err = d.DecodeElement(gateway, &item_type)
+				err = decoder.DecodeElement(gateway, &item_type)
 				gateway.Kind = GatewayKindExclusive
 				if err != nil {
 					return err
 				}
-				p.gateways = append(p.gateways, *gateway)
+				process.gateways = append(process.gateways, *gateway)
 			case "parallelGateway":
 				gateway := new(BpmnGateway)
-				err = d.DecodeElement(gateway, &item_type)
+				err = decoder.DecodeElement(gateway, &item_type)
 				gateway.Kind = GatewayKindParallel
 				if err != nil {
 					return err
 				}
-				p.gateways = append(p.gateways, *gateway)
+				process.gateways = append(process.gateways, *gateway)
 			case "textAnnotation":
 				annotation := new(BpmnAnnotation)
-				err = d.DecodeElement(annotation, &item_type)
+				err = decoder.DecodeElement(annotation, &item_type)
 				if err != nil {
 					return err
 				}
-				p.annotations = append(p.annotations, *annotation)
+				process.annotations = append(process.annotations, *annotation)
 			case "intermediateThrowEvent", "intermediateCatchEvent":
 				return fmt.Errorf("throw/catch mechanism is currently not implemented in SOARCA")
 			default:
@@ -295,12 +283,26 @@ func (converter *BpmnConverter) implement(process BpmnProcess, playbook *cacao.P
 }
 
 func (task BpmnTask) implement(playbook *cacao.Playbook, converter *BpmnConverter) error {
-	name := fmt.Sprintf("action--%s", uuid.New())
-	converter.translation[task.Id] = name
-	step := cacao.Step{Type: "action", Name: task.Name, Commands: make([]cacao.Command, 0)}
-	step.Commands = append(step.Commands, cacao.Command{Type: "manual", Command: task.Name})
+	step_id := fmt.Sprintf("action--%s", uuid.New())
+	converter.translation[task.Id] = step_id
+	step := cacao.Step{Type: "action", Name: task.Name, Commands: []cacao.Command{{Type: "manual", Command: task.Name}}}
 	step.Agent = converter.translation["soarca"]
-	playbook.Workflow[name] = step
+	playbook.Workflow[step_id] = step
+	return nil
+}
+func create_step(type_ string, step_name string, playbook *cacao.Playbook, converter *BpmnConverter) string {
+	step_id := fmt.Sprintf("%s--%s", type_, uuid.New())
+	converter.translation[step_name] = step_id
+	step := cacao.Step{Type: type_}
+	playbook.Workflow[step_id] = step
+	return step_id
+}
+func (end_event BpmnEndEvent) implement(playbook *cacao.Playbook, converter *BpmnConverter) error {
+	playbook.WorkflowException = create_step("end", end_event.Id, playbook, converter)
+	return nil
+}
+func (start_event BpmnStartEvent) implement(playbook *cacao.Playbook, converter *BpmnConverter) error {
+	playbook.WorkflowStart = create_step("start", start_event.Id, playbook, converter)
 	return nil
 }
 
@@ -368,48 +370,22 @@ func (flow BpmnFlow) implement_flow(playbook *cacao.Playbook, converter *BpmnCon
 	return nil
 }
 
-func (end_event BpmnEndEvent) implement(playbook *cacao.Playbook, converter *BpmnConverter) error {
-	name := fmt.Sprintf("end--%s", uuid.New())
-	converter.translation[end_event.Id] = name
-	step := cacao.Step{Type: "end"}
-	playbook.Workflow[name] = step
-	playbook.WorkflowException = name
-	return nil
-}
-func (start_event BpmnStartEvent) implement(playbook *cacao.Playbook, converter *BpmnConverter) error {
-	name := fmt.Sprintf("start--%s", uuid.New())
-	converter.translation[start_event.Id] = name
-	step := cacao.Step{Type: "start"}
-	playbook.Workflow[name] = step
-	playbook.WorkflowStart = name
-	return nil
-}
 func (gateway BpmnGateway) implement(playbook *cacao.Playbook, converter *BpmnConverter) error {
 	switch gateway.Kind {
 	case GatewayKindExclusive:
-		return gateway.implement_exclusive(playbook, converter)
+		return gateway.implement_gateway("if-condition", cacao.StepTypeIfCondition, playbook, converter)
 	case GatewayKindParallel:
-		return gateway.implement_parallel(playbook, converter)
+		return gateway.implement_gateway("parallel", cacao.StepTypeParallel, playbook, converter)
 	}
 	return nil
 }
-func (gateway BpmnGateway) implement_exclusive(playbook *cacao.Playbook, converter *BpmnConverter) error {
+func (gateway BpmnGateway) implement_gateway(step_id_prefix string, condition_type string, playbook *cacao.Playbook, converter *BpmnConverter) error {
 	condition := cacao.Step{
-		Type:      cacao.StepTypeIfCondition,
+		Type:      condition_type,
 		Condition: gateway.Name,
 	}
-	name := fmt.Sprintf("if-condition--%s", uuid.New())
-	converter.translation[gateway.Id] = name
-	playbook.Workflow[name] = condition
-	return nil
-}
-func (gateway BpmnGateway) implement_parallel(playbook *cacao.Playbook, converter *BpmnConverter) error {
-	condition := cacao.Step{
-		Type:      cacao.StepTypeParallel,
-		Condition: gateway.Name,
-	}
-	name := fmt.Sprintf("parallel--%s", uuid.New())
-	converter.translation[gateway.Id] = name
-	playbook.Workflow[name] = condition
+	step_id := fmt.Sprintf("%s--%s", step_id_prefix, uuid.New())
+	converter.translation[gateway.Id] = step_id
+	playbook.Workflow[step_id] = condition
 	return nil
 }

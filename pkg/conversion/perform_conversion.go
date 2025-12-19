@@ -2,27 +2,26 @@ package conversion
 
 import (
 	"errors"
+	bpmn_conversion "soarca/pkg/conversion/bpmn"
 	"soarca/pkg/models/cacao"
+	model "soarca/pkg/models/conversion"
+	util "soarca/pkg/utils/conversion"
 )
 
 func PerformConversion(input_filename string, input []byte, format_string string) (*cacao.Playbook, error) {
-	var format TargetFormat
+	var format model.TargetFormat
 	if format_string == "" {
-		format = guess_format(input_filename)
+		format = util.GuessFormat(input_filename)
 	} else {
-		format = read_format(format_string)
+		format = util.ReadFormat(format_string)
 	}
-	if format == FormatUnknown {
+	if format == model.FormatUnknown {
 		return nil, errors.New("could not deduce input file type")
 	}
 	var converter IConverter
 	switch format {
-	case FormatBpmn:
-		converter = NewBpmnConverter()
+	case model.FormatBpmn:
+		converter = bpmn_conversion.NewBpmnConverter()
 	}
 	return converter.Convert(input, input_filename)
-}
-
-type IConverter interface {
-	Convert(input []byte, filename string) (*cacao.Playbook, error)
 }

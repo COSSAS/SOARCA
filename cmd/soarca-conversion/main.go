@@ -32,6 +32,11 @@ var (
 func init() {
 	log = logger.Logger("CONVERTER", logger.Info, "", logger.Json)
 }
+
+func print_help() {
+	fmt.Println("Usage: soarca-conversion -source=SOURCE_FILE [-target=TARGET_FILE] [-format=FORMAT] [-h]")
+}
+
 func main() {
 	fmt.Print(banner)
 	log.Info("Version: ", Version)
@@ -44,9 +49,15 @@ func main() {
 	flag.StringVar(&source_filename, "source", "", "The source file to be converted")
 	flag.StringVar(&target_filename, "target", "", "The name of the converted filename")
 	flag.StringVar(&format, "format", "", "The format of the source file")
+	help := flag.Bool("help", false, "Print usage information")
 	flag.Parse()
+	if *help {
+		print_help()
+		return
+	}
 	if source_filename == "" {
 		log.Error("No source file given: -source=SOURCE_FILE is required")
+		print_help()
 		return
 	}
 	if target_filename == "" {

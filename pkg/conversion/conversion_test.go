@@ -3,7 +3,9 @@ package conversion
 import (
 	"encoding/json"
 	"os"
+	model "soarca/pkg/models/conversion"
 	"soarca/pkg/models/validator"
+	util "soarca/pkg/utils/conversion"
 	"strings"
 	"testing"
 
@@ -11,14 +13,14 @@ import (
 )
 
 func Test_read_format(t *testing.T) {
-	assert.Equal(t, read_format("bpmn"), FormatBpmn)
-	assert.Equal(t, read_format(""), FormatUnknown)
-	assert.Equal(t, read_format("cacao"), FormatUnknown)
-	assert.Equal(t, read_format("bpnm"), FormatUnknown)
-	assert.Equal(t, read_format("?"), FormatUnknown)
+	assert.Equal(t, util.ReadFormat("bpmn"), model.FormatBpmn)
+	assert.Equal(t, util.ReadFormat(""), model.FormatUnknown)
+	assert.Equal(t, util.ReadFormat("cacao"), model.FormatUnknown)
+	assert.Equal(t, util.ReadFormat("bpnm"), model.FormatUnknown)
+	assert.Equal(t, util.ReadFormat("?"), model.FormatUnknown)
 }
 func Test_guess_format(t *testing.T) {
-	assert.Equal(t, guess_format("x.bpmn"), FormatBpmn)
+	assert.Equal(t, util.GuessFormat("x.bpmn"), model.FormatBpmn)
 }
 
 func Test_bpmn_format(t *testing.T) {
