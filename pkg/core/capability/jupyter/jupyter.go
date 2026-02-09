@@ -73,12 +73,16 @@ func (capability *JupyterCapability) ExecuteB64(encoded string, addresses cacao.
 		return cacao.NewVariables(), err
 	}
 	responseBytes, err := io.ReadAll(response.Body)
+	if err != nil {
+		log.Error(err)
+		return cacao.NewVariables(), err
+	}
 	if response.Body.Close() != nil {
 		log.Warning("error closing response body")
 	}
 	if response.StatusCode != 200 {
 		response_str := string(responseBytes)
-		err = fmt.Errorf("Jupyter server returned %d\n%s", response.StatusCode, response_str)
+		err = fmt.Errorf("jupyter server returned %d\n%s", response.StatusCode, response_str)
 		return cacao.NewVariables(), err
 	}
 	return readVariables(responseBytes)
