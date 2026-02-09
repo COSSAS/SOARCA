@@ -1,0 +1,7 @@
+services:
+  jupy:
+    build: ../../jupyter
+    container_name: jupyter
+    restart: always
+    ports:
+      - 7000:7000
