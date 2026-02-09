@@ -33,13 +33,7 @@ clean:
 	rm -rf build/soarca* build/main
 	rm -rf bin/*
 
-.PHONY: jupylab
-jupylab:
-	docker build deployments/docker/jupyter -t jupy-runner:current
-	docker save jupy-runner:current -o build/jupy.tar.gz
-
-
-compile: swagger jupylab
+compile: swagger
 	echo "Compiling for every OS and Platform"
 	
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/${BINARY_NAME}-${VERSION}-linux-amd64 $(GOFLAGS) cmd/soarca/main.go

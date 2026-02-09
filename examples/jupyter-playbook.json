@@ -35,23 +35,14 @@
         }
     },
     "target_definitions": {
-        "ssh--1c3900b4-f86b-430d-b415-12312b9e31f4": {
-            "type": "ssh",
-            "name": "jupylab",
+        "net-address--1c3900b4-f86b-430d-b415-12312b9e31f4": {
+            "type": "net-address",
+            "name": "jupyter",
             "address": {
-                "ipv4": [
-                    "127.0.0.1"
+                "url": [
+                    "http://jupyter.local:7000"
                 ]
-            },
-            "port":"8022",
-            "authentication_info": "user-auth--b7ddc2ea-9f6a-4e82-8eaa-be202e942090"
-        }
-    },
-    "authentication_info_definitions": {
-        "user-auth--b7ddc2ea-9f6a-4e82-8eaa-be202e942090": {
-            "type": "user-auth",
-            "username": "jupy",
-            "password": "soarca"
+            }
         }
     },
     "workflow_start": "start--9e7d62b2-88ac-4656-94e1-dbd4413ba008",
@@ -70,7 +61,7 @@
             "commands": [
                 {
                     "type": "jupyter",
-                    "command_b64": "ewogImNlbGxzIjogWwogIHsKICAgImNlbGxfdHlwZSI6ICJjb2RlIiwKICAgImV4ZWN1dGlvbl9jb3VudCI6IG51bGwsCiAgICJpZCI6ICIwMGI1MDU2NiIsCiAgICJtZXRhZGF0YSI6IHsKICAgICJleGVjdXRpb24iOiB7CiAgICAgImlvcHViLmV4ZWN1dGVfaW5wdXQiOiAiMjAyNS0wOC0xNFQxMTo0MTo1Ny42MDM3OTVaIiwKICAgICAiaW9wdWIuc3RhdHVzLmJ1c3kiOiAiMjAyNS0wOC0xNFQxMTo0MTo1Ny42MDM1NjFaIiwKICAgICAiaW9wdWIuc3RhdHVzLmlkbGUiOiAiMjAyNS0wOC0xNFQxMTo0MTo1Ny42MDgwMjhaIiwKICAgICAic2hlbGwuZXhlY3V0ZV9yZXBseSI6ICIyMDI1LTA4LTE0VDExOjQxOjU3LjYwNzI1MloiCiAgICB9CiAgIH0sCiAgICJvdXRwdXRzIjogWwogICAgewogICAgICJuYW1lIjogInN0ZG91dCIsCiAgICAgIm91dHB1dF90eXBlIjogInN0cmVhbSIsCiAgICAgInRleHQiOiBbCiAgICAgICJoZWxsbyB3b3JsZFxuIgogICAgIF0KICAgIH0KICAgXSwKICAgInNvdXJjZSI6IFsKICAgICJwcmludChcInNvYXJjYTo6X19oZWxsb19fPWhlbGxvXCIpIgogICBdCiAgfQogXSwKICJtZXRhZGF0YSI6IHsKICAia2VybmVsc3BlYyI6IHsKICAgImRpc3BsYXlfbmFtZSI6ICJweS12ZW52IiwKICAgImxhbmd1YWdlIjogInB5dGhvbiIsCiAgICJuYW1lIjogInB5dGhvbjMiCiAgfSwKICAibGFuZ3VhZ2VfaW5mbyI6IHsKICAgImNvZGVtaXJyb3JfbW9kZSI6IHsKICAgICJuYW1lIjogImlweXRob24iLAogICAgInZlcnNpb24iOiAzCiAgIH0sCiAgICJmaWxlX2V4dGVuc2lvbiI6ICIucHkiLAogICAibWltZXR5cGUiOiAidGV4dC94LXB5dGhvbiIsCiAgICJuYW1lIjogInB5dGhvbiIsCiAgICJuYmNvbnZlcnRfZXhwb3J0ZXIiOiAicHl0aG9uIiwKICAgInB5Z21lbnRzX2xleGVyIjogImlweXRob24zIiwKICAgInZlcnNpb24iOiAiMy4xMy41IgogIH0KIH0sCiAibmJmb3JtYXQiOiA0LAogIm5iZm9ybWF0X21pbm9yIjogNQp9Cg=="
+                    "command_b64": "ewogImNlbGxzIjogWwogIHsKICAgImNlbGxfdHlwZSI6ICJjb2RlIiwKICAgImV4ZWN1dGlvbl9jb3VudCI6IG51bGwsCiAgICJpZCI6ICI3NTk2MzQyYyIsCiAgICJtZXRhZGF0YSI6IHt9LAogICAib3V0cHV0cyI6IFtdLAogICAic291cmNlIjogWwogICAgInByaW50KFwic29hcmNhOjpfX2hlbGxvX189d29ybGRcIikiCiAgIF0KICB9CiBdLAogIm1ldGFkYXRhIjogewogICJsYW5ndWFnZV9pbmZvIjogewogICAibmFtZSI6ICJweXRob24iCiAgfQogfSwKICJuYmZvcm1hdCI6IDQsCiAibmJmb3JtYXRfbWlub3IiOiA1Cn0K"
                 }
             ],
             "agent":"soarca--00010001-1000-1000-a000-000100010001", 
@@ -82,7 +73,7 @@
                 }
             },
             "targets": [
-                "ssh--1c3900b4-f86b-430d-b415-12312b9e31f4"
+                "net-address--1c3900b4-f86b-430d-b415-12312b9e31f4"
             ]
         },
         "end--a6f0b81e-affb-4bca-b4f6-a2d5af908958": {

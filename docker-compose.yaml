@@ -1,4 +1,3 @@
-version: '3.7'
 services:
   mongodb_container:
     image: mongo:latest
@@ -34,8 +33,6 @@ services:
     container_name: soarca_server
     volumes:
       - certs_data_containter:/app/certs
-      - /run/containerd/containerd.sock:/run/containerd/containerd.sock
-      - ./build/jupy.tar.gz:/jupy.tar.gz
     environment:
       PORT: 8080
       ENABLE_TLS: "false"
@@ -56,9 +53,16 @@ services:
       OIDC_SKIP_TLS_VERIFY: false
     ports:
       - 127.0.0.1:8080:8080
+    links:
+      - "jupy:jupyter.local"
     depends_on:
       - mongodb_container
       - cert-generator
+
+  jupy:
+    build: ./deployments/docker/jupyter
+    container_name: jupyter
+    restart: always
 
 networks:
   db-net:
