@@ -35,7 +35,7 @@ services:
       - certs_data_containter:/app/certs
     environment:
       PORT: 8080
-      ENABLE_TLS: "false"
+      ENABLE_TLS: "true"
       CERT_FILE: "/app/certs/server.crt"
       CERT_KEY_FILE: "/app/certs/server.key"
       SOARCA_ALLOWED_ORIGINS: "*"
