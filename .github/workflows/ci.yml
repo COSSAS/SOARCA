@@ -62,7 +62,7 @@ jobs:
       - name: Start httpbin docker container for test
         run: docker compose -f "deployments/docker/testing/httpbin-test/docker-compose.yml" up -d --build
       - name: Start jupyter docker container for test
-        run: docker compose -f "deployments/docker/testing/httpbin-test/docker-compose.yml" up -d --build
+        run: docker compose -f "deployments/docker/testing/jupyter-test/docker-compose.yml" up -d --build
       - name: Run tests
         run: |
           docker compose -f "deployments/docker/testing/ssh-test/docker-compose.yml" up -d --build
