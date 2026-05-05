@@ -14,7 +14,7 @@ GOFLAGS = -ldflags "$(GOLDFLAGS)"
 # The same overview of the build can be viewed at /swagger/index.html, including for local build.
 swagger:
 	mkdir -p api
-	swag init -g main.go -o api -d cmd/soarca/,api
+	swag init -o api -d ./ -g cmd/soarca/main.go
 
 lint: swagger
 	
