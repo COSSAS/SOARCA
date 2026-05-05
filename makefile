@@ -12,6 +12,11 @@ GOFLAGS = -ldflags "$(GOLDFLAGS)"
 # This creates the swagger.json and swagger.yaml files in api/. \
 # These can be copied to docs/static/openapi to provide convenient api documentation
 # The same overview of the build can be viewed at /swagger/index.html, including for local build.
+
+swagger-docs:
+	swag init -o docs/static/openapi -d ./ -g cmd/soarca/main.go --ot json,yaml
+	
+
 swagger:
 	mkdir -p api
 	swag init -o api -d ./ -g cmd/soarca/main.go
