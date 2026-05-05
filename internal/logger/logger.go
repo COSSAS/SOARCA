@@ -31,7 +31,7 @@ const (
 	Trace
 )
 
-func severityFromString(name string) Severity {
+func (severity Severity) fromString(name string) Severity {
 	nameToLower := strings.ToLower(name)
 	switch nameToLower {
 	case "panic":
@@ -106,12 +106,7 @@ func Logger(name string, severity Severity, fileName FileName, format Format) *L
 
 	setFormat(instance, globalLogFormat)
 
-	globalSeverityLevel := severityFromString(globalLogSeverity)
-	if globalSeverityLevel > severity {
-		instance.SetLevel(logrus.Level(globalSeverityLevel))
-	} else {
-		instance.SetLevel(logrus.Level(severity))
-	}
+	instance.SetLevel(logrus.Level(severity.fromString(globalLogSeverity)))
 
 	if globalOperationMode == development {
 		if fileName != "" {
