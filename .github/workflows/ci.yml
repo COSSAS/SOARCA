@@ -59,8 +59,10 @@ jobs:
       - name: Install swaggo
         run:  go install github.com/swaggo/swag/cmd/swag@latest  
         timeout-minutes: 12
-      - name: Start docker containers for test
+      - name: Start httpbin docker container for test
         run: docker compose -f "deployments/docker/testing/httpbin-test/docker-compose.yml" up -d --build
+      - name: Start jupyter docker container for test
+        run: docker compose -f "deployments/docker/testing/jupyter-test/docker-compose.yml" up -d --build
       - name: Run tests
         run: |
           docker compose -f "deployments/docker/testing/ssh-test/docker-compose.yml" up -d --build
