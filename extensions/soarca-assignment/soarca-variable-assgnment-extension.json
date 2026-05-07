@@ -24,5 +24,10 @@
             "$ref": "./expression/expression.json",
             "description": "The regular expression applied to the result before it's mapped into the variable. The expression is optional when the assignment is used."
         }
-    }
+    },
+    "required": [
+        "type",
+        "step-result",
+        "variable"
+    ]
 }
