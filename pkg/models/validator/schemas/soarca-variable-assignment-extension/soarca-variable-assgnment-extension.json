@@ -1,0 +1,28 @@
+{
+    "$id": "https://raw.githubusercontent.com/COSSAS/SOARCA/refs/heads/development/pkg/models/validator/schemas/soarca-variable-assignment-extension/soarca-variable-assgnment-extension.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "soarca-assignment",
+    "description": "This extension is used by SOARCA to allow for variable assignment based on step results. All SOARCA action steps have defined results. These defined results can be mapped into specific variables. To allow these variables to be useful the results can be processed by a expression engine. Currently SOARCA supports jq and regex.",
+    "type": "object",
+    "properties": {
+        "type": {
+            "type": "string",
+            "enum": [
+                "soarca-assignment"
+            ],
+            "description": "The value of this property MUST be layout."
+        },
+        "step-result": {
+            "type": "string",
+            "description": "The step result from SOARCA that needs to passed to the regex and/or variable. This must be populated when the assignment is used."
+        },
+        "variable": {
+            "type": "string",
+            "description": "The variable name denoted like __YOUR_VAR_NAME__ to put the output into. This must be populated when the assignment is used."
+        },
+        "expression": {
+            "$ref": "./expression/expression.json",
+            "description": "The regular expression applied to the result before it's mapped into the variable. The expression is optional when the assignment is used."
+        }
+    }
+}
