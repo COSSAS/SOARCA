@@ -58,9 +58,30 @@ services:
       - mongodb_container
       - cert-generator
 
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: loki
+    command: -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - ./observability/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - loki_data_container:/loki
+    ports:
+      - 127.0.0.1:3100:3100
+
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy
+    command: run /etc/alloy/config.alloy
+    volumes:
+      - ./observability/alloy-config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - loki
+
 networks:
   db-net:
 
 volumes:
   mongodb_data_container:
   certs_data_containter:
+  loki_data_container:

@@ -1,0 +1,59 @@
+discovery.docker "docker" {
+  host = "unix:///var/run/docker.sock"
+}
+
+discovery.relabel "soarca" {
+  targets = discovery.docker.docker.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/soarca_server"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+    replacement   = "$1"
+  }
+
+  rule {
+    target_label = "job"
+    replacement  = "soarca"
+  }
+}
+
+loki.source.docker "soarca" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.soarca.output
+  forward_to = [loki.process.json_parse.receiver]
+}
+
+loki.process "json_parse" {
+  stage.json {
+    expressions = {
+      level   = "level",
+      msg     = "msg",
+      time    = "time",
+    }
+  }
+
+  stage.labels {
+    values = {
+      level = "level",
+    }
+  }
+
+  stage.output {
+    source = "msg"
+  }
+
+  forward_to = [loki.write.default.receiver]
+}
+
+loki.write "default" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
