@@ -95,6 +95,7 @@ services:
     depends_on:
       - mongodb_container
       - mosquitto
+
   loki:
     image: grafana/loki:3.0.0
     container_name: loki
@@ -115,6 +116,21 @@ services:
     depends_on:
       - loki
 
+  grafana:
+    image: grafana/grafana:13.0.1
+    container_name: grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - ./observability/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
+      - grafana_data_container:/var/lib/grafana
+    ports:
+      - 127.0.0.1:3000:3000
+    depends_on:
+      - loki
+
 networks:
   db-net:
   mqtt-net:
@@ -131,3 +147,4 @@ volumes:
   mosquitto_data:
   mosquitto_log:
   loki_data_container:
+  grafana_data_container:
