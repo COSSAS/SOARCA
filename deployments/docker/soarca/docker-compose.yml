@@ -126,3 +126,4 @@ volumes:
       o: bind
   mosquitto_data:
   mosquitto_log:
+  loki_data_container:
