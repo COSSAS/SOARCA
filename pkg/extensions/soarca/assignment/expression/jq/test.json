@@ -1,0 +1,53 @@
+{
+    "library": "Riverside Branch",
+    "open": true,
+    "books": [
+        {
+            "id": 1,
+            "title": "The Left Hand of Darkness",
+            "author": "Ursula K. Le Guin",
+            "year": 1969,
+            "genres": [
+                "sci-fi",
+                "literary"
+            ],
+            "copies": 3,
+            "checked_out": 2
+        },
+        {
+            "id": 2,
+            "title": "Dune",
+            "author": "Frank Herbert",
+            "year": 1965,
+            "genres": [
+                "sci-fi"
+            ],
+            "copies": 5,
+            "checked_out": 5
+        },
+        {
+            "id": 3,
+            "title": "Beloved",
+            "author": "Toni Morrison",
+            "year": 1987,
+            "genres": [
+                "literary",
+                "historical"
+            ],
+            "copies": 2,
+            "checked_out": 0
+        },
+        {
+            "id": 4,
+            "title": "Neuromancer",
+            "author": "William Gibson",
+            "year": 1984,
+            "genres": [
+                "sci-fi",
+                "cyberpunk"
+            ],
+            "copies": 4,
+            "checked_out": 3
+        }
+    ]
+}
