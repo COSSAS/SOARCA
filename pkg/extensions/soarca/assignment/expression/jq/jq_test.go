@@ -52,7 +52,7 @@ const object = `{
 
 func TestName(t *testing.T) {
 	jq := New()
-	assert.Equal(t, jq.GetExpressionName(), "jq")
+	assert.Equal(t, jq.GetEngineName(), "jq")
 }
 
 func TestSimpleQuery(t *testing.T) {

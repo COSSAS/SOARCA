@@ -33,7 +33,7 @@ func New() *Jq {
 	return &Jq{}
 }
 
-func (jq *Jq) GetExpressionName() string {
+func (jq *Jq) GetEngineName() string {
 	return expressionEngine
 }
 
