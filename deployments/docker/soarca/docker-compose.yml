@@ -1,4 +1,3 @@
-version: "3.7"
 services:
   mongodb_container:
     image: docker.io/mongo:latest
@@ -41,12 +40,17 @@ services:
   soarca-gui:
     image: docker.io/cossas/soarca-gui:latest
     container_name: soarca_gui
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       PORT: 8081
       SOARCA_URI: "http://soarca_server:8080"
       GIN_MODE: "release"
       AUTH_ENABLED: false
       AUTH_ENABLED_TO_SOARCA: false
+      NODE_ENV: production
+      NGINX_BACKEND_URL: ${NGINX_BACKEND_URL:-http://host.docker.internal:8080/}
+      NGINX_SERVER_PORT: ${NGINX_SERVER_PORT:-8081}
     networks:
       - soarca-net
     ports:
