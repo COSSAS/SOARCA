@@ -1,4 +1,4 @@
-version: '3.7'
+version: "3.7"
 services:
   mongodb_container:
     image: docker.io/mongo:latest
@@ -91,12 +91,30 @@ services:
     depends_on:
       - mongodb_container
       - mosquitto
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: loki
+    command: -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - ./observability/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - loki_data_container:/loki
+    ports:
+      - 127.0.0.1:3100:3100
+
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy
+    command: run /etc/alloy/config.alloy
+    volumes:
+      - ./observability/alloy-config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - loki
 
 networks:
   db-net:
   mqtt-net:
   soarca-net:
-
 
 volumes:
   mongodb_data_container:
@@ -108,5 +126,3 @@ volumes:
       o: bind
   mosquitto_data:
   mosquitto_log:
-
-
