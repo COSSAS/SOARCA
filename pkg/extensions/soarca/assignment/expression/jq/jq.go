@@ -37,23 +37,23 @@ func (jq *Jq) GetEngineName() string {
 	return expressionEngine
 }
 
-func (jq *Jq) Execute(source string, queryExpression expression.Query) (error, string) {
+func (jq *Jq) Execute(source string, queryExpression expression.Query) (string, error) {
 	query, err := gojq.Parse(string(queryExpression))
 	if err != nil {
-		return err, ""
+		return "", err
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
 	valid := json.Valid([]byte(source))
 	if !valid {
-		return errors.New("invalid json object"), ""
+		return "", errors.New("invalid json object")
 	}
 	input := map[string]any{}
 	err = json.Unmarshal([]byte(source), &input)
 	if err != nil {
 		log.Error("unmarshal failed with error: ", err.Error())
-		return err, ""
+		return "", err
 	}
 
 	it := query.RunWithContext(ctx, input)
@@ -68,7 +68,7 @@ func (jq *Jq) Execute(source string, queryExpression expression.Query) (error, s
 			if errors.As(err, &halt) && halt.Value() == nil {
 				break
 			}
-			return err, ""
+			return "", err
 		}
 
 		if s, ok := v.(string); ok {
@@ -76,7 +76,7 @@ func (jq *Jq) Execute(source string, queryExpression expression.Query) (error, s
 		} else {
 			b, err := json.Marshal(v)
 			if err != nil {
-				return err, ""
+				return "", err
 			}
 			result.Write(b)
 			result.WriteByte('\n')
@@ -84,5 +84,5 @@ func (jq *Jq) Execute(source string, queryExpression expression.Query) (error, s
 
 	}
 
-	return nil, strings.TrimSpace(result.String())
+	return strings.TrimSpace(result.String()), nil
 }
