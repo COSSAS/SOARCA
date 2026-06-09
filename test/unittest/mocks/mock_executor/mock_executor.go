@@ -12,10 +12,10 @@ type Mock_Action_Executor struct {
 	mock.Mock
 }
 
-func (executer *Mock_Action_Executor) Execute(
+func (executor *Mock_Action_Executor) Execute(
 	metadata execution.Metadata,
 	details executors.PlaybookStepMetadata) (cacao.Variables,
 	error) {
-	args := executer.Called(metadata, details)
+	args := executor.Called(metadata, details)
 	return args.Get(0).(cacao.Variables), args.Error(1)
 }

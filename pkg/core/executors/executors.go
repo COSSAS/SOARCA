@@ -5,7 +5,7 @@ import (
 	"soarca/pkg/models/execution"
 )
 
-type IPlaybookExecuter interface {
+type IPlaybookExecutor interface {
 	Execute(execution.Metadata,
 		cacao.Step,
 		cacao.Variables) (cacao.Variables, error)
@@ -16,7 +16,7 @@ type Context struct {
 	Variables cacao.Variables
 }
 
-type IConditionExecuter interface {
+type IConditionExecutor interface {
 	Execute(metadata execution.Metadata,
 		stepContext Context) (string, bool, error)
 }

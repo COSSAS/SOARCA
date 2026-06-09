@@ -103,7 +103,7 @@ Interface IPlaybookDatabase
 Interface IDatabase
 Interface ICapability
 Interface IDecomposer
-Interface IExecuter
+Interface IExecutor
 
 class Controller
 class Decomposer
@@ -111,14 +111,14 @@ class PlaybookDatabase
 class Status
 class Mongo
 class Capability
-Class Executer
+Class Executor
 
 
 IPlaybook <|.. Playbook
 ITrigger <|.. Trigger
 IStatus <|.. Status
 ICapability <|.. Capability
-IExecuter <|.. Executer
+IExecutor <|.. Executor
 Trigger -> IPlaybookDatabase
 IPlaybookDatabase <- Playbook
 IPlaybookDatabase <|.. PlaybookDatabase
@@ -126,8 +126,8 @@ IDatabase <-up- PlaybookDatabase
 IDatabase <|.. Mongo
 IDecomposer <- Trigger
 IDecomposer <|.. Decomposer
-IExecuter <- Decomposer
-ICapability <- Executer
+IExecutor <- Decomposer
+ICapability <- Executor
 @enduml
 ```
 
@@ -155,7 +155,7 @@ interface ITrigger{
 Interface IPlaybookDatabase
 
 Interface IDecomposer
-Interface IExecuter
+Interface IExecutor
 
 class Trigger
 class Controller
@@ -173,7 +173,7 @@ IPlaybookDatabase <|.. PlaybookDatabase
 
 IDecomposer <- Trigger
 IDecomposer <|.. Decomposer
-IExecuter -> Decomposer
+IExecutor -> Decomposer
 
 ```
 

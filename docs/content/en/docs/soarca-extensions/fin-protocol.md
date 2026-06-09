@@ -141,7 +141,7 @@ The message is used to register a fin to SOARCA. It has the following payload.
     "capabilities": [
         {
             "capability_id": "uuid",
-            "name": "ssh executer",
+            "name": "ssh executor",
             "version": "0.1.0", 
             "step": { 
                 "type": "action",

@@ -69,7 +69,7 @@ loop for all playbook steps
     decomposer -> decomposer: parse command
    
     decomposer -> exe: execute command
-    note over exe: correct executer is selected
+    note over exe: correct executor is selected
     ... Time has passed ...
     decomposer <-- exe
 end loop

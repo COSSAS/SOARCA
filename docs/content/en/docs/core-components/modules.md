@@ -1,13 +1,13 @@
 ---
-title: Executer Modules
+title: Executor Modules
 weight: 6
 categories: [architecture]
 tags: [components]
 description: >
-    Native executer modules 
+    Native executor modules 
 ---
 
-Executer modules are part of the SOARCA core. Executer modules perform the actual commands in CACAO playbook steps.
+Executor modules are part of the SOARCA core. Executor modules perform the actual commands in CACAO playbook steps.
 
 ## Native modules in SOARCA
 The following capability modules are currently defined in SOARCA:

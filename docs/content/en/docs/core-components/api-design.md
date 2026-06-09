@@ -372,7 +372,7 @@ None
 @endjson
 ```
 
-Module is the executing module name that will do the executer call.
+Module is the executing module name that will do the executor call.
 
 Category defines what kind of step is executed:
 ```plantuml

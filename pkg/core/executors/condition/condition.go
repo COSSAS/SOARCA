@@ -26,7 +26,7 @@ func New(comparison comparison.IComparison,
 		reporter: reporter, time: time}
 }
 
-type IExecuter interface {
+type IExecutor interface {
 	Execute(metadata execution.Metadata,
 		step cacao.Step, variables cacao.Variables) (string, bool, error)
 }
