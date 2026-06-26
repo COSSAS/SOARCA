@@ -5,6 +5,7 @@ import (
 	"soarca/internal/logger"
 	"soarca/pkg/extensions/soarca/assignment/expression"
 	"soarca/pkg/extensions/soarca/assignment/expression/jq"
+	"soarca/pkg/extensions/soarca/assignment/expression/regex"
 	"soarca/pkg/models/cacao"
 	assignmentModel "soarca/pkg/models/extensions/soarca/assignment"
 )
@@ -38,9 +39,11 @@ type Assignment struct {
 // "type" field.
 func New() *Assignment {
 	jqEngine := jq.New()
+	regexEngine := regex.New()
 	return &Assignment{
 		engines: map[string]expression.IExpression{
-			jqEngine.GetEngineName(): jqEngine,
+			jqEngine.GetEngineName():    jqEngine,
+			regexEngine.GetEngineName(): regexEngine,
 		},
 	}
 }
