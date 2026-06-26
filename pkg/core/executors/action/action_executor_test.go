@@ -9,6 +9,7 @@ import (
 	"soarca/pkg/core/executors"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
+	"soarca/test/unittest/mocks/mock_assignment_extension"
 	"soarca/test/unittest/mocks/mock_capability"
 	"soarca/test/unittest/mocks/mock_reporter"
 	mock_time "soarca/test/unittest/mocks/mock_utils/time"
@@ -22,10 +23,11 @@ func TestExecuteStep(t *testing.T) {
 	mock_http := new(mock_capability.Mock_Capability)
 	mock_reporter := new(mock_reporter.Mock_Reporter)
 	mock_time := new(mock_time.MockTime)
+	mock_assignment := new(mock_assignment_extension.Mock_AssignmentExtension)
 
 	capabilities := map[string]capability.ICapability{"mock-ssh": mock_ssh, "http-api": mock_http}
 
-	executerObject := New(capabilities, mock_reporter, mock_time)
+	executerObject := New(capabilities, mock_reporter, mock_time, mock_assignment)
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	playbookId := "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
 	stepId := "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
@@ -114,10 +116,11 @@ func TestExecuteActionStep(t *testing.T) {
 	mock_http := new(mock_capability.Mock_Capability)
 	mock_reporter := new(mock_reporter.Mock_Reporter)
 	mock_time := new(mock_time.MockTime)
+	mock_assignment := new(mock_assignment_extension.Mock_AssignmentExtension)
 
 	capabilities := map[string]capability.ICapability{"ssh": mock_ssh, "http-api": mock_http}
 
-	executerObject := New(capabilities, mock_reporter, mock_time)
+	executerObject := New(capabilities, mock_reporter, mock_time, mock_assignment)
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	playbookId := "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
 	stepId := "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
@@ -180,10 +183,11 @@ func TestNonExistingCapabilityStep(t *testing.T) {
 	mock_ssh := new(mock_capability.Mock_Capability)
 	mock_http := new(mock_capability.Mock_Capability)
 	mock_time := new(mock_time.MockTime)
+	mock_assignment := new(mock_assignment_extension.Mock_AssignmentExtension)
 
 	capabilities := map[string]capability.ICapability{"ssh": mock_ssh, "http-api": mock_http}
 
-	executerObject := New(capabilities, new(mock_reporter.Mock_Reporter), mock_time)
+	executerObject := New(capabilities, new(mock_reporter.Mock_Reporter), mock_time, mock_assignment)
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	playbookId := "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
 	stepId := "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
@@ -230,10 +234,11 @@ func TestNonExistingCapabilityStep(t *testing.T) {
 func TestVariableInterpolation(t *testing.T) {
 	mock_capability1 := new(mock_capability.Mock_Capability)
 	mock_time := new(mock_time.MockTime)
+	mock_assignment := new(mock_assignment_extension.Mock_AssignmentExtension)
 
 	capabilities := map[string]capability.ICapability{"cap1": mock_capability1}
 
-	executerObject := New(capabilities, new(mock_reporter.Mock_Reporter), mock_time)
+	executerObject := New(capabilities, new(mock_reporter.Mock_Reporter), mock_time, mock_assignment)
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	playbookId := "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
 	stepId := "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
