@@ -1,0 +1,188 @@
+{
+    "type": "playbook",
+    "spec_version": "cacao-2.0",
+    "id": "playbook--460fda3e-11ba-4584-9dfa-ea3e5643c515",
+    "name": "Weather to Slack",
+    "description": "Fetches current temperature and humidity for a coordinate pair from Open-Meteo (no API key) and posts a one-line summary to a Slack incoming webhook. Uses the soarca-assignment / jq step extension to pull values out of the JSON response (Open-Meteo returns JSON; jq requires valid JSON input). The extracted values land as string-typed variables and are interpolated directly into the Slack message body.",
+    "created_by": "identity--1a09b724-e562-41eb-a8c2-9acf4d4f1fcc",
+    "created": "2026-05-27T10:00:00.000Z",
+    "modified": "2026-05-27T10:00:00.000Z",
+    "revoked": false,
+    "playbook_variables": {
+        "__lat__": {
+            "type": "string",
+            "description": "Latitude as a decimal string (e.g. '52.37' for Amsterdam). String-typed so it interpolates cleanly into the URL.",
+            "value": "52.37",
+            "constant": false,
+            "external": true
+        },
+        "__lon__": {
+            "type": "string",
+            "description": "Longitude as a decimal string (e.g. '4.89' for Amsterdam).",
+            "value": "4.89",
+            "constant": false,
+            "external": true
+        },
+        "__location_name__": {
+            "type": "string",
+            "description": "Human-readable name of the location (used in the Slack text; Open-Meteo only takes coordinates).",
+            "value": "Amsterdam",
+            "constant": false,
+            "external": true
+        },
+        "__slack_webhook_path__": {
+            "type": "string",
+            "description": "Path portion of the Slack incoming webhook, e.g. '/services/TXXX/BXXX/<token>'. Bind at trigger time; this is a secret. The command line is interpolated.",
+            "value": "",
+            "constant": true,
+            "external": true
+        },
+        "__soarca_http_api_result__": {
+            "type": "string",
+            "description": "Raw response body from the weather call. jq runs against this.",
+            "value": "",
+            "constant": false,
+            "external": false
+        },
+        "__temp__": {
+            "type": "string",
+            "description": "Temperature value extracted by jq (.current.temperature_2m). Always string-typed (the assignment engine forces string).",
+            "value": "",
+            "constant": false,
+            "external": false
+        },
+        "__humidity__": {
+            "type": "string",
+            "description": "Humidity value extracted by jq (.current.relative_humidity_2m).",
+            "value": "",
+            "constant": false,
+            "external": false
+        },
+        "__unit__": {
+            "type": "string",
+            "description": "Temperature unit extracted by jq (.current_units.temperature_2m, typically '\u00b0C').",
+            "value": "",
+            "constant": false,
+            "external": false
+        }
+    },
+    "workflow_start": "start--e34f120d-636e-4e99-a93e-2f1fd7178695",
+    "workflow": {
+        "start--e34f120d-636e-4e99-a93e-2f1fd7178695": {
+            "type": "start",
+            "on_completion": "action--4551c3d2-8e0d-47c5-9270-328194047a2b"
+        },
+        "action--4551c3d2-8e0d-47c5-9270-328194047a2b": {
+            "type": "action",
+            "name": "Get current weather (Open-Meteo)",
+            "description": "GET current weather for the configured coordinates. Three jq extensions then pull temperature, humidity and unit out of the JSON.",
+            "on_completion": "action--44a5ed3d-b5f0-4fbc-ac9d-2c044d99debf",
+            "commands": [
+                {
+                    "type": "http-api",
+                    "command": "GET /v1/forecast?latitude=__lat__:value&longitude=__lon__:value&current=temperature_2m,relative_humidity_2m HTTP/1.1",
+                    "headers": {
+                        "Accept": [
+                            "application/json"
+                        ]
+                    }
+                }
+            ],
+            "agent": "soarca--d6f577d5-9f6d-4318-8f12-bf5caaaa0ea9",
+            "targets": [
+                "http-api--4e49f341-5bea-4a2b-811d-4d81d1c0fa33"
+            ],
+            "out_args": [
+                "__soarca_http_api_result__",
+                "__temp__",
+                "__humidity__",
+                "__unit__"
+            ],
+            "step_extensions": {
+                "extension-definition--7f7007fb-e09f-4f2d-a404-1653d0da48f8": {
+                    "type": "soarca-assignment",
+                    "step-result": "__soarca_http_api_result__",
+                    "variable": "__temp__",
+                    "expression": {
+                        "type": "jq",
+                        "expression": ".current.temperature_2m"
+                    }
+                },
+                "extension-definition--930f55b3-07af-4089-b26d-1cdcb29f2a8f": {
+                    "type": "soarca-assignment",
+                    "step-result": "__soarca_http_api_result__",
+                    "variable": "__humidity__",
+                    "expression": {
+                        "type": "jq",
+                        "expression": ".current.relative_humidity_2m"
+                    }
+                },
+                "extension-definition--197653b9-e35d-478f-a005-230da89cbc93": {
+                    "type": "soarca-assignment",
+                    "step-result": "__soarca_http_api_result__",
+                    "variable": "__unit__",
+                    "expression": {
+                        "type": "jq",
+                        "expression": ".current_units.temperature_2m"
+                    }
+                }
+            }
+        },
+        "action--44a5ed3d-b5f0-4fbc-ac9d-2c044d99debf": {
+            "type": "action",
+            "name": "Post weather summary to Slack",
+            "description": "POST a single-line incoming-webhook message. Body interpolates the extracted variables; the webhook path is in the command line (interpolated) so it stays out of the target definition.",
+            "on_completion": "end--0ae884fc-c563-49bf-bdfe-991d5453c226",
+            "commands": [
+                {
+                    "type": "http-api",
+                    "command": "POST __slack_webhook_path__:value HTTP/1.1",
+                    "content": "{\"text\":\"Current weather in __location_name__:value: __temp__:value__unit__:value, humidity __humidity__:value%\"}",
+                    "headers": {
+                        "Content-Type": [
+                            "application/json"
+                        ]
+                    }
+                }
+            ],
+            "agent": "soarca--d6f577d5-9f6d-4318-8f12-bf5caaaa0ea9",
+            "targets": [
+                "http-api--7e9c587b-2324-464b-8e21-f2d41087605c"
+            ]
+        },
+        "end--0ae884fc-c563-49bf-bdfe-991d5453c226": {
+            "type": "end",
+            "name": "Weather posted"
+        }
+    },
+    "agent_definitions": {
+        "soarca--d6f577d5-9f6d-4318-8f12-bf5caaaa0ea9": {
+            "type": "soarca",
+            "name": "soarca-http-api"
+        }
+    },
+    "target_definitions": {
+        "http-api--4e49f341-5bea-4a2b-811d-4d81d1c0fa33": {
+            "type": "http-api",
+            "name": "Open-Meteo",
+            "description": "Open-Meteo current-weather API (no auth).",
+            "address": {
+                "url": [
+                    "https://api.open-meteo.com/"
+                ]
+            },
+            "port": "443"
+        },
+        "http-api--7e9c587b-2324-464b-8e21-f2d41087605c": {
+            "type": "http-api",
+            "name": "Slack incoming webhook",
+            "description": "Slack incoming webhook endpoint. The path (a secret) is supplied per call via __slack_webhook_path__.",
+            "address": {
+                "url": [
+                    "https://hooks.slack.com/"
+                ]
+            },
+            "port": "443"
+        }
+    }
+}
