@@ -20,6 +20,7 @@ import (
 	"soarca/pkg/core/executors/action"
 	"soarca/pkg/core/executors/condition"
 	"soarca/pkg/core/executors/playbook_action"
+	"soarca/pkg/extensions/soarca/assignment"
 	"soarca/pkg/reporting/cases"
 	"soarca/pkg/reporting/reporter"
 	"soarca/pkg/utils"
@@ -120,7 +121,8 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	reporter.RegisterReporters(downstreamReporters)
 
 	soarcaTime := new(timeUtil.Time)
-	actionExecutor := action.New(capabilities, reporter, soarcaTime)
+	assignmentExtension := assignment.New()
+	actionExecutor := action.New(capabilities, reporter, soarcaTime, assignmentExtension)
 	playbookActionExecutor := playbook_action.New(controller, controller, reporter, soarcaTime)
 	stixComparison := comparison.New()
 	conditionExecutor := condition.New(stixComparison, reporter, soarcaTime)
