@@ -7,8 +7,10 @@ import (
 	"soarca/internal/logger"
 	"soarca/pkg/core/capability"
 	"soarca/pkg/core/executors"
+	"soarca/pkg/extensions/soarca/assignment"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
+	assignmentModel "soarca/pkg/models/extensions/soarca/assignment"
 	"soarca/pkg/reporting/reporter"
 	timeUtil "soarca/pkg/utils/time"
 )
@@ -20,11 +22,12 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
-func New(capabilities map[string]capability.ICapability, reporter reporter.IStepReporter, time timeUtil.ITime) *Executor {
+func New(capabilities map[string]capability.ICapability, reporter reporter.IStepReporter, time timeUtil.ITime, assigner assignment.IAssignmentExtension) *Executor {
 	var instance = Executor{}
 	instance.capabilities = capabilities
 	instance.reporter = reporter
 	instance.time = time
+	instance.assigner = assigner
 	return &instance
 }
 
@@ -37,6 +40,7 @@ type Executor struct {
 	capabilities map[string]capability.ICapability
 	reporter     reporter.IStepReporter
 	time         timeUtil.ITime
+	assigner     assignment.IAssignmentExtension
 }
 
 type data struct {
@@ -93,22 +97,47 @@ func (executor *Executor) executeCommandFromArray(meta execution.Metadata,
 				meta,
 				data)
 
+			if err != nil {
+				log.Error("Error executing Command ", err)
+				return cacao.NewVariables(), err
+			}
+			log.Trace("Command executed")
+
+			// Map defined step results into variables as described by any
+			// soarca-assignment step extensions.
+			assignedVariables := executor.evaluateAssignments(metadata.Step.StepExtensions, outputVariables)
+			outputVariables.Merge(assignedVariables)
+
 			if len(metadata.Step.OutArgs) > 0 {
 				// If OutArgs is set, only update execution args that are explicitly referenced
 				outputVariables = outputVariables.Select(metadata.Step.OutArgs)
 			}
 
 			returnVariables.Merge(outputVariables)
-
-			if err != nil {
-				log.Error("Error executing Command ", err)
-				return cacao.NewVariables(), err
-			} else {
-				log.Debug("Command executed")
-			}
 		}
 	}
 	return returnVariables, nil
+}
+
+func (executor *Executor) evaluateAssignments(extensions cacao.Extensions, results cacao.Variables) cacao.Variables {
+	assigned := cacao.NewVariables()
+	for id, raw := range extensions {
+		switch raw.(type) {
+		case assignmentModel.Assignment:
+
+		}
+		model, ok := assignmentModel.DecodeAssignment(raw)
+		if !ok {
+			continue
+		}
+		log.Trace("evaluating assignment extension ", id)
+		produced := executor.assigner.AssignAndEvaluate(assignment.Context{
+			AssignmentModel: model,
+			Source:          results,
+		})
+		assigned.Merge(produced)
+	}
+	return assigned
 }
 
 func interpolateCommand(command cacao.Command, variables cacao.Variables) cacao.Command {
