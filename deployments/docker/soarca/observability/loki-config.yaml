@@ -29,3 +29,4 @@ compactor:
 
 limits_config:
   allow_structured_metadata: false
+  volume_enabled: true

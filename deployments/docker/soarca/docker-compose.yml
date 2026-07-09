@@ -1,4 +1,3 @@
-version: "3.7"
 services:
   mongodb_container:
     image: docker.io/mongo:latest
@@ -41,12 +40,17 @@ services:
   soarca-gui:
     image: docker.io/cossas/soarca-gui:latest
     container_name: soarca_gui
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       PORT: 8081
       SOARCA_URI: "http://soarca_server:8080"
       GIN_MODE: "release"
       AUTH_ENABLED: false
       AUTH_ENABLED_TO_SOARCA: false
+      NODE_ENV: production
+      NGINX_BACKEND_URL: ${NGINX_BACKEND_URL:-http://host.docker.internal:8080/}
+      NGINX_SERVER_PORT: ${NGINX_SERVER_PORT:-8081}
     networks:
       - soarca-net
     ports:
@@ -91,6 +95,7 @@ services:
     depends_on:
       - mongodb_container
       - mosquitto
+
   loki:
     image: grafana/loki:3.0.0
     container_name: loki
@@ -111,6 +116,21 @@ services:
     depends_on:
       - loki
 
+  grafana:
+    image: grafana/grafana:13.0.1
+    container_name: grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - ./observability/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
+      - grafana_data_container:/var/lib/grafana
+    ports:
+      - 127.0.0.1:3000:3000
+    depends_on:
+      - loki
+
 networks:
   db-net:
   mqtt-net:
@@ -127,3 +147,4 @@ volumes:
   mosquitto_data:
   mosquitto_log:
   loki_data_container:
+  grafana_data_container:
