@@ -11,22 +11,22 @@
     "playbook_variables": {
         "__lat__": {
             "type": "string",
-            "description": "Latitude as a decimal string (e.g. '52.37' for Amsterdam). String-typed so it interpolates cleanly into the URL.",
-            "value": "52.37",
+            "description": "Latitude as a decimal string (e.g. '51.43940' for Eindhoven). String-typed so it interpolates cleanly into the URL.",
+            "value": "51.43940",
             "constant": false,
             "external": true
         },
         "__lon__": {
             "type": "string",
-            "description": "Longitude as a decimal string (e.g. '4.89' for Amsterdam).",
-            "value": "4.89",
+            "description": "Longitude as a decimal string (e.g. '5.47789' for Eindhoven).",
+            "value": "5.47789",
             "constant": false,
             "external": true
         },
         "__location_name__": {
             "type": "string",
             "description": "Human-readable name of the location (used in the Slack text; Open-Meteo only takes coordinates).",
-            "value": "Amsterdam",
+            "value": "Eindhoven",
             "constant": false,
             "external": true
         },
