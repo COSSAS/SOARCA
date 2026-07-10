@@ -1,5 +1,5 @@
 ---
-title: Vision & Concepts
+title: LLM Playbook Generation
 weight: 4
 description: >
   The how to on playbook generation using LLMs
