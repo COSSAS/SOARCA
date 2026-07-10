@@ -20,7 +20,7 @@ func TestHttpConnection(t *testing.T) {
 
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
-			"url": {"https://httpbin.org/get"},
+			"url": {"https://localhost/get"},
 		},
 	}
 	expectedCommand := cacao.Command{
@@ -64,7 +64,7 @@ func TestHttpOAuth2(t *testing.T) {
 
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
-			"url": {"https://httpbin.org/bearer"},
+			"url": {"https://localhost/bearer"},
 		},
 		AuthInfoIdentifier: "d0c7e6a0-f7fe-464e-9935-e6b3443f5b91",
 	}
@@ -104,7 +104,7 @@ func TestHttpBasicAuth(t *testing.T) {
 	httpCapability := http.New(&request)
 	user_id := "test"
 	password := "password"
-	url := fmt.Sprintf("https://httpbin.org/basic-auth/%s/%s", user_id, password)
+	url := fmt.Sprintf("https://localhost/basic-auth/%s/%s", user_id, password)
 
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{

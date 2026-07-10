@@ -38,7 +38,7 @@ func TestHttpGetConnection(t *testing.T) {
 
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
-			"url": {"https://httpbin.org/get"},
+			"url": {"https://localhost/get"},
 		},
 	}
 	command := cacao.Command{
@@ -66,7 +66,7 @@ func TestHttpPostConnection(t *testing.T) {
 
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
-			"url": {"https://httpbin.org/post"},
+			"url": {"https://localhost/post"},
 		},
 	}
 	command := cacao.Command{
@@ -93,7 +93,7 @@ func TestHttpPutConnection(t *testing.T) {
 	httpRequest := HttpRequest{}
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
-			"url": {"https://httpbin.org/put"},
+			"url": {"https://localhost/put"},
 		},
 	}
 	command := cacao.Command{
@@ -119,7 +119,7 @@ func TestHttpDeleteConnection(t *testing.T) {
 	httpRequest := HttpRequest{}
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
-			"url": {"https://httpbin.org/delete"},
+			"url": {"https://localhost/delete"},
 		},
 	}
 	command := cacao.Command{
@@ -147,7 +147,7 @@ func TestHttpStatus200(t *testing.T) {
 	httpRequest := HttpRequest{}
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
-			"url": {"https://httpbin.org/status/200"},
+			"url": {"https://localhost/status/200"},
 		},
 	}
 	command := cacao.Command{
@@ -174,7 +174,7 @@ func TestHttpBearerToken(t *testing.T) {
 
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
-			"url": {"https://httpbin.org/bearer"},
+			"url": {"https://localhost/bearer"},
 		},
 		AuthInfoIdentifier: "d0c7e6a0-f7fe-464e-9935-e6b3443f5b91",
 	}
@@ -214,7 +214,7 @@ func TestHttpBearerToken(t *testing.T) {
 func TestHttpBasicAuth(t *testing.T) {
 	user_id := "test"
 	password := "password"
-	url := fmt.Sprintf("https://httpbin.org/basic-auth/%s/%s", user_id, password)
+	url := fmt.Sprintf("https://localhost/basic-auth/%s/%s", user_id, password)
 	httpRequest := HttpRequest{}
 
 	target := cacao.AgentTarget{
@@ -274,7 +274,7 @@ func TestHttpPostWithContentConnection(t *testing.T) {
 
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
-			"url": {"https://httpbin.org/anything"},
+			"url": {"https://localhost/anything"},
 		},
 	}
 
@@ -295,7 +295,7 @@ func TestHttpPostWithContentConnection(t *testing.T) {
 		t.Error("http post request with body content has failed: ", err)
 	}
 
-	// specific format used by httpbin.org
+	// specific format used by localhost
 	var httpBinReponse httpBinResponseBody
 	err = json.Unmarshal(response, &httpBinReponse)
 	fmt.Println(httpBinReponse)
@@ -320,7 +320,7 @@ func TestHttpPostWithBase64ContentConnection(t *testing.T) {
 
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
-			"url": {"https://httpbin.org/anything"},
+			"url": {"https://localhost/anything"},
 		},
 	}
 
@@ -341,7 +341,7 @@ func TestHttpPostWithBase64ContentConnection(t *testing.T) {
 		t.Error("http post request with body content has failed: ", err)
 	}
 
-	// specific format used by httpbin.org
+	// specific format used by localhost
 	var httpBinReponse httpBinResponseBody
 	err = json.Unmarshal(response, &httpBinReponse)
 	fmt.Println(httpBinReponse)
