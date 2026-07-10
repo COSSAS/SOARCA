@@ -6,7 +6,9 @@ on:
   pull_request:
     branches:
       - development
-  push: 
+    paths:
+      - "docs/**"
+  push:
     branches:
       - master
 
@@ -28,29 +30,27 @@ defaults:
 jobs:
   # Build job
   build-documentation:
-    if: ${{ contains(github.head_ref, 'feature/docs/') || (github.ref == 'refs/heads/master' && github.github.event_name == 'push') }}
     runs-on: ubuntu-latest
     env:
-      HUGO_VERSION: 0.139.3  
+      HUGO_VERSION: 0.139.3
     steps:
-
       - name: Install Hugo CLI
         run: |
           wget -O ${{ runner.temp }}/hugo.deb https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb \
-          && sudo dpkg -i ${{ runner.temp }}/hugo.deb          
+          && sudo dpkg -i ${{ runner.temp }}/hugo.deb
       - name: Install Dart Sass
         run: sudo snap install dart-sass
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: "20.x"
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 0
       - name: Update npm
-        run: npm install -g npm@10.5.0  
+        run: npm install -g npm@10.5.0
       - name: Install dependencies
         run: npm install
         working-directory: docs
@@ -69,7 +69,7 @@ jobs:
           hugo \
             --gc \
             --minify \
-            --baseURL "${{ steps.pages.outputs.base_url }}/"          
+            --baseURL "${{ steps.pages.outputs.base_url }}/"
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -77,7 +77,6 @@ jobs:
 
   # Deployment job
   deploy-to-pages:
-    if: ${{ contains(github.head_ref, 'feature/docs/') || (github.ref == 'refs/heads/master' && github.github.event_name == 'push')}}
     environment:
       name: development-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -87,4 +86,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
