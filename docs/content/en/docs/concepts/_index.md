@@ -55,6 +55,8 @@ By following CACAO playbook specifications, organizations can enhance their auto
 
 More information can be found in our [primer on playbooks](/docs/concepts/executable-playbooks).
 
+One can generate playbooks using LLMs using the [playbook generation guide](/docs/concepts/llm-playbook-generation)
+
 ### SOARCA Fin(s): Extending the core capabilities
 
 SOARCA can be extended with custom extensions or rather so-called FIN (inspired by the majestic orca). A fin can be integrated within the SOARCA core. Technical descriptions of the components can be found [here](/docs/soarca-extensions/fin-protocol). Fins communicate with the SOARCA core using a pre-defined MQTT protocol. 
