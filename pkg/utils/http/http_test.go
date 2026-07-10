@@ -35,7 +35,7 @@ type httpBinResponseBody struct {
 
 func TestHttpGetConnection(t *testing.T) {
 	httpRequest := HttpRequest{}
-
+	httpRequest.SkipCertificateValidation(true)
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
 			"url": {"https://localhost/get"},
@@ -63,7 +63,7 @@ func TestHttpGetConnection(t *testing.T) {
 
 func TestHttpPostConnection(t *testing.T) {
 	httpRequest := HttpRequest{}
-
+	httpRequest.SkipCertificateValidation(true)
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
 			"url": {"https://localhost/post"},
@@ -91,6 +91,7 @@ func TestHttpPostConnection(t *testing.T) {
 
 func TestHttpPutConnection(t *testing.T) {
 	httpRequest := HttpRequest{}
+	httpRequest.SkipCertificateValidation(true)
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
 			"url": {"https://localhost/put"},
@@ -117,6 +118,7 @@ func TestHttpPutConnection(t *testing.T) {
 
 func TestHttpDeleteConnection(t *testing.T) {
 	httpRequest := HttpRequest{}
+	httpRequest.SkipCertificateValidation(true)
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
 			"url": {"https://localhost/delete"},
@@ -145,6 +147,7 @@ func TestHttpDeleteConnection(t *testing.T) {
 
 func TestHttpStatus200(t *testing.T) {
 	httpRequest := HttpRequest{}
+	httpRequest.SkipCertificateValidation(true)
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
 			"url": {"https://localhost/status/200"},
@@ -171,6 +174,7 @@ func TestHttpStatus200(t *testing.T) {
 func TestHttpBearerToken(t *testing.T) {
 	bearerToken := "test_token"
 	httpRequest := HttpRequest{}
+	httpRequest.SkipCertificateValidation(true)
 
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
@@ -216,7 +220,7 @@ func TestHttpBasicAuth(t *testing.T) {
 	password := "password"
 	url := fmt.Sprintf("https://localhost/basic-auth/%s/%s", user_id, password)
 	httpRequest := HttpRequest{}
-
+	httpRequest.SkipCertificateValidation(true)
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
 			"url": {url},
@@ -261,7 +265,7 @@ func TestHttpBasicAuth(t *testing.T) {
 
 func TestHttpPostWithContentConnection(t *testing.T) {
 	httpRequest := HttpRequest{}
-
+	httpRequest.SkipCertificateValidation(true)
 	testJsonObj := testJson{Id: "28818819", User: "test", Description: "very interesting description"}
 	requestBody, err := json.Marshal(testJsonObj)
 	body := "some payload body"
@@ -307,7 +311,7 @@ func TestHttpPostWithContentConnection(t *testing.T) {
 
 func TestHttpPostWithBase64ContentConnection(t *testing.T) {
 	httpRequest := HttpRequest{}
-
+	httpRequest.SkipCertificateValidation(true)
 	testJsonObj := testJson{Id: "28818819", User: "test", Description: "very interesting description"}
 	requestBody, err := json.Marshal(testJsonObj)
 	base64EncodedBody := base64.StdEncoding.EncodeToString(requestBody)

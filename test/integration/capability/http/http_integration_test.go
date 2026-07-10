@@ -16,6 +16,7 @@ import (
 
 func TestHttpConnection(t *testing.T) {
 	request := httpUtil.HttpRequest{}
+	request.SkipCertificateValidation(true)
 	httpCapability := http.New(&request)
 
 	target := cacao.AgentTarget{
@@ -58,6 +59,7 @@ func TestHttpConnection(t *testing.T) {
 
 func TestHttpOAuth2(t *testing.T) {
 	request := httpUtil.HttpRequest{}
+	request.SkipCertificateValidation(true)
 	httpCapability := http.New(&request)
 
 	bearerToken := "test_token"
@@ -101,6 +103,7 @@ func TestHttpOAuth2(t *testing.T) {
 
 func TestHttpBasicAuth(t *testing.T) {
 	request := httpUtil.HttpRequest{}
+	request.SkipCertificateValidation(true)
 	httpCapability := http.New(&request)
 	user_id := "test"
 	password := "password"
@@ -147,7 +150,6 @@ func TestHttpBasicAuth(t *testing.T) {
 
 func TestInsecureHTTPConnection(t *testing.T) {
 	httpRequest := httpUtil.HttpRequest{}
-
 	target := cacao.AgentTarget{
 		Address: map[cacao.NetAddressType][]string{
 			"url": {"https://localhost/get"},
