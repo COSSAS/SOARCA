@@ -1,0 +1,388 @@
+{
+    "type": "playbook",
+    "spec_version": "cacao-2.0",
+    "id": "playbook--cd44f6a8-4289-4c9d-a6d6-690353399185",
+    "name": "IP reputation to Slack (AbuseIPDB + ip-api.com)",
+    "description": "Looks up an IP against AbuseIPDB (reputation) and ip-api.com (geo/ASN), extracts fields from each JSON response using the soarca-assignment/jq step extension, and posts a formatted summary to a Slack incoming webhook. Note: ip-api.com's free tier is HTTP only (port 80); the target reflects that. AbuseIPDB free tier is limited to 1000 checks/day; ip-api.com free tier is 45 requests/min per source IP.",
+    "created_by": "identity--9a13c80b-2ac5-44dc-aa8d-15e18c735fa9",
+    "created": "2026-05-27T10:00:00.000Z",
+    "modified": "2026-05-27T10:00:00.000Z",
+    "revoked": false,
+    "playbook_variables": {
+        "__ip__": {
+            "type": "ipv4-addr",
+            "description": "IP address to check. Bind at trigger time.",
+            "value": "",
+            "constant": false,
+            "external": true
+        },
+        "__abuse_api_key__": {
+            "type": "string",
+            "description": "AbuseIPDB API key. Sent in the 'Key' header (which is interpolated). Bind at trigger time / via KMS.",
+            "value": "",
+            "constant": true,
+            "external": false
+        },
+        "__slack_webhook_path__": {
+            "type": "string",
+            "description": "Path portion of the Slack incoming webhook. Secret; command line is interpolated.",
+            "value": "",
+            "constant": true,
+            "external": false
+        },
+        "__soarca_http_api_result__": {
+            "type": "string",
+            "description": "Raw response body from the last http-api call. jq runs against this per step.",
+            "value": "",
+            "constant": false,
+            "external": false
+        },
+        "__abuse_score__": {
+            "type": "string",
+            "description": "AbuseIPDB abuseConfidenceScore (0-100).",
+            "value": "",
+            "constant": false,
+            "external": false
+        },
+        "__abuse_reports__": {
+            "type": "string",
+            "description": "AbuseIPDB totalReports.",
+            "value": "",
+            "constant": false,
+            "external": false
+        },
+        "__abuse_country__": {
+            "type": "string",
+            "description": "AbuseIPDB countryCode.",
+            "value": "",
+            "constant": false,
+            "external": false
+        },
+        "__abuse_isp__": {
+            "type": "string",
+            "description": "AbuseIPDB isp.",
+            "value": "",
+            "constant": false,
+            "external": false
+        },
+        "__abuse_usage__": {
+            "type": "string",
+            "description": "AbuseIPDB usageType.",
+            "value": "",
+            "constant": false,
+            "external": false
+        },
+        "__abuse_last_reported__": {
+            "type": "string",
+            "description": "AbuseIPDB lastReportedAt (may be null).",
+            "value": "",
+            "constant": false,
+            "external": false
+        },
+        "__geo_country__": {
+            "type": "string",
+            "description": "ip-api country name.",
+            "value": "",
+            "constant": false,
+            "external": false
+        },
+        "__geo_city__": {
+            "type": "string",
+            "description": "ip-api city.",
+            "value": "",
+            "constant": false,
+            "external": false
+        },
+        "__geo_region__": {
+            "type": "string",
+            "description": "ip-api regionName.",
+            "value": "",
+            "constant": false,
+            "external": false
+        },
+        "__geo_isp__": {
+            "type": "string",
+            "description": "ip-api isp.",
+            "value": "",
+            "constant": false,
+            "external": false
+        },
+        "__geo_org__": {
+            "type": "string",
+            "description": "ip-api org.",
+            "value": "",
+            "constant": false,
+            "external": false
+        },
+        "__geo_as__": {
+            "type": "string",
+            "description": "ip-api as (autonomous system).",
+            "value": "",
+            "constant": false,
+            "external": false
+        },
+        "__geo_proxy__": {
+            "type": "string",
+            "description": "ip-api proxy flag (true/false).",
+            "value": "",
+            "constant": false,
+            "external": false
+        },
+        "__geo_hosting__": {
+            "type": "string",
+            "description": "ip-api hosting flag (true/false).",
+            "value": "",
+            "constant": false,
+            "external": false
+        }
+    },
+    "workflow_start": "start--f9d89891-9d52-4fc6-a575-6cba99eb32df",
+    "workflow": {
+        "start--f9d89891-9d52-4fc6-a575-6cba99eb32df": {
+            "type": "start",
+            "on_completion": "action--76e07065-8c27-454f-bf62-d1de3176170f"
+        },
+        "action--76e07065-8c27-454f-bf62-d1de3176170f": {
+            "type": "action",
+            "name": "AbuseIPDB check",
+            "description": "GET /api/v2/check with the IP address; API key in the 'Key' header.",
+            "on_completion": "action--5e2547f9-fa5d-4b05-9922-e50e95cbbcec",
+            "commands": [
+                {
+                    "type": "http-api",
+                    "command": "GET /api/v2/check?ipAddress=__ip__:value&maxAgeInDays=90 HTTP/1.1",
+                    "headers": {
+                        "Key": [
+                            "__abuse_api_key__:value"
+                        ],
+                        "Accept": [
+                            "application/json"
+                        ]
+                    }
+                }
+            ],
+            "agent": "soarca--29306bbd-ad5d-47c7-b62e-0e8ac44a6534",
+            "targets": [
+                "http-api--25803424-0ef8-4a8f-be9e-aac6eacd873e"
+            ],
+            "step_extensions": {
+                "extension-definition--dc3db308-f9fc-473a-9dbd-6772a15fc3a7": {
+                    "type": "soarca-assignment",
+                    "step-result": "__soarca_http_api_result__",
+                    "variable": "__abuse_score__",
+                    "expression": {
+                        "type": "jq",
+                        "expression": ".data.abuseConfidenceScore"
+                    }
+                },
+                "extension-definition--5f99fef4-d6ef-4b3f-9a57-a7ba191116eb": {
+                    "type": "soarca-assignment",
+                    "step-result": "__soarca_http_api_result__",
+                    "variable": "__abuse_reports__",
+                    "expression": {
+                        "type": "jq",
+                        "expression": ".data.totalReports"
+                    }
+                },
+                "extension-definition--a48ffcc1-cffa-4537-8568-6ad14f4d38b5": {
+                    "type": "soarca-assignment",
+                    "step-result": "__soarca_http_api_result__",
+                    "variable": "__abuse_country__",
+                    "expression": {
+                        "type": "jq",
+                        "expression": ".data.countryCode"
+                    }
+                },
+                "extension-definition--8a5022ca-bff9-4df4-881b-232dfd960b80": {
+                    "type": "soarca-assignment",
+                    "step-result": "__soarca_http_api_result__",
+                    "variable": "__abuse_isp__",
+                    "expression": {
+                        "type": "jq",
+                        "expression": ".data.isp"
+                    }
+                },
+                "extension-definition--6239eccb-7a08-4f67-a738-3de50d2ad9ad": {
+                    "type": "soarca-assignment",
+                    "step-result": "__soarca_http_api_result__",
+                    "variable": "__abuse_usage__",
+                    "expression": {
+                        "type": "jq",
+                        "expression": ".data.usageType"
+                    }
+                },
+                "extension-definition--3ffc69c4-d6cc-4246-89ae-faa9dea72409": {
+                    "type": "soarca-assignment",
+                    "step-result": "__soarca_http_api_result__",
+                    "variable": "__abuse_last_reported__",
+                    "expression": {
+                        "type": "jq",
+                        "expression": ".data.lastReportedAt"
+                    }
+                }
+            }
+        },
+        "action--5e2547f9-fa5d-4b05-9922-e50e95cbbcec": {
+            "type": "action",
+            "name": "ip-api.com geolocation",
+            "description": "GET /json/<ip> - free tier is HTTP only, no auth. Response is a flat JSON object.",
+            "on_completion": "action--0d49e534-11c4-4faf-8cda-348d4786c65c",
+            "commands": [
+                {
+                    "type": "http-api",
+                    "command": "GET /json/__ip__:value HTTP/1.1",
+                    "headers": {
+                        "Accept": [
+                            "application/json"
+                        ]
+                    }
+                }
+            ],
+            "agent": "soarca--29306bbd-ad5d-47c7-b62e-0e8ac44a6534",
+            "targets": [
+                "http-api--0f098f6a-7864-4f1d-a177-c708d8353891"
+            ],
+            "step_extensions": {
+                "extension-definition--d3b19052-67fd-41d3-8ef8-d81ab0cce8a4": {
+                    "type": "soarca-assignment",
+                    "step-result": "__soarca_http_api_result__",
+                    "variable": "__geo_country__",
+                    "expression": {
+                        "type": "jq",
+                        "expression": ".country"
+                    }
+                },
+                "extension-definition--789d7a39-08a4-433e-81a6-433e2ad0a789": {
+                    "type": "soarca-assignment",
+                    "step-result": "__soarca_http_api_result__",
+                    "variable": "__geo_city__",
+                    "expression": {
+                        "type": "jq",
+                        "expression": ".city"
+                    }
+                },
+                "extension-definition--dd0de811-a0e9-42d3-8d7b-7088002e911c": {
+                    "type": "soarca-assignment",
+                    "step-result": "__soarca_http_api_result__",
+                    "variable": "__geo_region__",
+                    "expression": {
+                        "type": "jq",
+                        "expression": ".regionName"
+                    }
+                },
+                "extension-definition--257486fb-7248-4d5a-8f27-18b995618f17": {
+                    "type": "soarca-assignment",
+                    "step-result": "__soarca_http_api_result__",
+                    "variable": "__geo_isp__",
+                    "expression": {
+                        "type": "jq",
+                        "expression": ".isp"
+                    }
+                },
+                "extension-definition--a966d309-3420-4e09-b761-a4ab7e36daba": {
+                    "type": "soarca-assignment",
+                    "step-result": "__soarca_http_api_result__",
+                    "variable": "__geo_org__",
+                    "expression": {
+                        "type": "jq",
+                        "expression": ".org"
+                    }
+                },
+                "extension-definition--8575f1ab-35ca-4708-b0bd-108ebffa4b49": {
+                    "type": "soarca-assignment",
+                    "step-result": "__soarca_http_api_result__",
+                    "variable": "__geo_as__",
+                    "expression": {
+                        "type": "jq",
+                        "expression": ".as"
+                    }
+                },
+                "extension-definition--6431ace6-3a87-44e1-b716-7147c2d1cb46": {
+                    "type": "soarca-assignment",
+                    "step-result": "__soarca_http_api_result__",
+                    "variable": "__geo_proxy__",
+                    "expression": {
+                        "type": "jq",
+                        "expression": ".proxy"
+                    }
+                },
+                "extension-definition--4e1547a3-ba16-47d7-826c-ea60baa15c5e": {
+                    "type": "soarca-assignment",
+                    "step-result": "__soarca_http_api_result__",
+                    "variable": "__geo_hosting__",
+                    "expression": {
+                        "type": "jq",
+                        "expression": ".hosting"
+                    }
+                }
+            }
+        },
+        "action--0d49e534-11c4-4faf-8cda-348d4786c65c": {
+            "type": "action",
+            "name": "Post reputation summary to Slack",
+            "description": "POST to Slack incoming webhook. Body interpolates all extracted variables.",
+            "on_completion": "end--2fa5a7b3-ac97-44a9-b3ee-7f35a545e9df",
+            "commands": [
+                {
+                    "type": "http-api",
+                    "command": "POST __slack_webhook_path__:value HTTP/1.1",
+                    "content": "{\"text\": \"*IP reputation report for __ip__:value*\\n\\n*AbuseIPDB*\\n\\u2022 Confidence score: __abuse_score__:value / 100\\n\\u2022 Total reports: __abuse_reports__:value\\n\\u2022 Country: __abuse_country__:value\\n\\u2022 ISP: __abuse_isp__:value\\n\\u2022 Usage type: __abuse_usage__:value\\n\\u2022 Last reported: __abuse_last_reported__:value\\n\\n*Geolocation (ip-api.com)*\\n\\u2022 Location: __geo_city__:value, __geo_region__:value, __geo_country__:value\\n\\u2022 Network: __geo_isp__:value / __geo_org__:value\\n\\u2022 AS: __geo_as__:value\\n\\u2022 Flags: proxy=__geo_proxy__:value, hosting=__geo_hosting__:value\"}",
+                    "headers": {
+                        "Content-Type": [
+                            "application/json"
+                        ]
+                    }
+                }
+            ],
+            "agent": "soarca--29306bbd-ad5d-47c7-b62e-0e8ac44a6534",
+            "targets": [
+                "http-api--93d4c873-605b-4149-b309-40030054c93f"
+            ]
+        },
+        "end--2fa5a7b3-ac97-44a9-b3ee-7f35a545e9df": {
+            "type": "end",
+            "name": "Reputation posted"
+        }
+    },
+    "agent_definitions": {
+        "soarca--29306bbd-ad5d-47c7-b62e-0e8ac44a6534": {
+            "type": "soarca",
+            "name": "soarca-http-api"
+        }
+    },
+    "target_definitions": {
+        "http-api--25803424-0ef8-4a8f-be9e-aac6eacd873e": {
+            "type": "http-api",
+            "name": "AbuseIPDB API",
+            "description": "AbuseIPDB v2 API. Auth is the 'Key' header, set per request.",
+            "address": {
+                "url": [
+                    "https://api.abuseipdb.com/"
+                ]
+            },
+            "port": "443"
+        },
+        "http-api--0f098f6a-7864-4f1d-a177-c708d8353891": {
+            "type": "http-api",
+            "name": "ip-api.com (free tier)",
+            "description": "ip-api.com free tier - HTTP only on port 80. Rate limit 45 req/min.",
+            "address": {
+                "url": [
+                    "http://ip-api.com/"
+                ]
+            },
+            "port": "80"
+        },
+        "http-api--93d4c873-605b-4149-b309-40030054c93f": {
+            "type": "http-api",
+            "name": "Slack incoming webhook",
+            "description": "Slack incoming webhook endpoint. Path (secret) supplied per call via __slack_webhook_path__.",
+            "address": {
+                "url": [
+                    "https://hooks.slack.com/"
+                ]
+            },
+            "port": "443"
+        }
+    }
+}
