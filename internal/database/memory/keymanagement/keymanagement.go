@@ -1,4 +1,4 @@
-package memorykms
+package keymanagement
 
 import (
 	"fmt"
