@@ -58,7 +58,7 @@ func NewManualHandler(interaction interaction.IInteractionStorage) *ManualHandle
 //	@Tags			manual
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	api.Execution
+//	@Success		200	{object}	[]api.InteractionCommandData
 //	@failure		400	{object}	[]api.InteractionCommandData
 //	@Router			/manual/ [GET]
 func (manualHandler *ManualHandler) GetPendingCommands(g *gin.Context) {
