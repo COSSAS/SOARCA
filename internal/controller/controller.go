@@ -7,6 +7,7 @@ import (
 	"reflect"
 	keymanagementrepository "soarca/internal/database/keymanagement"
 	"soarca/internal/database/memory"
+	"soarca/internal/database/memory/memorykms"
 	"soarca/internal/logger"
 
 	"soarca/pkg/core/capability"
@@ -165,12 +166,12 @@ func (controller *Controller) setupDatabase() error {
 			return err
 		}
 		controller.playbookRepo = playbookrepository.SetupPlaybookRepository(mongo.GetCacaoRepo(), mongo.DefaultLimitOpts())
-		controller.keyManagementRepo = keymanagementrepository.SetupKeyManagementRepository(mongo.GetKeyManagementRepo(), mongo.DefaultLimitOpts())
+		controller.keyManagementRepo = memorykms.New()
 	} else {
 		// Use in memory database
 		log.Info("Setting up in-memory database")
-		controller.playbookRepo = memory.NewPlaybookDatabase()
-		controller.keyManagementRepo = memory.NewKeyManagementDatabase()
+		controller.playbookRepo = memory.New()
+		controller.keyManagementRepo = memorykms.New()
 	}
 
 	return nil
