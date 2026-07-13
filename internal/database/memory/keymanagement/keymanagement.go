@@ -1,4 +1,4 @@
-package memory
+package memorykms
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ type InMemoryKeyManagementDatabase struct {
 	keys map[string]keymanagement.KeyPair
 }
 
-func NewKeyManagementDatabase() *InMemoryKeyManagementDatabase {
+func New() *InMemoryKeyManagementDatabase {
 	return &InMemoryKeyManagementDatabase{keys: make(map[string]keymanagement.KeyPair)}
 }
 
