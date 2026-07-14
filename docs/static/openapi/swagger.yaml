@@ -75,6 +75,8 @@ definitions:
     type: object
   api.KeyManagementKey:
     properties:
+      passphrase:
+        type: string
       private:
         type: string
       public:
@@ -773,8 +775,31 @@ paths:
       summary: remove key from KMS
       tags:
       - keymanagement
+    patch:
+      description: update a key in the KMS; load key into cache and write to database
+      parameters:
+      - description: key
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/api.KeyManagementKey'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: json
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: update key in KMS
+      tags:
+      - keymanagement
     put:
-      description: adds a key to the KMS; load key into cache and write file
+      description: adds a key to the KMS; load key into cache and write to database
       parameters:
       - description: key
         in: body
@@ -794,24 +819,6 @@ paths:
           schema:
             $ref: '#/definitions/api.Error'
       summary: add key to KMS
-      tags:
-      - keymanagement
-  /keymanagement/refresh/:
-    post:
-      description: refresh the KMS and re-parse the underlying directory
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: json
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.Error'
-      summary: refresh the KMS system, which allows the user to include manually added
-        files in the KMS
       tags:
       - keymanagement
   /manual/:
