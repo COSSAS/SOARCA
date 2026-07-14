@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"soarca/internal/database/memory"
+	memory "soarca/internal/database/memory/keymanagement"
 	"soarca/pkg/core/capability"
 	"soarca/pkg/core/capability/ssh"
 	"soarca/pkg/keymanagement"
@@ -18,28 +18,20 @@ import (
 
 var globalKeyManagement *keymanagement.KeyManagement
 
-func init() {
-	globalKeyManagement = keymanagement.InitKeyManagement(memory.NewKeyManagementDatabase())
-}
-
 const testkey string = "test"
+const testPath = "../../../deployments/docker/testing/ssh-kms-testing"
 
-func testkey_dir() string {
-	return path.Join("..", "..", "..", "deployments", "docker", "testing", "ssh-kms-test")
-}
-func addTestKey(t *testing.T) {
-	pubkey_path := path.Join(testkey_dir(), testkey+".pub")
-	privkey_path := path.Join(testkey_dir(), testkey)
+func TestSshConnection(t *testing.T) {
+	globalKeyManagement = keymanagement.New(memory.New())
+	sshCapability := ssh.SshCapability{Keys: globalKeyManagement}
+
+	pubkey_path := path.Join(testPath, testkey+".pub")
+	privkey_path := path.Join(testPath, testkey)
 	pubkey, err := os.ReadFile(pubkey_path)
 	assert.Nil(t, err)
 	privkey, err := os.ReadFile(privkey_path)
 	assert.Nil(t, err)
 	assert.Nil(t, globalKeyManagement.Insert(string(pubkey), string(privkey), "", testkey))
-}
-
-func TestSshConnection(t *testing.T) {
-	sshCapability := ssh.SshCapability{Keys: globalKeyManagement}
-	addTestKey(t)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
