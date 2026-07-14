@@ -21,7 +21,7 @@ type KeyManagement struct {
 	database keymanagementrepository.IKeyManagementRepository
 }
 
-func InitKeyManagement(database keymanagementrepository.IKeyManagementRepository) *KeyManagement {
+func New(database keymanagementrepository.IKeyManagementRepository) *KeyManagement {
 	return &KeyManagement{database: database}
 }
 
