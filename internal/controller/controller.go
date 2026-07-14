@@ -7,7 +7,7 @@ import (
 	"reflect"
 	keymanagementrepository "soarca/internal/database/keymanagement"
 	"soarca/internal/database/memory"
-	"soarca/internal/database/memory/memorykms"
+	memorykms "soarca/internal/database/memory/keymanagement"
 	"soarca/internal/logger"
 
 	"soarca/pkg/core/capability"
@@ -167,6 +167,11 @@ func (controller *Controller) setupDatabase() error {
 		}
 		controller.playbookRepo = playbookrepository.SetupPlaybookRepository(mongo.GetCacaoRepo(), mongo.DefaultLimitOpts())
 		controller.keyManagementRepo = memorykms.New()
+
+		// Ad-hoc creation of mongo client TODO: refactor mongo client.
+		kms, err := mongo.NewMongoCollection[keymanagementrepository.KeyPairEntry](mongo.GetCacaoRepo().Collection.Database().Client(), "database-kms", "kms-collection")
+		controller.keyManagementRepo = keymanagementrepository.SetupKeyManagementRepository(kms, mongo.DefaultLimitOpts())
+
 	} else {
 		// Use in memory database
 		log.Info("Setting up in-memory database")
