@@ -170,6 +170,9 @@ func (controller *Controller) setupDatabase() error {
 
 		// Ad-hoc creation of mongo client TODO: refactor mongo client.
 		kms, err := mongo.NewMongoCollection[keymanagementrepository.KeyPairEntry](mongo.GetCacaoRepo().Collection.Database().Client(), "database-kms", "kms-collection")
+		if err != nil {
+			return errors.New("could not create database collection for kms")
+		}
 		controller.keyManagementRepo = keymanagementrepository.SetupKeyManagementRepository(kms, mongo.DefaultLimitOpts())
 
 	} else {
@@ -183,7 +186,7 @@ func (controller *Controller) setupDatabase() error {
 }
 
 func (controller *Controller) setupKeyManagement() error {
-	controller.keyManagement = keymanagement.InitKeyManagement(controller.keyManagementRepo)
+	controller.keyManagement = keymanagement.New(controller.keyManagementRepo)
 	return nil
 }
 
