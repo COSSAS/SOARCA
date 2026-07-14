@@ -21,9 +21,9 @@ var (
 	mongoclient       *mongo.Client
 )
 
-type dbtypes interface {
-	cacao.Playbook // | for other supported types
-}
+// type dbtypes interface {
+// 	cacao.Playbook // | for other supported types
+// }
 
 type mongoCollection[T any] struct {
 	Collection     *mongo.Collection
