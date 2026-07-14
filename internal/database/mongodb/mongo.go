@@ -25,7 +25,7 @@ type dbtypes interface {
 	cacao.Playbook // | for other supported types
 }
 
-type mongoCollection[T dbtypes] struct {
+type mongoCollection[T any] struct {
 	Collection     *mongo.Collection
 	collectionname string
 }
@@ -197,7 +197,7 @@ func (mongocollection *mongoCollection[T]) Delete(id string) error {
 	return err
 }
 
-func NewMongoCollection[T dbtypes](mongo *mongo.Client, dbName string, colName string) (*mongoCollection[T], error) {
+func NewMongoCollection[T any](mongo *mongo.Client, dbName string, colName string) (*mongoCollection[T], error) {
 	log.Trace("Setting a new Mongo Collection name: ", colName)
 
 	if mongo == nil {
