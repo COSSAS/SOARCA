@@ -11,7 +11,7 @@ import (
 )
 
 const testkey string = "test-key"
-const testPath = "../../test/unittest/mocks/mock_utils"
+const testPath = "../../test/kms"
 
 func TestRevoke(t *testing.T) {
 	keyManagement := New(memory.New())
