@@ -19,7 +19,7 @@ import (
 var globalKeyManagement *keymanagement.KeyManagement
 
 const testkey string = "test"
-const testPath = "../../../deployments/docker/testing/ssh-kms-testing"
+const testPath = "../../../deployments/docker/testing/ssh-kms-test"
 
 func TestSshConnection(t *testing.T) {
 	globalKeyManagement = keymanagement.New(memory.New())
