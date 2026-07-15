@@ -186,7 +186,12 @@ func (controller *Controller) setupDatabase() error {
 }
 
 func (controller *Controller) setupKeyManagement() error {
-	controller.keyManagement = keymanagement.New(controller.keyManagementRepo)
+	if utils.GetEnv("ENABLE_SSH_KMS", "false") == "true" {
+		controller.keyManagement = keymanagement.New(controller.keyManagementRepo)
+		log.Info("KMS is enabled")
+	} else {
+		log.Trace("KMS is not enabled")
+	}
 	return nil
 }
 
