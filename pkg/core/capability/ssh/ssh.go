@@ -94,6 +94,10 @@ func (sshCapability *SshCapability) getConfig(authentication cacao.Authenticatio
 	switch authentication.Type {
 	case "user-auth":
 		if authentication.Kms {
+			if sshCapability.Keys == nil {
+				return config, errors.New("no KMS was set so it cannot be used by the playbook")
+			}
+
 			if authentication.KmsKeyIdentifier == "" {
 				return config, fmt.Errorf("KMS indicated, but no kms_key_identifier given")
 			}
