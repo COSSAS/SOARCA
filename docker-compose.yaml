@@ -1,4 +1,3 @@
-version: "3.7"
 services:
   mongodb_container:
     image: mongo:latest
@@ -15,7 +14,7 @@ services:
     image: alpine
     container_name: cert-generator
     volumes:
-      - certs_data_containter:/certs
+      - certs_data_container:/certs
     environment:
       - DOMAIN=localhost
     command: >
@@ -33,7 +32,7 @@ services:
         VERSION: "${GIT_VERSION}"
     container_name: soarca_server
     volumes:
-      - certs_data_containter:/app/certs
+      - certs_data_container:/app/certs
     environment:
       PORT: 8080
       ENABLE_TLS: "true"
