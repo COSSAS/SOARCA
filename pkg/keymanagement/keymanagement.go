@@ -17,6 +17,17 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
+type IKms interface {
+	GetPrivate(name string) (ssh.Signer, error)
+}
+
+type IKeyManagementApi interface {
+	Insert(public string, private string, passphrase string, name string) error
+	Update(public string, private string, passphrase string, name string) error
+	ListAllNames() ([]string, error)
+	Revoke(keyname string) error
+}
+
 type KeyManagement struct {
 	database keymanagementrepository.IKeyManagementRepository
 }
@@ -25,7 +36,7 @@ func New(database keymanagementrepository.IKeyManagementRepository) *KeyManageme
 	return &KeyManagement{database: database}
 }
 
-func (management *KeyManagement) GetKeyPair(name string) (*keys.KeyPair, error) {
+func (management *KeyManagement) getKeyPair(name string) (*keys.KeyPair, error) {
 	log.Trace("Getting keypair named", name)
 	keypair, err := management.database.Read(name)
 	if err != nil {
@@ -34,7 +45,7 @@ func (management *KeyManagement) GetKeyPair(name string) (*keys.KeyPair, error) 
 	return &keypair, nil
 }
 func (management *KeyManagement) GetPrivate(name string) (ssh.Signer, error) {
-	keypair, err := management.GetKeyPair(name)
+	keypair, err := management.getKeyPair(name)
 	if err != nil {
 		return nil, err
 	}
@@ -42,14 +53,14 @@ func (management *KeyManagement) GetPrivate(name string) (ssh.Signer, error) {
 }
 
 func (management *KeyManagement) Insert(public string, private string, passphrase string, name string) error {
-	if _, err := management.GetKeyPair(name); err == nil {
+	if _, err := management.getKeyPair(name); err == nil {
 		return fmt.Errorf("key with name already exists: %s (error: %s)", name, err)
 	}
 	return management.insertInternal(public, private, passphrase, name)
 }
 
 func (management *KeyManagement) Update(public string, private string, passphrase string, name string) error {
-	if _, err := management.GetKeyPair(name); err != nil {
+	if _, err := management.getKeyPair(name); err != nil {
 		return fmt.Errorf("no such key exists: %s (error: %s)", name, err)
 	}
 	return management.insertInternal(public, private, passphrase, name)
