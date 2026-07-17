@@ -1,4 +1,4 @@
-package keymanagement_api
+package keymanagement
 
 import (
 	"encoding/json"
@@ -22,7 +22,7 @@ func init() {
 }
 
 type KeyManagementHandler struct {
-	Manager *keymanagement.KeyManagement
+	Manager keymanagement.IKeyManagementApi
 }
 
 func NewKeyManagementHandler(manager *keymanagement.KeyManagement) *KeyManagementHandler {
