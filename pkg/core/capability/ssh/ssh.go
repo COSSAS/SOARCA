@@ -22,7 +22,7 @@ const (
 )
 
 type SshCapability struct {
-	Keys *keymanagement.KeyManagement
+	Keys keymanagement.IKms
 }
 
 var component = reflect.TypeOf(SshCapability{}).PkgPath()
