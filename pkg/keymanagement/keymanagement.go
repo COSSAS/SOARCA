@@ -82,6 +82,7 @@ func (management *KeyManagement) insertInternal(public string, private string, p
 		return fmt.Errorf("parsing private key: %s", err)
 	}
 	keypair := keys.KeyPair{Public: public_key, Private: private_key}
+	log.Info("Inserted key with id ", name)
 	return management.database.Create(name, keypair)
 }
 
