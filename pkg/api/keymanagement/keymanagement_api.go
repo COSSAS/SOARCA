@@ -58,11 +58,12 @@ func (handler *KeyManagementHandler) GetKeys(context *gin.Context) {
 //	@Schemes
 //	@Description	adds a key to the KMS; load key into cache and write to database
 //	@Tags			keymanagement
+//	@Param			keyname	path	string	true	"keyname"
 //	@Param			data	body		api.KeyManagementKey	true	"key"
 //	@Produce		json
 //	@success		200	{json}		Empty
 //	@failure		400	{object}	api.Error
-//	@Router			/keymanagement/:keyname/ [PUT]
+//	@Router			/keymanagement/{keyname} [PUT]
 func (handler *KeyManagementHandler) AddKey(context *gin.Context) {
 	keyname := context.Param("keyname")
 	jsonData, err := io.ReadAll(context.Request.Body)
@@ -93,11 +94,12 @@ func (handler *KeyManagementHandler) AddKey(context *gin.Context) {
 //	@Schemes
 //	@Description	update a key in the KMS; load key into cache and write to database
 //	@Tags			keymanagement
+//	@Param			keyname	path	string	true	"keyname"
 //	@Param			data	body		api.KeyManagementKey	true	"key"
 //	@Produce		json
 //	@success		200	{json}		Empty
 //	@failure		400	{object}	api.Error
-//	@Router			/keymanagement/:keyname/ [PATCH]
+//	@Router			/keymanagement/{keyname} [PATCH]
 func (handler *KeyManagementHandler) UpdateKey(context *gin.Context) {
 	keyname := context.Param("keyname")
 	jsonData, err := io.ReadAll(context.Request.Body)
@@ -127,10 +129,11 @@ func (handler *KeyManagementHandler) UpdateKey(context *gin.Context) {
 //	@Schemes
 //	@Description	revokes the key by moving it to .revoked and renaming it
 //	@Tags			keymanagement
+//	@Param			keyname	path	string	true	"keyname"
 //	@Produce		json
 //	@success		200	{json}		Empty
 //	@failure		400	{object}	api.Error
-//	@Router			/keymanagement/:keyname/ [DELETE]
+//	@Router			/keymanagement/{keyname} [DELETE]
 func (handler *KeyManagementHandler) RevokeKey(context *gin.Context) {
 	keyname := context.Param("keyname")
 	if err := handler.Manager.Revoke(keyname); err != nil {
