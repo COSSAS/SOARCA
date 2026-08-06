@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1rx6dcq" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.6.1">
+  <bpmn:process id="Process_0vlqoml" isExecutable="false">
+    <bpmn:startEvent id="StartEvent_0u0wx9w">
+      <bpmn:outgoing>Flow_1omgzsh</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1omgzsh" sourceRef="StartEvent_0u0wx9w" targetRef="Activity_1t08evl" />
+    <bpmn:sequenceFlow id="Flow_1cwwrrl" sourceRef="Activity_1t08evl" targetRef="Activity_10zicxy" />
+    <bpmn:endEvent id="Event_1uaiz5y">
+      <bpmn:incoming>Flow_0nitd8a</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0nitd8a" sourceRef="Activity_10zicxy" targetRef="Event_1uaiz5y" />
+    <bpmn:scriptTask id="Activity_1t08evl" name="Execute command">
+      <bpmn:incoming>Flow_1omgzsh</bpmn:incoming>
+      <bpmn:outgoing>Flow_1cwwrrl</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="Activity_10zicxy" name="Touch file">
+      <bpmn:incoming>Flow_1cwwrrl</bpmn:incoming>
+      <bpmn:outgoing>Flow_0nitd8a</bpmn:outgoing>
+    </bpmn:scriptTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_0vlqoml">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_0u0wx9w">
+        <dc:Bounds x="156" y="82" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1edoh91_di" bpmnElement="Activity_1t08evl">
+        <dc:Bounds x="250" y="60" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_08xaoe1_di" bpmnElement="Activity_10zicxy">
+        <dc:Bounds x="410" y="60" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1uaiz5y_di" bpmnElement="Event_1uaiz5y">
+        <dc:Bounds x="592" y="82" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1omgzsh_di" bpmnElement="Flow_1omgzsh">
+        <di:waypoint x="192" y="100" />
+        <di:waypoint x="250" y="100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1cwwrrl_di" bpmnElement="Flow_1cwwrrl">
+        <di:waypoint x="350" y="100" />
+        <di:waypoint x="410" y="100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0nitd8a_di" bpmnElement="Flow_0nitd8a">
+        <di:waypoint x="510" y="100" />
+        <di:waypoint x="592" y="100" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
