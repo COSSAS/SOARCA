@@ -9,7 +9,6 @@ import (
 	"soarca/internal/logger"
 
 	"soarca/pkg/core/capability"
-	"soarca/pkg/core/capability/fin/protocol"
 	"soarca/pkg/core/capability/http"
 	"soarca/pkg/core/capability/manual"
 	"soarca/pkg/core/capability/manual/interaction"
@@ -28,9 +27,6 @@ import (
 	"soarca/pkg/utils/stix/expression/comparison"
 	"strconv"
 	"strings"
-
-	finExecutor "soarca/pkg/core/capability/fin"
-	finChannelController "soarca/pkg/core/capability/fin/controller"
 
 	thehiveCases "soarca/pkg/integration/thehive/cases"
 	"soarca/pkg/integration/thehive/common/connector"
@@ -61,8 +57,7 @@ func init() {
 }
 
 type Controller struct {
-	finController finChannelController.IFinController
-	playbookRepo  playbookrepository.IPlaybookRepository
+	playbookRepo playbookrepository.IPlaybookRepository
 }
 
 var mainController = Controller{}
@@ -93,19 +88,6 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 
 	man := manual.New(mainInteraction)
 	capabilities[man.GetType()] = &man
-
-	enableFins, _ := strconv.ParseBool(utils.GetEnv("ENABLE_FINS", "false"))
-
-	if enableFins {
-		broker, port := getMqttDetails()
-
-		finCapabilities := controller.finController.GetRegisteredCapabilities()
-		for key := range finCapabilities {
-			prot := protocol.New(&guid.Guid{}, protocol.Topic(key), protocol.Broker(broker), port)
-			fin := finExecutor.New(&prot)
-			capabilities[key] = fin
-		}
-	}
 
 	// NOTE: Enrolling mainCache by default as reporter
 	reporter := reporter.New([]downstreamReporter.IDownStreamReporter{})
@@ -177,13 +159,6 @@ func Initialize() error {
 	log.Info("Log level is info")
 	log.Debug("Log level is debug")
 	log.Trace("Log level is trace")
-
-	enableFins, _ := strconv.ParseBool(utils.GetEnv("ENABLE_FINS", "false"))
-	if enableFins {
-		if err := mainController.setupAndRunMqtt(); err != nil {
-			log.Error(err)
-		}
-	}
 
 	cacheSize, _ := strconv.Atoi(utils.GetEnv("MAX_EXECUTIONS", strconv.Itoa(defaultCacheSize)))
 	mainCache = *cache.New(&timeUtil.Time{}, cacheSize)
@@ -280,20 +255,6 @@ func initializeCore(app *gin.Engine) error {
 	return err
 }
 
-func (controller *Controller) setupAndRunMqtt() error {
-	broker, port := getMqttDetails()
-	mqttClient := finChannelController.NewClient(protocol.Broker(broker), port)
-	finChannelController := finChannelController.New(*mqttClient)
-	controller.finController = finChannelController
-	err := finChannelController.ConnectAndSubscribe()
-	if err != nil {
-		log.Error(err)
-		return err
-	}
-	go finChannelController.Run()
-	return nil
-}
-
 func registerManualIntegration() []interaction.IInteractionIntegrationNotifier {
 	// Manual interaction integrations will be initialized here when implemented
 	// Here we should check ENV variables, see if a manual interaction integration is selected,
@@ -343,13 +304,4 @@ func intializeAuthenticationMiddleware(app *gin.Engine) error {
 
 	}
 	return nil
-}
-
-func getMqttDetails() (string, int) {
-	broker := utils.GetEnv("MQTT_BROKER", "localhost")
-	port, err := strconv.Atoi(utils.GetEnv("MQTT_PORT", "1883"))
-	if err != nil {
-		port = 1883
-	}
-	return broker, port
 }
