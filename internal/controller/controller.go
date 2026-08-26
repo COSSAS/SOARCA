@@ -43,9 +43,14 @@ import (
 	"github.com/COSSAS/gauth"
 	"github.com/gin-gonic/gin"
 
+	finrepository "soarca/internal/database/fin"
+	"soarca/internal/database/finmemory"
 	mongo "soarca/internal/database/mongodb"
 	playbookrepository "soarca/internal/database/playbook"
 	routes "soarca/pkg/api"
+	fin_handler "soarca/pkg/api/fin"
+	fincapability "soarca/pkg/core/capability/fin"
+	"soarca/pkg/core/capability/fin/queue"
 )
 
 var log *logger.Log
@@ -58,6 +63,7 @@ func init() {
 
 type Controller struct {
 	playbookRepo playbookrepository.IPlaybookRepository
+	finRepo      finrepository.IFinRepository
 }
 
 var mainController = Controller{}
@@ -68,6 +74,19 @@ const defaultCacheSize int = 10
 
 // One manual interaction per SOARCA instance
 var mainInteraction = interaction.New(registerManualIntegration())
+
+// One Fin job queue per SOARCA instance, shared between every
+// action.Executor built by NewDecomposer() (one per execution/sub-
+// execution) and the Fin API's poll/result/status handlers - all Fin jobs,
+// regardless of which execution enqueued them, must land in this single
+// queue so any live, matching Fin can claim them.
+var mainFinQueue = queue.New()
+
+const (
+	defaultFinPollIntervalSeconds    = 5
+	defaultFinLongPollTimeoutSeconds = 25
+	defaultFinJobLeaseSeconds        = 60
+)
 
 func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	ssh := new(ssh.SshCapability)
@@ -105,6 +124,12 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	soarcaTime := new(timeUtil.Time)
 	assignmentExtension := assignment.New()
 	actionExecutor := action.New(capabilities, reporter, soarcaTime, assignmentExtension)
+	// Any agent.Type not matching one of the built-in capabilities above
+	// falls through to a live, registered Fin declaring that capability
+	// type - Fin capability types are dynamic (declared at Fin
+	// registration time), so unlike built-ins there is no static entry to
+	// add to the capabilities map for them.
+	actionExecutor.SetFinFallback(fincapability.New(mainFinQueue, new(guid.Guid)))
 	playbookActionExecutor := playbook_action.New(controller, controller, reporter, soarcaTime)
 	stixComparison := comparison.New()
 	conditionExecutor := condition.New(stixComparison, reporter, soarcaTime)
@@ -142,9 +167,11 @@ func (controller *Controller) setupDatabase() error {
 			return err
 		}
 		controller.playbookRepo = playbookrepository.SetupPlaybookRepository(mongo.GetCacaoRepo(), mongo.DefaultLimitOpts())
+		controller.finRepo = finrepository.SetupFinRepository(mongo.GetFinRepo())
 	} else {
 		// Use in memory database
 		controller.playbookRepo = memory.New()
+		controller.finRepo = finmemory.New()
 	}
 
 	return nil
@@ -215,14 +242,36 @@ func initializeCore(app *gin.Engine) error {
 	origins := strings.Split(strings.ReplaceAll(utils.GetEnv("SOARCA_ALLOWED_ORIGINS", "*"), " ", ""), ",")
 	routes.Cors(app, origins)
 
-	err := intializeAuthenticationMiddleware(app)
-	if err != nil {
-		log.Error("Failed to setup Authentication middleware")
-		return err
-	}
-	err = mainController.setupDatabase()
+	err := mainController.setupDatabase()
 	if err != nil {
 		log.Error("Failed to setup database:", err)
+		return err
+	}
+
+	// Fin-token-authenticated routes (register/poll/jobs/status/unregister)
+	// MUST be registered before intializeAuthenticationMiddleware below -
+	// see FinPublic's doc comment and the warning at that call site. This
+	// requires setupDatabase() (which populates mainController.finRepo) to
+	// have already run, which is why it's been moved ahead of the auth
+	// middleware too; it registers no routes itself, so this reordering is
+	// safe with respect to auth.
+	finHandler := newFinHandler()
+	routes.FinPublic(app, finHandler)
+
+	// #############################################################
+	// WARNING: intializeAuthenticationMiddleware installs the global
+	// soarca_admin JWT middleware via app.Use(); gin copies engine-level
+	// middleware into a route's handler chain at the time the route is
+	// registered, so anything registered above this line does NOT get
+	// gated by it, and anything registered below DOES. routes.FinPublic
+	// (above) deliberately relies on being above this line - do not reorder
+	// it below, and do not move this call above it, or Fin processes
+	// (which authenticate via fin_token, not a JWT) will be locked out of
+	// their own protocol entirely.
+	// #############################################################
+	err = intializeAuthenticationMiddleware(app)
+	if err != nil {
+		log.Error("Failed to setup Authentication middleware")
 		return err
 	}
 
@@ -249,10 +298,37 @@ func initializeCore(app *gin.Engine) error {
 	// Manual capability native routes
 	routes.Manual(app, mainInteraction)
 
+	// Fin discovery routes (list/get) - ordinary admin/dashboard reads,
+	// registered here (behind the admin auth middleware above) like the
+	// rest of the admin API. Unlike FinPublic, there is no ordering
+	// constraint on these.
+	routes.FinAdmin(app, finHandler)
+
 	routes.Logging(app)
 	routes.Swagger(app)
 
 	return err
+}
+
+// newFinHandler builds the Fin protocol's API handler, sharing the same
+// job queue (mainFinQueue) that action.Executor instances enqueue onto (see
+// NewDecomposer) and the Fin registry populated by setupDatabase.
+func newFinHandler() *fin_handler.FinHandler {
+	pollIntervalSeconds, _ := strconv.Atoi(utils.GetEnv("FIN_POLL_INTERVAL_SECONDS", strconv.Itoa(defaultFinPollIntervalSeconds)))
+	longPollTimeoutSeconds, _ := strconv.Atoi(utils.GetEnv("FIN_LONG_POLL_TIMEOUT_SECONDS", strconv.Itoa(defaultFinLongPollTimeoutSeconds)))
+	jobLeaseSeconds, _ := strconv.Atoi(utils.GetEnv("FIN_JOB_LEASE_SECONDS", strconv.Itoa(defaultFinJobLeaseSeconds)))
+
+	config := fin_handler.Config{
+		// Empty by default: Register then always fails closed (see
+		// fin_handler.Config's doc comment) rather than silently accepting
+		// any registration attempt when an operator forgets to set this.
+		RegistrationToken:      utils.GetEnv("FIN_REGISTRATION_TOKEN", ""),
+		PollIntervalSeconds:    pollIntervalSeconds,
+		LongPollTimeoutSeconds: longPollTimeoutSeconds,
+		JobLeaseSeconds:        jobLeaseSeconds,
+	}
+
+	return fin_handler.NewFinHandler(mainController.finRepo, mainFinQueue, config, new(guid.Guid))
 }
 
 func registerManualIntegration() []interaction.IInteractionIntegrationNotifier {
