@@ -553,6 +553,3 @@ This module does not define specific variables as input, but it requires one to 
 }
 ```
 ---
-
-## MQTT fin module
-This module is used by SOARCA to communicate with fins (capabilities) see [fin documentation](/docs/soarca-extensions/) for more information

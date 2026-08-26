@@ -32,9 +32,6 @@ After completing the [Getting Started](/docs/getting-started/_index.md) setup fo
 | LOG_MODE                   | `development`                    | Set the logging mode. If `production`, `LOG_GLOBAL_LEVEL` is used for all modules. Default is `development`. |
 | LOG_FILE_PATH              | `""`                             | Path to the logfile for all logging. Default is `""` (empty string).        |
 | LOG_FORMAT                 | `json`                           | Set the logging format. Either `text` or `json`. Default is `json`.         |
-| ENABLE_FINS                | `false`                          | Enable FINS in SOARCA. Default is `false`.                                  |
-| MQTT_BROKER                | `localhost`                      | The broker address for SOARCA to connect to for communication with FINS. Default is `localhost`. |
-| MQTT_PORT                  | `1883`                           | The port for the MQTT broker. Default is `1883`.                            |
 | HTTP_SKIP_CERT_VALIDATION  | `false`                          | Set whether to skip certificate validation for HTTP connections. Default is `false`. |
 | VALIDATION_SCHEMA_URL      | `""`                             | Set a custom validation schema to validate playbooks. Default is `""` to use the internal schema. **Note:** Changing this can heavily impact performance. |
 

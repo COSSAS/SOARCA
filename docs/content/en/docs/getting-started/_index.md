@@ -94,10 +94,6 @@ LOG_MODE: "development"
 LOG_FILE_PATH: ""
 LOG_FORMAT: "json"
 
-ENABLE_FINS: false
-MQTT_BROKER: "localhost"
-MQTT_PORT: 1883
-
 HTTP_SKIP_CERT_VALIDATION: false
 {{< /tab >}}
 {{< /tabpane >}}
