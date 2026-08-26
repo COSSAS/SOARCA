@@ -34,6 +34,7 @@ func TestManualExecution(t *testing.T) {
 	interactionMock.On("Queue", command, mock_interaction.AnyManualCapabilityCommunication()).Return(nil).Run(func(args mock.Arguments) {
 		capturedComm = args.Get(1).(manualModel.ManualCapabilityCommunication)
 	})
+	interactionMock.On("Deregister", meta).Return(nil)
 
 	// Use a WaitGroup to wait for the Execute method to complete
 	var wg sync.WaitGroup
