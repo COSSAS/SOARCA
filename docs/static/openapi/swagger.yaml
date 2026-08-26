@@ -739,6 +739,270 @@ definitions:
     additionalProperties:
       $ref: '#/definitions/cacao.Step'
     type: object
+  fin.Capability:
+    properties:
+      description:
+        description: |-
+          Description is free text for humans (dashboards, logs) — it plays no
+          role in routing.
+        type: string
+      step_examples:
+        description: |-
+          StepExamples are optional, illustrative CACAO action steps showing
+          how a playbook author would invoke this capability (agent, commands,
+          targets, ...), surfaced to help playbook authors — they are never
+          interpreted or validated by SOARCA. A capability may offer more than
+          one example (e.g. to illustrate different commands or target shapes).
+        items:
+          $ref: '#/definitions/cacao.Step'
+        type: array
+      type:
+        description: |-
+          Type is the routing key: the value playbook authors write into
+          agent_definitions[...].type to target this capability pool. Multiple
+          independently-deployed Fin processes may register the same Type;
+          SOARCA treats them as one interchangeable pool and load-balances/
+          fails over across them (see docs/adr/FIN-WEBHOOK-PROTOCOL-PROPOSAL.md
+          §2.1b).
+        type: string
+      version:
+        description: |-
+          Version is the capability implementation's own version string, for
+          operator/debugging visibility only.
+        type: string
+    required:
+    - type
+    type: object
+  fin.Command:
+    properties:
+      command:
+        type: string
+      content:
+        type: string
+      content_b64:
+        type: string
+      headers:
+        additionalProperties:
+          items:
+            type: string
+          type: array
+        type: object
+      type:
+        type: string
+    type: object
+  fin.Job:
+    properties:
+      capability_type:
+        description: |-
+          CapabilityType is the routing key this job was queued under — it
+          matches Capability.Type of whichever Fin ultimately claims it.
+        type: string
+      commands:
+        items:
+          $ref: '#/definitions/fin.Command'
+        type: array
+      execution_id:
+        description: |-
+          ExecutionId/PlaybookId/StepId/StepExecutionId identify which
+          execution/playbook/step invocation this job belongs to.
+          StepExecutionId disambiguates concurrent/repeated invocations of the
+          same StepId within one execution (e.g. while-loop iterations),
+          matching how the rest of the execution model is keyed.
+        type: string
+      job_id:
+        description: |-
+          JobId identifies this specific poll-able unit of work (== the lease
+          handle used for result submission and status pings).
+        type: string
+      lease_expires_in_seconds:
+        description: |-
+          LeaseExpiresInSeconds mirrors a queue visibility timeout: sized off
+          the step's own timeout, and expected to cover however many targets
+          the claiming Fin ends up processing. If no result or status ping
+          arrives before it elapses, the job is requeued for any other Fin
+          registered under the same CapabilityType.
+        type: integer
+      playbook_id:
+        type: string
+      step:
+        $ref: '#/definitions/fin.StepInfo'
+      step_execution_id:
+        type: string
+      step_id:
+        type: string
+      targets:
+        items:
+          $ref: '#/definitions/fin.Target'
+        type: array
+      variables:
+        $ref: '#/definitions/cacao.Variables'
+    type: object
+  fin.JobState:
+    enum:
+    - success
+    - failure
+    type: string
+    x-enum-varnames:
+    - JobStateSuccess
+    - JobStateFailure
+  fin.ListResponse:
+    properties:
+      fins:
+        items:
+          $ref: '#/definitions/fin.Record'
+        type: array
+    type: object
+  fin.PollRequest:
+    properties:
+      concurrency_available:
+        description: |-
+          ConcurrencyAvailable is an optional hint: how many more jobs this Fin
+          could take on right now. Lets SOARCA prefer idle Fins in a capability
+          pool over busy ones. A Fin that only ever runs one job at a time can
+          omit it or always send 1/0.
+        type: integer
+    type: object
+  fin.PollResponse:
+    properties:
+      job:
+        $ref: '#/definitions/fin.Job'
+    type: object
+  fin.Record:
+    properties:
+      capabilities:
+        items:
+          $ref: '#/definitions/fin.Capability'
+        type: array
+      display_name:
+        description: |-
+          DisplayName is free text for humans/logs only; it plays no role in
+          routing or identity.
+        type: string
+      fin_id:
+        description: |-
+          FinId is server-assigned at registration (never client-chosen),
+          avoiding id collisions and any implicit trust that a Fin picks a
+          unique id for itself.
+        type: string
+      last_seen:
+        description: |-
+          LastSeen is updated on every /poll call, whether or not a job was
+          returned — the poll loop itself is the liveness mechanism (see
+          docs/adr/FIN-WEBHOOK-PROTOCOL-PROPOSAL.md §2.4). A Fin that stops
+          polling is expired from routing after a configured TTL.
+        type: string
+      protocol_version:
+        type: string
+      registered_at:
+        type: string
+    type: object
+  fin.RegisterRequest:
+    properties:
+      capabilities:
+        items:
+          $ref: '#/definitions/fin.Capability'
+        type: array
+      display_name:
+        type: string
+      protocol_version:
+        type: string
+      registration_token:
+        description: |-
+          RegistrationToken gates *creating* a new Fin identity. It is a
+          coarse, admin/instance-level shared secret (configured server-side as
+          FIN_REGISTRATION_TOKEN, distributed out-of-band), sent as a plain
+          body field because registration is the one call that happens before
+          a Fin has any credential of its own to put in a header.
+        type: string
+    required:
+    - capabilities
+    - registration_token
+    type: object
+  fin.RegisterResponse:
+    properties:
+      fin_id:
+        type: string
+      fin_token:
+        type: string
+      job_lease_seconds:
+        type: integer
+      long_poll_timeout_seconds:
+        type: integer
+      poll_interval_seconds:
+        description: |-
+          PollIntervalSeconds/LongPollTimeoutSeconds/JobLeaseSeconds are
+          server-chosen operational defaults, echoed back so a Fin doesn't need
+          its own hardcoded copy of them.
+        type: integer
+    type: object
+  fin.ResultRequest:
+    properties:
+      error:
+        type: string
+      state:
+        $ref: '#/definitions/fin.JobState'
+      target_results:
+        items:
+          $ref: '#/definitions/fin.TargetResult'
+        type: array
+      variables:
+        $ref: '#/definitions/cacao.Variables'
+    required:
+    - state
+    type: object
+  fin.StatusPingRequest:
+    properties:
+      progress:
+        type: string
+    type: object
+  fin.StatusPingResponse:
+    properties:
+      action:
+        type: string
+    type: object
+  fin.StepInfo:
+    properties:
+      delay:
+        type: integer
+      description:
+        type: string
+      name:
+        type: string
+      timeout:
+        type: integer
+    type: object
+  fin.Target:
+    properties:
+      address:
+        $ref: '#/definitions/cacao.Addresses'
+      authentication:
+        $ref: '#/definitions/cacao.AuthenticationInformation'
+      name:
+        type: string
+      port:
+        type: string
+      type:
+        type: string
+    type: object
+  fin.TargetResult:
+    properties:
+      error:
+        type: string
+      failed_command_index:
+        description: |-
+          FailedCommandIndex identifies which command in Commands aborted this
+          target's sequence, if any.
+        type: integer
+      state:
+        $ref: '#/definitions/fin.JobState'
+      target_index:
+        description: |-
+          TargetIndex identifies which entry in the job's Targets this result
+          is for. Nil when the job had no targets at all.
+        type: integer
+      variables:
+        $ref: '#/definitions/cacao.Variables'
+    type: object
   manual.ManualResponseStatus:
     enum:
     - success
@@ -752,6 +1016,207 @@ info:
   title: SOARCA API
   version: 1.0.0
 paths:
+  /fin/:
+    get:
+      description: list all currently-registered fins and their capabilities
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fin.ListResponse'
+      summary: list all currently-registered fins and their capabilities
+      tags:
+      - fin
+  /fin/{fin_id}:
+    delete:
+      description: delete a Fin's own registration. A Fin may only delete its own
+        registration - the token must resolve to the fin_id in the path.
+      parameters:
+      - description: fin ID
+        in: path
+        name: fin_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: delete a Fin's own registration
+      tags:
+      - fin
+    get:
+      description: look up a specific registered fin by id
+      parameters:
+      - description: fin ID
+        in: path
+        name: fin_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fin.Record'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: look up a specific registered fin by id
+      tags:
+      - fin
+  /fin/jobs/{job_id}:
+    put:
+      consumes:
+      - application/json
+      description: submit the result of a claimed job. Only the Fin the job is currently
+        leased to may submit a result for it.
+      parameters:
+      - description: job ID
+        in: path
+        name: job_id
+        required: true
+        type: string
+      - description: job result
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/fin.ResultRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: submit the result of a claimed job
+      tags:
+      - fin
+  /fin/jobs/{job_id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: extend a claimed job's lease (so a legitimately long-running job
+        isn't requeued out from under the Fin still working on it), and check for
+        a pending instruction such as cancellation
+      parameters:
+      - description: job ID
+        in: path
+        name: job_id
+        required: true
+        type: string
+      - description: progress
+        in: body
+        name: data
+        schema:
+          $ref: '#/definitions/fin.StatusPingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fin.StatusPingResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: extend a claimed job's lease, and check for a pending cancellation
+        instruction
+      tags:
+      - fin
+  /fin/poll:
+    post:
+      consumes:
+      - application/json
+      description: long-poll for the next job matching this Fin's registered capability
+        types. Returns 204 No Content if long_poll_timeout_seconds elapses with no
+        job available - callers should simply poll again.
+      parameters:
+      - description: poll hints
+        in: body
+        name: data
+        schema:
+          $ref: '#/definitions/fin.PollRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fin.PollResponse'
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: long-poll for the next job matching this Fin's registered capability
+        types
+      tags:
+      - fin
+  /fin/register:
+    post:
+      consumes:
+      - application/json
+      description: register a new Fin process, declaring the capability types it can
+        execute, and obtain its fin_id/fin_token
+      parameters:
+      - description: registration
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/fin.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/fin.RegisterResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: register a new Fin and obtain its fin_token
+      tags:
+      - fin
   /manual/:
     get:
       consumes:

@@ -14,6 +14,8 @@ import (
 
 	manual_handler "soarca/pkg/api/manual"
 
+	fin_handler "soarca/pkg/api/fin"
+
 	trigger_handler "soarca/pkg/api/trigger"
 
 	"github.com/gin-contrib/cors"
@@ -52,6 +54,27 @@ func Manual(app *gin.Engine, interaction interaction.IInteractionStorage) {
 	log.Trace("Setting up manual routes")
 	manualHandler := manual_handler.NewManualHandler(interaction)
 	ManualRoutes(app, manualHandler)
+}
+
+// FinPublic sets up the Fin-protocol endpoints that authenticate via their
+// own registration_token/fin_token scheme (register/poll/jobs/status/
+// unregister), not SOARCA's admin JWT auth. The caller MUST register these
+// before installing the global soarca_admin auth middleware (see
+// intializeAuthenticationMiddleware in internal/controller/controller.go) -
+// otherwise every Fin call would also require a valid JWT, which a Fin
+// process has no way to obtain.
+func FinPublic(app *gin.Engine, finHandler *fin_handler.FinHandler) {
+	log.Trace("Setting up fin protocol routes (registered ahead of the admin auth middleware - see FinPublic doc comment)")
+	FinPublicRoutes(app, finHandler)
+}
+
+// FinAdmin sets up the read-only Fin discovery endpoints (list/get). Unlike
+// FinPublic, these are ordinary admin/dashboard reads and are expected to
+// sit behind the same soarca_admin JWT gate as the rest of the admin API -
+// register these the same way/place as routes.Api/routes.Manual/etc.
+func FinAdmin(app *gin.Engine, finHandler *fin_handler.FinHandler) {
+	log.Trace("Setting up fin discovery routes")
+	FinAdminRoutes(app, finHandler)
 }
 
 func Api(app *gin.Engine,
@@ -142,5 +165,42 @@ func ManualRoutes(route *gin.Engine, manualHandler *manual_handler.ManualHandler
 		manualRoutes.GET("/", manualHandler.GetPendingCommands)
 		manualRoutes.GET(":exec_id/:step_execution_id", manualHandler.GetPendingCommand)
 		manualRoutes.PUT(":exec_id/:step_execution_id", manualHandler.PutContinue)
+	}
+}
+
+// FinPublicRoutes registers the Fin-protocol endpoints that authenticate
+// via their own registration_token/fin_token scheme, not SOARCA's admin
+// JWT auth (see FinPublic's doc comment for why these must be registered
+// before the global admin auth middleware is installed):
+// POST    /fin/register                (registration-token gated)
+// POST    /fin/poll                     (fin-token gated)
+// PUT     /fin/jobs/:job_id             (fin-token gated)
+// PATCH   /fin/jobs/:job_id/status      (fin-token gated)
+// DELETE  /fin/:fin_id                  (fin-token gated; a fin may only delete its own registration)
+func FinPublicRoutes(route *gin.Engine, finHandler *fin_handler.FinHandler) {
+	finRoutes := route.Group("/fin")
+	{
+		finRoutes.POST("/register", finHandler.Register)
+
+		finAuthenticated := finRoutes.Group("")
+		finAuthenticated.Use(finHandler.RequireFinToken)
+		{
+			finAuthenticated.POST("/poll", finHandler.Poll)
+			finAuthenticated.PUT("jobs/:job_id", finHandler.SubmitResult)
+			finAuthenticated.PATCH("jobs/:job_id/status", finHandler.StatusPing)
+			finAuthenticated.DELETE(":fin_id", finHandler.Unregister)
+		}
+	}
+}
+
+// FinAdminRoutes registers the read-only Fin discovery endpoints (ordinary
+// admin/dashboard reads, not fin-authenticated):
+// GET     /fin/                        (admin/dashboard read)
+// GET     /fin/:fin_id                  (admin/dashboard read)
+func FinAdminRoutes(route *gin.Engine, finHandler *fin_handler.FinHandler) {
+	finRoutes := route.Group("/fin")
+	{
+		finRoutes.GET("/", finHandler.List)
+		finRoutes.GET(":fin_id", finHandler.Get)
 	}
 }
