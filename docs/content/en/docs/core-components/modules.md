@@ -353,8 +353,8 @@ class ManualCommand
 
 protocol ManualAPI {
     GET     /manual
-    GET     /manual/{exec-id}/{step-id}
-    POST    /manual/continue
+    GET     /manual/{exec-id}/{step-execution-id}
+    PUT     /manual/{exec-id}/{step-execution-id}
 }
 
 interface ICapability{

@@ -6,122 +6,6 @@
         "version": "1.0.0"
     },
     "paths": {
-        "/keymanagement/": {
-            "get": {
-                "description": "return all keys in the KMS",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "keymanagement"
-                ],
-                "summary": "gets all keys from the KMS",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Error"
-                        }
-                    }
-                }
-            }
-        },
-        "/keymanagement/:keyname/": {
-            "put": {
-                "description": "adds a key to the KMS; load key into cache and write file",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "keymanagement"
-                ],
-                "summary": "add key to KMS",
-                "parameters": [
-                    {
-                        "description": "key",
-                        "name": "data",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/api.KeyManagementKey"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "json"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Error"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "revokes the key by moving it to .revoked and renaming it",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "keymanagement"
-                ],
-                "summary": "remove key from KMS",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "json"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Error"
-                        }
-                    }
-                }
-            }
-        },
-        "/keymanagement/refresh/": {
-            "post": {
-                "description": "refresh the KMS and re-parse the underlying directory",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "keymanagement"
-                ],
-                "summary": "refresh the KMS system, which allows the user to include manually added files in the KMS",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "json"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Error"
-                        }
-                    }
-                }
-            }
-        },
         "/manual/": {
             "get": {
                 "description": "get all pending manual commands that still needs values to be returned",
@@ -157,61 +41,7 @@
                 }
             }
         },
-        "/manual/continue": {
-            "post": {
-                "description": "updates the value of a variable according to the manual interaction",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "manual"
-                ],
-                "summary": "updates the value of a variable according to the manual interaction",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "execution ID",
-                        "name": "exec_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "step ID",
-                        "name": "step_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "playbook",
-                        "name": "data",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/api.ManualOutArgsUpdatePayload"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Execution"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Error"
-                        }
-                    }
-                }
-            }
-        },
-        "/manual/{exec_id}/{step_id}": {
+        "/manual/{exec_id}/{step_execution_id}": {
             "get": {
                 "description": "get a specific manual command that still needs a value to be returned",
                 "consumes": [
@@ -234,8 +64,8 @@
                     },
                     {
                         "type": "string",
-                        "description": "step ID",
-                        "name": "step_id",
+                        "description": "step execution ID (identifies a specific pending step invocation; see GET /manual/ to discover it, as multiple pending commands may share the same step ID)",
+                        "name": "step_execution_id",
                         "in": "path",
                         "required": true
                     }
@@ -245,6 +75,58 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/api.InteractionCommandData"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Error"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "resolve a specific pending manual command by supplying its out args. This is a PUT\non the same resource GET /manual/{exec_id}/{step_execution_id} identifies, not a\ngeneric RPC-style action, so the ids live in the path, not the body.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "manual"
+                ],
+                "summary": "resolve a specific pending manual command by supplying its out args",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "execution ID",
+                        "name": "exec_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "step execution ID (identifies a specific pending step invocation; see GET /manual/ to discover it, as multiple pending commands may share the same step ID)",
+                        "name": "step_execution_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "resolution",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.ManualOutArgsUpdatePayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Execution"
                         }
                     },
                     "400": {
@@ -713,27 +595,22 @@
         "api.InteractionCommandData": {
             "type": "object",
             "required": [
-                "command",
-                "description",
+                "commands",
                 "execution_id",
                 "out_args",
                 "playbook_id",
+                "step_execution_id",
                 "step_id",
-                "target",
+                "targets",
                 "type"
             ],
             "properties": {
-                "command": {
-                    "description": "The command for the agent either command",
-                    "type": "string"
-                },
-                "commandb64": {
-                    "description": "Indicates if the command is in b64",
-                    "type": "boolean"
-                },
-                "description": {
-                    "description": "The description from the workflow step",
-                    "type": "string"
+                "commands": {
+                    "description": "All commands of the step, in order. A manual step is a single unit of work resolved by one response, but may list multiple commands/instructions",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ManualCommand"
+                    }
                 },
                 "execution_id": {
                     "description": "The id of the execution",
@@ -751,17 +628,20 @@
                     "description": "The id of the CACAO playbook executed by the execution",
                     "type": "string"
                 },
+                "step_execution_id": {
+                    "description": "The id of this specific step invocation. Distinguishes concurrent/repeated pending commands that share the same StepId (e.g. overlapping loop iterations)",
+                    "type": "string"
+                },
                 "step_id": {
                     "description": "The id of the step executed by the execution",
                     "type": "string"
                 },
-                "target": {
-                    "description": "Map of cacao agent-target with the target(s) of this command",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/cacao.AgentTarget"
-                        }
-                    ]
+                "targets": {
+                    "description": "All targets of the step, in order, together with their resolved authentication information (needed by a human operator to perform the step manually)",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ManualTarget"
+                    }
                 },
                 "type": {
                     "description": "The type of this content",
@@ -770,13 +650,23 @@
                 }
             }
         },
-        "api.KeyManagementKey": {
+        "api.ManualCommand": {
             "type": "object",
+            "required": [
+                "command",
+                "description"
+            ],
             "properties": {
-                "private": {
+                "command": {
+                    "description": "The command for the agent, either plain or base64",
                     "type": "string"
                 },
-                "public": {
+                "commandb64": {
+                    "description": "Indicates if the command is in b64",
+                    "type": "boolean"
+                },
+                "description": {
+                    "description": "The description from the workflow step",
                     "type": "string"
                 }
             }
@@ -784,22 +674,11 @@
         "api.ManualOutArgsUpdatePayload": {
             "type": "object",
             "required": [
-                "execution_id",
-                "playbook_id",
                 "response_out_args",
                 "response_status",
-                "step_id",
                 "type"
             ],
             "properties": {
-                "execution_id": {
-                    "description": "The id of the execution",
-                    "type": "string"
-                },
-                "playbook_id": {
-                    "description": "The id of the CACAO playbook executed by the execution",
-                    "type": "string"
-                },
                 "response_out_args": {
                     "description": "Map of cacao variables storing the out args value, handled in the step out args, with current values and definitions",
                     "allOf": [
@@ -816,14 +695,34 @@
                         }
                     ]
                 },
-                "step_id": {
-                    "description": "The id of the step executed by the execution",
-                    "type": "string"
-                },
                 "type": {
                     "description": "The type of this content",
                     "type": "string",
                     "example": "string"
+                }
+            }
+        },
+        "api.ManualTarget": {
+            "type": "object",
+            "required": [
+                "target"
+            ],
+            "properties": {
+                "authentication": {
+                    "description": "The resolved authentication information for this target, if any",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/cacao.AuthenticationInformation"
+                        }
+                    ]
+                },
+                "target": {
+                    "description": "The cacao agent-target",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/cacao.AgentTarget"
+                        }
+                    ]
                 }
             }
         },
@@ -948,6 +847,9 @@
                     "type": "string"
                 },
                 "status_text": {
+                    "type": "string"
+                },
+                "step_execution_id": {
                     "type": "string"
                 },
                 "step_id": {
