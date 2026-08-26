@@ -2,6 +2,7 @@ package mock_reporter
 
 import (
 	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/execution"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,9 +20,9 @@ func (reporter *Mock_Reporter) ReportWorkflowEnd(executionId uuid.UUID, playbook
 	_ = reporter.Called(executionId, playbook, err, at)
 }
 
-func (reporter *Mock_Reporter) ReportStepStart(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, at time.Time) {
-	_ = reporter.Called(executionId, step, returnVars, at)
+func (reporter *Mock_Reporter) ReportStepStart(metadata execution.Metadata, step cacao.Step, returnVars cacao.Variables, at time.Time) {
+	_ = reporter.Called(metadata, step, returnVars, at)
 }
-func (reporter *Mock_Reporter) ReportStepEnd(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, err error, at time.Time) {
-	_ = reporter.Called(executionId, step, returnVars, err, at)
+func (reporter *Mock_Reporter) ReportStepEnd(metadata execution.Metadata, step cacao.Step, returnVars cacao.Variables, err error, at time.Time) {
+	_ = reporter.Called(metadata, step, returnVars, err, at)
 }

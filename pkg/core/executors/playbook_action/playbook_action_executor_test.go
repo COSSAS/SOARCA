@@ -76,8 +76,8 @@ func TestExecutePlaybook(t *testing.T) {
 	database.On("GetDatabaseInstance").Return(playbookRepoMock)
 	controller.On("NewDecomposer").Return(mockDecomposer)
 
-	mock_reporter.On("ReportStepStart", executionId, step, cacao.NewVariables(addedVariables), timeNow).Return()
-	mock_reporter.On("ReportStepEnd", executionId, step, cacao.NewVariables(returnedVariables), nil, timeNow).Return()
+	mock_reporter.On("ReportStepStart", metadata, step, cacao.NewVariables(addedVariables), timeNow).Return()
+	mock_reporter.On("ReportStepEnd", metadata, step, cacao.NewVariables(returnedVariables), nil, timeNow).Return()
 
 	playbook := cacao.Playbook{ID: playbookId, PlaybookVariables: cacao.NewVariables(initialVariables)}
 	playbookRepoMock.On("Read", playbookId).Return(playbook, nil)

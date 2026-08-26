@@ -8,6 +8,7 @@ import (
 	api_model "soarca/pkg/models/api"
 	"soarca/pkg/models/cacao"
 	cache_model "soarca/pkg/models/cache"
+	"soarca/pkg/models/execution"
 	"soarca/pkg/reporting/reporter/downstream_reporter/cache"
 	mock_time "soarca/test/unittest/mocks/mock_utils/time"
 	"testing"
@@ -225,6 +226,8 @@ func TestGetExecutionReport(t *testing.T) {
 	executionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
 	executionId1 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c1")
 	executionId2 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c2")
+	stepExecutionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c9")
+	metadata0 := execution.Metadata{ExecutionId: executionId0, StepId: step1.ID, StepExecutionId: stepExecutionId0}
 
 	layout := "2006-01-02T15:04:05.000Z"
 	str := "2014-11-12T11:45:26.371Z"
@@ -235,7 +238,7 @@ func TestGetExecutionReport(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables), mock_time.Now())
+	err = cacheReporter.ReportStepStart(metadata0, step1, cacao.NewVariables(expectedVariables), mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
@@ -248,7 +251,7 @@ func TestGetExecutionReport(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil, mock_time.Now())
+	err = cacheReporter.ReportStepEnd(metadata0, step1, cacao.NewVariables(expectedVariables), nil, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
@@ -269,9 +272,10 @@ func TestGetExecutionReport(t *testing.T) {
 		"status":"ongoing",
 		"status_text":"this playbook is currently being executed",
 		"step_results":{
-		   "action--test":{
+		   "6ba7b810-9dad-11d1-80b4-00c04fd430c9":{
 			  "execution_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
 			  "step_id":"action--test",
+			  "step_execution_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c9",
 			  "name":"ssh-tests",
 			  "started":"2014-11-12T11:45:26.371Z",
 			  "ended":"2014-11-12T11:45:26.371Z",

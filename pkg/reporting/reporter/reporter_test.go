@@ -2,6 +2,7 @@ package reporter
 
 import (
 	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/execution"
 	ds_reporter "soarca/pkg/reporting/reporter/downstream_reporter"
 	"soarca/test/unittest/mocks/mock_reporter"
 	mock_time "soarca/test/unittest/mocks/mock_utils/time"
@@ -224,6 +225,7 @@ func TestReportStepStart(t *testing.T) {
 	}
 
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	metadata := execution.Metadata{ExecutionId: executionId, StepId: step1.ID}
 
 	layout := "2006-01-02T15:04:05.000Z"
 	str := "2014-11-12T11:45:26.371Z"
@@ -231,8 +233,8 @@ func TestReportStepStart(t *testing.T) {
 	mock_time.On("Now").Return(timeNow)
 
 	wg.Add(1)
-	mock_ds_reporter.On("ReportStepStart", executionId, step1, cacao.NewVariables(expectedVariables), timeNow).Return(nil)
-	reporter.ReportStepStart(executionId, step1, cacao.NewVariables(expectedVariables), mock_time.Now())
+	mock_ds_reporter.On("ReportStepStart", metadata, step1, cacao.NewVariables(expectedVariables), timeNow).Return(nil)
+	reporter.ReportStepStart(metadata, step1, cacao.NewVariables(expectedVariables), mock_time.Now())
 
 	wg.Wait()
 	mock_ds_reporter.AssertExpectations(t)
@@ -268,6 +270,7 @@ func TestReportStepEnd(t *testing.T) {
 	}
 
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	metadata := execution.Metadata{ExecutionId: executionId, StepId: step1.ID}
 
 	layout := "2006-01-02T15:04:05.000Z"
 	str := "2014-11-12T11:45:26.371Z"
@@ -275,8 +278,8 @@ func TestReportStepEnd(t *testing.T) {
 	mock_time.On("Now").Return(timeNow)
 
 	wg.Add(1)
-	mock_ds_reporter.On("ReportStepEnd", executionId, step1, cacao.NewVariables(expectedVariables), nil, timeNow).Return(nil)
-	reporter.ReportStepEnd(executionId, step1, cacao.NewVariables(expectedVariables), nil, mock_time.Now())
+	mock_ds_reporter.On("ReportStepEnd", metadata, step1, cacao.NewVariables(expectedVariables), nil, timeNow).Return(nil)
+	reporter.ReportStepEnd(metadata, step1, cacao.NewVariables(expectedVariables), nil, mock_time.Now())
 
 	wg.Wait()
 	mock_ds_reporter.AssertExpectations(t)
@@ -348,6 +351,7 @@ func TestMultipleDownstreamReporters(t *testing.T) {
 	}
 
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	metadata := execution.Metadata{ExecutionId: executionId, StepId: step1.ID}
 
 	layout := "2006-01-02T15:04:05.000Z"
 	str := "2014-11-12T11:45:26.371Z"
@@ -359,20 +363,20 @@ func TestMultipleDownstreamReporters(t *testing.T) {
 	mock_ds_reporter2.On("ReportWorkflowStart", executionId, playbook, timeNow).Return(nil)
 
 	wg.Add(2)
-	mock_ds_reporter1.On("ReportStepStart", executionId, step1, cacao.NewVariables(expectedVariables), timeNow).Return(nil)
-	mock_ds_reporter2.On("ReportStepStart", executionId, step1, cacao.NewVariables(expectedVariables), timeNow).Return(nil)
+	mock_ds_reporter1.On("ReportStepStart", metadata, step1, cacao.NewVariables(expectedVariables), timeNow).Return(nil)
+	mock_ds_reporter2.On("ReportStepStart", metadata, step1, cacao.NewVariables(expectedVariables), timeNow).Return(nil)
 
 	wg.Add(2)
-	mock_ds_reporter1.On("ReportStepEnd", executionId, step1, cacao.NewVariables(expectedVariables), nil, timeNow).Return(nil)
-	mock_ds_reporter2.On("ReportStepEnd", executionId, step1, cacao.NewVariables(expectedVariables), nil, timeNow).Return(nil)
+	mock_ds_reporter1.On("ReportStepEnd", metadata, step1, cacao.NewVariables(expectedVariables), nil, timeNow).Return(nil)
+	mock_ds_reporter2.On("ReportStepEnd", metadata, step1, cacao.NewVariables(expectedVariables), nil, timeNow).Return(nil)
 
 	wg.Add(2)
 	mock_ds_reporter1.On("ReportWorkflowEnd", executionId, playbook, nil, timeNow).Return(nil)
 	mock_ds_reporter2.On("ReportWorkflowEnd", executionId, playbook, nil, timeNow).Return(nil)
 
 	reporter.ReportWorkflowStart(executionId, playbook, mock_time.Now())
-	reporter.ReportStepStart(executionId, step1, cacao.NewVariables(expectedVariables), mock_time.Now())
-	reporter.ReportStepEnd(executionId, step1, cacao.NewVariables(expectedVariables), nil, mock_time.Now())
+	reporter.ReportStepStart(metadata, step1, cacao.NewVariables(expectedVariables), mock_time.Now())
+	reporter.ReportStepEnd(metadata, step1, cacao.NewVariables(expectedVariables), nil, mock_time.Now())
 	reporter.ReportWorkflowEnd(executionId, playbook, nil, mock_time.Now())
 
 	wg.Wait()

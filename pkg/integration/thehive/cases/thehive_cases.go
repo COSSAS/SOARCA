@@ -118,11 +118,11 @@ func (manager *HiveCaseManager) ReportWorkflowEnd(executionId uuid.UUID, playboo
 }
 
 // Adds *event* to case
-func (manager *HiveCaseManager) ReportStepStart(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, at time.Time) error {
+func (manager *HiveCaseManager) ReportStepStart(metadata execution.Metadata, step cacao.Step, stepResults cacao.Variables, at time.Time) error {
 	log.Trace("TheHive casesreporting step start")
 	_, err := manager.connector.UpdateStartStepTaskInCase(
 		thehive_models.ExecutionMetadata{
-			ExecutionId: executionId.String(),
+			ExecutionId: metadata.ExecutionId.String(),
 			Step:        step,
 		},
 		at,
@@ -131,11 +131,11 @@ func (manager *HiveCaseManager) ReportStepStart(executionId uuid.UUID, step caca
 }
 
 // Populates event with step execution information
-func (manager *HiveCaseManager) ReportStepEnd(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, stepErr error, at time.Time) error {
+func (manager *HiveCaseManager) ReportStepEnd(metadata execution.Metadata, step cacao.Step, stepResults cacao.Variables, stepErr error, at time.Time) error {
 	log.Trace("TheHive casesreporting step end")
 	_, err := manager.connector.UpdateEndStepTaskInCase(
 		thehive_models.ExecutionMetadata{
-			ExecutionId:  executionId.String(),
+			ExecutionId:  metadata.ExecutionId.String(),
 			Step:         step,
 			Variables:    stepResults,
 			ExecutionErr: stepErr,

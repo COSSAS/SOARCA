@@ -39,9 +39,9 @@ func TestExecuteConditionTrue(t *testing.T) {
 	timeNow, _ := time.Parse(layout, str)
 	mock_time.On("Now").Return(timeNow)
 
-	mock_reporter.On("ReportStepStart", executionId, step, vars, timeNow)
+	mock_reporter.On("ReportStepStart", meta, step, vars, timeNow)
 	mock_stix.On("Evaluate", "a = a", vars).Return(true, nil)
-	mock_reporter.On("ReportStepEnd", executionId, step, vars, nil, timeNow)
+	mock_reporter.On("ReportStepEnd", meta, step, vars, nil, timeNow)
 	context := executors.Context{Step: step, Variables: vars}
 	nextStepId, goToBranch, err := conditionExecutior.Execute(meta, context)
 	assert.Equal(t, nil, err)
@@ -77,9 +77,9 @@ func TestExecuteConditionFalse(t *testing.T) {
 	timeNow, _ := time.Parse(layout, str)
 	mock_time.On("Now").Return(timeNow)
 
-	mock_reporter.On("ReportStepStart", executionId, step, vars, timeNow)
+	mock_reporter.On("ReportStepStart", meta, step, vars, timeNow)
 	mock_stix.On("Evaluate", "a = a", vars).Return(false, nil)
-	mock_reporter.On("ReportStepEnd", executionId, step, vars, nil, timeNow)
+	mock_reporter.On("ReportStepEnd", meta, step, vars, nil, timeNow)
 
 	context := executors.Context{Step: step, Variables: vars}
 	nextStepId, goToBranch, err := conditionExecutior.Execute(meta, context)
@@ -118,9 +118,9 @@ func TestExecuteConditionError(t *testing.T) {
 
 	evaluationError := errors.New("some ds error")
 
-	mock_reporter.On("ReportStepStart", executionId, step, vars, timeNow).Return()
+	mock_reporter.On("ReportStepStart", meta, step, vars, timeNow).Return()
 	mock_stix.On("Evaluate", "a = a", vars).Return(false, evaluationError)
-	mock_reporter.On("ReportStepEnd", executionId, step, vars, evaluationError, timeNow).Return()
+	mock_reporter.On("ReportStepEnd", meta, step, vars, evaluationError, timeNow).Return()
 
 	context := executors.Context{Step: step, Variables: vars}
 	nextStepId, goToBranch, err := conditionExecutior.Execute(meta, context)
@@ -157,9 +157,9 @@ func TestExecuteConditionWhile(t *testing.T) {
 	timeNow, _ := time.Parse(layout, str)
 	mock_time.On("Now").Return(timeNow)
 
-	mock_reporter.On("ReportStepStart", executionId, step, vars, timeNow)
+	mock_reporter.On("ReportStepStart", meta, step, vars, timeNow)
 	mock_stix.On("Evaluate", "a = a", vars).Return(true, nil)
-	mock_reporter.On("ReportStepEnd", executionId, step, vars, nil, timeNow)
+	mock_reporter.On("ReportStepEnd", meta, step, vars, nil, timeNow)
 
 	context := executors.Context{Step: step, Variables: vars}
 	nextStepId, goToBranch, err := conditionExecutior.Execute(meta, context)
@@ -196,9 +196,9 @@ func TestExecuteConditionWhileFalse(t *testing.T) {
 	timeNow, _ := time.Parse(layout, str)
 	mock_time.On("Now").Return(timeNow)
 
-	mock_reporter.On("ReportStepStart", executionId, step, vars, timeNow)
+	mock_reporter.On("ReportStepStart", meta, step, vars, timeNow)
 	mock_stix.On("Evaluate", "a = b", vars).Return(false, nil)
-	mock_reporter.On("ReportStepEnd", executionId, step, vars, nil, timeNow)
+	mock_reporter.On("ReportStepEnd", meta, step, vars, nil, timeNow)
 
 	context := executors.Context{Step: step, Variables: vars}
 	nextStepId, goToBranch, err := conditionExecutior.Execute(meta, context)

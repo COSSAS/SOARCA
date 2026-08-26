@@ -92,9 +92,9 @@ func TestExecuteStep(t *testing.T) {
 	timeNow, _ := time.Parse(layout, str)
 	mock_time.On("Now").Return(timeNow)
 
-	mock_reporter.On("ReportStepStart", executionId, step, cacao.NewVariables(expectedVariables), timeNow).Return()
+	mock_reporter.On("ReportStepStart", metadata, step, cacao.NewVariables(expectedVariables), timeNow).Return()
 
-	mock_reporter.On("ReportStepEnd", executionId, step, cacao.NewVariables(expectedVariables), nil, timeNow).Return()
+	mock_reporter.On("ReportStepEnd", metadata, step, cacao.NewVariables(expectedVariables), nil, timeNow).Return()
 	mock_ssh.On("Execute",
 		metadata,
 		context1).

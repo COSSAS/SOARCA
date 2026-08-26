@@ -54,12 +54,12 @@ type data struct {
 func (executor *Executor) Execute(meta execution.Metadata,
 	metadata executors.PlaybookStepMetadata) (cacao.Variables, error) {
 
-	executor.reporter.ReportStepStart(meta.ExecutionId, metadata.Step, metadata.Variables, executor.time.Now())
+	executor.reporter.ReportStepStart(meta, metadata.Step, metadata.Variables, executor.time.Now())
 
 	returnVariables := cacao.NewVariables()
 	var err error
 	defer func() {
-		executor.reporter.ReportStepEnd(meta.ExecutionId, metadata.Step, returnVariables, err, executor.time.Now())
+		executor.reporter.ReportStepEnd(meta, metadata.Step, returnVariables, err, executor.time.Now())
 	}()
 
 	if metadata.Step.Type != cacao.StepTypeAction {

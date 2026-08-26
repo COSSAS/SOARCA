@@ -2,6 +2,7 @@ package mock_reporter
 
 import (
 	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/execution"
 	"sync"
 	"time"
 
@@ -25,13 +26,13 @@ func (ds_reporter *Mock_Downstream_Reporter) ReportWorkflowEnd(executionId uuid.
 	return args.Error(0)
 }
 
-func (ds_reporter *Mock_Downstream_Reporter) ReportStepStart(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, at time.Time) error {
+func (ds_reporter *Mock_Downstream_Reporter) ReportStepStart(metadata execution.Metadata, step cacao.Step, stepResults cacao.Variables, at time.Time) error {
 	defer ds_reporter.Wg.Done()
-	args := ds_reporter.Called(executionId, step, stepResults, at)
+	args := ds_reporter.Called(metadata, step, stepResults, at)
 	return args.Error(0)
 }
-func (ds_reporter *Mock_Downstream_Reporter) ReportStepEnd(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, stepError error, at time.Time) error {
+func (ds_reporter *Mock_Downstream_Reporter) ReportStepEnd(metadata execution.Metadata, step cacao.Step, stepResults cacao.Variables, stepError error, at time.Time) error {
 	defer ds_reporter.Wg.Done()
-	args := ds_reporter.Called(executionId, step, stepResults, stepError, at)
+	args := ds_reporter.Called(metadata, step, stepResults, stepError, at)
 	return args.Error(0)
 }

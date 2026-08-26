@@ -6,6 +6,7 @@ import (
 	"soarca/pkg/integration/thehive/common/connector"
 	thehive_models "soarca/pkg/integration/thehive/common/models"
 	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/execution"
 	"time"
 
 	"github.com/google/uuid"
@@ -60,11 +61,11 @@ func (theHiveReporter *TheHiveReporter) ReportWorkflowEnd(executionId uuid.UUID,
 }
 
 // Adds *event* to case
-func (theHiveReporter *TheHiveReporter) ReportStepStart(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, at time.Time) error {
+func (theHiveReporter *TheHiveReporter) ReportStepStart(metadata execution.Metadata, step cacao.Step, stepResults cacao.Variables, at time.Time) error {
 	log.Trace("TheHive reporter reporting step start")
 	_, err := theHiveReporter.connector.UpdateStartStepTaskInCase(
 		thehive_models.ExecutionMetadata{
-			ExecutionId: executionId.String(),
+			ExecutionId: metadata.ExecutionId.String(),
 			Step:        step,
 		},
 		at,
@@ -73,11 +74,11 @@ func (theHiveReporter *TheHiveReporter) ReportStepStart(executionId uuid.UUID, s
 }
 
 // Populates event with step execution information
-func (theHiveReporter *TheHiveReporter) ReportStepEnd(executionId uuid.UUID, step cacao.Step, stepResults cacao.Variables, stepErr error, at time.Time) error {
+func (theHiveReporter *TheHiveReporter) ReportStepEnd(metadata execution.Metadata, step cacao.Step, stepResults cacao.Variables, stepErr error, at time.Time) error {
 	log.Trace("TheHive reporter reporting step end")
 	_, err := theHiveReporter.connector.UpdateEndStepTaskInCase(
 		thehive_models.ExecutionMetadata{
-			ExecutionId:  executionId.String(),
+			ExecutionId:  metadata.ExecutionId.String(),
 			Step:         step,
 			Variables:    stepResults,
 			ExecutionErr: stepErr,
