@@ -44,12 +44,11 @@ type Executor struct {
 }
 
 type data struct {
-	command        cacao.Command
-	authentication cacao.AuthenticationInformation
-	target         cacao.AgentTarget
-	variables      cacao.Variables
-	agent          cacao.AgentTarget
-	step           cacao.Step
+	commands  []cacao.Command
+	targets   []capability.ResolvedTarget
+	variables cacao.Variables
+	agent     cacao.AgentTarget
+	step      cacao.Step
 }
 
 func (executor *Executor) Execute(meta execution.Metadata,
@@ -75,48 +74,50 @@ func (executor *Executor) Execute(meta execution.Metadata,
 
 func (executor *Executor) executeCommandFromArray(meta execution.Metadata,
 	metadata executors.PlaybookStepMetadata) (cacao.Variables, error) {
-	returnVariables := cacao.NewVariables()
-	for _, command := range metadata.Step.Commands {
-		// NOTE: This assumes we want to run Command for every Target individually.
-		//       Is that something we want to enforce or leave up to the capability?
-		for _, element := range metadata.Step.Targets {
-			// NOTE: What about Agent authentication?
-			target := metadata.Targets[element]
-			auth := metadata.Auth[target.AuthInfoIdentifier]
 
-			data := data{
-				command:        command,
-				authentication: auth,
-				target:         target,
-				variables:      metadata.Variables,
-				agent:          metadata.Agent,
-				step:           metadata.Step,
-			}
-
-			outputVariables, err := executor.executeCommands(
-				meta,
-				data)
-
-			if err != nil {
-				log.Error("Error executing Command ", err)
-				return cacao.NewVariables(), err
-			}
-			log.Trace("Command executed")
-
-			// Map defined step results into variables as described by any
-			// soarca-assignment step extensions.
-			assignedVariables := executor.evaluateAssignments(metadata.Step.StepExtensions, outputVariables)
-			outputVariables.Merge(assignedVariables)
-
-			if len(metadata.Step.OutArgs) > 0 {
-				// If OutArgs is set, only update execution args that are explicitly referenced
-				outputVariables = outputVariables.Select(metadata.Step.OutArgs)
-			}
-
-			returnVariables.Merge(outputVariables)
-		}
+	// NOTE: interpolation happens once per command/target below, inside
+	// executeCommands, so raw (uninterpolated) values are passed through
+	// here; only the target->auth resolution needs the raw step data.
+	//
+	// NOTE: an action step's targets are optional per the CACAO spec — an
+	// empty Targets list is a valid shape, not a signal to skip execution.
+	// What about Agent authentication? (left as a pre-existing open question)
+	targets := make([]capability.ResolvedTarget, 0, len(metadata.Step.Targets))
+	for _, element := range metadata.Step.Targets {
+		target := metadata.Targets[element]
+		auth := metadata.Auth[target.AuthInfoIdentifier]
+		targets = append(targets, capability.ResolvedTarget{
+			Target:         target,
+			Authentication: auth,
+		})
 	}
-	return returnVariables, nil
+
+	data := data{
+		commands:  metadata.Step.Commands,
+		targets:   targets,
+		variables: metadata.Variables,
+		agent:     metadata.Agent,
+		step:      metadata.Step,
+	}
+
+	outputVariables, err := executor.executeCommands(meta, data)
+	if err != nil {
+		log.Error("Error executing Command ", err)
+		return cacao.NewVariables(), err
+	}
+	log.Trace("Command executed")
+
+	// Map defined step results into variables as described by any
+	// soarca-assignment step extensions.
+	assignedVariables := executor.evaluateAssignments(metadata.Step.StepExtensions, outputVariables)
+	outputVariables.Merge(assignedVariables)
+
+	if len(metadata.Step.OutArgs) > 0 {
+		// If OutArgs is set, only update execution args that are explicitly referenced
+		outputVariables = outputVariables.Select(metadata.Step.OutArgs)
+	}
+
+	return outputVariables, nil
 }
 
 func (executor *Executor) evaluateAssignments(extensions cacao.Extensions, results cacao.Variables) cacao.Variables {
@@ -180,21 +181,39 @@ func interpolateAuthentication(authentication cacao.AuthenticationInformation, v
 func (executor *Executor) executeCommands(metadata execution.Metadata,
 	data data) (cacao.Variables, error) {
 
-	context := capability.Context{}
-
-	if capability, ok := executor.capabilities[data.agent.Name]; ok {
-		context.Command = interpolateCommand(data.command, data.variables)
-		context.Target = interpolatedTarget(data.target, data.variables)
-		context.Authentication = interpolateAuthentication(data.authentication, data.variables)
-		context.Variables = data.variables
-		context.Step = data.step
-		returnVariables, err := capability.Execute(metadata, context)
+	if cap, ok := executor.capabilities[data.agent.Type]; ok {
+		context := capability.Context{
+			Commands:  interpolateCommands(data.commands, data.variables),
+			Targets:   interpolateTargets(data.targets, data.variables),
+			Variables: data.variables,
+			Step:      data.step,
+		}
+		returnVariables, err := cap.Execute(metadata, context)
 		return returnVariables, err
 	} else {
 		empty := cacao.NewVariables()
-		err := errors.New(fmt.Sprint("capability: ", data.agent.Name, " is not available in soarca"))
+		err := errors.New(fmt.Sprint("capability: ", data.agent.Type, " is not available in soarca"))
 		log.Error(err)
 		return empty, err
 	}
 
+}
+
+func interpolateCommands(commands []cacao.Command, variables cacao.Variables) []cacao.Command {
+	interpolated := make([]cacao.Command, 0, len(commands))
+	for _, command := range commands {
+		interpolated = append(interpolated, interpolateCommand(command, variables))
+	}
+	return interpolated
+}
+
+func interpolateTargets(targets []capability.ResolvedTarget, variables cacao.Variables) []capability.ResolvedTarget {
+	interpolated := make([]capability.ResolvedTarget, 0, len(targets))
+	for _, resolvedTarget := range targets {
+		interpolated = append(interpolated, capability.ResolvedTarget{
+			Target:         interpolatedTarget(resolvedTarget.Target, variables),
+			Authentication: interpolateAuthentication(resolvedTarget.Authentication, variables),
+		})
+	}
+	return interpolated
 }

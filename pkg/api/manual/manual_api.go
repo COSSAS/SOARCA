@@ -11,6 +11,7 @@ import (
 	"soarca/internal/logger"
 	"soarca/pkg/core/capability/manual/interaction"
 	"soarca/pkg/models/api"
+	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"soarca/pkg/models/manual"
 
@@ -228,10 +229,22 @@ func (manualHandler *ManualHandler) parseManualOutArgsUpdate(postData []byte) (a
 }
 
 func (manualHandler *ManualHandler) parseCommandInfoToResponse(commandInfo manual.CommandInfo) api.InteractionCommandData {
-	commandText := commandInfo.Context.Command.Command
+	// Manual is a human-resolved, single-outcome step: only the first
+	// command/target is surfaced for display, matching today's "one pending
+	// manual command per action step" semantics.
+	var command cacao.Command
+	if len(commandInfo.Context.Commands) > 0 {
+		command = commandInfo.Context.Commands[0]
+	}
+	var target cacao.AgentTarget
+	if len(commandInfo.Context.Targets) > 0 {
+		target = commandInfo.Context.Targets[0].Target
+	}
+
+	commandText := command.Command
 	isBase64 := false
-	if len(commandInfo.Context.Command.CommandB64) > 0 {
-		commandText = commandInfo.Context.Command.CommandB64
+	if len(command.CommandB64) > 0 {
+		commandText = command.CommandB64
 		isBase64 = true
 	}
 
@@ -240,10 +253,10 @@ func (manualHandler *ManualHandler) parseCommandInfoToResponse(commandInfo manua
 		ExecutionId:     commandInfo.Metadata.ExecutionId.String(),
 		PlaybookId:      commandInfo.Metadata.PlaybookId,
 		StepId:          commandInfo.Metadata.StepId,
-		Description:     commandInfo.Context.Command.Description,
+		Description:     command.Description,
 		Command:         commandText,
 		CommandIsBase64: isBase64,
-		Target:          commandInfo.Context.Target,
+		Target:          target,
 		OutVariables:    commandInfo.OutArgsVariables,
 	}
 

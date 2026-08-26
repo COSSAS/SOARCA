@@ -561,16 +561,18 @@ var testInteractionCommand = manualModel.CommandInfo{
 		},
 	},
 	Context: capability.Context{
-		Command: cacao.Command{
-			Type:             "test_type",
-			Command:          "test_command",
-			Description:      "test_description",
-			CommandB64:       "test_command_b64",
-			Version:          "1.0",
-			PlaybookActivity: "test_activity",
-			Headers:          cacao.Headers{},
-			Content:          "test_content",
-			ContentB64:       "test_content_b64",
+		Commands: []cacao.Command{
+			{
+				Type:             "test_type",
+				Command:          "test_command",
+				Description:      "test_description",
+				CommandB64:       "test_command_b64",
+				Version:          "1.0",
+				PlaybookActivity: "test_activity",
+				Headers:          cacao.Headers{},
+				Content:          "test_content",
+				ContentB64:       "test_content_b64",
+			},
 		},
 		Step: cacao.Step{
 			Type:        "test_type",
@@ -596,12 +598,16 @@ var testInteractionCommand = manualModel.CommandInfo{
 				},
 			},
 		},
-		Authentication: cacao.AuthenticationInformation{},
-		Target: cacao.AgentTarget{
-			ID:          "test_id",
-			Type:        "test_type",
-			Name:        "test_name",
-			Description: "test_description",
+		Targets: []capability.ResolvedTarget{
+			{
+				Authentication: cacao.AuthenticationInformation{},
+				Target: cacao.AgentTarget{
+					ID:          "test_id",
+					Type:        "test_type",
+					Name:        "test_name",
+					Description: "test_description",
+				},
+			},
 		},
 		Variables: cacao.Variables{
 			"var2": {

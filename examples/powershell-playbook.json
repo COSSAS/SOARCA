@@ -43,7 +43,7 @@
     },
     "agent_definitions": {
         "soarca--00040001-1000-1000-a000-000100010001": {
-            "type": "soarca",
+            "type": "soarca-powershell",
             "name": "soarca-powershell"
         }
     },

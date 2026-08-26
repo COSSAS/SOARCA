@@ -90,8 +90,8 @@ func TestParseCommandInfoToResponse(t *testing.T) {
 	inputVariable := map[string]cacao.Variable{"__test__": variable2}
 
 	context := capability.Context{
-		Command:   command,
-		Target:    target,
+		Commands:  []cacao.Command{command},
+		Targets:   []capability.ResolvedTarget{{Target: target}},
 		Variables: inputVariable,
 	}
 

@@ -346,7 +346,7 @@
     },
     "agent_definitions": {
         "soarca--29306bbd-ad5d-47c7-b62e-0e8ac44a6534": {
-            "type": "soarca",
+            "type": "soarca-http-api",
             "name": "soarca-http-api"
         }
     },

@@ -37,7 +37,32 @@ func (sshCapability *SshCapability) Execute(metadata execution.Metadata,
 	context capability.Context) (cacao.Variables, error) {
 
 	log.Trace(metadata.ExecutionId)
-	return execute(context.Command, context.Authentication, context.Target)
+
+	// This capability performs commands against a target; a step declaring
+	// zero targets has nothing to run against, so skip without error.
+	if len(context.Targets) == 0 {
+		return cacao.NewVariables(), nil
+	}
+	targets := context.Targets
+
+	returnVariables := cacao.NewVariables()
+	var stepErr error
+
+	for _, resolvedTarget := range targets {
+		for _, command := range context.Commands {
+			results, err := execute(command, resolvedTarget.Authentication, resolvedTarget.Target)
+			returnVariables.Merge(results)
+			if err != nil {
+				log.Error(err)
+				stepErr = err
+				// Abort this target's remaining commands on first failure,
+				// but keep processing the other targets.
+				break
+			}
+		}
+	}
+
+	return returnVariables, stepErr
 }
 
 func execute(command cacao.Command,
