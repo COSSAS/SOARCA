@@ -8,6 +8,7 @@ import (
 
 	"soarca/internal/database/projections"
 	cacao "soarca/pkg/models/cacao"
+	"soarca/pkg/models/fin"
 
 	"go.mongodb.org/mongo-driver/bson"
 	mongo "go.mongodb.org/mongo-driver/mongo"
@@ -18,11 +19,12 @@ const writeErrorDuplicationCode = 11000
 
 var (
 	cacaoPlayBookRepo *mongoCollection[cacao.Playbook]
+	finRegistryRepo   *mongoCollection[fin.Record]
 	mongoclient       *mongo.Client
 )
 
 type dbtypes interface {
-	cacao.Playbook // | for other supported types
+	cacao.Playbook | fin.Record // | for other supported types
 }
 
 type mongoCollection[T dbtypes] struct {
@@ -58,6 +60,10 @@ func GetCacaoRepo() *mongoCollection[cacao.Playbook] {
 	return cacaoPlayBookRepo
 }
 
+func GetFinRepo() *mongoCollection[fin.Record] {
+	return finRegistryRepo
+}
+
 // func GetMongoClient() *mongodbClient {
 // 	return mongoclient
 // }
@@ -77,6 +83,11 @@ func SetupMongodb(uri string, username string, password string) error {
 	}
 
 	cacaoPlayBookRepo, err = NewMongoCollection[cacao.Playbook](mongoclient, "soarca", "cacoa_playbook_collection")
+	if err != nil {
+		return err
+	}
+
+	finRegistryRepo, err = NewMongoCollection[fin.Record](mongoclient, "soarca", "fin_registry_collection")
 	return err
 }
 
