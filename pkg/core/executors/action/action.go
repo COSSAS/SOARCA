@@ -38,9 +38,23 @@ type IExecuter interface {
 
 type Executor struct {
 	capabilities map[string]capability.ICapability
-	reporter     reporter.IStepReporter
-	time         timeUtil.ITime
-	assigner     assignment.IAssignmentExtension
+	// finFallback is consulted whenever data.agent.Type doesn't match any
+	// statically-registered capability. Unlike built-ins, Fin capability
+	// types are declared dynamically at Fin registration time and can't be
+	// known up front to populate capabilities, so a single fallback
+	// capability (routing internally on Context.Agent.Type) stands in for
+	// the whole, open-ended set of them. Nil if Fin support is disabled.
+	finFallback capability.ICapability
+	reporter    reporter.IStepReporter
+	time        timeUtil.ITime
+	assigner    assignment.IAssignmentExtension
+}
+
+// SetFinFallback wires the fallback capability consulted for any
+// agent.Type not present in the static capabilities map (see
+// Executor.finFallback). Passing nil disables Fin routing entirely.
+func (executor *Executor) SetFinFallback(finFallback capability.ICapability) {
+	executor.finFallback = finFallback
 }
 
 type data struct {
@@ -181,22 +195,26 @@ func interpolateAuthentication(authentication cacao.AuthenticationInformation, v
 func (executor *Executor) executeCommands(metadata execution.Metadata,
 	data data) (cacao.Variables, error) {
 
-	if cap, ok := executor.capabilities[data.agent.Type]; ok {
-		context := capability.Context{
-			Commands:  interpolateCommands(data.commands, data.variables),
-			Targets:   interpolateTargets(data.targets, data.variables),
-			Variables: data.variables,
-			Step:      data.step,
+	cap, ok := executor.capabilities[data.agent.Type]
+	if !ok {
+		if executor.finFallback == nil {
+			empty := cacao.NewVariables()
+			err := errors.New(fmt.Sprint("capability: ", data.agent.Type, " is not available in soarca"))
+			log.Error(err)
+			return empty, err
 		}
-		returnVariables, err := cap.Execute(metadata, context)
-		return returnVariables, err
-	} else {
-		empty := cacao.NewVariables()
-		err := errors.New(fmt.Sprint("capability: ", data.agent.Type, " is not available in soarca"))
-		log.Error(err)
-		return empty, err
+		cap = executor.finFallback
 	}
 
+	context := capability.Context{
+		Commands:  interpolateCommands(data.commands, data.variables),
+		Targets:   interpolateTargets(data.targets, data.variables),
+		Variables: data.variables,
+		Step:      data.step,
+		Agent:     data.agent,
+	}
+	returnVariables, err := cap.Execute(metadata, context)
+	return returnVariables, err
 }
 
 func interpolateCommands(commands []cacao.Command, variables cacao.Variables) []cacao.Command {

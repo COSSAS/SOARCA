@@ -61,7 +61,7 @@ definitions:
           authentication information (needed by a human operator to perform the step
           manually)
         items:
-          $ref: '#/definitions/api.ManualTarget'
+          $ref: '#/definitions/capability.ResolvedTarget'
         type: array
       type:
         description: The type of this content
@@ -111,19 +111,6 @@ definitions:
     - response_out_args
     - response_status
     - type
-    type: object
-  api.ManualTarget:
-    properties:
-      authentication:
-        allOf:
-        - $ref: '#/definitions/cacao.AuthenticationInformation'
-        description: The resolved authentication information for this target, if any
-      target:
-        allOf:
-        - $ref: '#/definitions/cacao.AgentTarget'
-        description: The cacao agent-target
-    required:
-    - target
     type: object
   api.PlaybookExecutionReport:
     properties:
@@ -739,39 +726,14 @@ definitions:
     additionalProperties:
       $ref: '#/definitions/cacao.Step'
     type: object
-  fin.Capability:
+  capability.ResolvedTarget:
     properties:
-      description:
-        description: |-
-          Description is free text for humans (dashboards, logs) — it plays no
-          role in routing.
-        type: string
-      step_examples:
-        description: |-
-          StepExamples are optional, illustrative CACAO action steps showing
-          how a playbook author would invoke this capability (agent, commands,
-          targets, ...), surfaced to help playbook authors — they are never
-          interpreted or validated by SOARCA. A capability may offer more than
-          one example (e.g. to illustrate different commands or target shapes).
-        items:
-          $ref: '#/definitions/cacao.Step'
-        type: array
-      type:
-        description: |-
-          Type is the routing key: the value playbook authors write into
-          agent_definitions[...].type to target this capability pool. Multiple
-          independently-deployed Fin processes may register the same Type;
-          SOARCA treats them as one interchangeable pool and load-balances/
-          fails over across them (see docs/adr/FIN-WEBHOOK-PROTOCOL-PROPOSAL.md
-          §2.1b).
-        type: string
-      version:
-        description: |-
-          Version is the capability implementation's own version string, for
-          operator/debugging visibility only.
-        type: string
+      authentication:
+        $ref: '#/definitions/cacao.AuthenticationInformation'
+      target:
+        $ref: '#/definitions/cacao.AgentTarget'
     required:
-    - type
+    - target
     type: object
   fin.Command:
     properties:
@@ -832,7 +794,7 @@ definitions:
         type: string
       targets:
         items:
-          $ref: '#/definitions/fin.Target'
+          $ref: '#/definitions/capability.ResolvedTarget'
         type: array
       variables:
         $ref: '#/definitions/cacao.Variables'
@@ -871,7 +833,7 @@ definitions:
     properties:
       capabilities:
         items:
-          $ref: '#/definitions/fin.Capability'
+          $ref: '#/definitions/pkg_models_fin.Capability'
         type: array
       display_name:
         description: |-
@@ -900,7 +862,7 @@ definitions:
     properties:
       capabilities:
         items:
-          $ref: '#/definitions/fin.Capability'
+          $ref: '#/definitions/pkg_models_fin.Capability'
         type: array
       display_name:
         type: string
@@ -971,19 +933,6 @@ definitions:
       timeout:
         type: integer
     type: object
-  fin.Target:
-    properties:
-      address:
-        $ref: '#/definitions/cacao.Addresses'
-      authentication:
-        $ref: '#/definitions/cacao.AuthenticationInformation'
-      name:
-        type: string
-      port:
-        type: string
-      type:
-        type: string
-    type: object
   fin.TargetResult:
     properties:
       error:
@@ -1011,6 +960,40 @@ definitions:
     x-enum-varnames:
     - ManualResponseSuccessStatus
     - ManualResponseFailureStatus
+  pkg_models_fin.Capability:
+    properties:
+      description:
+        description: |-
+          Description is free text for humans (dashboards, logs) — it plays no
+          role in routing.
+        type: string
+      step_examples:
+        description: |-
+          StepExamples are optional, illustrative CACAO action steps showing
+          how a playbook author would invoke this capability (agent, commands,
+          targets, ...), surfaced to help playbook authors — they are never
+          interpreted or validated by SOARCA. A capability may offer more than
+          one example (e.g. to illustrate different commands or target shapes).
+        items:
+          $ref: '#/definitions/cacao.Step'
+        type: array
+      type:
+        description: |-
+          Type is the routing key: the value playbook authors write into
+          agent_definitions[...].type to target this capability pool. Multiple
+          independently-deployed Fin processes may register the same Type;
+          SOARCA treats them as one interchangeable pool and load-balances/
+          fails over across them (see docs/adr/FIN-WEBHOOK-PROTOCOL-PROPOSAL.md
+          §2.1b).
+        type: string
+      version:
+        description: |-
+          Version is the capability implementation's own version string, for
+          operator/debugging visibility only.
+        type: string
+    required:
+    - type
+    type: object
 info:
   contact: {}
   title: SOARCA API

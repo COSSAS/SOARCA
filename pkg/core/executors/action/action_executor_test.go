@@ -85,6 +85,7 @@ func TestExecuteStep(t *testing.T) {
 		Targets:   []capability.ResolvedTarget{{Target: expectedTarget, Authentication: expectedAuth}},
 		Variables: cacao.NewVariables(expectedVariables),
 		Step:      step,
+		Agent:     agent,
 	}
 
 	layout := "2006-01-02T15:04:05.000Z"
@@ -154,6 +155,7 @@ func TestExecuteActionStep(t *testing.T) {
 		Commands:  []cacao.Command{expectedCommand},
 		Targets:   []capability.ResolvedTarget{{Target: expectedTarget, Authentication: expectedAuth}},
 		Variables: cacao.NewVariables(expectedVariables),
+		Agent:     agent,
 	}
 
 	mock_ssh.On("Execute",
@@ -223,6 +225,72 @@ func TestNonExistingCapabilityStep(t *testing.T) {
 		data)
 
 	assert.Equal(t, err, errors.New("capability: non-existing is not available in soarca"))
+	mock_ssh.AssertExpectations(t)
+	mock_time.AssertExpectations(t)
+}
+
+func TestUnknownCapabilityTypeRoutesToFinFallbackWhenConfigured(t *testing.T) {
+	mock_ssh := new(mock_capability.Mock_Capability)
+	mock_fin := new(mock_capability.Mock_Capability)
+	mock_time := new(mock_time.MockTime)
+	mock_assignment := new(mock_assignment_extension.Mock_AssignmentExtension)
+
+	capabilities := map[string]capability.ICapability{"ssh": mock_ssh}
+
+	executerObject := New(capabilities, new(mock_reporter.Mock_Reporter), mock_time, mock_assignment)
+	executerObject.SetFinFallback(mock_fin)
+
+	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	playbookId := "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
+	stepId := "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
+
+	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId, StepId: stepId}
+
+	expectedCommand := cacao.Command{
+		Type:    "http-executor",
+		Command: "do the thing",
+	}
+
+	expectedVariables := cacao.Variable{
+		Type:  "string",
+		Name:  "var1",
+		Value: "testing",
+	}
+
+	expectedAuth := cacao.AuthenticationInformation{
+		Name: "user",
+	}
+
+	expectedTarget := cacao.AgentTarget{
+		Name: "sometarget",
+	}
+
+	// A capability type unknown to the static capabilities map must not
+	// error out - it must fall through to the Fin fallback capability,
+	// which is exactly how dynamically-registered Fin capability types get
+	// routed (see Executor.SetFinFallback).
+	agent := cacao.AgentTarget{
+		Type: "some-fin-capability",
+		Name: "some fin",
+	}
+
+	expectedContext := capability.Context{
+		Commands:  []cacao.Command{expectedCommand},
+		Targets:   []capability.ResolvedTarget{{Target: expectedTarget, Authentication: expectedAuth}},
+		Variables: cacao.NewVariables(expectedVariables),
+		Agent:     agent,
+	}
+
+	mock_fin.On("Execute", metadata, expectedContext).Return(cacao.NewVariables(expectedVariables), nil)
+
+	data := data{commands: []cacao.Command{expectedCommand},
+		targets:   []capability.ResolvedTarget{{Target: expectedTarget, Authentication: expectedAuth}},
+		variables: cacao.NewVariables(expectedVariables),
+		agent:     agent}
+	_, err := executerObject.executeCommands(metadata, data)
+
+	assert.Equal(t, err, nil)
+	mock_fin.AssertExpectations(t)
 	mock_ssh.AssertExpectations(t)
 	mock_time.AssertExpectations(t)
 }
@@ -370,7 +438,8 @@ func TestVariableInterpolation(t *testing.T) {
 
 	context1 := capability.Context{Commands: []cacao.Command{expectedCommand},
 		Targets:   []capability.ResolvedTarget{{Target: expectedTarget, Authentication: expectedAuth}},
-		Variables: cacao.NewVariables(var1, var2, var3, varUser, varPassword, varOauth, varPrivateKey, varToken, varUserId, varheader1, varheader2)}
+		Variables: cacao.NewVariables(var1, var2, var3, varUser, varPassword, varOauth, varPrivateKey, varToken, varUserId, varheader1, varheader2),
+		Agent:     agent}
 
 	mock_capability1.On("Execute",
 		metadata,
@@ -409,7 +478,8 @@ func TestVariableInterpolation(t *testing.T) {
 	metadataHttp := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId, StepId: stepId}
 	contextHttp := capability.Context{Commands: []cacao.Command{expectedHttpCommand},
 		Targets:   []capability.ResolvedTarget{{Target: expectedTarget, Authentication: expectedAuth}},
-		Variables: cacao.NewVariables(varHttpContent, varheader1, varheader2)}
+		Variables: cacao.NewVariables(varHttpContent, varheader1, varheader2),
+		Agent:     agent}
 
 	mock_capability1.On("Execute",
 		metadataHttp,

@@ -933,7 +933,7 @@
                     "description": "All targets of the step, in order, together with their resolved authentication information (needed by a human operator to perform the step manually)",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.ManualTarget"
+                        "$ref": "#/definitions/capability.ResolvedTarget"
                     }
                 },
                 "type": {
@@ -992,30 +992,6 @@
                     "description": "The type of this content",
                     "type": "string",
                     "example": "string"
-                }
-            }
-        },
-        "api.ManualTarget": {
-            "type": "object",
-            "required": [
-                "target"
-            ],
-            "properties": {
-                "authentication": {
-                    "description": "The resolved authentication information for this target, if any",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/cacao.AuthenticationInformation"
-                        }
-                    ]
-                },
-                "target": {
-                    "description": "The cacao agent-target",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/cacao.AgentTarget"
-                        }
-                    ]
                 }
             }
         },
@@ -1924,30 +1900,17 @@
                 "$ref": "#/definitions/cacao.Step"
             }
         },
-        "fin.Capability": {
+        "capability.ResolvedTarget": {
             "type": "object",
             "required": [
-                "type"
+                "target"
             ],
             "properties": {
-                "description": {
-                    "description": "Description is free text for humans (dashboards, logs) — it plays no\nrole in routing.",
-                    "type": "string"
+                "authentication": {
+                    "$ref": "#/definitions/cacao.AuthenticationInformation"
                 },
-                "step_examples": {
-                    "description": "StepExamples are optional, illustrative CACAO action steps showing\nhow a playbook author would invoke this capability (agent, commands,\ntargets, ...), surfaced to help playbook authors — they are never\ninterpreted or validated by SOARCA. A capability may offer more than\none example (e.g. to illustrate different commands or target shapes).",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/cacao.Step"
-                    }
-                },
-                "type": {
-                    "description": "Type is the routing key: the value playbook authors write into\nagent_definitions[...].type to target this capability pool. Multiple\nindependently-deployed Fin processes may register the same Type;\nSOARCA treats them as one interchangeable pool and load-balances/\nfails over across them (see docs/adr/FIN-WEBHOOK-PROTOCOL-PROPOSAL.md\n§2.1b).",
-                    "type": "string"
-                },
-                "version": {
-                    "description": "Version is the capability implementation's own version string, for\noperator/debugging visibility only.",
-                    "type": "string"
+                "target": {
+                    "$ref": "#/definitions/cacao.AgentTarget"
                 }
             }
         },
@@ -2017,7 +1980,7 @@
                 "targets": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/fin.Target"
+                        "$ref": "#/definitions/capability.ResolvedTarget"
                     }
                 },
                 "variables": {
@@ -2070,7 +2033,7 @@
                 "capabilities": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/fin.Capability"
+                        "$ref": "#/definitions/pkg_models_fin.Capability"
                     }
                 },
                 "display_name": {
@@ -2103,7 +2066,7 @@
                 "capabilities": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/fin.Capability"
+                        "$ref": "#/definitions/pkg_models_fin.Capability"
                     }
                 },
                 "display_name": {
@@ -2195,26 +2158,6 @@
                 }
             }
         },
-        "fin.Target": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "$ref": "#/definitions/cacao.Addresses"
-                },
-                "authentication": {
-                    "$ref": "#/definitions/cacao.AuthenticationInformation"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "port": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
         "fin.TargetResult": {
             "type": "object",
             "properties": {
@@ -2247,6 +2190,33 @@
                 "ManualResponseSuccessStatus",
                 "ManualResponseFailureStatus"
             ]
+        },
+        "pkg_models_fin.Capability": {
+            "type": "object",
+            "required": [
+                "type"
+            ],
+            "properties": {
+                "description": {
+                    "description": "Description is free text for humans (dashboards, logs) — it plays no\nrole in routing.",
+                    "type": "string"
+                },
+                "step_examples": {
+                    "description": "StepExamples are optional, illustrative CACAO action steps showing\nhow a playbook author would invoke this capability (agent, commands,\ntargets, ...), surfaced to help playbook authors — they are never\ninterpreted or validated by SOARCA. A capability may offer more than\none example (e.g. to illustrate different commands or target shapes).",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/cacao.Step"
+                    }
+                },
+                "type": {
+                    "description": "Type is the routing key: the value playbook authors write into\nagent_definitions[...].type to target this capability pool. Multiple\nindependently-deployed Fin processes may register the same Type;\nSOARCA treats them as one interchangeable pool and load-balances/\nfails over across them (see docs/adr/FIN-WEBHOOK-PROTOCOL-PROPOSAL.md\n§2.1b).",
+                    "type": "string"
+                },
+                "version": {
+                    "description": "Version is the capability implementation's own version string, for\noperator/debugging visibility only.",
+                    "type": "string"
+                }
+            }
         }
     }
 }
