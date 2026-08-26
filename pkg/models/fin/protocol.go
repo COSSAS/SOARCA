@@ -1,10 +1,6 @@
 package fin
 
-// RegisterRequest is the body of POST /api/v1/fins/register — a one-time,
-// admin-gated call (see RegistrationToken) that creates a new Fin identity
-// and returns its credential (RegisterResponse). Capabilities is an array
-// from day one: a single Fin registration can declare more than one
-// capability type.
+// RegisterRequest is the body of POST /fin/register.
 type RegisterRequest struct {
 	// RegistrationToken must match FIN_REGISTRATION_TOKEN.
 	RegistrationToken string       `json:"registration_token" validate:"required"`
@@ -23,7 +19,7 @@ type RegisterResponse struct {
 	JobLeaseSeconds        int `json:"job_lease_seconds"`
 }
 
-// PollRequest is the body of POST /api/v1/fins/poll. The calling Fin is
+// PollRequest is the body of POST /fin/poll. The calling Fin is
 // identified and authenticated by its Authorization: Bearer fin_token
 // header — fin_id and capability types are never resent here; SOARCA
 // already knows both server-side, keyed off the token.
@@ -37,19 +33,12 @@ type PollResponse struct {
 	Job Job `json:"job"`
 }
 
-// ResultRequest is the body of PUT /api/v1/fins/jobs/{job_id}. job_id is a
-// path parameter (identifying which job resource this updates), not
-// repeated in the body.
+// ResultRequest is the body of PUT /fin/jobs/{job_id}.
 type ResultRequest struct {
 	JobResult
 }
 
-// StatusPingRequest is the body of PATCH /api/v1/fins/jobs/{job_id}/status
-// — a Fin-initiated, optional call used only for jobs that run longer than
-// a few seconds. It both extends the job's lease (so a legitimately
-// long-running job isn't requeued out from under the Fin still working on
-// it) and gives SOARCA a place to piggyback a pending instruction (see
-// StatusPingResponse) without any inbound-facing channel on the Fin side.
+// StatusPingRequest extends an active lease for long-running jobs.
 type StatusPingRequest struct {
 	Progress string `json:"progress,omitempty"`
 }
@@ -59,10 +48,7 @@ type StatusPingResponse struct {
 	Action string `json:"action,omitempty"`
 }
 
-// ListResponse is returned by GET /api/v1/fins — read-only
-// discovery/observability for admins and dashboards, so playbook authors
-// and operators can see what capability types are actually live instead of
-// needing out-of-band knowledge of a running Fin's id.
+// ListResponse is returned by GET /fin/.
 type ListResponse struct {
 	Fins []Record `json:"fins"`
 }

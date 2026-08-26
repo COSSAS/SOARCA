@@ -52,9 +52,13 @@ type Record struct {
 	Capabilities    []Capability `bson:"capabilities" json:"capabilities"`
 	RegisteredAt    time.Time    `bson:"registered_at" json:"registered_at"`
 	// LastSeen is updated on every /poll call, whether or not a job was
-	// returned — the poll loop itself is the liveness mechanism (see
-	// docs/adr/FIN-WEBHOOK-PROTOCOL-PROPOSAL.md §2.4). A Fin that stops
-	// polling is expired from routing after a configured TTL.
+	// returned — surfaced via List/Get for operator/dashboard visibility
+	// into which registered Fins are actually still polling. It is
+	// observability only: a Fin that stops polling is not actively expired
+	// or hidden from routing (see docs/adr/FIN-WEBHOOK-PROTOCOL-PROPOSAL.md
+	// §2.4); jobs queued under its capability types simply go unclaimed
+	// until the enqueuing step's own timeout elapses (the job queue's
+	// lease mechanism, not this field, is what bounds that wait).
 	LastSeen time.Time `bson:"last_seen" json:"last_seen"`
 }
 
