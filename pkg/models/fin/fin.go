@@ -55,12 +55,16 @@ type Record struct {
 	RegisteredAt    time.Time    `bson:"registered_at" json:"registered_at"`
 	// LastSeen is updated on every /poll call, whether or not a job was
 	// returned — surfaced via List/Get for operator/dashboard visibility
-	// into which registered Fins are actually still polling. It is
-	// observability only: a Fin that stops polling is not actively expired
-	// or hidden from routing (see docs/adr/FIN-WEBHOOK-PROTOCOL-PROPOSAL.md
-	// §2.4); jobs queued under its capability types simply go unclaimed
-	// until the enqueuing step's own timeout elapses (the job queue's
-	// lease mechanism, not this field, is what bounds that wait).
+	// into which registered Fins are actually still polling, and used to
+	// derive Stale below. A Fin that stops polling is never actively
+	// expired or removed from routing (see
+	// docs/adr/FIN-WEBHOOK-PROTOCOL-PROPOSAL.md §2.4): its registration
+	// stays in place, but pkg/core/capability/fin.Capability's fail-fast
+	// liveness check uses LastSeen to decide whether a step should even
+	// bother enqueuing a job for it - once every Fin declaring a given
+	// capability type is stale, new jobs of that type are failed
+	// immediately instead of being enqueued to wait out the step's own
+	// timeout unclaimed.
 	LastSeen time.Time `bson:"last_seen" json:"last_seen"`
 	// Stale is computed at read time and is not persisted.
 	Stale bool `bson:"-" json:"stale"`
