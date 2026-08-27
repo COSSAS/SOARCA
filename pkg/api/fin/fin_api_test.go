@@ -56,6 +56,7 @@ func newTestRouter(handler *FinHandler) *gin.Engine {
 		finRoutes.POST("/register", handler.Register)
 		finRoutes.GET("/", handler.List)
 		finRoutes.GET(":fin_id", handler.Get)
+		finRoutes.DELETE(":fin_id", handler.Delete)
 
 		authenticated := finRoutes.Group("")
 		authenticated.Use(handler.RequireFinToken)
@@ -63,7 +64,7 @@ func newTestRouter(handler *FinHandler) *gin.Engine {
 			authenticated.POST("/poll", handler.Poll)
 			authenticated.PUT("jobs/:job_id", handler.SubmitResult)
 			authenticated.PATCH("jobs/:job_id/status", handler.StatusPing)
-			authenticated.DELETE(":fin_id", handler.Unregister)
+			authenticated.DELETE("/", handler.Unregister)
 		}
 	}
 	return router
@@ -312,7 +313,7 @@ func TestUnregisterOwnRegistrationSucceeds(t *testing.T) {
 
 	registered := registerTestFin(t, router, "pong")
 
-	recorder := doRequest(router, http.MethodDelete, "/fin/"+registered.FinId, nil, registered.FinToken)
+	recorder := doRequest(router, http.MethodDelete, "/fin/", nil, registered.FinToken)
 	assert.Equal(t, recorder.Code, http.StatusNoContent)
 
 	_, err := repo.Get(registered.FinId)
@@ -321,19 +322,20 @@ func TestUnregisterOwnRegistrationSucceeds(t *testing.T) {
 	}
 }
 
-func TestUnregisterAnotherFinsRegistrationFails(t *testing.T) {
-	handler, _, _ := newTestHandler(t)
+func TestAdminDeleteRemovesAnyFinsRegistration(t *testing.T) {
+	handler, repo, _ := newTestHandler(t)
 	router := newTestRouter(handler)
 
-	registeredA := registerTestFin(t, router, "pong")
+	registered := registerTestFin(t, router, "pong")
 
-	guidMock := handler.guid.(*mock_guid.Mock_Guid)
-	guidMock.ExpectedCalls = nil
-	guidMock.On("New").Return(uuid.MustParse("33333333-3333-3333-3333-333333333333"))
-	registeredB := registerTestFin(t, router, "pong")
+	// Admin delete is not fin-token gated at all - no Authorization header.
+	recorder := doRequest(router, http.MethodDelete, "/fin/"+registered.FinId, nil, "")
+	assert.Equal(t, recorder.Code, http.StatusNoContent)
 
-	recorder := doRequest(router, http.MethodDelete, "/fin/"+registeredB.FinId, nil, registeredA.FinToken)
-	assert.Equal(t, recorder.Code, http.StatusForbidden)
+	_, err := repo.Get(registered.FinId)
+	if err == nil {
+		t.Fatal("expected fin to be unregistered")
+	}
 }
 
 func TestListAndGet(t *testing.T) {

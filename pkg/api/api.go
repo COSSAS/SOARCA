@@ -176,7 +176,7 @@ func ManualRoutes(route *gin.Engine, manualHandler *manual_handler.ManualHandler
 // POST    /fin/poll                     (fin-token gated)
 // PUT     /fin/jobs/:job_id             (fin-token gated)
 // PATCH   /fin/jobs/:job_id/status      (fin-token gated)
-// DELETE  /fin/:fin_id                  (fin-token gated; a fin may only delete its own registration)
+// DELETE  /fin/                        (fin-token gated; unregisters the calling fin itself, inferred from the token)
 func FinPublicRoutes(route *gin.Engine, finHandler *fin_handler.FinHandler) {
 	finRoutes := route.Group("/fin")
 	{
@@ -188,19 +188,22 @@ func FinPublicRoutes(route *gin.Engine, finHandler *fin_handler.FinHandler) {
 			finAuthenticated.POST("/poll", finHandler.Poll)
 			finAuthenticated.PUT("jobs/:job_id", finHandler.SubmitResult)
 			finAuthenticated.PATCH("jobs/:job_id/status", finHandler.StatusPing)
-			finAuthenticated.DELETE(":fin_id", finHandler.Unregister)
+			finAuthenticated.DELETE("/", finHandler.Unregister)
 		}
 	}
 }
 
-// FinAdminRoutes registers the read-only Fin discovery endpoints (ordinary
-// admin/dashboard reads, not fin-authenticated):
+// FinAdminRoutes registers the read-only Fin discovery endpoints and the
+// admin-initiated delete (ordinary admin/dashboard actions, not
+// fin-authenticated):
 // GET     /fin/                        (admin/dashboard read)
 // GET     /fin/:fin_id                  (admin/dashboard read)
+// DELETE  /fin/:fin_id                  (admin/dashboard action; forcibly removes any fin's registration)
 func FinAdminRoutes(route *gin.Engine, finHandler *fin_handler.FinHandler) {
 	finRoutes := route.Group("/fin")
 	{
 		finRoutes.GET("/", finHandler.List)
 		finRoutes.GET(":fin_id", finHandler.Get)
+		finRoutes.DELETE(":fin_id", finHandler.Delete)
 	}
 }

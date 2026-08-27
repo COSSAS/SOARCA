@@ -71,9 +71,10 @@ own timeout elapses.
 | `POST` | `/fin/poll` | fin_token | Long-poll for the next job matching this Fin's registered capability types |
 | `PUT` | `/fin/jobs/{job_id}` | fin_token | Submit the result of a claimed job |
 | `PATCH` | `/fin/jobs/{job_id}/status` | fin_token | Extend a claimed job's lease and check for a pending instruction (e.g. cancellation) |
-| `DELETE` | `/fin/{fin_id}` | fin_token | Delete a Fin's own registration (a Fin may only delete itself) |
+| `DELETE` | `/fin/` | fin_token | Unregister the calling Fin itself - the fin_id is inferred from the token, never sent explicitly |
 | `GET` | `/fin/` | admin JWT | List all currently-registered Fins and their capabilities |
 | `GET` | `/fin/{fin_id}` | admin JWT | Look up a specific registered Fin by id |
+| `DELETE` | `/fin/{fin_id}` | admin JWT | Forcibly remove any Fin's registration (e.g. one that is stale/offline and will never unregister itself) |
 
 The full request/response bodies are documented in the generated
 [OpenAPI/Swagger reference](/docs/soarca-api/), under the `fin` tag.
@@ -260,9 +261,14 @@ checking it now.
 
 ### Unregistering
 
-`DELETE /fin/{fin_id}`, authenticated with that Fin's own `fin_token`,
-removes its registration. A Fin may only delete itself; the token must
-resolve to the `fin_id` in the path.
+`DELETE /fin/`, authenticated with that Fin's own `fin_token`, removes its
+own registration. There is no `fin_id` in the path - it's inferred from the
+token, since a Fin can only ever unregister itself.
+
+An admin/dashboard client can additionally force-remove *any* Fin's
+registration via `DELETE /fin/{fin_id}` (admin JWT, not fin_token) - useful
+for cleaning up a stale/offline Fin that will never come back to
+unregister itself.
 
 ### Discovery
 

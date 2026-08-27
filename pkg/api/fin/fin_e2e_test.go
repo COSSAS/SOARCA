@@ -54,6 +54,7 @@ func TestFullFinProtocolFlow(t *testing.T) {
 		finRoutes.POST("/register", handler.Register)
 		finRoutes.GET("/", handler.List)
 		finRoutes.GET(":fin_id", handler.Get)
+		finRoutes.DELETE(":fin_id", handler.Delete)
 
 		authenticated := finRoutes.Group("")
 		authenticated.Use(handler.RequireFinToken)
@@ -61,7 +62,7 @@ func TestFullFinProtocolFlow(t *testing.T) {
 			authenticated.POST("/poll", handler.Poll)
 			authenticated.PUT("jobs/:job_id", handler.SubmitResult)
 			authenticated.PATCH("jobs/:job_id/status", handler.StatusPing)
-			authenticated.DELETE(":fin_id", handler.Unregister)
+			authenticated.DELETE("/", handler.Unregister)
 		}
 	}
 

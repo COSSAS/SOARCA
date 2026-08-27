@@ -330,27 +330,19 @@ func (finHandler *FinHandler) StatusPing(g *gin.Context) {
 
 // Unregister
 //
-//	@Summary	delete a Fin's own registration
+//	@Summary	delete this Fin's own registration
 //	@Schemes
-//	@Description	delete a Fin's own registration. A Fin may only delete its own registration - the token must resolve to the fin_id in the path.
+//	@Description	delete this Fin's own registration. The fin_id is inferred from the fin_token presented in the Authorization header - a Fin can only ever delete its own registration, so it never needs to name itself explicitly.
 //	@Tags			fin
 //	@Produce		json
-//	@Param			fin_id	path	string	true	"fin ID"
 //	@Success		204
-//	@failure		403	{object}	api.Error
 //	@failure		404	{object}	api.Error
-//	@Router			/fin/{fin_id} [DELETE]
+//	@Router			/fin/ [DELETE]
 func (finHandler *FinHandler) Unregister(g *gin.Context) {
 	record := finHandler.currentFin(g)
-	finId := g.Param("fin_id")
-	route := "DELETE /fin/" + finId
+	route := "DELETE /fin/"
 
-	if record.FinId != finId {
-		apiError.SendErrorResponse(g, http.StatusForbidden, "A fin may only delete its own registration", route, "")
-		return
-	}
-
-	if err := finHandler.repository.Unregister(finId); err != nil {
+	if err := finHandler.repository.Unregister(record.FinId); err != nil {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusNotFound, "Fin not found", route, "")
 		return
@@ -401,6 +393,30 @@ func (finHandler *FinHandler) Get(g *gin.Context) {
 		return
 	}
 	g.JSON(http.StatusOK, record)
+}
+
+// Delete
+//
+//	@Summary	forcibly remove a registered fin (admin)
+//	@Schemes
+//	@Description	forcibly remove a registered fin's record, e.g. one that is stale/offline and will never come back to unregister itself. This is an admin/dashboard action, not Fin-authenticated - unlike Unregister, it is not restricted to a fin removing its own registration.
+//	@Tags			fin
+//	@Produce		json
+//	@Param			fin_id	path	string	true	"fin ID"
+//	@Success		204
+//	@failure		404	{object}	api.Error
+//	@Router			/fin/{fin_id} [DELETE]
+func (finHandler *FinHandler) Delete(g *gin.Context) {
+	finId := g.Param("fin_id")
+	route := "DELETE /fin/" + finId
+
+	if err := finHandler.repository.Unregister(finId); err != nil {
+		log.Error(err)
+		apiError.SendErrorResponse(g, http.StatusNotFound, "Fin not found", route, "")
+		return
+	}
+
+	g.Status(http.StatusNoContent)
 }
 
 // ############################################################################
