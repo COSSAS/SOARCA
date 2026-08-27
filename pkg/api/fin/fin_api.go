@@ -58,7 +58,15 @@ type Config struct {
 	PollIntervalSeconds    int
 	LongPollTimeoutSeconds int
 	JobLeaseSeconds        int
+	// StaleAfterSeconds is the threshold (in seconds, since LastSeen) after
+	// which List/Get mark a registered Fin as Stale in their response, for
+	// GUI/operator visibility. It should match the threshold used by
+	// pkg/core/capability/fin.Capability's fail-fast liveness check so the
+	// two stay consistent; a value <= 0 falls back to defaultStaleAfter.
+	StaleAfterSeconds int
 }
+
+const defaultStaleAfter = 2 * time.Minute
 
 type FinHandler struct {
 	repository IFinRepository
@@ -371,6 +379,9 @@ func (finHandler *FinHandler) List(g *gin.Context) {
 		apiError.SendErrorResponse(g, http.StatusInternalServerError, "Failed to list fins", "GET /fin/", "")
 		return
 	}
+	for i := range records {
+		records[i].Stale = finHandler.isStale(records[i])
+	}
 	g.JSON(http.StatusOK, fin.ListResponse{Fins: records})
 }
 
@@ -392,6 +403,7 @@ func (finHandler *FinHandler) Get(g *gin.Context) {
 		apiError.SendErrorResponse(g, http.StatusNotFound, "Fin not found", "GET /fin/"+finId, "")
 		return
 	}
+	record.Stale = finHandler.isStale(record)
 	g.JSON(http.StatusOK, record)
 }
 
@@ -417,6 +429,16 @@ func (finHandler *FinHandler) Delete(g *gin.Context) {
 	}
 
 	g.Status(http.StatusNoContent)
+}
+
+// isStale reports whether record hasn't been seen (via /poll) within the
+// configured staleness threshold - see Config.StaleAfterSeconds.
+func (finHandler *FinHandler) isStale(record fin.Record) bool {
+	staleAfter := defaultStaleAfter
+	if finHandler.config.StaleAfterSeconds > 0 {
+		staleAfter = time.Duration(finHandler.config.StaleAfterSeconds) * time.Second
+	}
+	return time.Since(record.LastSeen) > staleAfter
 }
 
 // ############################################################################

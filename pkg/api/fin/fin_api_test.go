@@ -351,10 +351,44 @@ func TestListAndGet(t *testing.T) {
 		t.Fatal(err)
 	}
 	assert.Equal(t, len(listResponse.Fins), 1)
+	assert.Equal(t, listResponse.Fins[0].Stale, false)
 
 	recorder = doRequest(router, http.MethodGet, "/fin/"+registered.FinId, nil, "")
 	assert.Equal(t, recorder.Code, http.StatusOK)
+	var record fin.Record
+	if err := json.Unmarshal(recorder.Body.Bytes(), &record); err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, record.Stale, false)
 
 	recorder = doRequest(router, http.MethodGet, "/fin/does-not-exist", nil, "")
 	assert.Equal(t, recorder.Code, http.StatusNotFound)
+}
+
+func TestListAndGetMarkFinStaleAfterThreshold(t *testing.T) {
+	handler, repo, _ := newTestHandler(t)
+	handler.config.StaleAfterSeconds = 1
+	router := newTestRouter(handler)
+
+	registered := registerTestFin(t, router, "pong")
+	if err := repo.Touch(registered.FinId, time.Now().Add(-time.Hour)); err != nil {
+		t.Fatal(err)
+	}
+
+	recorder := doRequest(router, http.MethodGet, "/fin/"+registered.FinId, nil, "")
+	assert.Equal(t, recorder.Code, http.StatusOK)
+	var record fin.Record
+	if err := json.Unmarshal(recorder.Body.Bytes(), &record); err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, record.Stale, true)
+
+	recorder = doRequest(router, http.MethodGet, "/fin/", nil, "")
+	assert.Equal(t, recorder.Code, http.StatusOK)
+	var listResponse fin.ListResponse
+	if err := json.Unmarshal(recorder.Body.Bytes(), &listResponse); err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, len(listResponse.Fins), 1)
+	assert.Equal(t, listResponse.Fins[0].Stale, true)
 }

@@ -2,6 +2,8 @@
 package fin
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"soarca/pkg/core/capability"
@@ -60,6 +62,8 @@ type Record struct {
 	// until the enqueuing step's own timeout elapses (the job queue's
 	// lease mechanism, not this field, is what bounds that wait).
 	LastSeen time.Time `bson:"last_seen" json:"last_seen"`
+	// Stale is computed at read time and is not persisted.
+	Stale bool `bson:"-" json:"stale"`
 }
 
 // JobState is the aggregated outcome of a job.
@@ -186,4 +190,27 @@ type ErrJobNotLeasedToFin struct {
 
 func (e ErrJobNotLeasedToFin) Error() string {
 	return "job " + e.JobId + " is not leased to fin " + e.FinId
+}
+
+// ErrNoCapableFin indicates no Fin is registered for the capability type.
+type ErrNoCapableFin struct {
+	CapabilityType string
+}
+
+func (e ErrNoCapableFin) Error() string {
+	return "no fin is registered for capability type " + e.CapabilityType
+}
+
+// ErrOnlyStaleCapableFins indicates all capable Fins are stale.
+type ErrOnlyStaleCapableFins struct {
+	CapabilityType string
+	FinIds         []string
+	StaleAfter     time.Duration
+}
+
+func (e ErrOnlyStaleCapableFins) Error() string {
+	return fmt.Sprintf(
+		"every fin registered for capability type %s has not been seen in over %s (fin ids: %s); assuming none are still running",
+		e.CapabilityType, e.StaleAfter, strings.Join(e.FinIds, ", "),
+	)
 }

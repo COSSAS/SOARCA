@@ -197,6 +197,8 @@ definitions:
         type: string
       step_id:
         type: string
+      type:
+        type: string
       variables:
         additionalProperties:
           $ref: '#/definitions/cacao.Variable'
@@ -849,14 +851,28 @@ definitions:
       last_seen:
         description: |-
           LastSeen is updated on every /poll call, whether or not a job was
-          returned — the poll loop itself is the liveness mechanism (see
-          docs/adr/FIN-WEBHOOK-PROTOCOL-PROPOSAL.md §2.4). A Fin that stops
-          polling is expired from routing after a configured TTL.
+          returned — surfaced via List/Get for operator/dashboard visibility
+          into which registered Fins are actually still polling. It is
+          observability only: a Fin that stops polling is not actively expired
+          or hidden from routing (see docs/adr/FIN-WEBHOOK-PROTOCOL-PROPOSAL.md
+          §2.4); jobs queued under its capability types simply go unclaimed
+          until the enqueuing step's own timeout elapses (the job queue's
+          lease mechanism, not this field, is what bounds that wait).
         type: string
       protocol_version:
         type: string
       registered_at:
         type: string
+      stale:
+        description: |-
+          Stale is computed (never persisted - bson:"-") by pkg/api/fin's
+          List/Get handlers, using the same staleness threshold as
+          pkg/core/capability/fin.Capability's fail-fast liveness check: true
+          once this Fin hasn't been seen (via /poll) in longer than that
+          threshold, so a dashboard can flag it as likely no longer running
+          without SOARCA having to actively expire or hide the registration
+          itself.
+        type: boolean
     type: object
   fin.RegisterRequest:
     properties:

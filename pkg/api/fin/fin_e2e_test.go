@@ -16,6 +16,7 @@ import (
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	finmodels "soarca/pkg/models/fin"
+	timeUtil "soarca/pkg/utils/time"
 	"soarca/test/unittest/mocks/mock_guid"
 
 	"github.com/gin-gonic/gin"
@@ -86,7 +87,7 @@ func TestFullFinProtocolFlow(t *testing.T) {
 	stepGuidMock := new(mock_guid.Mock_Guid)
 	jobId := uuid.MustParse("33333333-3333-3333-3333-333333333333")
 	stepGuidMock.On("New").Return(jobId)
-	finCap := fincapability.New(jobQueue, stepGuidMock)
+	finCap := fincapability.New(jobQueue, stepGuidMock, repo, &timeUtil.Time{}, 0)
 
 	executionId := uuid.MustParse("44444444-4444-4444-4444-444444444444")
 	metadata := execution.Metadata{

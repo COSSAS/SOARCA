@@ -27,6 +27,7 @@ import (
 	"soarca/pkg/utils/stix/expression/comparison"
 	"strconv"
 	"strings"
+	"time"
 
 	thehiveCases "soarca/pkg/integration/thehive/cases"
 	"soarca/pkg/integration/thehive/common/connector"
@@ -86,7 +87,26 @@ const (
 	defaultFinPollIntervalSeconds    = 5
 	defaultFinLongPollTimeoutSeconds = 25
 	defaultFinJobLeaseSeconds        = 60
+	// finStaleAfterMultiplier bounds how long a registered Fin can go
+	// without a /poll before FinCapability's fail-fast check stops
+	// counting it as live (see fincapability.Capability.checkCapableFin,
+	// which fails a step immediately rather than enqueuing it if every
+	// Fin declaring its capability type is considered stale). A healthy
+	// Fin's long-poll blocks for up to FIN_LONG_POLL_TIMEOUT_SECONDS
+	// before it reconnects and updates LastSeen again, so this multiplier
+	// is just a safety margin over that cadence for network/scheduling
+	// jitter - not a separate, independently-configured timeout.
+	finStaleAfterMultiplier = 2
 )
+
+// finLongPollTimeoutSeconds reads FIN_LONG_POLL_TIMEOUT_SECONDS (or its
+// default), shared by newFinHandler (handed to Fins at registration) and
+// NewDecomposer (used to derive the Fin-liveness staleness threshold) so
+// both stay in sync from a single source.
+func finLongPollTimeoutSeconds() int {
+	seconds, _ := strconv.Atoi(utils.GetEnv("FIN_LONG_POLL_TIMEOUT_SECONDS", strconv.Itoa(defaultFinLongPollTimeoutSeconds)))
+	return seconds
+}
 
 func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	ssh := new(ssh.SshCapability)
@@ -128,8 +148,11 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	// falls through to a live, registered Fin declaring that capability
 	// type - Fin capability types are dynamic (declared at Fin
 	// registration time), so unlike built-ins there is no static entry to
-	// add to the capabilities map for them.
-	actionExecutor.SetFinFallback(fincapability.New(mainFinQueue, new(guid.Guid)))
+	// add to the capabilities map for them. controller.finRepo lets the
+	// fallback fail a step immediately when no live Fin could possibly
+	// claim it, instead of always waiting out the step's own timeout.
+	staleAfter := time.Duration(finStaleAfterMultiplier*finLongPollTimeoutSeconds()) * time.Second
+	actionExecutor.SetFinFallback(fincapability.New(mainFinQueue, new(guid.Guid), controller.finRepo, soarcaTime, staleAfter))
 	playbookActionExecutor := playbook_action.New(controller, controller, reporter, soarcaTime)
 	stixComparison := comparison.New()
 	conditionExecutor := condition.New(stixComparison, reporter, soarcaTime)
@@ -315,7 +338,7 @@ func initializeCore(app *gin.Engine) error {
 // NewDecomposer) and the Fin registry populated by setupDatabase.
 func newFinHandler() *fin_handler.FinHandler {
 	pollIntervalSeconds, _ := strconv.Atoi(utils.GetEnv("FIN_POLL_INTERVAL_SECONDS", strconv.Itoa(defaultFinPollIntervalSeconds)))
-	longPollTimeoutSeconds, _ := strconv.Atoi(utils.GetEnv("FIN_LONG_POLL_TIMEOUT_SECONDS", strconv.Itoa(defaultFinLongPollTimeoutSeconds)))
+	longPollTimeoutSeconds := finLongPollTimeoutSeconds()
 	jobLeaseSeconds, _ := strconv.Atoi(utils.GetEnv("FIN_JOB_LEASE_SECONDS", strconv.Itoa(defaultFinJobLeaseSeconds)))
 
 	config := fin_handler.Config{
@@ -326,6 +349,10 @@ func newFinHandler() *fin_handler.FinHandler {
 		PollIntervalSeconds:    pollIntervalSeconds,
 		LongPollTimeoutSeconds: longPollTimeoutSeconds,
 		JobLeaseSeconds:        jobLeaseSeconds,
+		// Matches the threshold fed into fincapability.New in
+		// NewDecomposer, so a Fin flagged Stale here is the same Fin that
+		// fails fast as "only stale" in the capability's liveness check.
+		StaleAfterSeconds: finStaleAfterMultiplier * longPollTimeoutSeconds,
 	}
 
 	return fin_handler.NewFinHandler(mainController.finRepo, mainFinQueue, config, new(guid.Guid))
