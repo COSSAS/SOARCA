@@ -850,10 +850,14 @@ definitions:
         type: string
       last_seen:
         description: |-
-          LastSeen is updated on every /poll call, whether or not a job was
-          returned — surfaced via List/Get for operator/dashboard visibility
-          into which registered Fins are actually still polling, and used to
-          derive Stale below. A Fin that stops polling is never actively
+          LastSeen is updated on every /poll call (whether or not a job was
+          returned), every job result submission, and every status ping (the
+          heartbeat for a long-running job, §2.5) — so a Fin busy working a
+          job via status pings is not wrongly treated as gone dark just
+          because it isn't polling. Surfaced via List/Get for operator/
+          dashboard visibility into which registered Fins are actually still
+          alive, and used to derive Stale below. A Fin that stops all of the
+          above is never actively
           expired or removed from routing (see
           docs/adr/FIN-WEBHOOK-PROTOCOL-PROPOSAL.md §2.4): its registration
           stays in place, but pkg/core/capability/fin.Capability's fail-fast

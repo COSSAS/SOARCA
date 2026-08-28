@@ -288,6 +288,14 @@ func (finHandler *FinHandler) SubmitResult(g *gin.Context) {
 		return
 	}
 
+	if err := finHandler.repository.Touch(record.FinId, time.Now()); err != nil {
+		// A submitted result is itself a liveness signal - a Fin that just
+		// finished a job is clearly not stale. As in Poll, a failure to
+		// record it is logged, but must not fail an otherwise-successful
+		// submission.
+		log.Warning("failed to update last-seen for fin ", record.FinId, ": ", err)
+	}
+
 	g.Status(http.StatusNoContent)
 }
 
@@ -329,6 +337,16 @@ func (finHandler *FinHandler) StatusPing(g *gin.Context) {
 	if err != nil {
 		finHandler.sendJobError(g, route, err)
 		return
+	}
+
+	if err := finHandler.repository.Touch(record.FinId, time.Now()); err != nil {
+		// A status ping is this protocol's designed heartbeat for a Fin
+		// mid-job (§2.5) - without this, a long-running job's Fin would
+		// otherwise go stale (and other jobs of its capability type could
+		// be fail-fast rejected, see fin.Capability.checkCapableFin) purely
+		// because it isn't calling /poll while busy. As in Poll, a failure
+		// to record it is logged, but must not fail the lease extension.
+		log.Warning("failed to update last-seen for fin ", record.FinId, ": ", err)
 	}
 
 	// Cancellation is not implemented yet (see

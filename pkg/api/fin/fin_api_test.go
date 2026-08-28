@@ -216,7 +216,7 @@ func TestPollReturnsEnqueuedJobAndUpdatesLastSeen(t *testing.T) {
 }
 
 func TestSubmitResultRoundTrip(t *testing.T) {
-	handler, _, jobQueue := newTestHandler(t)
+	handler, repo, jobQueue := newTestHandler(t)
 	router := newTestRouter(handler)
 
 	registered := registerTestFin(t, router, "pong")
@@ -235,6 +235,12 @@ func TestSubmitResultRoundTrip(t *testing.T) {
 	recorder := doRequest(router, http.MethodPost, "/fin/poll", nil, registered.FinToken)
 	assert.Equal(t, recorder.Code, http.StatusOK)
 
+	lastSeenAfterPoll, err := repo.Get(registered.FinId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	time.Sleep(time.Millisecond)
+
 	recorder = doRequest(router, http.MethodPut, "/fin/jobs/"+job.JobId.String(),
 		fin.ResultRequest{JobResult: fin.JobResult{State: fin.JobStateSuccess}}, registered.FinToken)
 	assert.Equal(t, recorder.Code, http.StatusNoContent)
@@ -244,6 +250,15 @@ func TestSubmitResultRoundTrip(t *testing.T) {
 		assert.Equal(t, result.State, fin.JobStateSuccess)
 	case <-time.After(time.Second):
 		t.Fatal("expected the enqueued job to receive its result")
+	}
+
+	afterSubmit, err := repo.Get(registered.FinId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !afterSubmit.LastSeen.After(lastSeenAfterPoll.LastSeen) {
+		t.Fatalf("expected submitting a job result to advance LastSeen: before=%v after=%v",
+			lastSeenAfterPoll.LastSeen, afterSubmit.LastSeen)
 	}
 }
 
@@ -283,7 +298,7 @@ func TestSubmitResultFailsWhenLeasedToAnotherFin(t *testing.T) {
 }
 
 func TestStatusPingExtendsLease(t *testing.T) {
-	handler, _, jobQueue := newTestHandler(t)
+	handler, repo, jobQueue := newTestHandler(t)
 	router := newTestRouter(handler)
 
 	registered := registerTestFin(t, router, "pong")
@@ -294,6 +309,12 @@ func TestStatusPingExtendsLease(t *testing.T) {
 	recorder := doRequest(router, http.MethodPost, "/fin/poll", nil, registered.FinToken)
 	assert.Equal(t, recorder.Code, http.StatusOK)
 
+	lastSeenAfterPoll, err := repo.Get(registered.FinId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	time.Sleep(time.Millisecond)
+
 	recorder = doRequest(router, http.MethodPatch, "/fin/jobs/"+job.JobId.String()+"/status",
 		fin.StatusPingRequest{Progress: "running"}, registered.FinToken)
 	assert.Equal(t, recorder.Code, http.StatusOK)
@@ -303,6 +324,15 @@ func TestStatusPingExtendsLease(t *testing.T) {
 		t.Fatal(err)
 	}
 	assert.Equal(t, response.Action, "")
+
+	afterPing, err := repo.Get(registered.FinId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !afterPing.LastSeen.After(lastSeenAfterPoll.LastSeen) {
+		t.Fatalf("expected a status ping to advance LastSeen: before=%v after=%v",
+			lastSeenAfterPoll.LastSeen, afterPing.LastSeen)
+	}
 
 	_ = jobQueue.Submit(job.JobId, registered.FinId, fin.JobResult{State: fin.JobStateSuccess})
 }
