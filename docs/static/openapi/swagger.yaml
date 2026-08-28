@@ -197,8 +197,6 @@ definitions:
         type: string
       step_id:
         type: string
-      type:
-        type: string
       variables:
         additionalProperties:
           $ref: '#/definitions/cacao.Variable'
@@ -741,6 +739,8 @@ definitions:
     properties:
       command:
         type: string
+      command_b64:
+        type: string
       content:
         type: string
       content_b64:
@@ -852,12 +852,16 @@ definitions:
         description: |-
           LastSeen is updated on every /poll call, whether or not a job was
           returned — surfaced via List/Get for operator/dashboard visibility
-          into which registered Fins are actually still polling. It is
-          observability only: a Fin that stops polling is not actively expired
-          or hidden from routing (see docs/adr/FIN-WEBHOOK-PROTOCOL-PROPOSAL.md
-          §2.4); jobs queued under its capability types simply go unclaimed
-          until the enqueuing step's own timeout elapses (the job queue's
-          lease mechanism, not this field, is what bounds that wait).
+          into which registered Fins are actually still polling, and used to
+          derive Stale below. A Fin that stops polling is never actively
+          expired or removed from routing (see
+          docs/adr/FIN-WEBHOOK-PROTOCOL-PROPOSAL.md §2.4): its registration
+          stays in place, but pkg/core/capability/fin.Capability's fail-fast
+          liveness check uses LastSeen to decide whether a step should even
+          bother enqueuing a job for it - once every Fin declaring a given
+          capability type is stale, new jobs of that type are failed
+          immediately instead of being enqueued to wait out the step's own
+          timeout unclaimed.
         type: string
       protocol_version:
         type: string
@@ -1016,6 +1020,22 @@ info:
   version: 1.0.0
 paths:
   /fin/:
+    delete:
+      description: delete this Fin's own registration. The fin_id is inferred from
+        the fin_token presented in the Authorization header - a Fin can only ever
+        delete its own registration, so it never needs to name itself explicitly.
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: delete this Fin's own registration
+      tags:
+      - fin
     get:
       description: list all currently-registered fins and their capabilities
       produces:
@@ -1030,8 +1050,10 @@ paths:
       - fin
   /fin/{fin_id}:
     delete:
-      description: delete a Fin's own registration. A Fin may only delete its own
-        registration - the token must resolve to the fin_id in the path.
+      description: forcibly remove a registered fin's record, e.g. one that is stale/offline
+        and will never come back to unregister itself. This is an admin/dashboard
+        action, not Fin-authenticated - unlike Unregister, it is not restricted to
+        a fin removing its own registration.
       parameters:
       - description: fin ID
         in: path
@@ -1043,15 +1065,11 @@ paths:
       responses:
         "204":
           description: No Content
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/api.Error'
         "404":
           description: Not Found
           schema:
             $ref: '#/definitions/api.Error'
-      summary: delete a Fin's own registration
+      summary: forcibly remove a registered fin (admin)
       tags:
       - fin
     get:
