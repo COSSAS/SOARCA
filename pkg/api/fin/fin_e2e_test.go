@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"soarca/internal/database/finmemory"
+	"soarca/internal/storage/memory"
 	"soarca/pkg/api/fin"
 	"soarca/pkg/core/capability"
 	fincapability "soarca/pkg/core/capability/fin"
@@ -33,7 +33,7 @@ import (
 // protocol exists for: register -> Execute() enqueues a job -> poll claims
 // it -> submit result -> Execute() returns the result to the step machinery.
 func TestFullFinProtocolFlow(t *testing.T) {
-	repo := finmemory.New()
+	repo := memory.New().Fins()
 	jobQueue := queue.New()
 	t.Cleanup(jobQueue.Close)
 

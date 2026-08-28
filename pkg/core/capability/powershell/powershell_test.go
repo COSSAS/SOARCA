@@ -37,4 +37,3 @@ func TestPowershellExecuteNoTargetsSkipsWithoutError(t *testing.T) {
 	}
 	assert.Equal(t, len(results), 0)
 }
-

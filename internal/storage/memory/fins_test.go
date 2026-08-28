@@ -11,9 +11,9 @@ import (
 
 func newTestFin(finID string) fin.Record {
 	return fin.Record{
-		FinId:         finID,
-		FinTokenHash:  "hash-" + finID,
-		LastSeen:      time.Now(),
+		FinId:        finID,
+		FinTokenHash: "hash-" + finID,
+		LastSeen:     time.Now(),
 	}
 }
 

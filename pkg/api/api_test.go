@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"soarca/internal/database/finmemory"
+	"soarca/internal/storage/memory"
 	"soarca/pkg/api/fin"
 	"soarca/pkg/core/capability/fin/queue"
 	finmodels "soarca/pkg/models/fin"
@@ -43,7 +43,7 @@ func TestFinPublicRoutesAreExemptFromAdminAuthButFinAdminRoutesAreNot(t *testing
 	gin.SetMode(gin.TestMode)
 	app := gin.New()
 
-	repository := finmemory.New()
+	repository := memory.New().Fins()
 	jobQueue := queue.New()
 	t.Cleanup(jobQueue.Close)
 	guidMock := new(mock_guid.Mock_Guid)

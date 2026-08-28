@@ -32,9 +32,34 @@ type mockRepository struct {
 	mock.Mock
 }
 
-func (m *mockRepository) List() ([]fin.Record, error) {
-	args := m.Called()
+func (m *mockRepository) Create(ctx context.Context, record fin.Record) error {
+	args := m.Called(ctx, record)
+	return args.Error(0)
+}
+
+func (m *mockRepository) Get(ctx context.Context, finID string) (fin.Record, error) {
+	args := m.Called(ctx, finID)
+	return args.Get(0).(fin.Record), args.Error(1)
+}
+
+func (m *mockRepository) GetByTokenHash(ctx context.Context, tokenHash string) (fin.Record, error) {
+	args := m.Called(ctx, tokenHash)
+	return args.Get(0).(fin.Record), args.Error(1)
+}
+
+func (m *mockRepository) List(ctx context.Context) ([]fin.Record, error) {
+	args := m.Called(ctx)
 	return args.Get(0).([]fin.Record), args.Error(1)
+}
+
+func (m *mockRepository) Touch(ctx context.Context, finID string, lastSeen time.Time) error {
+	args := m.Called(ctx, finID, lastSeen)
+	return args.Error(0)
+}
+
+func (m *mockRepository) Delete(ctx context.Context, finID string) error {
+	args := m.Called(ctx, finID)
+	return args.Error(0)
 }
 
 func newMetadataAndContext() (execution.Metadata, capability.Context) {
@@ -166,7 +191,7 @@ func TestExecuteFailsFastWhenNoFinIsRegisteredForCapabilityType(t *testing.T) {
 
 	metadata, commandContext := newMetadataAndContext()
 
-	repository.On("List").Return([]fin.Record{
+	repository.On("List", mock.Anything).Return([]fin.Record{
 		{FinId: "other-fin", LastSeen: time.Unix(1000, 0), Capabilities: []fin.Capability{{Type: "some-other-type"}}},
 	}, nil)
 
@@ -191,7 +216,7 @@ func TestExecuteFailsFastWhenEveryCapableFinIsStale(t *testing.T) {
 	metadata, commandContext := newMetadataAndContext()
 
 	staleAfter := time.Minute
-	repository.On("List").Return([]fin.Record{
+	repository.On("List", mock.Anything).Return([]fin.Record{
 		{
 			FinId:        "stale-fin",
 			LastSeen:     now.Add(-2 * staleAfter),
@@ -221,7 +246,7 @@ func TestExecuteProceedsWhenAtLeastOneCapableFinIsLive(t *testing.T) {
 	metadata, commandContext := newMetadataAndContext()
 
 	staleAfter := time.Minute
-	repository.On("List").Return([]fin.Record{
+	repository.On("List", mock.Anything).Return([]fin.Record{
 		{
 			FinId:        "stale-fin",
 			LastSeen:     now.Add(-2 * staleAfter),
@@ -253,7 +278,7 @@ func TestExecuteProceedsWhenRepositoryListFails(t *testing.T) {
 
 	metadata, commandContext := newMetadataAndContext()
 
-	repository.On("List").Return([]fin.Record{}, errors.New("database unavailable"))
+	repository.On("List", mock.Anything).Return([]fin.Record{}, errors.New("database unavailable"))
 	queue.On("Enqueue", mock.Anything, mock.Anything).
 		Return(fin.JobResult{State: fin.JobStateSuccess, Variables: cacao.NewVariables()}, nil)
 

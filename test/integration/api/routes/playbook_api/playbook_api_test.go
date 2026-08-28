@@ -19,6 +19,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 const jsonTestPlayBookMeta = `{
@@ -41,7 +42,7 @@ func close(file *os.File) {
 	}
 }
 
-func TestGetPlaybookMetas(t *testing.T) {
+func TestListMeta(t *testing.T) {
 	app := gin.New()
 
 	mockController := new(mock_database_controller.Mock_Controller)
@@ -66,9 +67,9 @@ func TestGetPlaybookMetas(t *testing.T) {
 		t.Fail()
 		return
 	}
-	mockController.On("GetDatabaseInstance").Return(mockPlaybook)
+	mockController.On("GetPlaybookStore").Return(mockPlaybook)
 
-	mockPlaybook.On("GetPlaybookMetas").Return(dummyPlaybookMetas, nil)
+	mockPlaybook.On("ListMeta", mock.Anything).Return(dummyPlaybookMetas, nil)
 
 	w := httptest.NewRecorder()
 	api_routes.PlaybookRoutes(app, mockController)
@@ -80,7 +81,7 @@ func TestGetPlaybookMetas(t *testing.T) {
 	assert.JSONEq(t, string(marshalledDummyPlayBookMetas), w.Body.String())
 }
 
-func TestGetPlaybooks(t *testing.T) {
+func TestList(t *testing.T) {
 	jsonFile, err := os.Open("../playbook.json")
 	if err != nil {
 		fmt.Println(err)
@@ -94,7 +95,7 @@ func TestGetPlaybooks(t *testing.T) {
 
 	mockController := new(mock_database_controller.Mock_Controller)
 	mockPlaybook := new(mock_playbook.MockPlaybook)
-	mockController.On("GetDatabaseInstance").Return(mockPlaybook)
+	mockController.On("GetPlaybookStore").Return(mockPlaybook)
 	dummyPlaybook := decoder.DecodeValidate(byteValue)
 	if dummyPlaybook == nil {
 		fmt.Println("got an nil playbook pointer")
@@ -113,7 +114,7 @@ func TestGetPlaybooks(t *testing.T) {
 		t.Fail()
 		return
 	}
-	mockPlaybook.On("GetPlaybooks").Return(playbooks, nil)
+	mockPlaybook.On("List", mock.Anything).Return(playbooks, nil)
 	w := httptest.NewRecorder()
 	api_routes.PlaybookRoutes(app, mockController)
 	req, _ := http.NewRequest("GET", "/playbook/", nil)
@@ -136,9 +137,9 @@ func TestGetPlaybookByID(t *testing.T) {
 	app := gin.New()
 	mockController := new(mock_database_controller.Mock_Controller)
 	mockPlaybook := new(mock_playbook.MockPlaybook)
-	mockController.On("GetDatabaseInstance").Return(mockPlaybook)
+	mockController.On("GetPlaybookStore").Return(mockPlaybook)
 	dummyPlaybook := decoder.DecodeValidate(byteValue)
-	mockPlaybook.On("Read", dummyPlaybook.ID).Return(*dummyPlaybook, nil)
+	mockPlaybook.On("Get", mock.Anything, dummyPlaybook.ID).Return(*dummyPlaybook, nil)
 	marshalledDummyPlaybook, err := json.Marshal(dummyPlaybook)
 	if err != nil {
 		fmt.Println("Failed to marshall dummy JSON:", err)
@@ -168,7 +169,7 @@ func TestPostPlaybook(t *testing.T) {
 	app := gin.New()
 	mockController := new(mock_database_controller.Mock_Controller)
 	mockPlaybook := new(mock_playbook.MockPlaybook)
-	mockController.On("GetDatabaseInstance").Return(mockPlaybook)
+	mockController.On("GetPlaybookStore").Return(mockPlaybook)
 
 	dummyPlaybook := decoder.DecodeValidate(byteValue)
 	if dummyPlaybook == nil {
@@ -182,8 +183,7 @@ func TestPostPlaybook(t *testing.T) {
 		t.Fail()
 		return
 	}
-	pointerDummyObject := []byte(marshalledDummyPlaybook)
-	mockPlaybook.On("Create", &pointerDummyObject).Return(*dummyPlaybook, nil)
+	mockPlaybook.On("Create", mock.Anything, mock.Anything).Return(nil)
 
 	w := httptest.NewRecorder()
 	api_routes.PlaybookRoutes(app, mockController)
@@ -207,7 +207,7 @@ func TestDeletePlaybook(t *testing.T) {
 	app := gin.New()
 	mockController := new(mock_database_controller.Mock_Controller)
 	mockPlaybook := new(mock_playbook.MockPlaybook)
-	mockController.On("GetDatabaseInstance").Return(mockPlaybook)
+	mockController.On("GetPlaybookStore").Return(mockPlaybook)
 
 	dummyPlaybook := decoder.DecodeValidate(byteValue)
 	if dummyPlaybook == nil {
@@ -215,7 +215,7 @@ func TestDeletePlaybook(t *testing.T) {
 		t.Fail()
 		return
 	}
-	mockPlaybook.On("Delete", dummyPlaybook.ID).Return(nil)
+	mockPlaybook.On("Delete", mock.Anything, dummyPlaybook.ID).Return(nil)
 	w := httptest.NewRecorder()
 	api_routes.PlaybookRoutes(app, mockController)
 	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/playbook/%s", dummyPlaybook.ID), nil)
@@ -235,7 +235,7 @@ func TestUpdatePlaybook(t *testing.T) {
 	app := gin.New()
 	mockController := new(mock_database_controller.Mock_Controller)
 	mockPlaybook := new(mock_playbook.MockPlaybook)
-	mockController.On("GetDatabaseInstance").Return(mockPlaybook)
+	mockController.On("GetPlaybookStore").Return(mockPlaybook)
 
 	dummyPlaybook := decoder.DecodeValidate(byteValue)
 	if dummyPlaybook == nil {
@@ -249,8 +249,7 @@ func TestUpdatePlaybook(t *testing.T) {
 		t.Fail()
 		return
 	}
-	pointerDummyObject := []byte(marshalledDummyPlaybook)
-	mockPlaybook.On("Update", dummyPlaybook.ID, &pointerDummyObject).Return(*dummyPlaybook, nil)
+	mockPlaybook.On("Update", mock.Anything, mock.Anything).Return(nil)
 
 	w := httptest.NewRecorder()
 	api_routes.PlaybookRoutes(app, mockController)

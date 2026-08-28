@@ -11,9 +11,9 @@ import (
 
 func newTestFin(finID string) fin.Record {
 	return fin.Record{
-		FinId:         finID,
-		FinTokenHash:  "hash-" + finID,
-		LastSeen:      time.Now(),
+		FinId:        finID,
+		FinTokenHash: "hash-" + finID,
+		LastSeen:     time.Now(),
 	}
 }
 
@@ -21,8 +21,7 @@ func TestMongoFinCreate(t *testing.T) {
 	t.Skip("Requires running MongoDB instance; run with -run=TestMongoFin* after starting mongo")
 	uri := skipIfNoMongo(t)
 	cfg := Config{
-		URI:            uri,
-		
+		URI: uri,
 	}
 
 	store, err := New(context.Background(), cfg)
@@ -51,8 +50,7 @@ func TestMongoFinGet(t *testing.T) {
 	t.Skip("Requires running MongoDB instance")
 	uri := skipIfNoMongo(t)
 	cfg := Config{
-		URI:            uri,
-		
+		URI: uri,
 	}
 
 	store, err := New(context.Background(), cfg)
@@ -86,8 +84,7 @@ func TestMongoFinGetByTokenHash(t *testing.T) {
 	t.Skip("Requires running MongoDB instance")
 	uri := skipIfNoMongo(t)
 	cfg := Config{
-		URI:            uri,
-		
+		URI: uri,
 	}
 
 	store, err := New(context.Background(), cfg)
@@ -121,8 +118,7 @@ func TestMongoFinTouch(t *testing.T) {
 	t.Skip("Requires running MongoDB instance")
 	uri := skipIfNoMongo(t)
 	cfg := Config{
-		URI:            uri,
-		
+		URI: uri,
 	}
 
 	store, err := New(context.Background(), cfg)
@@ -160,8 +156,7 @@ func TestMongoFinDelete(t *testing.T) {
 	t.Skip("Requires running MongoDB instance")
 	uri := skipIfNoMongo(t)
 	cfg := Config{
-		URI:            uri,
-		
+		URI: uri,
 	}
 
 	store, err := New(context.Background(), cfg)

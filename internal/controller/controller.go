@@ -1,12 +1,19 @@
 package controller
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
 	"reflect"
-	"soarca/internal/database/memory"
+	"strconv"
+	"strings"
+	"time"
+
 	"soarca/internal/logger"
+	"soarca/internal/storage"
+	storage_memory "soarca/internal/storage/memory"
+	storage_mongodb "soarca/internal/storage/mongodb"
 
 	"soarca/pkg/core/capability"
 	"soarca/pkg/core/capability/http"
@@ -25,9 +32,6 @@ import (
 	"soarca/pkg/utils"
 	"soarca/pkg/utils/guid"
 	"soarca/pkg/utils/stix/expression/comparison"
-	"strconv"
-	"strings"
-	"time"
 
 	thehiveCases "soarca/pkg/integration/thehive/cases"
 	"soarca/pkg/integration/thehive/common/connector"
@@ -35,23 +39,18 @@ import (
 
 	cache "soarca/pkg/reporting/reporter/downstream_reporter/cache"
 
-	httpUtil "soarca/pkg/utils/http"
-
-	timeUtil "soarca/pkg/utils/time"
+	"soarca/pkg/api"
+	"soarca/pkg/api/fin"
+	fincapability "soarca/pkg/core/capability/fin"
+	"soarca/pkg/core/capability/fin/queue"
 
 	downstreamReporter "soarca/pkg/reporting/reporter/downstream_reporter"
 
+	httpUtil "soarca/pkg/utils/http"
+	timeUtil "soarca/pkg/utils/time"
+
 	"github.com/COSSAS/gauth"
 	"github.com/gin-gonic/gin"
-
-	finrepository "soarca/internal/database/fin"
-	"soarca/internal/database/finmemory"
-	mongo "soarca/internal/database/mongodb"
-	playbookrepository "soarca/internal/database/playbook"
-	routes "soarca/pkg/api"
-	fin_handler "soarca/pkg/api/fin"
-	fincapability "soarca/pkg/core/capability/fin"
-	"soarca/pkg/core/capability/fin/queue"
 )
 
 var log *logger.Log
@@ -63,80 +62,56 @@ func init() {
 }
 
 type Controller struct {
-	playbookRepo playbookrepository.IPlaybookRepository
-	finRepo      finrepository.IFinRepository
+	playbookStore storage.PlaybookStore
+	finStore      storage.FinStore
 }
 
 var mainController = Controller{}
-
 var mainCache = cache.Cache{}
 
 const defaultCacheSize int = 10
 
-// One manual interaction per SOARCA instance
 var mainInteraction = interaction.New(registerManualIntegration())
-
-// One Fin job queue per SOARCA instance, shared between every
-// action.Executor built by NewDecomposer() (one per execution/sub-
-// execution) and the Fin API's poll/result/status handlers - all Fin jobs,
-// regardless of which execution enqueued them, must land in this single
-// queue so any live, matching Fin can claim them.
 var mainFinQueue = queue.New()
 
 const (
 	defaultFinPollIntervalSeconds    = 5
 	defaultFinLongPollTimeoutSeconds = 25
 	defaultFinJobLeaseSeconds        = 60
-	// finStaleAfterMultiplier bounds how long a registered Fin can go
-	// without a /poll before FinCapability's fail-fast check stops
-	// counting it as live (see fincapability.Capability.checkCapableFin,
-	// which fails a step immediately rather than enqueuing it if every
-	// Fin declaring its capability type is considered stale). A healthy
-	// Fin's long-poll blocks for up to FIN_LONG_POLL_TIMEOUT_SECONDS
-	// before it reconnects and updates LastSeen again, so this multiplier
-	// is just a safety margin over that cadence for network/scheduling
-	// jitter - not a separate, independently-configured timeout.
-	finStaleAfterMultiplier = 2
+	finStaleAfterMultiplier          = 2
 )
 
-// finLongPollTimeoutSeconds reads FIN_LONG_POLL_TIMEOUT_SECONDS (or its
-// default), shared by newFinHandler (handed to Fins at registration) and
-// NewDecomposer (used to derive the Fin-liveness staleness threshold) so
-// both stay in sync from a single source.
 func finLongPollTimeoutSeconds() int {
 	seconds, _ := strconv.Atoi(utils.GetEnv("FIN_LONG_POLL_TIMEOUT_SECONDS", strconv.Itoa(defaultFinLongPollTimeoutSeconds)))
 	return seconds
 }
 
 func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
-	ssh := new(ssh.SshCapability)
-	capabilities := map[string]capability.ICapability{ssh.GetType(): ssh}
+	sshCap := new(ssh.SshCapability)
+	capabilities := map[string]capability.ICapability{sshCap.GetType(): sshCap}
 
 	skip, _ := strconv.ParseBool(utils.GetEnv("HTTP_SKIP_CERT_VALIDATION", "false"))
 
 	httpUtil := new(httpUtil.HttpRequest)
 	httpUtil.SkipCertificateValidation(skip)
-	http := http.New(httpUtil)
-	capabilities[http.GetType()] = http
+	httpCap := http.New(httpUtil)
+	capabilities[httpCap.GetType()] = httpCap
 
-	openc2 := openc2.New(httpUtil)
-	capabilities[openc2.GetType()] = openc2
+	openc2Cap := openc2.New(httpUtil)
+	capabilities[openc2Cap.GetType()] = openc2Cap
 
-	poswershell := powershell.New()
-	capabilities[poswershell.GetType()] = poswershell
+	powershellCap := powershell.New()
+	capabilities[powershellCap.GetType()] = powershellCap
 
 	man := manual.New(mainInteraction)
 	capabilities[man.GetType()] = &man
 
-	// NOTE: Enrolling mainCache by default as reporter
 	reporter := reporter.New([]downstreamReporter.IDownStreamReporter{})
 	downstreamReporters := []downstreamReporter.IDownStreamReporter{&mainCache}
 
-	// Reporter integrations
-
-	thehive_reporter, theHiveCaseManager := initializeIntegrationTheHiveReporting()
-	if thehive_reporter != nil {
-		downstreamReporters = append(downstreamReporters, thehive_reporter)
+	thehiveReporter, theHiveCaseManager := initializeIntegrationTheHiveReporting()
+	if thehiveReporter != nil {
+		downstreamReporters = append(downstreamReporters, thehiveReporter)
 	}
 
 	reporter.RegisterReporters(downstreamReporters)
@@ -144,25 +119,13 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	soarcaTime := new(timeUtil.Time)
 	assignmentExtension := assignment.New()
 	actionExecutor := action.New(capabilities, reporter, soarcaTime, assignmentExtension)
-	// Any agent.Type not matching one of the built-in capabilities above
-	// falls through to a live, registered Fin declaring that capability
-	// type - Fin capability types are dynamic (declared at Fin
-	// registration time), so unlike built-ins there is no static entry to
-	// add to the capabilities map for them. controller.finRepo lets the
-	// fallback fail a step immediately when no live Fin could possibly
-	// claim it, instead of always waiting out the step's own timeout.
 	staleAfter := time.Duration(finStaleAfterMultiplier*finLongPollTimeoutSeconds()) * time.Second
-	actionExecutor.SetFinFallback(fincapability.New(mainFinQueue, new(guid.Guid), controller.finRepo, soarcaTime, staleAfter))
-	playbookActionExecutor := playbook_action.New(controller, controller, reporter, soarcaTime)
+	actionExecutor.SetFinFallback(fincapability.New(mainFinQueue, new(guid.Guid), controller.finStore, soarcaTime, staleAfter))
+	playbookActionExecutor := playbook_action.New(controller, controller.playbookStore, reporter, soarcaTime)
 	stixComparison := comparison.New()
 	conditionExecutor := condition.New(stixComparison, reporter, soarcaTime)
-	guid := new(guid.Guid)
-	decompose := decomposer.New(actionExecutor,
-		playbookActionExecutor,
-		conditionExecutor,
-		guid,
-		reporter,
-		soarcaTime)
+	guidGen := new(guid.Guid)
+	decompose := decomposer.New(actionExecutor, playbookActionExecutor, conditionExecutor, guidGen, reporter, soarcaTime)
 	if theHiveCaseManager != nil {
 		decompose.SetCaseManager(theHiveCaseManager)
 	}
@@ -172,36 +135,28 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 func (controller *Controller) setupDatabase() error {
 	initMongoDatabase, _ := strconv.ParseBool(utils.GetEnv("DATABASE", "false"))
 
+	var store storage.Store
+	var err error
 	if initMongoDatabase {
-
-		mongo.LoadComponent()
-
-		log.Info("SOARCA API Trying to start")
 		uri := os.Getenv("MONGODB_URI")
-		username := os.Getenv("DB_USERNAME")
-		password := os.Getenv("DB_PASSWORD")
-
-		if uri == "" || username == "" || password == "" {
-			log.Error("you must set 'MONGODB_URI' or 'DB_USERNAME' or 'DB_PASSWORD' in the environment variable")
+		if uri == "" {
 			return errors.New("could not obtain required environment settings")
 		}
-		err := mongo.SetupMongodb(uri, username, password)
+		store, err = storage_mongodb.New(context.Background(), storage_mongodb.Config{URI: uri})
 		if err != nil {
 			return err
 		}
-		controller.playbookRepo = playbookrepository.SetupPlaybookRepository(mongo.GetCacaoRepo(), mongo.DefaultLimitOpts())
-		controller.finRepo = finrepository.SetupFinRepository(mongo.GetFinRepo())
 	} else {
-		// Use in memory database
-		controller.playbookRepo = memory.New()
-		controller.finRepo = finmemory.New()
+		store = storage_memory.New()
 	}
 
+	controller.playbookStore = store.Playbooks()
+	controller.finStore = store.Fins()
 	return nil
 }
 
-func (controller *Controller) GetDatabaseInstance() playbookrepository.IPlaybookRepository {
-	return controller.playbookRepo
+func (controller *Controller) GetPlaybookStore() storage.PlaybookStore {
+	return controller.playbookStore
 }
 
 func Initialize() error {
@@ -232,7 +187,6 @@ func validateCertificates(certFile string, keyFile string) error {
 	if os.IsNotExist(err) {
 		return fmt.Errorf("certificate file not found: %s", certFile)
 	}
-
 	_, err = os.Stat(keyFile)
 	if os.IsNotExist(err) {
 		return fmt.Errorf("key file not found: %s", keyFile)
@@ -254,7 +208,6 @@ func run(app *gin.Engine) error {
 		}
 		log.Infof("Starting HTTPS server on port %s", port)
 		return app.RunTLS(port, certFile, keyFile)
-
 	}
 
 	log.Infof("Starting HTTP server on port %s", port)
@@ -263,7 +216,7 @@ func run(app *gin.Engine) error {
 
 func initializeCore(app *gin.Engine) error {
 	origins := strings.Split(strings.ReplaceAll(utils.GetEnv("SOARCA_ALLOWED_ORIGINS", "*"), " ", ""), ",")
-	routes.Cors(app, origins)
+	api.Cors(app, origins)
 
 	err := mainController.setupDatabase()
 	if err != nil {
@@ -271,98 +224,58 @@ func initializeCore(app *gin.Engine) error {
 		return err
 	}
 
-	// Fin-token-authenticated routes (register/poll/jobs/status/unregister)
-	// MUST be registered before intializeAuthenticationMiddleware below -
-	// see FinPublic's doc comment and the warning at that call site. This
-	// requires setupDatabase() (which populates mainController.finRepo) to
-	// have already run, which is why it's been moved ahead of the auth
-	// middleware too; it registers no routes itself, so this reordering is
-	// safe with respect to auth.
 	finHandler := newFinHandler()
-	routes.FinPublic(app, finHandler)
+	api.FinPublic(app, finHandler)
 
-	// #############################################################
-	// WARNING: intializeAuthenticationMiddleware installs the global
-	// soarca_admin JWT middleware via app.Use(); gin copies engine-level
-	// middleware into a route's handler chain at the time the route is
-	// registered, so anything registered above this line does NOT get
-	// gated by it, and anything registered below DOES. routes.FinPublic
-	// (above) deliberately relies on being above this line - do not reorder
-	// it below, and do not move this call above it, or Fin processes
-	// (which authenticate via fin_token, not a JWT) will be locked out of
-	// their own protocol entirely.
-	// #############################################################
 	err = intializeAuthenticationMiddleware(app)
 	if err != nil {
 		log.Error("Failed to setup Authentication middleware")
 		return err
 	}
 
-	err = routes.Api(app, &mainController, &mainController)
+	err = api.Api(app, &mainController, &mainController)
 	if err != nil {
 		log.Error(err)
 		return err
 	}
 
-	err = routes.Database(app, &mainController)
+	err = api.Database(app, &mainController)
 	if err != nil {
 		log.Error(err)
 		return err
 	}
 
-	// NOTE: Assuming that the cache is the main information mediator for
-	// the reporter API
-	err = routes.Reporter(app, &mainCache)
+	err = api.Reporter(app, &mainCache)
 	if err != nil {
 		log.Error(err)
 		return err
 	}
 
-	// Manual capability native routes
-	routes.Manual(app, mainInteraction)
-
-	// Fin discovery routes (list/get) - ordinary admin/dashboard reads,
-	// registered here (behind the admin auth middleware above) like the
-	// rest of the admin API. Unlike FinPublic, there is no ordering
-	// constraint on these.
-	routes.FinAdmin(app, finHandler)
-
-	routes.Logging(app)
-	routes.Swagger(app)
+	api.Manual(app, mainInteraction)
+	api.FinAdmin(app, finHandler)
+	api.Logging(app)
+	api.Swagger(app)
 
 	return err
 }
 
-// newFinHandler builds the Fin protocol's API handler, sharing the same
-// job queue (mainFinQueue) that action.Executor instances enqueue onto (see
-// NewDecomposer) and the Fin registry populated by setupDatabase.
-func newFinHandler() *fin_handler.FinHandler {
+func newFinHandler() *fin.FinHandler {
 	pollIntervalSeconds, _ := strconv.Atoi(utils.GetEnv("FIN_POLL_INTERVAL_SECONDS", strconv.Itoa(defaultFinPollIntervalSeconds)))
 	longPollTimeoutSeconds := finLongPollTimeoutSeconds()
 	jobLeaseSeconds, _ := strconv.Atoi(utils.GetEnv("FIN_JOB_LEASE_SECONDS", strconv.Itoa(defaultFinJobLeaseSeconds)))
 
-	config := fin_handler.Config{
-		// Empty by default: Register then always fails closed (see
-		// fin_handler.Config's doc comment) rather than silently accepting
-		// any registration attempt when an operator forgets to set this.
+	config := fin.Config{
 		RegistrationToken:      utils.GetEnv("FIN_REGISTRATION_TOKEN", ""),
 		PollIntervalSeconds:    pollIntervalSeconds,
 		LongPollTimeoutSeconds: longPollTimeoutSeconds,
 		JobLeaseSeconds:        jobLeaseSeconds,
-		// Matches the threshold fed into fincapability.New in
-		// NewDecomposer, so a Fin flagged Stale here is the same Fin that
-		// fails fast as "only stale" in the capability's liveness check.
-		StaleAfterSeconds: finStaleAfterMultiplier * longPollTimeoutSeconds,
+		StaleAfterSeconds:      finStaleAfterMultiplier * longPollTimeoutSeconds,
 	}
 
-	return fin_handler.NewFinHandler(mainController.finRepo, mainFinQueue, config, new(guid.Guid))
+	return fin.NewFinHandler(mainController.finStore, mainFinQueue, config, new(guid.Guid))
 }
 
 func registerManualIntegration() []interaction.IInteractionIntegrationNotifier {
-	// Manual interaction integrations will be initialized here when implemented
-	// Here we should check ENV variables, see if a manual interaction integration is selected,
-	// And populate the returned array via generating an instance of the notifier associated with
-	// the integration - which should be found in the integration code.
 	return []interaction.IInteractionIntegrationNotifier{}
 }
 
@@ -404,7 +317,6 @@ func intializeAuthenticationMiddleware(app *gin.Engine) error {
 		}
 		app.Use(auth.LoadAuthContext())
 		app.Use(auth.Middleware([]string{"soarca_admin"}))
-
 	}
 	return nil
 }

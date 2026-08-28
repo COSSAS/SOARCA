@@ -23,8 +23,7 @@ func TestMongoPlaybookCreate(t *testing.T) {
 	t.Skip("Requires running MongoDB instance; run with -run=TestMongoPlaybook* after starting mongo")
 	uri := skipIfNoMongo(t)
 	cfg := Config{
-		URI:            uri,
-		
+		URI: uri,
 	}
 
 	store, err := New(context.Background(), cfg)
@@ -53,8 +52,7 @@ func TestMongoPlaybookGet(t *testing.T) {
 	t.Skip("Requires running MongoDB instance")
 	uri := skipIfNoMongo(t)
 	cfg := Config{
-		URI:            uri,
-		
+		URI: uri,
 	}
 
 	store, err := New(context.Background(), cfg)
@@ -88,8 +86,7 @@ func TestMongoPlaybookUpdate(t *testing.T) {
 	t.Skip("Requires running MongoDB instance")
 	uri := skipIfNoMongo(t)
 	cfg := Config{
-		URI:            uri,
-		
+		URI: uri,
 	}
 
 	store, err := New(context.Background(), cfg)
@@ -126,8 +123,7 @@ func TestMongoPlaybookDelete(t *testing.T) {
 	t.Skip("Requires running MongoDB instance")
 	uri := skipIfNoMongo(t)
 	cfg := Config{
-		URI:            uri,
-		
+		URI: uri,
 	}
 
 	store, err := New(context.Background(), cfg)

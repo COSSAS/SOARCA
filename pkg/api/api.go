@@ -32,17 +32,13 @@ func init() {
 	log = logger.Logger(reflect.TypeOf(Empty{}).PkgPath(), logger.Info, "", logger.Json)
 }
 
-func Database(app *gin.Engine,
-	controller database.IController,
-) error {
+func Database(app *gin.Engine, controller database.IController) error {
 	log.Trace("Setting up playbook routes")
 	PlaybookRoutes(app, controller)
 	return nil
 }
 
-func Logging(app *gin.Engine) {
-	// app.Use(middelware.LoggingMiddleware(log.Logger))
-}
+func Logging(app *gin.Engine) {}
 
 func Reporter(app *gin.Engine, informer informer.IExecutionInformer) error {
 	log.Trace("Setting up reporter routes")
@@ -56,37 +52,21 @@ func Manual(app *gin.Engine, interaction interaction.IInteractionStorage) {
 	ManualRoutes(app, manualHandler)
 }
 
-// FinPublic sets up the Fin-protocol endpoints that authenticate via their
-// own registration_token/fin_token scheme (register/poll/jobs/status/
-// unregister), not SOARCA's admin JWT auth. The caller MUST register these
-// before installing the global soarca_admin auth middleware (see
-// intializeAuthenticationMiddleware in internal/controller/controller.go) -
-// otherwise every Fin call would also require a valid JWT, which a Fin
-// process has no way to obtain.
 func FinPublic(app *gin.Engine, finHandler *fin_handler.FinHandler) {
 	log.Trace("Setting up fin protocol routes (registered ahead of the admin auth middleware - see FinPublic doc comment)")
 	FinPublicRoutes(app, finHandler)
 }
 
-// FinAdmin sets up the read-only Fin discovery endpoints (list/get). Unlike
-// FinPublic, these are ordinary admin/dashboard reads and are expected to
-// sit behind the same soarca_admin JWT gate as the rest of the admin API -
-// register these the same way/place as routes.Api/routes.Manual/etc.
 func FinAdmin(app *gin.Engine, finHandler *fin_handler.FinHandler) {
 	log.Trace("Setting up fin discovery routes")
 	FinAdminRoutes(app, finHandler)
 }
 
-func Api(app *gin.Engine,
-	controller decomposer_controller.IController,
-	database database.IController,
-) error {
+func Api(app *gin.Engine, controller decomposer_controller.IController, database database.IController) error {
 	log.Trace("Trying to setup all Routes")
-	// gin.SetMode(gin.ReleaseMode)
-	triggerHandler := trigger_handler.NewTriggerHandler(controller, database)
+	triggerHandler := trigger_handler.NewTriggerHandler(controller, database.GetPlaybookStore())
 	TriggerRoutes(app, triggerHandler)
 	StatusRoutes(app)
-
 	return nil
 }
 
@@ -96,9 +76,7 @@ func Cors(app *gin.Engine, origins []string) {
 	app.Use(cors.New(config))
 }
 
-func Swagger(app *gin.Engine) {
-	swaggerRoutes(app)
-}
+func Swagger(app *gin.Engine) { swaggerRoutes(app) }
 
 func swaggerRoutes(route *gin.Engine) {
 	open_api.SwaggerInfo.BasePath = "/"
@@ -108,14 +86,8 @@ func swaggerRoutes(route *gin.Engine) {
 	}
 }
 
-// Main Router for the following endpoints:
-// GET     /playbook
-// POST    /playbook
-// GET     /playbook/playbook-id
-// PUT     /playbook/playbook-id
-// DELETE  /playbook/playbook-id
 func PlaybookRoutes(route *gin.Engine, controller database.IController) {
-	playbookHandler := playbook_handler.NewPlaybookHandler(controller)
+	playbookHandler := playbook_handler.NewPlaybookHandler(controller.GetPlaybookStore())
 	playbookRoutes := route.Group("/playbook")
 	{
 		playbookRoutes.GET("/", playbookHandler.GetAllPlaybooks)
@@ -124,13 +96,9 @@ func PlaybookRoutes(route *gin.Engine, controller database.IController) {
 		playbookRoutes.GET("/:id", playbookHandler.GetPlaybookByID)
 		playbookRoutes.PUT("/:id", playbookHandler.UpdatePlaybookByID)
 		playbookRoutes.DELETE("/:id", playbookHandler.DeleteByPlaybookID)
-
 	}
 }
 
-// Main Router for the following endpoints:
-// GET     /reporter
-// GET     /reporter/{execution-id}
 func ReporterRoutes(route *gin.Engine, informer informer.IExecutionInformer) {
 	reportHandler := reporter_handler.NewReportHandler(informer)
 	reportRoutes := route.Group("/reporter")
@@ -140,14 +108,11 @@ func ReporterRoutes(route *gin.Engine, informer informer.IExecutionInformer) {
 	}
 }
 
-// GET     /status
-// GET     /status/ping
 func StatusRoutes(route *gin.Engine) {
 	router := route.Group("/status")
 	{
 		router.GET("/", status_handler.GetApi)
 		router.GET("/ping", status_handler.GetPong)
-
 	}
 }
 
@@ -168,20 +133,10 @@ func ManualRoutes(route *gin.Engine, manualHandler *manual_handler.ManualHandler
 	}
 }
 
-// FinPublicRoutes registers the Fin-protocol endpoints that authenticate
-// via their own registration_token/fin_token scheme, not SOARCA's admin
-// JWT auth (see FinPublic's doc comment for why these must be registered
-// before the global admin auth middleware is installed):
-// POST    /fin/register                (registration-token gated)
-// POST    /fin/poll                     (fin-token gated)
-// PUT     /fin/jobs/:job_id             (fin-token gated)
-// PATCH   /fin/jobs/:job_id/status      (fin-token gated)
-// DELETE  /fin/                        (fin-token gated; unregisters the calling fin itself, inferred from the token)
 func FinPublicRoutes(route *gin.Engine, finHandler *fin_handler.FinHandler) {
 	finRoutes := route.Group("/fin")
 	{
 		finRoutes.POST("/register", finHandler.Register)
-
 		finAuthenticated := finRoutes.Group("")
 		finAuthenticated.Use(finHandler.RequireFinToken)
 		{
@@ -193,12 +148,6 @@ func FinPublicRoutes(route *gin.Engine, finHandler *fin_handler.FinHandler) {
 	}
 }
 
-// FinAdminRoutes registers the read-only Fin discovery endpoints and the
-// admin-initiated delete (ordinary admin/dashboard actions, not
-// fin-authenticated):
-// GET     /fin/                        (admin/dashboard read)
-// GET     /fin/:fin_id                  (admin/dashboard read)
-// DELETE  /fin/:fin_id                  (admin/dashboard action; forcibly removes any fin's registration)
 func FinAdminRoutes(route *gin.Engine, finHandler *fin_handler.FinHandler) {
 	finRoutes := route.Group("/fin")
 	{

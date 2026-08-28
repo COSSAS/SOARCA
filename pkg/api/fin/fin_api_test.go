@@ -9,7 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"soarca/internal/database/finmemory"
+	"soarca/internal/storage"
+	"soarca/internal/storage/memory"
 	"soarca/pkg/core/capability/fin/queue"
 	"soarca/pkg/models/fin"
 	"soarca/test/unittest/mocks/mock_guid"
@@ -21,9 +22,9 @@ import (
 
 const registrationToken = "test-registration-token"
 
-func newTestHandler(t *testing.T) (*FinHandler, *finmemory.InMemoryFinRepository, *queue.Queue) {
+func newTestHandler(t *testing.T) (*FinHandler, storage.FinStore, *queue.Queue) {
 	t.Helper()
-	repo := finmemory.New()
+	repo := memory.New().Fins()
 	jobQueue := queue.New()
 	t.Cleanup(jobQueue.Close)
 
@@ -138,7 +139,7 @@ func TestRegisterFailsWithoutCapabilities(t *testing.T) {
 }
 
 func TestRegisterFailsWhenNotConfigured(t *testing.T) {
-	repo := finmemory.New()
+	repo := memory.New().Fins()
 	jobQueue := queue.New()
 	defer jobQueue.Close()
 	guidMock := new(mock_guid.Mock_Guid)
@@ -178,7 +179,7 @@ func TestPollReturnsEnqueuedJobAndUpdatesLastSeen(t *testing.T) {
 	router := newTestRouter(handler)
 
 	registered := registerTestFin(t, router, "pong")
-	before, err := repo.Get(registered.FinId)
+	before, err := repo.Get(context.Background(), registered.FinId)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -202,7 +203,7 @@ func TestPollReturnsEnqueuedJobAndUpdatesLastSeen(t *testing.T) {
 	}
 	assert.Equal(t, response.Job.JobId, job.JobId)
 
-	after, err := repo.Get(registered.FinId)
+	after, err := repo.Get(context.Background(), registered.FinId)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -235,7 +236,7 @@ func TestSubmitResultRoundTrip(t *testing.T) {
 	recorder := doRequest(router, http.MethodPost, "/fin/poll", nil, registered.FinToken)
 	assert.Equal(t, recorder.Code, http.StatusOK)
 
-	lastSeenAfterPoll, err := repo.Get(registered.FinId)
+	lastSeenAfterPoll, err := repo.Get(context.Background(), registered.FinId)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -252,7 +253,7 @@ func TestSubmitResultRoundTrip(t *testing.T) {
 		t.Fatal("expected the enqueued job to receive its result")
 	}
 
-	afterSubmit, err := repo.Get(registered.FinId)
+	afterSubmit, err := repo.Get(context.Background(), registered.FinId)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -309,7 +310,7 @@ func TestStatusPingExtendsLease(t *testing.T) {
 	recorder := doRequest(router, http.MethodPost, "/fin/poll", nil, registered.FinToken)
 	assert.Equal(t, recorder.Code, http.StatusOK)
 
-	lastSeenAfterPoll, err := repo.Get(registered.FinId)
+	lastSeenAfterPoll, err := repo.Get(context.Background(), registered.FinId)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -325,7 +326,7 @@ func TestStatusPingExtendsLease(t *testing.T) {
 	}
 	assert.Equal(t, response.Action, "")
 
-	afterPing, err := repo.Get(registered.FinId)
+	afterPing, err := repo.Get(context.Background(), registered.FinId)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -346,7 +347,7 @@ func TestUnregisterOwnRegistrationSucceeds(t *testing.T) {
 	recorder := doRequest(router, http.MethodDelete, "/fin/", nil, registered.FinToken)
 	assert.Equal(t, recorder.Code, http.StatusNoContent)
 
-	_, err := repo.Get(registered.FinId)
+	_, err := repo.Get(context.Background(), registered.FinId)
 	if err == nil {
 		t.Fatal("expected fin to be unregistered")
 	}
@@ -362,7 +363,7 @@ func TestAdminDeleteRemovesAnyFinsRegistration(t *testing.T) {
 	recorder := doRequest(router, http.MethodDelete, "/fin/"+registered.FinId, nil, "")
 	assert.Equal(t, recorder.Code, http.StatusNoContent)
 
-	_, err := repo.Get(registered.FinId)
+	_, err := repo.Get(context.Background(), registered.FinId)
 	if err == nil {
 		t.Fatal("expected fin to be unregistered")
 	}
@@ -401,7 +402,7 @@ func TestListAndGetMarkFinStaleAfterThreshold(t *testing.T) {
 	router := newTestRouter(handler)
 
 	registered := registerTestFin(t, router, "pong")
-	if err := repo.Touch(registered.FinId, time.Now().Add(-time.Hour)); err != nil {
+	if err := repo.Touch(context.Background(), registered.FinId, time.Now().Add(-time.Hour)); err != nil {
 		t.Fatal(err)
 	}
 

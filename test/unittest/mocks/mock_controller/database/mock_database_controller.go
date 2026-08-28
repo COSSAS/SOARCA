@@ -1,7 +1,7 @@
 package mock_database_controller
 
 import (
-	playbookrepository "soarca/internal/database/playbook"
+	"soarca/internal/storage"
 
 	"github.com/stretchr/testify/mock"
 )
@@ -10,7 +10,7 @@ type Mock_Controller struct {
 	mock.Mock
 }
 
-func (mock *Mock_Controller) GetDatabaseInstance() playbookrepository.IPlaybookRepository {
+func (mock *Mock_Controller) GetPlaybookStore() storage.PlaybookStore {
 	args := mock.Called()
-	return args.Get(0).(playbookrepository.IPlaybookRepository)
+	return args.Get(0).(storage.PlaybookStore)
 }

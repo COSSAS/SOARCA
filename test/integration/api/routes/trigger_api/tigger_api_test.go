@@ -11,18 +11,18 @@ import (
 	"soarca/pkg/core/decomposer"
 	"soarca/pkg/models/cacao"
 	"soarca/test/unittest/mocks/mock_decomposer"
-	"soarca/test/unittest/mocks/mock_playbook_database"
+	mock_playbook_database "soarca/test/unittest/mocks/mock_playbook_database"
 	"testing"
 
 	api_routes "soarca/pkg/api"
 
 	trigger_handler "soarca/pkg/api/trigger"
-	mock_database_controller "soarca/test/unittest/mocks/mock_controller/database"
 	mock_decomposer_controller "soarca/test/unittest/mocks/mock_controller/decomposer"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/assert/v2"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/mock"
 )
 
 func close(file *os.File) {
@@ -45,12 +45,12 @@ func TestTriggerExecutionOfPlaybook(t *testing.T) {
 	gin.SetMode(gin.DebugMode)
 	mock_decomposer := new(mock_decomposer.Mock_Decomposer)
 	mock_controller := new(mock_decomposer_controller.Mock_Controller)
-	mock_database_controller := new(mock_database_controller.Mock_Controller)
+	mock_database := new(mock_playbook_database.MockPlaybook)
 	mock_controller.On("NewDecomposer").Return(mock_decomposer)
 	playbook := cacao.Decode(byteValue)
 
 	recorder := httptest.NewRecorder()
-	triggerHandler := trigger_handler.NewTriggerHandler(mock_controller, mock_database_controller)
+	triggerHandler := trigger_handler.NewTriggerHandler(mock_controller, mock_database)
 	api_routes.TriggerRoutes(app, triggerHandler)
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	mock_decomposer.On("ExecuteAsync", *playbook, triggerHandler.ExecutionsChannel).Return(&decomposer.ExecutionDetails{}, nil, executionId)
@@ -81,15 +81,13 @@ func TestExecutionOfPlaybookById(t *testing.T) {
 	mock_decomposer := new(mock_decomposer.Mock_Decomposer)
 	mock_controller := new(mock_decomposer_controller.Mock_Controller)
 	mock_database := new(mock_playbook_database.MockPlaybook)
-	mock_database_controller := new(mock_database_controller.Mock_Controller)
-	mock_database_controller.On("GetDatabaseInstance").Return(mock_database)
-	playbook := cacao.Decode(byteValue)
-	mock_database.On("Read", "1").Return(*playbook, nil)
+		playbook := cacao.Decode(byteValue)
+	mock_database.On("Get", mock.Anything, "1").Return(*playbook, nil)
 	mock_controller.On("NewDecomposer").Return(mock_decomposer)
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
 	recorder := httptest.NewRecorder()
-	triggerHandler := trigger_handler.NewTriggerHandler(mock_controller, mock_database_controller)
+	triggerHandler := trigger_handler.NewTriggerHandler(mock_controller, mock_database)
 	api_routes.TriggerRoutes(app, triggerHandler)
 	mock_decomposer.On("ExecuteAsync", *playbook, triggerHandler.ExecutionsChannel).Return(&decomposer.ExecutionDetails{}, nil, executionId)
 
@@ -118,12 +116,10 @@ func TestExecutionOfPlaybookByIdWithPayloadValidVariables(t *testing.T) {
 	mock_controller := new(mock_decomposer_controller.Mock_Controller)
 
 	mock_database := new(mock_playbook_database.MockPlaybook)
-	mock_database_controller := new(mock_database_controller.Mock_Controller)
-	mock_database_controller.On("GetDatabaseInstance").Return(mock_database)
-
+	
 	playbook := cacao.Decode(byteValue)
 
-	mock_database.On("Read", "1").Return(*playbook, nil)
+	mock_database.On("Get", mock.Anything, "1").Return(*playbook, nil)
 	mock_controller.On("NewDecomposer").Return(mock_decomposer)
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
@@ -137,7 +133,7 @@ func TestExecutionOfPlaybookByIdWithPayloadValidVariables(t *testing.T) {
 	assert.Equal(t, err, nil)
 
 	recorder := httptest.NewRecorder()
-	triggerHandler := trigger_handler.NewTriggerHandler(mock_controller, mock_database_controller)
+	triggerHandler := trigger_handler.NewTriggerHandler(mock_controller, mock_database)
 	api_routes.TriggerRoutes(app, triggerHandler)
 
 	mock_decomposer.On("ExecuteAsync", *playbook, triggerHandler.ExecutionsChannel).Return(&decomposer.ExecutionDetails{}, nil, executionId)
@@ -167,14 +163,12 @@ func TestPlaybookByIdVariableNotInPlaybook(t *testing.T) {
 	mock_decomposer := new(mock_decomposer.Mock_Decomposer)
 	mock_controller := new(mock_decomposer_controller.Mock_Controller)
 	mock_database := new(mock_playbook_database.MockPlaybook)
-	mock_database_controller := new(mock_database_controller.Mock_Controller)
-	mock_database_controller.On("GetDatabaseInstance").Return(mock_database)
-	playbook := cacao.Decode(byteValue)
-	mock_database.On("Read", "1").Return(*playbook, nil)
+		playbook := cacao.Decode(byteValue)
+	mock_database.On("Get", mock.Anything, "1").Return(*playbook, nil)
 	mock_controller.On("NewDecomposer").Return(mock_decomposer)
 
 	recorder := httptest.NewRecorder()
-	triggerHandler := trigger_handler.NewTriggerHandler(mock_controller, mock_database_controller)
+	triggerHandler := trigger_handler.NewTriggerHandler(mock_controller, mock_database)
 	api_routes.TriggerRoutes(app, triggerHandler)
 
 	var_not_in_playbook := cacao.Variable{
@@ -217,14 +211,12 @@ func TestPlaybookByIdVariableTypeMismatch(t *testing.T) {
 	mock_decomposer := new(mock_decomposer.Mock_Decomposer)
 	mock_controller := new(mock_decomposer_controller.Mock_Controller)
 	mock_database := new(mock_playbook_database.MockPlaybook)
-	mock_database_controller := new(mock_database_controller.Mock_Controller)
-	mock_database_controller.On("GetDatabaseInstance").Return(mock_database)
-	playbook := cacao.Decode(byteValue)
-	mock_database.On("Read", "1").Return(*playbook, nil)
+		playbook := cacao.Decode(byteValue)
+	mock_database.On("Get", mock.Anything, "1").Return(*playbook, nil)
 	mock_controller.On("NewDecomposer").Return(mock_decomposer)
 
 	recorder := httptest.NewRecorder()
-	triggerHandler := trigger_handler.NewTriggerHandler(mock_controller, mock_database_controller)
+	triggerHandler := trigger_handler.NewTriggerHandler(mock_controller, mock_database)
 	api_routes.TriggerRoutes(app, triggerHandler)
 
 	var_wrong_type := cacao.Variable{
@@ -268,14 +260,12 @@ func TestPlaybookByIdVariableIsNotExternal(t *testing.T) {
 	mock_decomposer := new(mock_decomposer.Mock_Decomposer)
 	mock_controller := new(mock_decomposer_controller.Mock_Controller)
 	mock_database := new(mock_playbook_database.MockPlaybook)
-	mock_database_controller := new(mock_database_controller.Mock_Controller)
-	mock_database_controller.On("GetDatabaseInstance").Return(mock_database)
-	playbook := cacao.Decode(byteValue)
-	mock_database.On("Read", "1").Return(*playbook, nil)
+		playbook := cacao.Decode(byteValue)
+	mock_database.On("Get", mock.Anything, "1").Return(*playbook, nil)
 	mock_controller.On("NewDecomposer").Return(mock_decomposer)
 
 	recorder := httptest.NewRecorder()
-	triggerHandler := trigger_handler.NewTriggerHandler(mock_controller, mock_database_controller)
+	triggerHandler := trigger_handler.NewTriggerHandler(mock_controller, mock_database)
 	api_routes.TriggerRoutes(app, triggerHandler)
 
 	varNotExternal := cacao.Variable{

@@ -7,15 +7,15 @@ import (
 	"io"
 	"net/http"
 	"reflect"
-	"soarca/internal/controller/database"
-	"soarca/internal/controller/decomposer_controller"
 	"soarca/internal/logger"
+	"soarca/internal/storage"
 	"soarca/pkg/core/decomposer"
 	"soarca/pkg/models/api"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/decoder"
 	"time"
 
+	"soarca/internal/controller/decomposer_controller"
 	apiError "soarca/pkg/api/error"
 
 	"github.com/gin-gonic/gin"
@@ -35,38 +35,23 @@ func init() {
 
 type TriggerHandler struct {
 	controller        decomposer_controller.IController
-	database          database.IController
+	playbookStore     storage.PlaybookStore
 	ExecutionsChannel chan decomposer.ExecutionDetails
 }
 
-func NewTriggerHandler(controller decomposer_controller.IController, database database.IController) *TriggerHandler {
+func NewTriggerHandler(controller decomposer_controller.IController, playbookStore storage.PlaybookStore) *TriggerHandler {
 	instance := TriggerHandler{}
 	instance.controller = controller
-	instance.database = database
-	// Channel to get back execution details
+	instance.playbookStore = playbookStore
 	instance.ExecutionsChannel = make(chan decomposer.ExecutionDetails)
 	return &instance
 }
 
-// trigger
-//
-//	@Summary	trigger a playbook by id that is stored in SOARCA
-//	@Schemes
-//	@Description	trigger playbook by id
-//	@Tags			trigger
-//	@Accept			json
-//	@Produce		json
-//	@Param			id		path		string			true	"playbook ID"
-//	@Param			data	body		cacao.Variables	true	"playbook"
-//	@Success		200		{object}	api.Execution
-//	@failure		400		{object}	api.Error
-//	@Router			/trigger/playbook/{id} [POST]
 func (handler *TriggerHandler) ExecuteById(context *gin.Context) {
 	log.Trace("received execute by ID")
 	id := context.Param("id")
 
-	db := handler.database.GetDatabaseInstance()
-	playbook, err := db.Read(id)
+	playbook, err := handler.playbookStore.Get(context.Request.Context(), id)
 	if err != nil {
 		log.Error("failed to load playbook")
 		apiError.SendErrorResponse(context, http.StatusBadRequest,
@@ -79,6 +64,7 @@ func (handler *TriggerHandler) ExecuteById(context *gin.Context) {
 		if err != nil {
 			log.Trace("Playbook trigger has failed to decode request body")
 			apiError.SendErrorResponse(context, http.StatusBadRequest, "Failed to decode request body", "POST /trigger/playbook/"+id, "")
+			return
 		}
 		err = MergeVariablesInPlaybook(&playbook, jsonData)
 		if err != nil {
@@ -90,18 +76,6 @@ func (handler *TriggerHandler) ExecuteById(context *gin.Context) {
 	handler.executePlaybook(&playbook, context)
 }
 
-// trigger
-//
-//	@Summary	trigger a playbook by supplying a cacao playbook payload
-//	@Schemes
-//	@Description	trigger playbook
-//	@Tags			trigger
-//	@Accept			json
-//	@Produce		json
-//	@Param			playbook	body		cacao.Playbook	true	"execute playbook by payload"
-//	@Success		200			{object}	api.Execution
-//	@failure		400			{object}	api.Error
-//	@Router			/trigger/playbook [POST]
 func (handler *TriggerHandler) Execute(context *gin.Context) {
 	log.Trace("received execute with body")
 	jsonData, err := io.ReadAll(context.Request.Body)
@@ -132,7 +106,6 @@ func (handler *TriggerHandler) executePlaybook(playbook *cacao.Playbook, context
 		select {
 		case <-timer.C:
 			log.Error("async execution timed out for playbook ", playbook.ID)
-
 			apiError.SendErrorResponse(context,
 				http.StatusRequestTimeout,
 				"async execution timed out for playbook "+playbook.ID,
@@ -154,7 +127,6 @@ func (handler *TriggerHandler) executePlaybook(playbook *cacao.Playbook, context
 	}
 }
 
-// public fun as tested externally (integration test)
 func MergeVariablesInPlaybook(playbook *cacao.Playbook, body []byte) error {
 	payloadVariables := cacao.NewVariables()
 	err := json.Unmarshal(body, &payloadVariables)
@@ -162,18 +134,13 @@ func MergeVariablesInPlaybook(playbook *cacao.Playbook, body []byte) error {
 		log.Trace(err)
 		return errors.New("cannot unmarshal provided variables")
 	}
-
-	// Check payload-injected variables are valid set for playbook variables
 	for name, variable := range payloadVariables {
-		// Must exist
 		if _, ok := playbook.PlaybookVariables[name]; !ok {
 			return fmt.Errorf("provided variables is not a valid subset of the variables for the referenced playbook [ playbook id: %s ]", playbook.ID)
 		}
-		// Exists, playbook var type must match
 		if variable.Type != playbook.PlaybookVariables[name].Type {
 			return fmt.Errorf("mismatch in variables type for [ %s ]: payload var type = %s, playbook var type = %s", name, variable.Type, playbook.PlaybookVariables[name].Type)
 		}
-		// Exists, playbook var must be external
 		if !playbook.PlaybookVariables[name].External {
 			return fmt.Errorf("playbook variable [ %s ] cannot be assigned in playbook because it is not marked as external in the plabook", name)
 		}

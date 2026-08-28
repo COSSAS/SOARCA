@@ -1,9 +1,7 @@
 package database
 
-import (
-	playbookrepository "soarca/internal/database/playbook"
-)
+import "soarca/internal/storage"
 
 type IController interface {
-	GetDatabaseInstance() playbookrepository.IPlaybookRepository
+	GetPlaybookStore() storage.PlaybookStore
 }

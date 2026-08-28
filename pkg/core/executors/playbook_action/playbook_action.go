@@ -1,12 +1,13 @@
 package playbook_action
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"reflect"
-	"soarca/internal/controller/database"
 	"soarca/internal/controller/decomposer_controller"
 	"soarca/internal/logger"
+	"soarca/internal/storage"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"soarca/pkg/reporting/reporter"
@@ -15,7 +16,7 @@ import (
 
 type PlaybookAction struct {
 	decomposerController decomposer_controller.IController
-	databaseController   database.IController
+	playbookStore        storage.PlaybookStore
 	reporter             reporter.IStepReporter
 	time                 timeUtil.ITime
 }
@@ -27,9 +28,8 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
-func New(controller decomposer_controller.IController,
-	database database.IController, reporter reporter.IStepReporter, time timeUtil.ITime) *PlaybookAction {
-	return &PlaybookAction{decomposerController: controller, databaseController: database, reporter: reporter, time: time}
+func New(controller decomposer_controller.IController, playbookStore storage.PlaybookStore, reporter reporter.IStepReporter, time timeUtil.ITime) *PlaybookAction {
+	return &PlaybookAction{decomposerController: controller, playbookStore: playbookStore, reporter: reporter, time: time}
 }
 
 func (playbookAction *PlaybookAction) Execute(metadata execution.Metadata,
@@ -51,25 +51,23 @@ func (playbookAction *PlaybookAction) Execute(metadata execution.Metadata,
 		return cacao.NewVariables(), err
 	}
 
-	playbookRepo := playbookAction.databaseController.GetDatabaseInstance()
-	decomposer := playbookAction.decomposerController.NewDecomposer()
-
-	playbook, err := playbookRepo.Read(step.PlaybookID)
+	playbook, err := playbookAction.playbookStore.Get(context.Background(), step.PlaybookID)
 	if err != nil {
-		log.Error("failed loading the playbook from the repository in playbook action")
+		log.Error("failed loading the playbook from storage in playbook action")
 		return cacao.NewVariables(), err
 	}
 
 	playbook.PlaybookVariables.Merge(variables)
 
+	decomposer := playbookAction.decomposerController.NewDecomposer()
 	details, err := decomposer.Execute(playbook)
 	if err != nil {
 		err = errors.New(fmt.Sprint("execution of playbook failed with error: ", err))
 		log.Error(err)
-		reportVars = details.Variables // make sure vars are reported
+		reportVars = details.Variables
 		return cacao.NewVariables(), err
 	}
-	reportVars = details.Variables // make sure vars are reported
+	reportVars = details.Variables
 	return details.Variables, nil
 
 }
