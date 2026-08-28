@@ -222,6 +222,7 @@ func toFinCommands(commands []cacao.Command) []fin.Command {
 		converted = append(converted, fin.Command{
 			Type:       command.Type,
 			Command:    command.Command,
+			CommandB64: command.CommandB64,
 			Content:    command.Content,
 			ContentB64: command.ContentB64,
 			Headers:    map[string][]string(command.Headers),

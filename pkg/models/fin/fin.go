@@ -107,13 +107,11 @@ type StepInfo struct {
 	Delay       int    `bson:"delay,omitempty" json:"delay,omitempty"`
 }
 
-// Command is one command in the step's ordered commands[] array, carrying
-// everything a capability needs to interpret and run it (today's payload
-// only forwards the raw command string, dropping Type/Content/Headers
-// entirely).
+// Command is one command in a job.
 type Command struct {
 	Type       string              `bson:"type" json:"type"`
 	Command    string              `bson:"command,omitempty" json:"command,omitempty"`
+	CommandB64 string              `bson:"command_b64,omitempty" json:"command_b64,omitempty"`
 	Content    string              `bson:"content,omitempty" json:"content,omitempty"`
 	ContentB64 string              `bson:"content_b64,omitempty" json:"content_b64,omitempty"`
 	Headers    map[string][]string `bson:"headers,omitempty" json:"headers,omitempty"`
