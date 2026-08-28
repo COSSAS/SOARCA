@@ -112,7 +112,9 @@ func (finHandler *FinHandler) Register(g *gin.Context) {
 		return
 	}
 	if !token.Equal(request.RegistrationToken, finHandler.config.RegistrationToken) {
-		apiError.SendErrorResponse(g, http.StatusForbidden, "Invalid registration token", route, "")
+		err := fin.ErrRegistrationTokenInvalid{}
+		log.Warning(err)
+		apiError.SendErrorResponse(g, http.StatusForbidden, err.Error(), route, "")
 		return
 	}
 	if len(request.Capabilities) == 0 {
