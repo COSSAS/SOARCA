@@ -10,6 +10,7 @@ import (
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"soarca/pkg/models/fin"
+	"soarca/pkg/utils"
 	"soarca/test/unittest/mocks/mock_guid"
 	mock_time "soarca/test/unittest/mocks/mock_utils/time"
 
@@ -143,7 +144,7 @@ func TestExecuteFallsBackToDefaultLeaseWhenStepTimeoutIsUnset(t *testing.T) {
 	queue.On("Enqueue", mock.Anything, mock.Anything).
 		Run(func(args mock.Arguments) {
 			job := args.Get(1).(fin.Job)
-			assert.Equal(t, job.LeaseExpiresInSeconds, 60)
+			assert.Equal(t, job.LeaseExpiresInSeconds, int(utils.DefaultStepTimeout().Seconds()))
 		}).
 		Return(fin.JobResult{State: fin.JobStateSuccess, Variables: cacao.NewVariables()}, nil)
 

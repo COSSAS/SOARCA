@@ -5,6 +5,7 @@ import (
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	manualModel "soarca/pkg/models/manual"
+	"soarca/pkg/utils"
 	"soarca/test/unittest/mocks/mock_interaction"
 	"sync"
 	"testing"
@@ -62,7 +63,7 @@ func TestTimetoutCalculationNotSet(t *testing.T) {
 	interactionMock := mock_interaction.MockInteraction{}
 	manual := New(&interactionMock)
 	timeout := manual.getTimeoutValue(0)
-	assert.Equal(t, timeout, time.Minute)
+	assert.Equal(t, timeout, utils.DefaultStepTimeout())
 }
 
 func TestTimetoutCalculation(t *testing.T) {

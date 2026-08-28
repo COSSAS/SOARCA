@@ -16,6 +16,7 @@ import (
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"soarca/pkg/models/fin"
+	"soarca/pkg/utils"
 	timeUtil "soarca/pkg/utils/time"
 
 	"soarca/pkg/utils/guid"
@@ -28,11 +29,6 @@ var log *logger.Log
 func init() {
 	log = logger.Logger(reflect.TypeOf(Empty{}).PkgPath(), logger.Info, "", logger.Json)
 }
-
-// fallbackLeaseDuration is used when a step does not declare a positive
-// Timeout, mirroring manual.ManualCapability's own fallback (see
-// pkg/core/capability/manual/manual.go).
-const fallbackLeaseDuration = time.Minute
 
 // defaultStaleAfter is used when New is given a non-positive staleAfter. A
 // Fin that hasn't been seen (via /poll) in this long is assumed to no
@@ -210,8 +206,9 @@ func hasCapability(record fin.Record, capabilityType string) bool {
 
 func leaseDuration(stepTimeoutMillis int) time.Duration {
 	if stepTimeoutMillis <= 0 {
-		log.Warning("timeout is not set or set to 0, fallback timeout of 1 minute is used to complete step")
-		return fallbackLeaseDuration
+		fallback := utils.DefaultStepTimeout()
+		log.Warning("timeout is not set or set to 0, fallback timeout of ", fallback, " is used to complete step")
+		return fallback
 	}
 	return time.Duration(stepTimeoutMillis) * time.Millisecond
 }
