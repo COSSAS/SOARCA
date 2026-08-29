@@ -3,8 +3,8 @@ package reporter
 import (
 	"net/http"
 	"reflect"
-	"soarca/internal/controller/informer"
 	"soarca/internal/logger"
+	"soarca/internal/services"
 	"soarca/pkg/api/error"
 	"soarca/pkg/models/api"
 
@@ -22,12 +22,12 @@ func init() {
 
 // reportHandler implements the handler functions that can be called by the gin api is dependent on a database.
 type reportHandler struct {
-	informer informer.IExecutionInformer
+	reporter services.ReporterService
 }
 
 // NewReportHandler makes a new instance of playbookControler
-func NewReportHandler(informer informer.IExecutionInformer) *reportHandler {
-	return &reportHandler{informer: informer}
+func NewReportHandler(reporter services.ReporterService) *reportHandler {
+	return &reportHandler{reporter: reporter}
 }
 
 // GetExecutions GET handler for obtaining all the executions that can be retrieved.
@@ -42,7 +42,7 @@ func NewReportHandler(informer informer.IExecutionInformer) *reportHandler {
 //	@failure		400	{object}	api.Error
 //	@Router			/reporter [GET]
 func (reportHandler *reportHandler) GetExecutions(g *gin.Context) {
-	executions, err := reportHandler.informer.GetExecutions()
+	executions, err := reportHandler.reporter.ListExecutions(g.Request.Context())
 	if err != nil {
 		log.Debug("Could not get executions from informer")
 		error.SendErrorResponse(g, http.StatusInternalServerError, "Could not get executions from informer", "GET /reporter/", "")
@@ -86,7 +86,7 @@ func (handler *reportHandler) GetExecutionReport(g *gin.Context) {
 		return
 	}
 
-	executionEntry, err := handler.informer.GetExecutionReport(uuid)
+	executionEntry, err := handler.reporter.GetExecutionReport(g.Request.Context(), uuid)
 	if err != nil {
 		log.Debug("Could not find execution for given id")
 		log.Error(err)

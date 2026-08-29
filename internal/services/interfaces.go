@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"soarca/pkg/models/api"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/cache"
 	"soarca/pkg/models/execution"
@@ -139,7 +140,7 @@ type PlaybookService interface {
 	DeletePlaybook(ctx context.Context, playbookID string) error
 
 	// ListPlaybookMetas returns metadata for all playbooks (efficient list).
-	ListPlaybookMetas(ctx context.Context) (metas []cacao.Playbook, err error)
+	ListPlaybookMetas(ctx context.Context) (metas []api.PlaybookMeta, err error)
 }
 
 // ReporterService provides execution reporting and status views.

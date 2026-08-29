@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"reflect"
 	"soarca/internal/logger"
+	"soarca/internal/services"
 	"soarca/internal/storage"
 	"soarca/pkg/models/cacao"
 	"strconv"
@@ -22,17 +23,17 @@ func init() {
 }
 
 type playbookHandler struct {
-	playbookRepo storage.PlaybookStore
+	playbooks services.PlaybookService
 }
 
-func NewPlaybookHandler(playbookRepo storage.PlaybookStore) *playbookHandler {
-	return &playbookHandler{playbookRepo: playbookRepo}
+func NewPlaybookHandler(playbooks services.PlaybookService) *playbookHandler {
+	return &playbookHandler{playbooks: playbooks}
 }
 
 func (handler *playbookHandler) GetAllPlaybooks(g *gin.Context) {
 	log.Trace("Trying to obtain all playbook IDs")
 
-	returnListIDs, err := handler.playbookRepo.List(g.Request.Context())
+	returnListIDs, err := handler.playbooks.ListPlaybooks(g.Request.Context())
 	if err != nil {
 		log.Debug("Could not obtain any Playbooks", err)
 		SendErrorResponse(g, http.StatusBadRequest, "Could not obtain any IDs", "GET /playbook")
@@ -45,7 +46,7 @@ func (handler *playbookHandler) GetAllPlaybooks(g *gin.Context) {
 func (handler *playbookHandler) GetAllPlaybookMetas(g *gin.Context) {
 	log.Trace("Trying to obtain all playbook IDs")
 
-	returnListIDs, err := handler.playbookRepo.ListMeta(g.Request.Context())
+	returnListIDs, err := handler.playbooks.ListPlaybookMetas(g.Request.Context())
 	if err != nil {
 		log.Debug("Could not obtain any PlaybookMetas", err)
 		SendErrorResponse(g, http.StatusBadRequest, "Could not obtain any IDs", "GET /playbook/meta")
@@ -67,7 +68,7 @@ func (handler *playbookHandler) SubmitPlaybook(g *gin.Context) {
 		SendErrorResponse(g, http.StatusBadRequest, "Could not create playbook. Is the playbook correct?", "POST /playbook")
 		return
 	}
-	if err := handler.playbookRepo.Create(g.Request.Context(), playbook); err != nil {
+	if err := handler.playbooks.CreatePlaybook(g.Request.Context(), &playbook); err != nil {
 		if err == storage.ErrConflict {
 			SendErrorResponse(g, http.StatusConflict, "Provided duplicate playbook, already in database", "POST /playbook")
 			return
@@ -82,7 +83,7 @@ func (handler *playbookHandler) GetPlaybookByID(g *gin.Context) {
 	id := g.Param("id")
 	log.Trace("Trying to obtain playbook for id: ", id)
 
-	playbook, err := handler.playbookRepo.Get(g.Request.Context(), id)
+	playbook, err := handler.playbooks.GetPlaybook(g.Request.Context(), id)
 	if err != nil {
 		log.Debug("Could not find document for given id")
 		SendErrorResponse(g, http.StatusNotFound, "Could not find playbook for given ID", "GET /playbook/{id}")
@@ -106,8 +107,7 @@ func (handler *playbookHandler) UpdatePlaybookByID(g *gin.Context) {
 		SendErrorResponse(g, http.StatusBadRequest, "Could not find playbook for given ID", "PUT /playbook/{id}")
 		return
 	}
-	updatedPlaybook.ID = id
-	if err := handler.playbookRepo.Update(g.Request.Context(), updatedPlaybook); err != nil {
+	if err := handler.playbooks.UpdatePlaybook(g.Request.Context(), id, &updatedPlaybook); err != nil {
 		if err == storage.ErrNotFound {
 			SendErrorResponse(g, http.StatusNotFound, "Could not find playbook for given ID", "PUT /playbook/{id}")
 			return
@@ -120,7 +120,7 @@ func (handler *playbookHandler) UpdatePlaybookByID(g *gin.Context) {
 
 func (handler *playbookHandler) DeleteByPlaybookID(g *gin.Context) {
 	id := g.Param("id")
-	err := handler.playbookRepo.Delete(g.Request.Context(), id)
+	err := handler.playbooks.DeletePlaybook(g.Request.Context(), id)
 	if err != nil {
 		log.Debug("Something when wrong tying to delete the playbook object. Does the object exists?")
 		SendErrorResponse(g, http.StatusBadRequest, "Could not delete object", "DELETE /playbook/{id}")

@@ -7,6 +7,8 @@ import (
 	"soarca/internal/controller/informer"
 	"soarca/internal/logger"
 	"soarca/internal/services"
+	playbookservice "soarca/internal/services/playbook"
+	reporterservice "soarca/internal/services/reporter"
 	playbook_handler "soarca/pkg/api/playbook"
 	reporter_handler "soarca/pkg/api/reporter"
 	status_handler "soarca/pkg/api/status"
@@ -86,7 +88,7 @@ func swaggerRoutes(route *gin.Engine) {
 }
 
 func PlaybookRoutes(route *gin.Engine, controller database.IController) {
-	playbookHandler := playbook_handler.NewPlaybookHandler(controller.GetPlaybookStore())
+	playbookHandler := playbook_handler.NewPlaybookHandler(playbookservice.New(controller.GetPlaybookStore()))
 	playbookRoutes := route.Group("/playbook")
 	{
 		playbookRoutes.GET("/", playbookHandler.GetAllPlaybooks)
@@ -99,7 +101,7 @@ func PlaybookRoutes(route *gin.Engine, controller database.IController) {
 }
 
 func ReporterRoutes(route *gin.Engine, informer informer.IExecutionInformer) {
-	reportHandler := reporter_handler.NewReportHandler(informer)
+	reportHandler := reporter_handler.NewReportHandler(reporterservice.New(informer))
 	reportRoutes := route.Group("/reporter")
 	{
 		reportRoutes.GET("/", reportHandler.GetExecutions)

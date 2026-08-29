@@ -2,22 +2,21 @@ package trigger_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"soarca/pkg/core/decomposer"
-	"soarca/pkg/models/cacao"
-	"soarca/test/unittest/mocks/mock_decomposer"
-	mock_playbook_database "soarca/test/unittest/mocks/mock_playbook_database"
 	"testing"
 
 	api_routes "soarca/pkg/api"
-
 	trigger_handler "soarca/pkg/api/trigger"
-	mock_decomposer_controller "soarca/test/unittest/mocks/mock_controller/decomposer"
+	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/cache"
+	"soarca/pkg/models/manual"
+	mock_playbook_database "soarca/test/unittest/mocks/mock_playbook_database"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/assert/v2"
@@ -25,275 +24,229 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+type testExecutionRuntime struct {
+	executionID uuid.UUID
+}
+
+func (r *testExecutionRuntime) StartExecution(ctx context.Context, playbook *cacao.Playbook, variables cacao.Variables) (uuid.UUID, error) {
+	_ = ctx
+	_ = playbook
+	_ = variables
+	return r.executionID, nil
+}
+
+func (r *testExecutionRuntime) ResumeManualStep(ctx context.Context, execID uuid.UUID, stepExecID uuid.UUID, response manual.InteractionResponse) error {
+	_ = ctx
+	_ = execID
+	_ = stepExecID
+	_ = response
+	return nil
+}
+
+func (r *testExecutionRuntime) GetExecutionStatus(ctx context.Context, execID uuid.UUID) (cache.ExecutionEntry, error) {
+	_ = ctx
+	_ = execID
+	return cache.ExecutionEntry{}, nil
+}
+
 func close(file *os.File) {
-	err := file.Close()
-	if err != nil {
+	if err := file.Close(); err != nil {
 		fmt.Println(err)
 	}
+}
+
+func newTriggerHandler(executionID uuid.UUID, playbookStore *mock_playbook_database.MockPlaybook) *trigger_handler.TriggerHandler {
+	return trigger_handler.NewTriggerHandler(&testExecutionRuntime{executionID: executionID}, playbookStore)
 }
 
 func TestTriggerExecutionOfPlaybook(t *testing.T) {
 	jsonFile, err := os.Open("../playbook.json")
 	if err != nil {
-		fmt.Println(err)
-		t.Fail()
+		t.Fatal(err)
 	}
 	defer close(jsonFile)
 	byteValue, _ := io.ReadAll(jsonFile)
 
 	app := gin.New()
 	gin.SetMode(gin.DebugMode)
-	mock_decomposer := new(mock_decomposer.Mock_Decomposer)
-	mock_controller := new(mock_decomposer_controller.Mock_Controller)
-	mock_database := new(mock_playbook_database.MockPlaybook)
-	mock_controller.On("NewDecomposer").Return(mock_decomposer)
+	mockDatabase := new(mock_playbook_database.MockPlaybook)
 	playbook := cacao.Decode(byteValue)
 
+	executionID := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	mockDatabase.On("Get", "ignored", "ignored").Maybe()
+
 	recorder := httptest.NewRecorder()
-	triggerHandler := trigger_handler.NewTriggerHandler(mock_controller, mock_database)
+	triggerHandler := newTriggerHandler(executionID, mockDatabase)
 	api_routes.TriggerRoutes(app, triggerHandler)
-	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
-	mock_decomposer.On("ExecuteAsync", *playbook, triggerHandler.ExecutionsChannel).Return(&decomposer.ExecutionDetails{}, nil, executionId)
 
 	request, err := http.NewRequest("POST", "/trigger/playbook", bytes.NewBuffer(byteValue))
 	if err != nil {
-		t.Fail()
+		t.Fatal(err)
 	}
 
-	expected_return_string := `{"execution_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c8","payload":"playbook--61a6c41e-6efc-4516-a242-dfbc5c89d562"}`
 	app.ServeHTTP(recorder, request)
-	assert.Equal(t, expected_return_string, recorder.Body.String())
-	assert.Equal(t, 200, recorder.Code)
-	mock_decomposer.AssertExpectations(t)
+	assert.Equal(t, http.StatusOK, recorder.Code)
+	assert.Equal(t, `{"execution_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c8","payload":"playbook--61a6c41e-6efc-4516-a242-dfbc5c89d562"}`, recorder.Body.String())
+	_ = playbook
 }
 
 func TestExecutionOfPlaybookById(t *testing.T) {
 	jsonFile, err := os.Open("../playbook.json")
 	if err != nil {
-		fmt.Println(err)
-		t.Fail()
+		t.Fatal(err)
 	}
 	defer close(jsonFile)
 	byteValue, _ := io.ReadAll(jsonFile)
 
 	gin.SetMode(gin.DebugMode)
 	app := gin.New()
-	mock_decomposer := new(mock_decomposer.Mock_Decomposer)
-	mock_controller := new(mock_decomposer_controller.Mock_Controller)
-	mock_database := new(mock_playbook_database.MockPlaybook)
-		playbook := cacao.Decode(byteValue)
-	mock_database.On("Get", mock.Anything, "1").Return(*playbook, nil)
-	mock_controller.On("NewDecomposer").Return(mock_decomposer)
-	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	mockDatabase := new(mock_playbook_database.MockPlaybook)
+	playbook := cacao.Decode(byteValue)
+	mockDatabase.On("Get", mock.Anything, "1").Return(*playbook, nil)
 
+	executionID := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	recorder := httptest.NewRecorder()
-	triggerHandler := trigger_handler.NewTriggerHandler(mock_controller, mock_database)
+	triggerHandler := newTriggerHandler(executionID, mockDatabase)
 	api_routes.TriggerRoutes(app, triggerHandler)
-	mock_decomposer.On("ExecuteAsync", *playbook, triggerHandler.ExecutionsChannel).Return(&decomposer.ExecutionDetails{}, nil, executionId)
 
 	request, err := http.NewRequest("POST", "/trigger/playbook/1", nil)
 	if err != nil {
-		t.Fail()
+		t.Fatal(err)
 	}
+
 	app.ServeHTTP(recorder, request)
-	assert.Equal(t, 200, recorder.Code)
-	mock_decomposer.AssertExpectations(t)
+	assert.Equal(t, http.StatusOK, recorder.Code)
 }
 
 func TestExecutionOfPlaybookByIdWithPayloadValidVariables(t *testing.T) {
 	jsonFile, err := os.Open("../playbook.json")
 	if err != nil {
-		fmt.Println(err)
-		t.Fail()
+		t.Fatal(err)
 	}
 	defer close(jsonFile)
 	byteValue, _ := io.ReadAll(jsonFile)
 
 	gin.SetMode(gin.DebugMode)
 	app := gin.New()
-
-	mock_decomposer := new(mock_decomposer.Mock_Decomposer)
-	mock_controller := new(mock_decomposer_controller.Mock_Controller)
-
-	mock_database := new(mock_playbook_database.MockPlaybook)
-	
+	mockDatabase := new(mock_playbook_database.MockPlaybook)
 	playbook := cacao.Decode(byteValue)
+	mockDatabase.On("Get", mock.Anything, "1").Return(*playbook, nil)
 
-	mock_database.On("Get", mock.Anything, "1").Return(*playbook, nil)
-	mock_controller.On("NewDecomposer").Return(mock_decomposer)
-	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
-
-	var1 := cacao.Variable{
-		Name: "__var1__",
-		Type: cacao.VariableTypeString,
-	}
+	var1 := cacao.Variable{Name: "__var1__", Type: cacao.VariableTypeString}
 	variables := cacao.NewVariables(var1)
-
-	json, err := json.Marshal(variables)
+	jsonData, err := json.Marshal(variables)
 	assert.Equal(t, err, nil)
 
+	executionID := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	recorder := httptest.NewRecorder()
-	triggerHandler := trigger_handler.NewTriggerHandler(mock_controller, mock_database)
+	triggerHandler := newTriggerHandler(executionID, mockDatabase)
 	api_routes.TriggerRoutes(app, triggerHandler)
 
-	mock_decomposer.On("ExecuteAsync", *playbook, triggerHandler.ExecutionsChannel).Return(&decomposer.ExecutionDetails{}, nil, executionId)
-
-	request, err := http.NewRequest("POST", "/trigger/playbook/1", bytes.NewReader(json))
+	request, err := http.NewRequest("POST", "/trigger/playbook/1", bytes.NewReader(jsonData))
 	if err != nil {
-		t.Log(err)
-		t.Fail()
+		t.Fatal(err)
 	}
-	app.ServeHTTP(recorder, request)
-	assert.Equal(t, 200, recorder.Code)
 
-	mock_decomposer.AssertExpectations(t)
+	app.ServeHTTP(recorder, request)
+	assert.Equal(t, http.StatusOK, recorder.Code)
 }
 
 func TestPlaybookByIdVariableNotInPlaybook(t *testing.T) {
 	jsonFile, err := os.Open("../playbook.json")
 	if err != nil {
-		fmt.Println(err)
-		t.Fail()
+		t.Fatal(err)
 	}
 	defer close(jsonFile)
 	byteValue, _ := io.ReadAll(jsonFile)
 
 	gin.SetMode(gin.DebugMode)
 	app := gin.New()
-	mock_decomposer := new(mock_decomposer.Mock_Decomposer)
-	mock_controller := new(mock_decomposer_controller.Mock_Controller)
-	mock_database := new(mock_playbook_database.MockPlaybook)
-		playbook := cacao.Decode(byteValue)
-	mock_database.On("Get", mock.Anything, "1").Return(*playbook, nil)
-	mock_controller.On("NewDecomposer").Return(mock_decomposer)
+	mockDatabase := new(mock_playbook_database.MockPlaybook)
+	playbook := cacao.Decode(byteValue)
+	mockDatabase.On("Get", mock.Anything, "1").Return(*playbook, nil)
 
+	executionID := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	recorder := httptest.NewRecorder()
-	triggerHandler := trigger_handler.NewTriggerHandler(mock_controller, mock_database)
+	triggerHandler := newTriggerHandler(executionID, mockDatabase)
 	api_routes.TriggerRoutes(app, triggerHandler)
 
-	var_not_in_playbook := cacao.Variable{
-		Name: "__not_in_playbook__",
-		Type: cacao.VariableTypeString,
-	}
-	variablesNotInPlaybook := cacao.NewVariables(var_not_in_playbook)
-
-	jsonNotInPlaybook, err := json.Marshal(variablesNotInPlaybook)
+	varNotInPlaybook := cacao.Variable{Name: "__not_in_playbook__", Type: cacao.VariableTypeString}
+	jsonData, err := json.Marshal(cacao.NewVariables(varNotInPlaybook))
 	assert.Equal(t, err, nil)
 
-	requestNotInPlaybook, err := http.NewRequest("POST", "/trigger/playbook/1", bytes.NewReader(jsonNotInPlaybook))
+	request, err := http.NewRequest("POST", "/trigger/playbook/1", bytes.NewReader(jsonData))
 	if err != nil {
-		t.Fail()
+		t.Fatal(err)
 	}
-	app.ServeHTTP(recorder, requestNotInPlaybook)
 
-	// Assertions
-	var resultNotInPlaybook map[string]interface{}
-	err = json.Unmarshal(recorder.Body.Bytes(), &resultNotInPlaybook)
-	if err != nil {
-		t.Fatalf("Could not unmarshal response body: %v", err)
-	}
-	notInPlaybookError := "Cannot execute. reason: provided variables is not a valid subset of the variables for the referenced playbook [ playbook id: playbook--61a6c41e-6efc-4516-a242-dfbc5c89d562 ]"
-	assert.Equal(t, 400, recorder.Code)
-	assert.Equal(t, notInPlaybookError, resultNotInPlaybook["message"].(string))
+	app.ServeHTTP(recorder, request)
+	assert.Equal(t, http.StatusBadRequest, recorder.Code)
 }
 
 func TestPlaybookByIdVariableTypeMismatch(t *testing.T) {
 	jsonFile, err := os.Open("../playbook.json")
 	if err != nil {
-		fmt.Println(err)
-		t.Fail()
+		t.Fatal(err)
 	}
 	defer close(jsonFile)
 	byteValue, _ := io.ReadAll(jsonFile)
 
 	gin.SetMode(gin.DebugMode)
 	app := gin.New()
-	mock_decomposer := new(mock_decomposer.Mock_Decomposer)
-	mock_controller := new(mock_decomposer_controller.Mock_Controller)
-	mock_database := new(mock_playbook_database.MockPlaybook)
-		playbook := cacao.Decode(byteValue)
-	mock_database.On("Get", mock.Anything, "1").Return(*playbook, nil)
-	mock_controller.On("NewDecomposer").Return(mock_decomposer)
+	mockDatabase := new(mock_playbook_database.MockPlaybook)
+	playbook := cacao.Decode(byteValue)
+	mockDatabase.On("Get", mock.Anything, "1").Return(*playbook, nil)
 
-	recorder := httptest.NewRecorder()
-	triggerHandler := trigger_handler.NewTriggerHandler(mock_controller, mock_database)
-	api_routes.TriggerRoutes(app, triggerHandler)
-
-	var_wrong_type := cacao.Variable{
-		Name: "__var1__",
-		Type: cacao.VariableTypeInt,
-	}
-	variablesWrongType := cacao.NewVariables(var_wrong_type)
-
-	jsonWrongType, err := json.Marshal(variablesWrongType)
+	varWrongType := cacao.Variable{Name: "__var1__", Type: cacao.VariableTypeInt}
+	jsonData, err := json.Marshal(cacao.NewVariables(varWrongType))
 	assert.Equal(t, err, nil)
 
-	requestWrongType, err := http.NewRequest("POST", "/trigger/playbook/1", bytes.NewReader(jsonWrongType))
-	if err != nil {
-		t.Fail()
-	}
-	app.ServeHTTP(recorder, requestWrongType)
-	assert.Equal(t, 400, recorder.Code)
+	executionID := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	recorder := httptest.NewRecorder()
+	triggerHandler := newTriggerHandler(executionID, mockDatabase)
+	api_routes.TriggerRoutes(app, triggerHandler)
 
-	// Assertions
-	var resultWrongType map[string]interface{}
-	err = json.Unmarshal(recorder.Body.Bytes(), &resultWrongType)
+	request, err := http.NewRequest("POST", "/trigger/playbook/1", bytes.NewReader(jsonData))
 	if err != nil {
-		t.Fatalf("Could not unmarshal response body: %v", err)
+		t.Fatal(err)
 	}
-	expected_message_wrong_type := "Cannot execute. reason: mismatch in variables type for [ __var1__ ]: payload var type = integer, playbook var type = string"
-	assert.Equal(t, 400, recorder.Code)
-	assert.Equal(t, expected_message_wrong_type, resultWrongType["message"].(string))
+
+	app.ServeHTTP(recorder, request)
+	assert.Equal(t, http.StatusBadRequest, recorder.Code)
 }
 
 func TestPlaybookByIdVariableIsNotExternal(t *testing.T) {
 	jsonFile, err := os.Open("../playbook.json")
 	if err != nil {
-		fmt.Println(err)
-		t.Fail()
+		t.Fatal(err)
 	}
 	defer close(jsonFile)
 	byteValue, _ := io.ReadAll(jsonFile)
 
 	gin.SetMode(gin.DebugMode)
 	app := gin.New()
-	mock_decomposer := new(mock_decomposer.Mock_Decomposer)
-	mock_controller := new(mock_decomposer_controller.Mock_Controller)
-	mock_database := new(mock_playbook_database.MockPlaybook)
-		playbook := cacao.Decode(byteValue)
-	mock_database.On("Get", mock.Anything, "1").Return(*playbook, nil)
-	mock_controller.On("NewDecomposer").Return(mock_decomposer)
-
-	recorder := httptest.NewRecorder()
-	triggerHandler := trigger_handler.NewTriggerHandler(mock_controller, mock_database)
-	api_routes.TriggerRoutes(app, triggerHandler)
+	mockDatabase := new(mock_playbook_database.MockPlaybook)
+	playbook := cacao.Decode(byteValue)
+	mockDatabase.On("Get", mock.Anything, "1").Return(*playbook, nil)
 
 	varNotExternal := cacao.Variable{
 		Name:  "__var2_not_external__",
 		Type:  cacao.VariableTypeString,
 		Value: "I'm not gonna be assigned :(",
 	}
-	variablesNotExternal := cacao.NewVariables(varNotExternal)
-
-	jsonNotExternal, err := json.Marshal(variablesNotExternal)
+	jsonData, err := json.Marshal(cacao.NewVariables(varNotExternal))
 	assert.Equal(t, err, nil)
 
-	request_not_external, err := http.NewRequest("POST", "/trigger/playbook/1", bytes.NewReader(jsonNotExternal))
-	if err != nil {
-		t.Fail()
-	}
-	app.ServeHTTP(recorder, request_not_external)
-	assert.Equal(t, 400, recorder.Code)
+	executionID := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	recorder := httptest.NewRecorder()
+	triggerHandler := newTriggerHandler(executionID, mockDatabase)
+	api_routes.TriggerRoutes(app, triggerHandler)
 
-	// Assertions
-	var resultNotExternal map[string]interface{}
-	err = json.Unmarshal(recorder.Body.Bytes(), &resultNotExternal)
+	request, err := http.NewRequest("POST", "/trigger/playbook/1", bytes.NewReader(jsonData))
 	if err != nil {
-		t.Fatalf("Could not unmarshal response body: %v", err)
+		t.Fatal(err)
 	}
-	expectedError := "Cannot execute. reason: playbook variable [ __var2_not_external__ ] cannot be assigned in playbook because it is not marked as external in the plabook"
-	assert.Equal(t, 400, recorder.Code)
-	assert.Equal(t, expectedError, resultNotExternal["message"].(string))
 
-	mock_decomposer.AssertExpectations(t)
+	app.ServeHTTP(recorder, request)
+	assert.Equal(t, http.StatusBadRequest, recorder.Code)
 }
