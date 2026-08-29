@@ -132,17 +132,22 @@ Each phase compiles, keeps tests green, and is independently mergeable.
 
 See "Phase 0 results" below.
 
-### Phase 1 — stop passing the container
+### Phase 1 — stop passing the container (DONE)
 
-No files move. `WorkflowFactory` and `execution.Service` take explicit dependency
+No files moved. `WorkflowFactory` and `execution.Service` now take explicit dependency
 structs instead of `*appruntime.Runtime`:
 
 ```go
-engine.New(engine.Deps{Interaction, Cache, FinQueue, FinStore, PlaybookStore, Config})
+newWorkflowFactory(EngineDeps{Interaction, Cache, FinQueue, FinStore, PlaybookStore, Config})
+execservice.New(wf, interaction, cache)
 ```
 
-`Runtime` becomes construction-only. This is the phase that actually fixes the
-architecture.
+`execution.Service` declares its own narrow consumer interfaces (`ManualResumer`,
+`ExecutionReports`) rather than reaching through the container. `bootstrap.New` is now
+the only place that reads runtime getters, which is legitimate for a composition root.
+
+No service or engine holds `*Runtime` any more. It survives only in `bootstrap.New`,
+`controller.go`, `httptransport.New` and tests — all removed in Phase 3.
 
 ### Phase 2 — collapse the fake cycle
 
@@ -229,6 +234,23 @@ test/manual/thehive_connector      (thehive)
 test/manual/thehive_reporter       (thehive)
 ```
 
-Coverage gaps to be aware of during the refactor: there is no integration coverage for
-the FIN routes (`/fin/register`, `/poll`, `/jobs/:id`, admin) or `/status`. Phase 3
-changes FIN handler construction, so FIN route tests are worth adding first.
+Coverage gaps to be aware of during the refactor: `/status` has no integration coverage.
+
+## FIN route coverage (added)
+
+`test/integration/api/routes/fin_api/fin_api_test.go` — 16 tests over the real registry
+and work service backed by in-memory storage and a real queue, so the route/middleware/
+service composition is covered before Phase 3 moves FIN handler construction into
+transport. Covers registration (success, wrong token, no capabilities, registration
+disabled), bearer auth (missing, unknown), poll with no work, result submission errors,
+admin list/get/delete, and unregister.
+
+Includes `TestListFinsDoesNotLeakTokenHash`, a regression guard for `fin.Record` doubling
+as persistence type and admin wire type with only `json:"-"` keeping the credential
+hash off the wire.
+
+## Notes for later phases
+
+- `internal/controller/boundary_test.go` asserts that every `Runtime` getter returns
+  non-nil. It pins the service-locator shape and must be rewritten in Phase 3 to assert
+  on `Operations` instead.

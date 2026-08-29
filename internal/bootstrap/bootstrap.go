@@ -53,10 +53,17 @@ func New(runtime *appruntime.Runtime, cfg config.Config) (*Container, error) {
 
 	// WorkflowFactory owns all capability/executor/reporter wiring.
 	// It implements decomposer_controller.IController so ExecutionRuntime can call NewDecomposer().
-	wf := newWorkflowFactory(runtime, cfg)
+	wf := newWorkflowFactory(EngineDeps{
+		Interaction:   runtime.GetInteraction(),
+		Cache:         runtime.GetCache(),
+		FinQueue:      runtime.GetFinQueue(),
+		FinStore:      runtime.GetFinStore(),
+		PlaybookStore: runtime.GetPlaybookStore(),
+		Config:        cfg,
+	})
 
 	// Build ExecutionRuntime service
-	executionRuntime := execservice.New(runtime, wf)
+	executionRuntime := execservice.New(wf, runtime.GetInteraction(), runtime.GetCache())
 
 	// Inject ExecutionRuntime into runtime (also constructs TriggerService there)
 	runtime.SetExecutionRuntime(executionRuntime)

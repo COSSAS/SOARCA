@@ -6,8 +6,6 @@ import (
 	"github.com/google/uuid"
 
 	"soarca/internal/controller/decomposer_controller"
-	"soarca/internal/logger"
-	appruntime "soarca/internal/runtime"
 	"soarca/pkg/core/decomposer"
 	"soarca/pkg/models/cacao"
 	modelcache "soarca/pkg/models/cache"
@@ -15,26 +13,36 @@ import (
 	"soarca/pkg/models/manual"
 )
 
-var log *logger.Log
+// ManualResumer resolves a paused manual step.
+type ManualResumer interface {
+	PostContinue(response manual.InteractionResponse) error
+}
+
+// ExecutionReports reads recorded execution state.
+type ExecutionReports interface {
+	GetExecutionReport(executionID uuid.UUID) (modelcache.ExecutionEntry, error)
+}
 
 // Service implements the ExecutionRuntime contract.
 type Service struct {
-	runtime    *appruntime.Runtime
-	controller decomposer_controller.IController
+	decomposers decomposer_controller.IController
+	manual      ManualResumer
+	reports     ExecutionReports
 }
 
 // New creates a new execution runtime service.
-func New(runtime *appruntime.Runtime, controller decomposer_controller.IController) *Service {
+func New(decomposers decomposer_controller.IController, manualResumer ManualResumer, reports ExecutionReports) *Service {
 	return &Service{
-		runtime:    runtime,
-		controller: controller,
+		decomposers: decomposers,
+		manual:      manualResumer,
+		reports:     reports,
 	}
 }
 
 // StartExecution launches a playbook execution and waits for the execution ID.
 func (s *Service) StartExecution(ctx context.Context, playbook *cacao.Playbook, variables cacao.Variables) (executionID uuid.UUID, err error) {
 	_ = variables
-	decomp := s.controller.NewDecomposer()
+	decomp := s.decomposers.NewDecomposer()
 	executions := make(chan decomposer.ExecutionDetails, 1)
 
 	go decomp.ExecuteAsync(*playbook, executions)
@@ -59,11 +67,11 @@ func (s *Service) ResumeManualStep(ctx context.Context, execID uuid.UUID, stepEx
 		ExecutionId:     execID,
 		StepExecutionId: stepExecID,
 	}
-	return s.runtime.GetInteraction().PostContinue(response)
+	return s.manual.PostContinue(response)
 }
 
 // GetExecutionStatus returns the cached execution report for an execution.
 func (s *Service) GetExecutionStatus(ctx context.Context, execID uuid.UUID) (modelcache.ExecutionEntry, error) {
 	_ = ctx
-	return s.runtime.GetCache().GetExecutionReport(execID)
+	return s.reports.GetExecutionReport(execID)
 }
