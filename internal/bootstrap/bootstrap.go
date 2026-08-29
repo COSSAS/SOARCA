@@ -28,18 +28,16 @@ type TransportOptions struct {
 	CORS    config.CORSConfig
 }
 
-// Container holds all bootstrapped services and handlers ready for injection into the transport layer.
-// FinHandler is the only HTTP handler; other services are retrieved from runtime via getters.
-// The HTTP server receives this and only uses it for route registration — no runtime internals exposed.
+// Container holds the bootstrapped runtime and transport configuration.
+// HTTP handlers are composed by the transport layer.
 type Container struct {
 	Runtime          *appruntime.Runtime
 	FinHandler       *fin.FinHandler
 	TransportOptions TransportOptions
 }
 
-// New bootstraps services and handlers.
-// Runtime already constructs most services. Bootstrap constructs ExecutionRuntime (special case)
-// and FinHandler, then injects ExecutionRuntime into runtime.
+// New bootstraps the execution runtime and injects it into the app runtime.
+// HTTP handler construction belongs to the transport layer.
 func New(runtime *appruntime.Runtime, cfg config.Config) (*Container, error) {
 	c := &Container{
 		Runtime: runtime,
@@ -62,21 +60,6 @@ func New(runtime *appruntime.Runtime, cfg config.Config) (*Container, error) {
 
 	// Inject ExecutionRuntime into runtime (also constructs TriggerService there)
 	runtime.SetExecutionRuntime(executionRuntime)
-
-	// Build FinHandler from runtime services
-	finHandlerConfig := fin.Config{
-		RegistrationToken:      cfg.Fin.RegistrationToken,
-		PollIntervalSeconds:    cfg.Fin.PollIntervalSeconds,
-		LongPollTimeoutSeconds: cfg.Fin.LongPollTimeoutSeconds,
-		JobLeaseSeconds:        cfg.Fin.JobLeaseSeconds,
-		StaleAfter:             cfg.Fin.StaleAfter,
-	}
-
-	c.FinHandler = fin.NewFinHandler(
-		runtime.GetFinRegistry(),
-		runtime.GetFinWorkService(),
-		finHandlerConfig,
-	)
 
 	return c, nil
 }

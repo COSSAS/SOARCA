@@ -11,6 +11,7 @@ import (
 	"soarca/internal/logger"
 	appruntime "soarca/internal/runtime"
 	"soarca/pkg/api"
+	finapi "soarca/pkg/api/fin"
 
 	"github.com/COSSAS/gauth"
 	"github.com/gin-gonic/gin"
@@ -37,6 +38,17 @@ func New(runtime *appruntime.Runtime, cfg config.Config) (*Server, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to bootstrap services: %w", err)
 	}
+	container.FinHandler = finapi.NewFinHandler(
+		container.Runtime.GetFinRegistry(),
+		container.Runtime.GetFinWorkService(),
+		finapi.Config{
+			RegistrationToken:      cfg.Fin.RegistrationToken,
+			PollIntervalSeconds:    cfg.Fin.PollIntervalSeconds,
+			LongPollTimeoutSeconds: cfg.Fin.LongPollTimeoutSeconds,
+			JobLeaseSeconds:        cfg.Fin.JobLeaseSeconds,
+			StaleAfter:             cfg.Fin.StaleAfter,
+		},
+	)
 	return &Server{container: container}, nil
 }
 
