@@ -37,7 +37,8 @@ func TestRuntimeBoundary(t *testing.T) {
 	}
 }
 
-// TestTransportBoundary verifies that transport correctly uses runtime accessors.
+// TestTransportBoundary verifies that the transport layer only does route registration and startup.
+// It must NOT expose runtime internals (playbook store, decomposer factory, etc.).
 func TestTransportBoundary(t *testing.T) {
 	runtime, err := appruntime.New(appruntime.Options{
 		Storage: mockStorageConfig(),
@@ -54,7 +55,7 @@ func TestTransportBoundary(t *testing.T) {
 		t.Fatalf("Failed to create server: %v", err)
 	}
 
-	// Verify transport can call SetupServer successfully
+	// Server should be able to set up routes
 	engine, err := server.SetupServer()
 	if err != nil {
 		t.Fatalf("Failed to setup server: %v", err)
@@ -63,17 +64,16 @@ func TestTransportBoundary(t *testing.T) {
 		t.Error("SetupServer returned nil engine")
 	}
 
-	// Verify transport can access playbook store through interface
-	store := server.GetPlaybookStore()
-	if store == nil {
-		t.Error("GetPlaybookStore returned nil")
+	// Server should have routes registered — the exact count is a sanity check
+	if got := len(engine.Routes()); got == 0 {
+		t.Error("SetupServer registered no routes")
 	}
 
-	// Verify transport can create decomposer
-	decomposer := server.NewDecomposer()
-	if decomposer == nil {
-		t.Error("NewDecomposer returned nil")
-	}
+	// The transport layer must NOT expose GetPlaybookStore or NewDecomposer.
+	// Those belong in the bootstrap/runtime layer. If the following lines compile,
+	// the boundary has been violated:
+	//   _ = server.GetPlaybookStore()   // must not compile
+	//   _ = server.NewDecomposer()      // must not compile
 }
 
 // TestConfigBoundary verifies that config is properly split between layers.

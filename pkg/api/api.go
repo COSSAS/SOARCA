@@ -3,7 +3,6 @@ package api
 import (
 	"reflect"
 	open_api "soarca/api"
-	"soarca/internal/bootstrap"
 	"soarca/internal/controller/database"
 	"soarca/internal/controller/informer"
 	"soarca/internal/logger"
@@ -14,11 +13,8 @@ import (
 	playbook_handler "soarca/pkg/api/playbook"
 	reporter_handler "soarca/pkg/api/reporter"
 	status_handler "soarca/pkg/api/status"
-
 	manual_handler "soarca/pkg/api/manual"
-
 	fin_handler "soarca/pkg/api/fin"
-
 	trigger_handler "soarca/pkg/api/trigger"
 
 	"github.com/gin-contrib/cors"
@@ -35,77 +31,29 @@ func init() {
 	log = logger.Logger(reflect.TypeOf(Empty{}).PkgPath(), logger.Info, "", logger.Json)
 }
 
-func Database(app *gin.Engine, controller database.IController) error {
-	log.Trace("Setting up playbook routes")
-	PlaybookRoutes(app, controller)
-	return nil
+// ============================================================================
+// Handler constructors (for callers that inject services directly)
+// ============================================================================
+
+func NewTriggerHandler(svc services.TriggerService) *trigger_handler.TriggerHandler {
+	return trigger_handler.NewTriggerHandler(svc)
 }
 
-func Logging(app *gin.Engine) {}
-
-func Reporter(app *gin.Engine, informer informer.IExecutionInformer) error {
-	log.Trace("Setting up reporter routes")
-	ReporterRoutes(app, informer)
-	return nil
+func NewManualHandler(inbox services.ManualInbox) *manual_handler.ManualHandler {
+	return manual_handler.NewManualHandler(inbox)
 }
 
-// ReporterWithService sets up reporter routes with an injected service (for use by bootstrap).
-func ReporterWithService(app *gin.Engine, reporterSvc services.ReporterService) error {
-	log.Trace("Setting up reporter routes")
-	reportHandler := reporter_handler.NewReportHandler(reporterSvc)
-	reportRoutes := app.Group("/reporter")
-	{
-		reportRoutes.GET("/", reportHandler.GetExecutions)
-		reportRoutes.GET("/:id", reportHandler.GetExecutionReport)
-	}
-	return nil
-}
-
-func Manual(app *gin.Engine, inbox services.ManualInbox) {
-	log.Trace("Setting up manual routes")
-	manualHandler := manual_handler.NewManualHandler(inbox)
-	ManualRoutes(app, manualHandler)
-}
-
-// ManualWithService sets up manual routes with an injected service (for use by bootstrap).
-func ManualWithService(app *gin.Engine, inbox services.ManualInbox) {
-	log.Trace("Setting up manual routes")
-	manualHandler := manual_handler.NewManualHandler(inbox)
-	ManualRoutes(app, manualHandler)
-}
-
-func FinPublic(app *gin.Engine, finHandler *fin_handler.FinHandler) {
-	log.Trace("Setting up fin protocol routes (registered ahead of the admin auth middleware - see FinPublic doc comment)")
-	FinPublicRoutes(app, finHandler)
-}
-
-func FinAdmin(app *gin.Engine, finHandler *fin_handler.FinHandler) {
-	log.Trace("Setting up fin discovery routes")
-	FinAdminRoutes(app, finHandler)
-}
-
-func Api(app *gin.Engine, executionRuntime services.ExecutionRuntime, database database.IController) error {
-	log.Trace("Trying to setup all Routes")
-	triggerHandler := trigger_handler.NewTriggerHandler(triggerservice.New(executionRuntime, database.GetPlaybookStore()))
-	TriggerRoutes(app, triggerHandler)
-	StatusRoutes(app)
-	return nil
-}
-
-// ApiWithServices sets up API routes with injected services from bootstrap (for use by SetupServer).
-func ApiWithServices(app *gin.Engine, container *bootstrap.Container) error {
-	log.Trace("Setting up API routes with injected services")
-	triggerHandler := trigger_handler.NewTriggerHandler(container.TriggerService)
-	TriggerRoutes(app, triggerHandler)
-	StatusRoutes(app)
-	return nil
-}
+// ============================================================================
+// Route registration functions
+// ============================================================================
 
 func Cors(app *gin.Engine, origins []string) {
 	config := cors.DefaultConfig()
 	config.AllowOrigins = origins
 	app.Use(cors.New(config))
 }
+
+func Logging(app *gin.Engine) {}
 
 func Swagger(app *gin.Engine) { swaggerRoutes(app) }
 
@@ -114,28 +62,6 @@ func swaggerRoutes(route *gin.Engine) {
 	swaggerRoutes := route.Group("/swagger")
 	{
 		swaggerRoutes.GET("/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
-	}
-}
-
-func PlaybookRoutes(route *gin.Engine, controller database.IController) {
-	playbookHandler := playbook_handler.NewPlaybookHandler(playbook.New(controller.GetPlaybookStore()))
-	playbookRoutes := route.Group("/playbook")
-	{
-		playbookRoutes.GET("/", playbookHandler.GetAllPlaybooks)
-		playbookRoutes.POST("/", playbookHandler.SubmitPlaybook)
-		playbookRoutes.GET("/meta/", playbookHandler.GetAllPlaybookMetas)
-		playbookRoutes.GET("/:id", playbookHandler.GetPlaybookByID)
-		playbookRoutes.PUT("/:id", playbookHandler.UpdatePlaybookByID)
-		playbookRoutes.DELETE("/:id", playbookHandler.DeleteByPlaybookID)
-	}
-}
-
-func ReporterRoutes(route *gin.Engine, informer informer.IExecutionInformer) {
-	reportHandler := reporter_handler.NewReportHandler(reporter.New(informer))
-	reportRoutes := route.Group("/reporter")
-	{
-		reportRoutes.GET("/", reportHandler.GetExecutions)
-		reportRoutes.GET("/:id", reportHandler.GetExecutionReport)
 	}
 }
 
@@ -164,6 +90,42 @@ func ManualRoutes(route *gin.Engine, manualHandler *manual_handler.ManualHandler
 	}
 }
 
+// PlaybookRoutesWithService registers playbook CRUD routes using an injected service.
+func PlaybookRoutesWithService(route *gin.Engine, svc services.PlaybookService) {
+	log.Trace("Setting up playbook routes")
+	playbookHandler := playbook_handler.NewPlaybookHandler(svc)
+	playbookRoutes := route.Group("/playbook")
+	{
+		playbookRoutes.GET("/", playbookHandler.GetAllPlaybooks)
+		playbookRoutes.POST("/", playbookHandler.SubmitPlaybook)
+		playbookRoutes.GET("/meta/", playbookHandler.GetAllPlaybookMetas)
+		playbookRoutes.GET("/:id", playbookHandler.GetPlaybookByID)
+		playbookRoutes.PUT("/:id", playbookHandler.UpdatePlaybookByID)
+		playbookRoutes.DELETE("/:id", playbookHandler.DeleteByPlaybookID)
+	}
+}
+
+// ReporterRoutesWithService registers reporter routes using an injected service.
+func ReporterRoutesWithService(route *gin.Engine, svc services.ReporterService) {
+	log.Trace("Setting up reporter routes")
+	reportHandler := reporter_handler.NewReportHandler(svc)
+	reportRoutes := route.Group("/reporter")
+	{
+		reportRoutes.GET("/", reportHandler.GetExecutions)
+		reportRoutes.GET("/:id", reportHandler.GetExecutionReport)
+	}
+}
+
+func FinPublic(app *gin.Engine, finHandler *fin_handler.FinHandler) {
+	log.Trace("Setting up fin protocol routes (registered ahead of the admin auth middleware - see FinPublic doc comment)")
+	FinPublicRoutes(app, finHandler)
+}
+
+func FinAdmin(app *gin.Engine, finHandler *fin_handler.FinHandler) {
+	log.Trace("Setting up fin discovery routes")
+	FinAdminRoutes(app, finHandler)
+}
+
 func FinPublicRoutes(route *gin.Engine, finHandler *fin_handler.FinHandler) {
 	finRoutes := route.Group("/fin")
 	{
@@ -187,3 +149,50 @@ func FinAdminRoutes(route *gin.Engine, finHandler *fin_handler.FinHandler) {
 		finRoutes.DELETE(":fin_id", finHandler.Delete)
 	}
 }
+
+// ============================================================================
+// Legacy helpers — kept for tests that still use the old controller-based API
+// ============================================================================
+
+func Database(app *gin.Engine, controller database.IController) error {
+	log.Trace("Setting up playbook routes")
+	PlaybookRoutes(app, controller)
+	return nil
+}
+
+func Reporter(app *gin.Engine, inf informer.IExecutionInformer) error {
+	log.Trace("Setting up reporter routes")
+	ReporterRoutes(app, inf)
+	return nil
+}
+
+func Api(app *gin.Engine, executionRuntime services.ExecutionRuntime, db database.IController) error {
+	log.Trace("Setting up trigger routes")
+	triggerHandler := trigger_handler.NewTriggerHandler(triggerservice.New(executionRuntime, db.GetPlaybookStore()))
+	TriggerRoutes(app, triggerHandler)
+	StatusRoutes(app)
+	return nil
+}
+
+func PlaybookRoutes(route *gin.Engine, controller database.IController) {
+	playbookHandler := playbook_handler.NewPlaybookHandler(playbook.New(controller.GetPlaybookStore()))
+	playbookRoutes := route.Group("/playbook")
+	{
+		playbookRoutes.GET("/", playbookHandler.GetAllPlaybooks)
+		playbookRoutes.POST("/", playbookHandler.SubmitPlaybook)
+		playbookRoutes.GET("/meta/", playbookHandler.GetAllPlaybookMetas)
+		playbookRoutes.GET("/:id", playbookHandler.GetPlaybookByID)
+		playbookRoutes.PUT("/:id", playbookHandler.UpdatePlaybookByID)
+		playbookRoutes.DELETE("/:id", playbookHandler.DeleteByPlaybookID)
+	}
+}
+
+func ReporterRoutes(route *gin.Engine, inf informer.IExecutionInformer) {
+	reportHandler := reporter_handler.NewReportHandler(reporter.New(inf))
+	reportRoutes := route.Group("/reporter")
+	{
+		reportRoutes.GET("/", reportHandler.GetExecutions)
+		reportRoutes.GET("/:id", reportHandler.GetExecutionReport)
+	}
+}
+

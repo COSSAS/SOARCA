@@ -4,7 +4,6 @@ import (
 	"reflect"
 
 	"soarca/internal/config"
-	"soarca/internal/controller/decomposer_controller"
 	"soarca/internal/logger"
 	appruntime "soarca/internal/runtime"
 	execservice "soarca/internal/services/execution"
@@ -26,12 +25,6 @@ func init() {
 	log = logger.Logger(reflect.TypeOf(Empty{}).PkgPath(), logger.Info, "", logger.Json)
 }
 
-// DecomposerFactory creates decomposers (used by runtime for workflow orchestration).
-// This is implemented by the HTTP transport layer.
-type DecomposerFactory interface {
-	decomposer_controller.IController
-}
-
 // TransportOptions contains the configuration needed by the HTTP transport.
 type TransportOptions struct {
 	Server  config.ServerConfig
@@ -43,25 +36,22 @@ type TransportOptions struct {
 }
 
 // Container holds all bootstrapped services and handlers ready for injection into the transport layer.
+// The HTTP server receives this and only uses it for route registration — no runtime internals exposed.
 type Container struct {
-	ExecutionRuntime  services.ExecutionRuntime
-	FinHandler        *fin.FinHandler
-	TriggerService    services.TriggerService
-	PlaybookService   services.PlaybookService
-	ReporterService   services.ReporterService
-	ManualInbox       services.ManualInbox
-	Runtime           *appruntime.Runtime
-	Config            config.Config
-	TransportOptions  TransportOptions
-	DecomposerFactory DecomposerFactory
+	ExecutionRuntime services.ExecutionRuntime
+	FinHandler       *fin.FinHandler
+	TriggerService   services.TriggerService
+	PlaybookService  services.PlaybookService
+	ReporterService  services.ReporterService
+	ManualInbox      services.ManualInbox
+	TransportOptions TransportOptions
 }
 
 // New bootstraps all services and handlers.
-func New(runtime *appruntime.Runtime, cfg config.Config, decomposerFactory DecomposerFactory) (*Container, error) {
+// The workflow factory (capability wiring, decomposer construction) is built here,
+// not in the HTTP transport layer.
+func New(runtime *appruntime.Runtime, cfg config.Config) (*Container, error) {
 	c := &Container{
-		Runtime:           runtime,
-		Config:            cfg,
-		DecomposerFactory: decomposerFactory,
 		TransportOptions: TransportOptions{
 			Server:  cfg.Server,
 			Fin:     cfg.Fin,
@@ -72,8 +62,12 @@ func New(runtime *appruntime.Runtime, cfg config.Config, decomposerFactory Decom
 		},
 	}
 
+	// WorkflowFactory owns all capability/executor/reporter wiring.
+	// It implements decomposer_controller.IController so the runtime can call NewDecomposer().
+	wf := newWorkflowFactory(runtime, cfg)
+
 	// Build execution runtime
-	c.ExecutionRuntime = execservice.New(runtime, decomposerFactory)
+	c.ExecutionRuntime = execservice.New(runtime, wf)
 
 	// Build FIN services and handler
 	finRegistry := finsvc.NewRegistry(
