@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	finservice "soarca/internal/services/fin"
 	"soarca/internal/storage/memory"
 	"soarca/pkg/api/fin"
 	"soarca/pkg/core/capability"
@@ -41,17 +42,20 @@ func TestFullFinProtocolFlow(t *testing.T) {
 	finGuidMock := new(mock_guid.Mock_Guid)
 	finGuidMock.On("New").Return(fixedFinId)
 
-	handler := fin.NewFinHandler(fin.HandlerDependencies{
-		Store: repo,
-		Queue: jobQueue,
-		Config: fin.Config{
-			RegistrationToken:      "test-registration-token",
-			PollIntervalSeconds:    5,
-			LongPollTimeoutSeconds: 1,
-			JobLeaseSeconds:        60,
-			StaleAfter:             2 * time.Minute,
-		},
-		GUID: finGuidMock,
+	registry := finservice.NewRegistry(repo, finservice.RegistryConfig{
+		RegistrationToken: "test-registration-token",
+		StaleAfter:        2 * time.Minute,
+	}, finGuidMock)
+	workService := finservice.NewWorkService(repo, jobQueue, finservice.WorkServiceConfig{
+		LongPollTimeoutSeconds: 1,
+		JobLeaseSeconds:        60,
+	})
+	handler := fin.NewFinHandler(registry, workService, fin.Config{
+		RegistrationToken:      "test-registration-token",
+		PollIntervalSeconds:    5,
+		LongPollTimeoutSeconds: 1,
+		JobLeaseSeconds:        60,
+		StaleAfter:             2 * time.Minute,
 	})
 
 	gin.SetMode(gin.TestMode)

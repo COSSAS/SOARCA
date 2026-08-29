@@ -1,7 +1,6 @@
 package fin
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"reflect"
@@ -9,12 +8,9 @@ import (
 	"time"
 
 	"soarca/internal/logger"
-	"soarca/internal/storage"
+	"soarca/internal/services"
 	apiError "soarca/pkg/api/error"
-	"soarca/pkg/core/capability/fin/queue"
-	"soarca/pkg/core/capability/fin/token"
 	"soarca/pkg/models/fin"
-	"soarca/pkg/utils/guid"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -38,31 +34,23 @@ type Config struct {
 	StaleAfter             time.Duration
 }
 
-// HandlerDependencies groups the dependencies needed to construct a FinHandler.
-type HandlerDependencies struct {
-	Store  storage.FinStore
-	Queue  *queue.Queue
-	Config Config
-	GUID   guid.IGuid
-}
-
+// FinHandler is the HTTP adapter for FIN operations.
 type FinHandler struct {
-	store  storage.FinStore
-	queue  *queue.Queue
-	config Config
-	guid   guid.IGuid
+	registry    services.FinRegistry
+	workService services.FinWorkService
+	config      Config
 }
 
-func NewFinHandler(deps HandlerDependencies) *FinHandler {
+// NewFinHandler creates a new FIN HTTP handler with service dependencies.
+func NewFinHandler(registry services.FinRegistry, workService services.FinWorkService, config Config) *FinHandler {
 	return &FinHandler{
-		store:  deps.Store,
-		queue:  deps.Queue,
-		config: deps.Config,
-		guid:   deps.GUID,
+		registry:    registry,
+		workService: workService,
+		config:      config,
 	}
 }
 
-func (finHandler *FinHandler) Register(g *gin.Context) {
+func (h *FinHandler) Register(g *gin.Context) {
 	const route = "POST /fin/register"
 
 	var request fin.RegisterRequest
@@ -71,56 +59,23 @@ func (finHandler *FinHandler) Register(g *gin.Context) {
 		apiError.SendErrorResponse(g, http.StatusBadRequest, "Failed to parse registration request", route, err.Error())
 		return
 	}
-	if finHandler.config.RegistrationToken == "" {
-		log.Warning("rejecting fin registration attempt: no FIN_REGISTRATION_TOKEN is configured")
-		apiError.SendErrorResponse(g, http.StatusServiceUnavailable, "Fin registration is not configured", route, "")
-		return
-	}
-	if !token.Equal(request.RegistrationToken, finHandler.config.RegistrationToken) {
-		err := fin.ErrRegistrationTokenInvalid{}
-		log.Warning(err)
-		apiError.SendErrorResponse(g, http.StatusForbidden, err.Error(), route, "")
-		return
-	}
-	if len(request.Capabilities) == 0 {
-		apiError.SendErrorResponse(g, http.StatusBadRequest, "At least one capability is required", route, "")
-		return
-	}
-	for _, capability := range request.Capabilities {
-		if capability.Type == "" {
-			apiError.SendErrorResponse(g, http.StatusBadRequest, "Every capability requires a non-empty type", route, "")
-			return
-		}
-	}
 
-	finToken, err := token.Generate()
+	finID, finToken, err := h.registry.RegisterFin(g.Request.Context(), request)
 	if err != nil {
-		log.Error(err)
-		apiError.SendErrorResponse(g, http.StatusInternalServerError, "Failed to generate fin token", route, "")
+		h.sendRegistrationError(g, route, err)
 		return
 	}
 
-	record := fin.Record{
-		FinId:           finHandler.guid.New().String(),
-		FinTokenHash:    token.Hash(finToken),
-		DisplayName:     request.DisplayName,
-		ProtocolVersion: request.ProtocolVersion,
-		Capabilities:    request.Capabilities,
-		RegisteredAt:    time.Now(),
-		LastSeen:        time.Now(),
-	}
-
-	if err := finHandler.store.Create(g.Request.Context(), record); err != nil {
-		log.Error(err)
-		apiError.SendErrorResponse(g, http.StatusInternalServerError, "Failed to register fin", route, "")
-		return
-	}
-
-	log.Info("registered fin ", record.FinId, " (", record.DisplayName, ") with capabilities ", capabilityTypes(record.Capabilities))
-	g.JSON(http.StatusCreated, fin.RegisterResponse{FinId: record.FinId, FinToken: finToken, PollIntervalSeconds: finHandler.config.PollIntervalSeconds, LongPollTimeoutSeconds: finHandler.config.LongPollTimeoutSeconds, JobLeaseSeconds: finHandler.config.JobLeaseSeconds})
+	g.JSON(http.StatusCreated, fin.RegisterResponse{
+		FinId:                    finID,
+		FinToken:                 finToken,
+		PollIntervalSeconds:      h.config.PollIntervalSeconds,
+		LongPollTimeoutSeconds:   h.config.LongPollTimeoutSeconds,
+		JobLeaseSeconds:          h.config.JobLeaseSeconds,
+	})
 }
 
-func (finHandler *FinHandler) RequireFinToken(g *gin.Context) {
+func (h *FinHandler) RequireFinToken(g *gin.Context) {
 	const route = "fin bearer auth"
 	presentedToken, ok := bearerToken(g)
 	if !ok {
@@ -129,19 +84,25 @@ func (finHandler *FinHandler) RequireFinToken(g *gin.Context) {
 		return
 	}
 
-	record, err := finHandler.store.GetByTokenHash(g.Request.Context(), token.Hash(presentedToken))
-	if err != nil {
+	// Validate that the token is registered
+	if _, err := h.registry.ValidateToken(g.Request.Context(), presentedToken); err != nil {
 		apiError.SendErrorResponse(g, http.StatusUnauthorized, "Invalid or unknown fin token", route, "")
 		g.Abort()
 		return
 	}
 
-	g.Set(finContextKey, record)
+	// Store the token in context for handlers to use
+	g.Set(finContextKey, presentedToken)
 	g.Next()
 }
 
-func (finHandler *FinHandler) Poll(g *gin.Context) {
-	record := finHandler.currentFin(g)
+func (h *FinHandler) Poll(g *gin.Context) {
+	finToken, ok := h.getFinToken(g)
+	if !ok {
+		apiError.SendErrorResponse(g, http.StatusUnauthorized, "FIN token not found in context", "POST /fin/poll", "")
+		return
+	}
+
 	var request fin.PollRequest
 	if g.Request.ContentLength > 0 {
 		if err := g.ShouldBindJSON(&request); err != nil {
@@ -150,61 +111,65 @@ func (finHandler *FinHandler) Poll(g *gin.Context) {
 			return
 		}
 	}
-	if err := finHandler.store.Touch(g.Request.Context(), record.FinId, time.Now()); err != nil {
-		log.Warning("failed to update last-seen for fin ", record.FinId, ": ", err)
-	}
 
-	timeout := time.Duration(finHandler.config.LongPollTimeoutSeconds) * time.Second
-	if finHandler.config.LongPollTimeoutSeconds <= 0 {
-		timeout = 25 * time.Second
-	}
-	ctx, cancel := context.WithTimeout(g.Request.Context(), timeout)
-	defer cancel()
-
-	job, err := finHandler.queue.Claim(ctx, capabilityTypes(record.Capabilities), record.FinId)
+	job, err := h.workService.PollJob(g.Request.Context(), finToken, request)
 	if err != nil {
+		// Poll timeout or context cancellation -> return no content
 		g.Status(http.StatusNoContent)
 		return
 	}
-	g.JSON(http.StatusOK, fin.PollResponse{Job: job})
+
+	g.JSON(http.StatusOK, fin.PollResponse{Job: *job})
 }
 
-func (finHandler *FinHandler) SubmitResult(g *gin.Context) {
-	record := finHandler.currentFin(g)
+func (h *FinHandler) SubmitResult(g *gin.Context) {
+	finToken, ok := h.getFinToken(g)
+	if !ok {
+		apiError.SendErrorResponse(g, http.StatusUnauthorized, "FIN token not found in context", "PUT /fin/jobs/:job_id", "")
+		return
+	}
+
 	route := "PUT /fin/jobs/" + g.Param("job_id")
-	jobId, err := uuid.Parse(g.Param("job_id"))
+	jobID, err := uuid.Parse(g.Param("job_id"))
 	if err != nil {
 		apiError.SendErrorResponse(g, http.StatusBadRequest, "Failed to parse job ID", route, "")
 		return
 	}
+
 	var request fin.ResultRequest
 	if err := g.ShouldBindJSON(&request); err != nil {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusBadRequest, "Failed to parse job result", route, err.Error())
 		return
 	}
+
 	if request.State != fin.JobStateSuccess && request.State != fin.JobStateFailure {
 		apiError.SendErrorResponse(g, http.StatusBadRequest, "state must be \"success\" or \"failure\"", route, "")
 		return
 	}
-	if err := finHandler.queue.Submit(jobId, record.FinId, request.JobResult); err != nil {
-		finHandler.sendJobError(g, route, err)
+
+	if err := h.workService.SubmitJobResult(g.Request.Context(), finToken, jobID, request.JobResult); err != nil {
+		h.sendJobError(g, route, err)
 		return
 	}
-	if err := finHandler.store.Touch(g.Request.Context(), record.FinId, time.Now()); err != nil {
-		log.Warning("failed to update last-seen for fin ", record.FinId, ": ", err)
-	}
+
 	g.Status(http.StatusNoContent)
 }
 
-func (finHandler *FinHandler) StatusPing(g *gin.Context) {
-	record := finHandler.currentFin(g)
+func (h *FinHandler) StatusPing(g *gin.Context) {
+	finToken, ok := h.getFinToken(g)
+	if !ok {
+		apiError.SendErrorResponse(g, http.StatusUnauthorized, "FIN token not found in context", "PATCH /fin/jobs/:job_id/status", "")
+		return
+	}
+
 	route := "PATCH /fin/jobs/" + g.Param("job_id") + "/status"
-	jobId, err := uuid.Parse(g.Param("job_id"))
+	jobID, err := uuid.Parse(g.Param("job_id"))
 	if err != nil {
 		apiError.SendErrorResponse(g, http.StatusBadRequest, "Failed to parse job ID", route, "")
 		return
 	}
+
 	if g.Request.ContentLength > 0 {
 		var request fin.StatusPingRequest
 		if err := g.ShouldBindJSON(&request); err != nil {
@@ -213,55 +178,56 @@ func (finHandler *FinHandler) StatusPing(g *gin.Context) {
 			return
 		}
 	}
-	if err := finHandler.queue.ExtendLease(jobId, record.FinId, finHandler.config.JobLeaseSeconds); err != nil {
-		finHandler.sendJobError(g, route, err)
+
+	if err := h.workService.HeartbeatJob(g.Request.Context(), finToken, jobID); err != nil {
+		h.sendJobError(g, route, err)
 		return
 	}
-	if err := finHandler.store.Touch(g.Request.Context(), record.FinId, time.Now()); err != nil {
-		log.Warning("failed to update last-seen for fin ", record.FinId, ": ", err)
-	}
+
 	g.JSON(http.StatusOK, fin.StatusPingResponse{})
 }
 
-func (finHandler *FinHandler) Unregister(g *gin.Context) {
-	record := finHandler.currentFin(g)
+func (h *FinHandler) Unregister(g *gin.Context) {
+	finToken, ok := h.getFinToken(g)
+	if !ok {
+		apiError.SendErrorResponse(g, http.StatusUnauthorized, "FIN token not found in context", "DELETE /fin/", "")
+		return
+	}
+
 	route := "DELETE /fin/"
-	if err := finHandler.store.Delete(g.Request.Context(), record.FinId); err != nil {
+	if err := h.registry.UnregisterFin(g.Request.Context(), finToken); err != nil {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusNotFound, "Fin not found", route, "")
 		return
 	}
+
 	g.Status(http.StatusNoContent)
 }
 
-func (finHandler *FinHandler) List(g *gin.Context) {
-	records, err := finHandler.store.List(g.Request.Context())
+func (h *FinHandler) List(g *gin.Context) {
+	records, err := h.registry.ListFins(g.Request.Context())
 	if err != nil {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusInternalServerError, "Failed to list fins", "GET /fin/", "")
 		return
 	}
-	for i := range records {
-		records[i].Stale = finHandler.isStale(records[i])
-	}
 	g.JSON(http.StatusOK, fin.ListResponse{Fins: records})
 }
 
-func (finHandler *FinHandler) Get(g *gin.Context) {
-	finId := g.Param("fin_id")
-	record, err := finHandler.store.Get(g.Request.Context(), finId)
+func (h *FinHandler) Get(g *gin.Context) {
+	finID := g.Param("fin_id")
+	record, err := h.registry.GetFin(g.Request.Context(), finID)
 	if err != nil {
-		apiError.SendErrorResponse(g, http.StatusNotFound, "Fin not found", "GET /fin/"+finId, "")
+		apiError.SendErrorResponse(g, http.StatusNotFound, "Fin not found", "GET /fin/"+finID, "")
 		return
 	}
-	record.Stale = finHandler.isStale(record)
 	g.JSON(http.StatusOK, record)
 }
 
-func (finHandler *FinHandler) Delete(g *gin.Context) {
-	finId := g.Param("fin_id")
-	route := "DELETE /fin/" + finId
-	if err := finHandler.store.Delete(g.Request.Context(), finId); err != nil {
+func (h *FinHandler) Delete(g *gin.Context) {
+	finID := g.Param("fin_id")
+	route := "DELETE /fin/" + finID
+	if err := h.registry.DeleteFin(g.Request.Context(), finID); err != nil {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusNotFound, "Fin not found", route, "")
 		return
@@ -269,20 +235,47 @@ func (finHandler *FinHandler) Delete(g *gin.Context) {
 	g.Status(http.StatusNoContent)
 }
 
-func (finHandler *FinHandler) isStale(record fin.Record) bool {
-	return time.Since(record.LastSeen) > finHandler.config.StaleAfter
+// ============================================================================
+// Helper methods
+// ============================================================================
+
+func (h *FinHandler) getFinToken(g *gin.Context) (string, bool) {
+	value, ok := g.Get(finContextKey)
+	if !ok {
+		return "", false
+	}
+	token, ok := value.(string)
+	return token, ok
 }
 
-func (finHandler *FinHandler) currentFin(g *gin.Context) fin.Record {
-	value, _ := g.Get(finContextKey)
-	record, _ := value.(fin.Record)
-	return record
+func (h *FinHandler) sendRegistrationError(g *gin.Context, route string, err error) {
+	log.Warning(err)
+
+	var errRegistrationDisabled fin.ErrRegistrationDisabled
+	var errTokenInvalid fin.ErrRegistrationTokenInvalid
+	var errNoCapabilities fin.ErrNoCapabilities
+	var errCapabilityTypeEmpty fin.ErrCapabilityTypeEmpty
+
+	switch {
+	case errors.As(err, &errRegistrationDisabled):
+		apiError.SendErrorResponse(g, http.StatusServiceUnavailable, "Fin registration is not configured", route, "")
+	case errors.As(err, &errTokenInvalid):
+		apiError.SendErrorResponse(g, http.StatusForbidden, err.Error(), route, "")
+	case errors.As(err, &errNoCapabilities):
+		apiError.SendErrorResponse(g, http.StatusBadRequest, "At least one capability is required", route, "")
+	case errors.As(err, &errCapabilityTypeEmpty):
+		apiError.SendErrorResponse(g, http.StatusBadRequest, "Every capability requires a non-empty type", route, "")
+	default:
+		apiError.SendErrorResponse(g, http.StatusInternalServerError, "Failed to register fin", route, "")
+	}
 }
 
-func (finHandler *FinHandler) sendJobError(g *gin.Context, route string, err error) {
+func (h *FinHandler) sendJobError(g *gin.Context, route string, err error) {
 	log.Error(err)
+
 	var notFound fin.ErrJobNotFound
 	var notLeased fin.ErrJobNotLeasedToFin
+
 	switch {
 	case errors.As(err, &notFound):
 		apiError.SendErrorResponse(g, http.StatusNotFound, "Job not found", route, "")
@@ -304,12 +297,4 @@ func bearerToken(g *gin.Context) (string, bool) {
 		return "", false
 	}
 	return value, true
-}
-
-func capabilityTypes(capabilities []fin.Capability) []string {
-	types := make([]string, 0, len(capabilities))
-	for _, capability := range capabilities {
-		types = append(types, capability.Type)
-	}
-	return types
 }

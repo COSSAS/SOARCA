@@ -10,6 +10,7 @@ import (
 	"soarca/internal/logger"
 	appruntime "soarca/internal/runtime"
 	execservice "soarca/internal/services/execution"
+	finsvc "soarca/internal/services/fin"
 	"soarca/internal/storage"
 	"soarca/pkg/api"
 	finapi "soarca/pkg/api/fin"
@@ -39,6 +40,8 @@ import (
 	"github.com/COSSAS/gauth"
 	"github.com/gin-gonic/gin"
 )
+
+
 
 var log *logger.Log
 
@@ -125,8 +128,26 @@ func (s *Server) setupAuthMiddleware(engine *gin.Engine) error {
 	return nil
 }
 
-// newFinHandler creates and configures a FinHandler.
+// newFinHandler creates and configures a FinHandler with its services.
 func (s *Server) newFinHandler() *finapi.FinHandler {
+	finRegistry := finsvc.NewRegistry(
+		s.runtime.GetFinStore(),
+		finsvc.RegistryConfig{
+			RegistrationToken: s.config.Fin.RegistrationToken,
+			StaleAfter:        s.config.Fin.StaleAfter,
+		},
+		new(guid.Guid),
+	)
+
+	finWorkService := finsvc.NewWorkService(
+		s.runtime.GetFinStore(),
+		s.runtime.GetFinQueue(),
+		finsvc.WorkServiceConfig{
+			LongPollTimeoutSeconds: s.config.Fin.LongPollTimeoutSeconds,
+			JobLeaseSeconds:        s.config.Fin.JobLeaseSeconds,
+		},
+	)
+
 	cfg := finapi.Config{
 		RegistrationToken:      s.config.Fin.RegistrationToken,
 		PollIntervalSeconds:    s.config.Fin.PollIntervalSeconds,
@@ -134,13 +155,11 @@ func (s *Server) newFinHandler() *finapi.FinHandler {
 		JobLeaseSeconds:        s.config.Fin.JobLeaseSeconds,
 		StaleAfter:             s.config.Fin.StaleAfter,
 	}
-	return finapi.NewFinHandler(finapi.HandlerDependencies{
-		Store:  s.runtime.GetFinStore(),
-		Queue:  s.runtime.GetFinQueue(),
-		Config: cfg,
-		GUID:   new(guid.Guid),
-	})
+
+	return finapi.NewFinHandler(finRegistry, finWorkService, cfg)
 }
+
+
 
 // RunServer starts the HTTP server on the configured port.
 func (s *Server) RunServer(engine *gin.Engine) error {

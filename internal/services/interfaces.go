@@ -58,6 +58,10 @@ type FinRegistry interface {
 
 	// DeleteFin removes a FIN record (admin use).
 	DeleteFin(ctx context.Context, finID string) error
+
+	// ValidateToken checks if a token is valid and returns the FIN ID.
+	// Used by auth middleware to verify credentials.
+	ValidateToken(ctx context.Context, finToken string) (finID string, err error)
 }
 
 // FinWorkService manages leased FIN work items.

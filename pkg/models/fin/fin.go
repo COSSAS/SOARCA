@@ -200,3 +200,24 @@ func (e ErrOnlyStaleCapableFins) Error() string {
 		e.CapabilityType, e.StaleAfter, strings.Join(e.FinIds, ", "),
 	)
 }
+
+// ErrRegistrationDisabled indicates that FIN registration is disabled.
+type ErrRegistrationDisabled struct{}
+
+func (e ErrRegistrationDisabled) Error() string {
+	return "fin registration is not configured"
+}
+
+// ErrNoCapabilities indicates no capabilities were provided during registration.
+type ErrNoCapabilities struct{}
+
+func (e ErrNoCapabilities) Error() string {
+	return "at least one capability is required"
+}
+
+// ErrCapabilityTypeEmpty indicates a capability has an empty type.
+type ErrCapabilityTypeEmpty struct{}
+
+func (e ErrCapabilityTypeEmpty) Error() string {
+	return "every capability requires a non-empty type"
+}

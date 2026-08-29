@@ -9,10 +9,11 @@ import (
 	"testing"
 	"time"
 
+	finservice "soarca/internal/services/fin"
 	"soarca/internal/storage"
 	"soarca/internal/storage/memory"
 	"soarca/pkg/core/capability/fin/queue"
-	"soarca/pkg/models/fin"
+	finmodels "soarca/pkg/models/fin"
 	"soarca/test/unittest/mocks/mock_guid"
 
 	"github.com/gin-gonic/gin"
@@ -22,7 +23,7 @@ import (
 
 const registrationToken = "test-registration-token"
 
-func newTestHandler(t *testing.T) (*FinHandler, storage.FinStore, *queue.Queue) {
+func newTestHandler(t *testing.T) (*FinHandler, storage.FinStore, *queue.Queue, *mock_guid.Mock_Guid) {
 	t.Helper()
 	repo := memory.New().Fins()
 	jobQueue := queue.New()
@@ -32,19 +33,24 @@ func newTestHandler(t *testing.T) (*FinHandler, storage.FinStore, *queue.Queue) 
 	guidMock := new(mock_guid.Mock_Guid)
 	guidMock.On("New").Return(fixedId)
 
-	handler := NewFinHandler(HandlerDependencies{
-		Store: repo,
-		Queue: jobQueue,
-		Config: Config{
-			RegistrationToken:      registrationToken,
-			PollIntervalSeconds:    5,
-			LongPollTimeoutSeconds: 1,
-			JobLeaseSeconds:        60,
-			StaleAfter:             2 * time.Minute,
-		},
-		GUID: guidMock,
+	registry := finservice.NewRegistry(repo, finservice.RegistryConfig{
+		RegistrationToken: registrationToken,
+		StaleAfter:        2 * time.Minute,
+	}, guidMock)
+
+	workService := finservice.NewWorkService(repo, jobQueue, finservice.WorkServiceConfig{
+		LongPollTimeoutSeconds: 1,
+		JobLeaseSeconds:        60,
 	})
-	return handler, repo, jobQueue
+
+	handler := NewFinHandler(registry, workService, Config{
+		RegistrationToken:      registrationToken,
+		PollIntervalSeconds:    5,
+		LongPollTimeoutSeconds: 1,
+		JobLeaseSeconds:        60,
+		StaleAfter:             2 * time.Minute,
+	})
+	return handler, repo, jobQueue, guidMock
 }
 
 func newTestRouter(handler *FinHandler) *gin.Engine {
@@ -95,17 +101,17 @@ func doRequest(router *gin.Engine, method string, path string, body any, bearer 
 	return recorder
 }
 
-func registerTestFin(t *testing.T, router *gin.Engine, capabilityType string) fin.RegisterResponse {
+func registerTestFin(t *testing.T, router *gin.Engine, capabilityType string) finmodels.RegisterResponse {
 	t.Helper()
-	recorder := doRequest(router, http.MethodPost, "/fin/register", fin.RegisterRequest{
+	recorder := doRequest(router, http.MethodPost, "/fin/register", finmodels.RegisterRequest{
 		RegistrationToken: registrationToken,
 		DisplayName:       "Test Fin",
-		Capabilities:      []fin.Capability{{Type: capabilityType}},
+		Capabilities:      []finmodels.Capability{{Type: capabilityType}},
 	}, "")
 	if recorder.Code != http.StatusCreated {
 		t.Fatalf("expected 201, got %d: %s", recorder.Code, recorder.Body.String())
 	}
-	var response fin.RegisterResponse
+	var response finmodels.RegisterResponse
 	if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
 		t.Fatal(err)
 	}
@@ -113,7 +119,7 @@ func registerTestFin(t *testing.T, router *gin.Engine, capabilityType string) fi
 }
 
 func TestRegisterSucceeds(t *testing.T) {
-	handler, _, _ := newTestHandler(t)
+	handler, _, _, _ := newTestHandler(t)
 	router := newTestRouter(handler)
 
 	response := registerTestFin(t, router, "pong")
@@ -123,23 +129,23 @@ func TestRegisterSucceeds(t *testing.T) {
 }
 
 func TestRegisterFailsWithWrongToken(t *testing.T) {
-	handler, _, _ := newTestHandler(t)
+	handler, _, _, _ := newTestHandler(t)
 	router := newTestRouter(handler)
 
-	recorder := doRequest(router, http.MethodPost, "/fin/register", fin.RegisterRequest{
+	recorder := doRequest(router, http.MethodPost, "/fin/register", finmodels.RegisterRequest{
 		RegistrationToken: "wrong-token",
-		Capabilities:      []fin.Capability{{Type: "pong"}},
+		Capabilities:      []finmodels.Capability{{Type: "pong"}},
 	}, "")
 	assert.Equal(t, recorder.Code, http.StatusForbidden)
 }
 
 func TestRegisterFailsWithoutCapabilities(t *testing.T) {
-	handler, _, _ := newTestHandler(t)
+	handler, _, _, _ := newTestHandler(t)
 	router := newTestRouter(handler)
 
-	recorder := doRequest(router, http.MethodPost, "/fin/register", fin.RegisterRequest{
+	recorder := doRequest(router, http.MethodPost, "/fin/register", finmodels.RegisterRequest{
 		RegistrationToken: registrationToken,
-		Capabilities:      []fin.Capability{},
+		Capabilities:      []finmodels.Capability{},
 	}, "")
 	assert.Equal(t, recorder.Code, http.StatusBadRequest)
 }
@@ -149,23 +155,26 @@ func TestRegisterFailsWhenNotConfigured(t *testing.T) {
 	jobQueue := queue.New()
 	defer jobQueue.Close()
 	guidMock := new(mock_guid.Mock_Guid)
-	handler := NewFinHandler(HandlerDependencies{
-		Store:  repo,
-		Queue:  jobQueue,
-		Config: Config{},
-		GUID:   guidMock,
+	registry := finservice.NewRegistry(repo, finservice.RegistryConfig{
+		RegistrationToken: "",
+		StaleAfter:        2 * time.Minute,
+	}, guidMock)
+	workService := finservice.NewWorkService(repo, jobQueue, finservice.WorkServiceConfig{
+		LongPollTimeoutSeconds: 1,
+		JobLeaseSeconds:        60,
 	})
+	handler := NewFinHandler(registry, workService, Config{})
 	router := newTestRouter(handler)
 
-	recorder := doRequest(router, http.MethodPost, "/fin/register", fin.RegisterRequest{
+	recorder := doRequest(router, http.MethodPost, "/fin/register", finmodels.RegisterRequest{
 		RegistrationToken: "",
-		Capabilities:      []fin.Capability{{Type: "pong"}},
+		Capabilities:      []finmodels.Capability{{Type: "pong"}},
 	}, "")
 	assert.Equal(t, recorder.Code, http.StatusServiceUnavailable)
 }
 
 func TestPollRequiresFinToken(t *testing.T) {
-	handler, _, _ := newTestHandler(t)
+	handler, _, _, _ := newTestHandler(t)
 	router := newTestRouter(handler)
 
 	recorder := doRequest(router, http.MethodPost, "/fin/poll", nil, "")
@@ -176,7 +185,7 @@ func TestPollRequiresFinToken(t *testing.T) {
 }
 
 func TestPollReturnsNoContentWhenNoJobIsAvailable(t *testing.T) {
-	handler, _, _ := newTestHandler(t)
+	handler, _, _, _ := newTestHandler(t)
 	router := newTestRouter(handler)
 
 	registered := registerTestFin(t, router, "pong")
@@ -186,7 +195,7 @@ func TestPollReturnsNoContentWhenNoJobIsAvailable(t *testing.T) {
 }
 
 func TestPollReturnsEnqueuedJobAndUpdatesLastSeen(t *testing.T) {
-	handler, repo, jobQueue := newTestHandler(t)
+	handler, repo, jobQueue, _ := newTestHandler(t)
 	router := newTestRouter(handler)
 
 	registered := registerTestFin(t, router, "pong")
@@ -195,7 +204,7 @@ func TestPollReturnsEnqueuedJobAndUpdatesLastSeen(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	job := fin.Job{
+	job := finmodels.Job{
 		JobId:                 uuid.New(),
 		CapabilityType:        "pong",
 		LeaseExpiresInSeconds: 60,
@@ -208,7 +217,7 @@ func TestPollReturnsEnqueuedJobAndUpdatesLastSeen(t *testing.T) {
 	recorder := doRequest(router, http.MethodPost, "/fin/poll", nil, registered.FinToken)
 	assert.Equal(t, recorder.Code, http.StatusOK)
 
-	var response fin.PollResponse
+	var response finmodels.PollResponse
 	if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
 		t.Fatal(err)
 	}
@@ -224,21 +233,21 @@ func TestPollReturnsEnqueuedJobAndUpdatesLastSeen(t *testing.T) {
 
 	// Clean up: submit a result so the Enqueue goroutine doesn't leak past
 	// the test.
-	_ = jobQueue.Submit(job.JobId, registered.FinId, fin.JobResult{State: fin.JobStateSuccess})
+	_ = jobQueue.Submit(job.JobId, registered.FinId, finmodels.JobResult{State: finmodels.JobStateSuccess})
 }
 
 func TestSubmitResultRoundTrip(t *testing.T) {
-	handler, repo, jobQueue := newTestHandler(t)
+	handler, repo, jobQueue, _ := newTestHandler(t)
 	router := newTestRouter(handler)
 
 	registered := registerTestFin(t, router, "pong")
 
-	job := fin.Job{
+	job := finmodels.Job{
 		JobId:                 uuid.New(),
 		CapabilityType:        "pong",
 		LeaseExpiresInSeconds: 60,
 	}
-	resultCh := make(chan fin.JobResult, 1)
+	resultCh := make(chan finmodels.JobResult, 1)
 	go func() {
 		result, _ := jobQueue.Enqueue(context.Background(), job)
 		resultCh <- result
@@ -254,12 +263,12 @@ func TestSubmitResultRoundTrip(t *testing.T) {
 	time.Sleep(time.Millisecond)
 
 	recorder = doRequest(router, http.MethodPut, "/fin/jobs/"+job.JobId.String(),
-		fin.ResultRequest{JobResult: fin.JobResult{State: fin.JobStateSuccess}}, registered.FinToken)
+		finmodels.ResultRequest{JobResult: finmodels.JobResult{State: finmodels.JobStateSuccess}}, registered.FinToken)
 	assert.Equal(t, recorder.Code, http.StatusNoContent)
 
 	select {
 	case result := <-resultCh:
-		assert.Equal(t, result.State, fin.JobStateSuccess)
+		assert.Equal(t, result.State, finmodels.JobStateSuccess)
 	case <-time.After(time.Second):
 		t.Fatal("expected the enqueued job to receive its result")
 	}
@@ -275,47 +284,46 @@ func TestSubmitResultRoundTrip(t *testing.T) {
 }
 
 func TestSubmitResultFailsForUnknownJob(t *testing.T) {
-	handler, _, _ := newTestHandler(t)
+	handler, _, _, _ := newTestHandler(t)
 	router := newTestRouter(handler)
 
 	registered := registerTestFin(t, router, "pong")
 
 	recorder := doRequest(router, http.MethodPut, "/fin/jobs/"+uuid.New().String(),
-		fin.ResultRequest{JobResult: fin.JobResult{State: fin.JobStateSuccess}}, registered.FinToken)
+		finmodels.ResultRequest{JobResult: finmodels.JobResult{State: finmodels.JobStateSuccess}}, registered.FinToken)
 	assert.Equal(t, recorder.Code, http.StatusNotFound)
 }
 
 func TestSubmitResultFailsWhenLeasedToAnotherFin(t *testing.T) {
-	handler, _, jobQueue := newTestHandler(t)
+	handler, _, jobQueue, guidMock := newTestHandler(t)
 	router := newTestRouter(handler)
 
 	registeredA := registerTestFin(t, router, "pong")
 
 	// A second fin registered under the same capability type, to claim the
 	// job first without being the one submitting the result.
-	guidMock := handler.guid.(*mock_guid.Mock_Guid)
 	guidMock.ExpectedCalls = nil
 	guidMock.On("New").Return(uuid.MustParse("22222222-2222-2222-2222-222222222222"))
 	registeredB := registerTestFin(t, router, "pong")
 
-	job := fin.Job{JobId: uuid.New(), CapabilityType: "pong", LeaseExpiresInSeconds: 60}
+	job := finmodels.Job{JobId: uuid.New(), CapabilityType: "pong", LeaseExpiresInSeconds: 60}
 	go func() { _, _ = jobQueue.Enqueue(context.Background(), job) }()
 
 	recorder := doRequest(router, http.MethodPost, "/fin/poll", nil, registeredB.FinToken)
 	assert.Equal(t, recorder.Code, http.StatusOK)
 
 	recorder = doRequest(router, http.MethodPut, "/fin/jobs/"+job.JobId.String(),
-		fin.ResultRequest{JobResult: fin.JobResult{State: fin.JobStateSuccess}}, registeredA.FinToken)
+		finmodels.ResultRequest{JobResult: finmodels.JobResult{State: finmodels.JobStateSuccess}}, registeredA.FinToken)
 	assert.Equal(t, recorder.Code, http.StatusForbidden)
 }
 
 func TestStatusPingExtendsLease(t *testing.T) {
-	handler, repo, jobQueue := newTestHandler(t)
+	handler, repo, jobQueue, _ := newTestHandler(t)
 	router := newTestRouter(handler)
 
 	registered := registerTestFin(t, router, "pong")
 
-	job := fin.Job{JobId: uuid.New(), CapabilityType: "pong", LeaseExpiresInSeconds: 60}
+	job := finmodels.Job{JobId: uuid.New(), CapabilityType: "pong", LeaseExpiresInSeconds: 60}
 	go func() { _, _ = jobQueue.Enqueue(context.Background(), job) }()
 
 	recorder := doRequest(router, http.MethodPost, "/fin/poll", nil, registered.FinToken)
@@ -328,10 +336,10 @@ func TestStatusPingExtendsLease(t *testing.T) {
 	time.Sleep(time.Millisecond)
 
 	recorder = doRequest(router, http.MethodPatch, "/fin/jobs/"+job.JobId.String()+"/status",
-		fin.StatusPingRequest{Progress: "running"}, registered.FinToken)
+		finmodels.StatusPingRequest{Progress: "running"}, registered.FinToken)
 	assert.Equal(t, recorder.Code, http.StatusOK)
 
-	var response fin.StatusPingResponse
+	var response finmodels.StatusPingResponse
 	if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
 		t.Fatal(err)
 	}
@@ -346,11 +354,11 @@ func TestStatusPingExtendsLease(t *testing.T) {
 			lastSeenAfterPoll.LastSeen, afterPing.LastSeen)
 	}
 
-	_ = jobQueue.Submit(job.JobId, registered.FinId, fin.JobResult{State: fin.JobStateSuccess})
+	_ = jobQueue.Submit(job.JobId, registered.FinId, finmodels.JobResult{State: finmodels.JobStateSuccess})
 }
 
 func TestUnregisterOwnRegistrationSucceeds(t *testing.T) {
-	handler, repo, _ := newTestHandler(t)
+	handler, repo, _, _ := newTestHandler(t)
 	router := newTestRouter(handler)
 
 	registered := registerTestFin(t, router, "pong")
@@ -365,7 +373,7 @@ func TestUnregisterOwnRegistrationSucceeds(t *testing.T) {
 }
 
 func TestAdminDeleteRemovesAnyFinsRegistration(t *testing.T) {
-	handler, repo, _ := newTestHandler(t)
+	handler, repo, _, _ := newTestHandler(t)
 	router := newTestRouter(handler)
 
 	registered := registerTestFin(t, router, "pong")
@@ -381,14 +389,14 @@ func TestAdminDeleteRemovesAnyFinsRegistration(t *testing.T) {
 }
 
 func TestListAndGet(t *testing.T) {
-	handler, _, _ := newTestHandler(t)
+	handler, _, _, _ := newTestHandler(t)
 	router := newTestRouter(handler)
 
 	registered := registerTestFin(t, router, "pong")
 
 	recorder := doRequest(router, http.MethodGet, "/fin/", nil, "")
 	assert.Equal(t, recorder.Code, http.StatusOK)
-	var listResponse fin.ListResponse
+	var listResponse finmodels.ListResponse
 	if err := json.Unmarshal(recorder.Body.Bytes(), &listResponse); err != nil {
 		t.Fatal(err)
 	}
@@ -397,7 +405,7 @@ func TestListAndGet(t *testing.T) {
 
 	recorder = doRequest(router, http.MethodGet, "/fin/"+registered.FinId, nil, "")
 	assert.Equal(t, recorder.Code, http.StatusOK)
-	var record fin.Record
+	var record finmodels.Record
 	if err := json.Unmarshal(recorder.Body.Bytes(), &record); err != nil {
 		t.Fatal(err)
 	}
@@ -408,7 +416,7 @@ func TestListAndGet(t *testing.T) {
 }
 
 func TestListAndGetMarkFinStaleAfterThreshold(t *testing.T) {
-	handler, repo, _ := newTestHandler(t)
+	handler, repo, _, _ := newTestHandler(t)
 	handler.config.StaleAfter = time.Second
 	router := newTestRouter(handler)
 
@@ -419,7 +427,7 @@ func TestListAndGetMarkFinStaleAfterThreshold(t *testing.T) {
 
 	recorder := doRequest(router, http.MethodGet, "/fin/"+registered.FinId, nil, "")
 	assert.Equal(t, recorder.Code, http.StatusOK)
-	var record fin.Record
+	var record finmodels.Record
 	if err := json.Unmarshal(recorder.Body.Bytes(), &record); err != nil {
 		t.Fatal(err)
 	}
@@ -427,7 +435,7 @@ func TestListAndGetMarkFinStaleAfterThreshold(t *testing.T) {
 
 	recorder = doRequest(router, http.MethodGet, "/fin/", nil, "")
 	assert.Equal(t, recorder.Code, http.StatusOK)
-	var listResponse fin.ListResponse
+	var listResponse finmodels.ListResponse
 	if err := json.Unmarshal(recorder.Body.Bytes(), &listResponse); err != nil {
 		t.Fatal(err)
 	}
