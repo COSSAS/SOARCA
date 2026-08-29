@@ -3,13 +3,14 @@ package api
 import (
 	"reflect"
 	open_api "soarca/api"
+	"soarca/internal/bootstrap"
 	"soarca/internal/controller/database"
 	"soarca/internal/controller/informer"
 	"soarca/internal/logger"
 	"soarca/internal/services"
-	playbookservice "soarca/internal/services/playbook"
+	"soarca/internal/services/playbook"
+	"soarca/internal/services/reporter"
 	triggerservice "soarca/internal/services/trigger"
-	reporterservice "soarca/internal/services/reporter"
 	playbook_handler "soarca/pkg/api/playbook"
 	reporter_handler "soarca/pkg/api/reporter"
 	status_handler "soarca/pkg/api/status"
@@ -48,7 +49,26 @@ func Reporter(app *gin.Engine, informer informer.IExecutionInformer) error {
 	return nil
 }
 
+// ReporterWithService sets up reporter routes with an injected service (for use by bootstrap).
+func ReporterWithService(app *gin.Engine, reporterSvc services.ReporterService) error {
+	log.Trace("Setting up reporter routes")
+	reportHandler := reporter_handler.NewReportHandler(reporterSvc)
+	reportRoutes := app.Group("/reporter")
+	{
+		reportRoutes.GET("/", reportHandler.GetExecutions)
+		reportRoutes.GET("/:id", reportHandler.GetExecutionReport)
+	}
+	return nil
+}
+
 func Manual(app *gin.Engine, inbox services.ManualInbox) {
+	log.Trace("Setting up manual routes")
+	manualHandler := manual_handler.NewManualHandler(inbox)
+	ManualRoutes(app, manualHandler)
+}
+
+// ManualWithService sets up manual routes with an injected service (for use by bootstrap).
+func ManualWithService(app *gin.Engine, inbox services.ManualInbox) {
 	log.Trace("Setting up manual routes")
 	manualHandler := manual_handler.NewManualHandler(inbox)
 	ManualRoutes(app, manualHandler)
@@ -72,6 +92,15 @@ func Api(app *gin.Engine, executionRuntime services.ExecutionRuntime, database d
 	return nil
 }
 
+// ApiWithServices sets up API routes with injected services from bootstrap (for use by SetupServer).
+func ApiWithServices(app *gin.Engine, container *bootstrap.Container) error {
+	log.Trace("Setting up API routes with injected services")
+	triggerHandler := trigger_handler.NewTriggerHandler(container.TriggerService)
+	TriggerRoutes(app, triggerHandler)
+	StatusRoutes(app)
+	return nil
+}
+
 func Cors(app *gin.Engine, origins []string) {
 	config := cors.DefaultConfig()
 	config.AllowOrigins = origins
@@ -89,7 +118,7 @@ func swaggerRoutes(route *gin.Engine) {
 }
 
 func PlaybookRoutes(route *gin.Engine, controller database.IController) {
-	playbookHandler := playbook_handler.NewPlaybookHandler(playbookservice.New(controller.GetPlaybookStore()))
+	playbookHandler := playbook_handler.NewPlaybookHandler(playbook.New(controller.GetPlaybookStore()))
 	playbookRoutes := route.Group("/playbook")
 	{
 		playbookRoutes.GET("/", playbookHandler.GetAllPlaybooks)
@@ -102,7 +131,7 @@ func PlaybookRoutes(route *gin.Engine, controller database.IController) {
 }
 
 func ReporterRoutes(route *gin.Engine, informer informer.IExecutionInformer) {
-	reportHandler := reporter_handler.NewReportHandler(reporterservice.New(informer))
+	reportHandler := reporter_handler.NewReportHandler(reporter.New(informer))
 	reportRoutes := route.Group("/reporter")
 	{
 		reportRoutes.GET("/", reportHandler.GetExecutions)

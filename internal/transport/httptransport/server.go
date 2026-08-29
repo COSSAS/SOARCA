@@ -6,15 +6,12 @@ import (
 	"reflect"
 	"strings"
 
+	"soarca/internal/bootstrap"
 	"soarca/internal/config"
 	"soarca/internal/logger"
 	appruntime "soarca/internal/runtime"
-	execservice "soarca/internal/services/execution"
-	finsvc "soarca/internal/services/fin"
-	manualsvc "soarca/internal/services/manual"
 	"soarca/internal/storage"
 	"soarca/pkg/api"
-	finapi "soarca/pkg/api/fin"
 	"soarca/pkg/core/capability"
 	fincap "soarca/pkg/core/capability/fin"
 	httpcap "soarca/pkg/core/capability/http"
@@ -43,7 +40,6 @@ import (
 )
 
 
-
 var log *logger.Log
 
 type Empty struct{}
@@ -52,25 +48,23 @@ func init() {
 	log = logger.Logger(reflect.TypeOf(Empty{}).PkgPath(), logger.Info, "", logger.Json)
 }
 
-// Options contains only the configuration needed by the HTTP transport.
-type Options struct {
-	Server  config.ServerConfig
-	Fin     config.FinConfig
-	HTTP    config.HTTPConfig
-	Auth    config.AuthConfig
-	TheHive config.TheHiveConfig
-	CORS    config.CORSConfig
-}
-
 // Server owns the HTTP transport wiring for a runtime app.
 type Server struct {
-	runtime *appruntime.Runtime
-	config  Options
+	container *bootstrap.Container
 }
 
-// New creates a new HTTP server adapter for the given app runtime.
-func New(runtime *appruntime.Runtime, cfg Options) *Server {
-	return &Server{runtime: runtime, config: cfg}
+// New creates a new HTTP server adapter with a bootstrapped service container.
+func New(runtime *appruntime.Runtime, cfg config.Config) (*Server, error) {
+	server := &Server{}
+
+	// Bootstrap all services
+	container, err := bootstrap.New(runtime, cfg, server)
+	if err != nil {
+		return nil, fmt.Errorf("failed to bootstrap services: %w", err)
+	}
+
+	server.container = container
+	return server, nil
 }
 
 // SetupServer initializes the Gin engine with all routes and middleware.
@@ -81,19 +75,16 @@ func (s *Server) SetupServer() (*gin.Engine, error) {
 	log.Debug("Log level is debug")
 	log.Trace("Log level is trace")
 
-	origins := strings.Split(strings.ReplaceAll(s.config.CORS.AllowedOrigins, " ", ""), ",")
+	origins := strings.Split(strings.ReplaceAll(s.container.TransportOptions.CORS.AllowedOrigins, " ", ""), ",")
 	api.Cors(engine, origins)
 
-	finHandler := s.newFinHandler()
-	api.FinPublic(engine, finHandler)
+	api.FinPublic(engine, s.container.FinHandler)
 
 	if err := s.setupAuthMiddleware(engine); err != nil {
 		return nil, fmt.Errorf("failed to setup auth middleware: %w", err)
 	}
 
-	executionRuntime := execservice.New(s.runtime, s)
-
-	if err := api.Api(engine, executionRuntime, s); err != nil {
+	if err := api.ApiWithServices(engine, s.container); err != nil {
 		return nil, fmt.Errorf("failed to setup API routes: %w", err)
 	}
 
@@ -101,12 +92,12 @@ func (s *Server) SetupServer() (*gin.Engine, error) {
 		return nil, fmt.Errorf("failed to setup database routes: %w", err)
 	}
 
-	if err := api.Reporter(engine, s.runtime.GetCache()); err != nil {
+	if err := api.ReporterWithService(engine, s.container.ReporterService); err != nil {
 		return nil, fmt.Errorf("failed to setup reporter routes: %w", err)
 	}
 
-	api.Manual(engine, manualsvc.NewInbox(s.runtime.GetInteraction()))
-	api.FinAdmin(engine, finHandler)
+	api.ManualWithService(engine, s.container.ManualInbox)
+	api.FinAdmin(engine, s.container.FinHandler)
 	api.Logging(engine)
 	api.Swagger(engine)
 
@@ -115,7 +106,7 @@ func (s *Server) SetupServer() (*gin.Engine, error) {
 
 // setupAuthMiddleware configures authentication if enabled.
 func (s *Server) setupAuthMiddleware(engine *gin.Engine) error {
-	if !s.config.Auth.Enabled {
+	if !s.container.TransportOptions.Auth.Enabled {
 		return nil
 	}
 
@@ -129,51 +120,18 @@ func (s *Server) setupAuthMiddleware(engine *gin.Engine) error {
 	return nil
 }
 
-// newFinHandler creates and configures a FinHandler with its services.
-func (s *Server) newFinHandler() *finapi.FinHandler {
-	finRegistry := finsvc.NewRegistry(
-		s.runtime.GetFinStore(),
-		finsvc.RegistryConfig{
-			RegistrationToken: s.config.Fin.RegistrationToken,
-			StaleAfter:        s.config.Fin.StaleAfter,
-		},
-		new(guid.Guid),
-	)
-
-	finWorkService := finsvc.NewWorkService(
-		s.runtime.GetFinStore(),
-		s.runtime.GetFinQueue(),
-		finsvc.WorkServiceConfig{
-			LongPollTimeoutSeconds: s.config.Fin.LongPollTimeoutSeconds,
-			JobLeaseSeconds:        s.config.Fin.JobLeaseSeconds,
-		},
-	)
-
-	cfg := finapi.Config{
-		RegistrationToken:      s.config.Fin.RegistrationToken,
-		PollIntervalSeconds:    s.config.Fin.PollIntervalSeconds,
-		LongPollTimeoutSeconds: s.config.Fin.LongPollTimeoutSeconds,
-		JobLeaseSeconds:        s.config.Fin.JobLeaseSeconds,
-		StaleAfter:             s.config.Fin.StaleAfter,
-	}
-
-	return finapi.NewFinHandler(finRegistry, finWorkService, cfg)
-}
-
-
-
 // RunServer starts the HTTP server on the configured port.
 func (s *Server) RunServer(engine *gin.Engine) error {
-	if s.config.Server.EnableTLS {
-		if err := validateCertificates(s.config.Server.CertFile, s.config.Server.CertKey); err != nil {
+	if s.container.TransportOptions.Server.EnableTLS {
+		if err := validateCertificates(s.container.TransportOptions.Server.CertFile, s.container.TransportOptions.Server.CertKey); err != nil {
 			return err
 		}
-		log.Infof("Starting HTTPS server on port %s", s.config.Server.Port)
-		return engine.RunTLS(":"+s.config.Server.Port, s.config.Server.CertFile, s.config.Server.CertKey)
+		log.Infof("Starting HTTPS server on port %s", s.container.TransportOptions.Server.Port)
+		return engine.RunTLS(":"+s.container.TransportOptions.Server.Port, s.container.TransportOptions.Server.CertFile, s.container.TransportOptions.Server.CertKey)
 	}
 
-	log.Infof("Starting HTTP server on port %s", s.config.Server.Port)
-	return engine.Run(":" + s.config.Server.Port)
+	log.Infof("Starting HTTP server on port %s", s.container.TransportOptions.Server.Port)
+	return engine.Run(":" + s.container.TransportOptions.Server.Port)
 }
 
 // validateCertificates checks that TLS certificate files exist.
@@ -188,13 +146,13 @@ func validateCertificates(certFile, keyFile string) error {
 }
 
 // NewDecomposer creates a new decomposer with all capabilities and executors wired.
-// Implements decomposer_controller.IController.
+// Implements DecomposerFactory.
 func (s *Server) NewDecomposer() decomposer.IDecomposer {
 	sshCap := new(sshcap.SshCapability)
 	capabilities := map[string]capability.ICapability{sshCap.GetType(): sshCap}
 
 	httpUtil := new(httputil.HttpRequest)
-	httpUtil.SkipCertificateValidation(s.config.HTTP.SkipCertValidation)
+	httpUtil.SkipCertificateValidation(s.container.TransportOptions.HTTP.SkipCertValidation)
 	httpCap := httpcap.New(httpUtil)
 	capabilities[httpCap.GetType()] = httpCap
 
@@ -204,11 +162,11 @@ func (s *Server) NewDecomposer() decomposer.IDecomposer {
 	powershellCap := pscap.New()
 	capabilities[powershellCap.GetType()] = powershellCap
 
-	man := manualcap.New(s.runtime.GetInteraction())
+	man := manualcap.New(s.container.Runtime.GetInteraction())
 	capabilities[man.GetType()] = &man
 
 	report := reporter.New([]downstreamreport.IDownStreamReporter{})
-	downstreamReporters := []downstreamreport.IDownStreamReporter{s.runtime.GetCache()}
+	downstreamReporters := []downstreamreport.IDownStreamReporter{s.container.Runtime.GetCache()}
 
 	thehiveReporter, theHiveCaseManager := s.initializeTheHiveReporting()
 	if thehiveReporter != nil {
@@ -222,14 +180,14 @@ func (s *Server) NewDecomposer() decomposer.IDecomposer {
 	actionExec := actionexec.New(capabilities, report, soarcaTime, assignmentExt)
 
 	actionExec.SetFinFallback(fincap.New(fincap.Dependencies{
-		Queue:      s.runtime.GetFinQueue(),
+		Queue:      s.container.Runtime.GetFinQueue(),
 		GUID:       new(guid.Guid),
-		Store:      s.runtime.GetFinStore(),
+		Store:      s.container.Runtime.GetFinStore(),
 		Time:       soarcaTime,
-		StaleAfter: s.config.Fin.StaleAfter,
+		StaleAfter: s.container.TransportOptions.Fin.StaleAfter,
 	}))
 
-	pbExec := pbactionexec.New(s, s.runtime.GetPlaybookStore(), report, soarcaTime)
+	pbExec := pbactionexec.New(s, s.container.Runtime.GetPlaybookStore(), report, soarcaTime)
 	stixCmp := stixcmp.New()
 	condExec := condexec.New(stixCmp, report, soarcaTime)
 	guidGen := new(guid.Guid)
@@ -243,34 +201,34 @@ func (s *Server) NewDecomposer() decomposer.IDecomposer {
 }
 
 // GetPlaybookStore returns the playbook store.
-// Implements database.IController.
+// Implements DecomposerFactory.
 func (s *Server) GetPlaybookStore() storage.PlaybookStore {
-	return s.runtime.GetPlaybookStore()
+	return s.container.Runtime.GetPlaybookStore()
 }
 
 // initializeTheHiveReporting sets up The Hive integration if configured.
 func (s *Server) initializeTheHiveReporting() (downstreamreport.IDownStreamReporter, cases.ICasesManager) {
-	if !s.config.TheHive.Activate {
+	if !s.container.TransportOptions.TheHive.Activate {
 		return nil, nil
 	}
 
 	log.Info("Initializing The Hive reporting integration")
 
-	if len(s.config.TheHive.APIBaseURL) < 1 || len(s.config.TheHive.APIToken) < 1 {
+	if len(s.container.TransportOptions.TheHive.APIBaseURL) < 1 || len(s.container.TransportOptions.TheHive.APIToken) < 1 {
 		log.Warning("Could not initialize The Hive reporting integration. Check environment variables.")
 		return nil, nil
 	}
 
-	log.Infof("Creating The Hive connector with API base URL: %s", s.config.TheHive.APIBaseURL)
-	conn := thehiveconnector.NewConnector(s.config.TheHive.APIBaseURL, s.config.TheHive.APIToken, s.config.TheHive.AllowInsecure)
+	log.Infof("Creating The Hive connector with API base URL: %s", s.container.TransportOptions.TheHive.APIBaseURL)
+	conn := thehiveconnector.NewConnector(s.container.TransportOptions.TheHive.APIBaseURL, s.container.TransportOptions.TheHive.APIToken, s.container.TransportOptions.TheHive.AllowInsecure)
 
-	if s.config.TheHive.EnableCaseManager {
+	if s.container.TransportOptions.TheHive.EnableCaseManager {
 		log.Info("Enabling The Hive case manager")
 		caseMgr := thehivecases.NewCaseManager(conn)
 		return caseMgr, caseMgr
 	}
 
-	if s.config.TheHive.EnableReporter {
+	if s.container.TransportOptions.TheHive.EnableReporter {
 		log.Info("Enabling The Hive reporter")
 		rep := thehivereport.NewReporter(conn)
 		return rep, nil

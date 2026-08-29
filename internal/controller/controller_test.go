@@ -7,13 +7,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"soarca/internal/config"
 	appruntime "soarca/internal/runtime"
-	httptransport "soarca/internal/transport/httptransport"
 )
 
 type fakeTransport struct {
 	setupCalled bool
 	runCalled   bool
-	cfg         httptransport.Options
+	cfg         config.Config
 }
 
 func (f *fakeTransport) SetupServer() (*gin.Engine, error) {
@@ -52,7 +51,7 @@ func TestInitializeWiresRuntimeAndTransport(t *testing.T) {
 	}
 
 	var gotRuntimeOpts appruntime.Options
-	var gotTransportOpts httptransport.Options
+	var gotCfg config.Config
 	fake := &fakeTransport{}
 
 	loadConfig = func() (config.Config, error) {
@@ -62,8 +61,8 @@ func TestInitializeWiresRuntimeAndTransport(t *testing.T) {
 		gotRuntimeOpts = opts
 		return &appruntime.Runtime{}, nil
 	}
-	newTransport = func(runtime *appruntime.Runtime, opts httptransport.Options) transport {
-		gotTransportOpts = opts
+	newTransport = func(runtime *appruntime.Runtime, cfg config.Config) transport {
+		gotCfg = cfg
 		return fake
 	}
 
@@ -77,23 +76,23 @@ func TestInitializeWiresRuntimeAndTransport(t *testing.T) {
 	if gotRuntimeOpts.Cache != cfg.Cache {
 		t.Fatalf("runtime options cache mismatch: %#v", gotRuntimeOpts.Cache)
 	}
-	if gotTransportOpts.Server != cfg.Server {
-		t.Fatalf("transport options server mismatch: %#v", gotTransportOpts.Server)
+	if gotCfg.Server != cfg.Server {
+		t.Fatalf("config server mismatch: %#v", gotCfg.Server)
 	}
-	if gotTransportOpts.Fin != cfg.Fin {
-		t.Fatalf("transport options fin mismatch: %#v", gotTransportOpts.Fin)
+	if gotCfg.Fin != cfg.Fin {
+		t.Fatalf("config fin mismatch: %#v", gotCfg.Fin)
 	}
-	if gotTransportOpts.HTTP != cfg.HTTP {
-		t.Fatalf("transport options http mismatch: %#v", gotTransportOpts.HTTP)
+	if gotCfg.HTTP != cfg.HTTP {
+		t.Fatalf("config http mismatch: %#v", gotCfg.HTTP)
 	}
-	if gotTransportOpts.Auth != cfg.Auth {
-		t.Fatalf("transport options auth mismatch: %#v", gotTransportOpts.Auth)
+	if gotCfg.Auth != cfg.Auth {
+		t.Fatalf("config auth mismatch: %#v", gotCfg.Auth)
 	}
-	if gotTransportOpts.TheHive != cfg.TheHive {
-		t.Fatalf("transport options thehive mismatch: %#v", gotTransportOpts.TheHive)
+	if gotCfg.TheHive != cfg.TheHive {
+		t.Fatalf("config thehive mismatch: %#v", gotCfg.TheHive)
 	}
-	if gotTransportOpts.CORS != cfg.CORS {
-		t.Fatalf("transport options cors mismatch: %#v", gotTransportOpts.CORS)
+	if gotCfg.CORS != cfg.CORS {
+		t.Fatalf("config cors mismatch: %#v", gotCfg.CORS)
 	}
 	if !fake.setupCalled {
 		t.Fatal("expected SetupServer to be called")

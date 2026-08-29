@@ -48,7 +48,11 @@ func TestTransportBoundary(t *testing.T) {
 	}
 	defer runtime.Close()
 
-	server := httptransport.New(runtime, mockTransportOptions())
+	cfg := mockTransportConfig()
+	server, err := httptransport.New(runtime, cfg)
+	if err != nil {
+		t.Fatalf("Failed to create server: %v", err)
+	}
 
 	// Verify transport can call SetupServer successfully
 	engine, err := server.SetupServer()
@@ -85,26 +89,26 @@ func TestConfigBoundary(t *testing.T) {
 		t.Error("Runtime should have Cache config")
 	}
 
-	// Verify transport options include HTTP-specific config
-	transportOpts := mockTransportOptions()
+	// Verify transport config includes HTTP-specific config
+	transportCfg := mockTransportConfig()
 
 	// Transport should have server port
-	if transportOpts.Server.Port != "8080" {
+	if transportCfg.Server.Port != "8080" {
 		t.Error("Transport should have Server config with port")
 	}
 
 	// Transport should have FIN config
-	if transportOpts.Fin.RegistrationToken != "test-token" {
+	if transportCfg.Fin.RegistrationToken != "test-token" {
 		t.Error("Transport should have Fin config")
 	}
 
 	// Transport should have HTTP config
-	if transportOpts.HTTP.SkipCertValidation != false {
+	if transportCfg.HTTP.SkipCertValidation != false {
 		t.Error("Transport should have HTTP config")
 	}
 
 	// Transport should have Auth config
-	if transportOpts.Auth.Enabled != false {
+	if transportCfg.Auth.Enabled != false {
 		t.Error("Transport should have Auth config")
 	}
 }
@@ -124,8 +128,8 @@ func mockCacheConfig() config.CacheConfig {
 	}
 }
 
-func mockTransportOptions() httptransport.Options {
-	return httptransport.Options{
+func mockTransportConfig() config.Config {
+	return config.Config{
 		Server: config.ServerConfig{
 			Port:      "8080",
 			EnableTLS: false,
@@ -137,6 +141,8 @@ func mockTransportOptions() httptransport.Options {
 			JobLeaseSeconds:        60,
 			StaleAfter:             300,
 		},
+		Storage: mockStorageConfig(),
+		Cache:   mockCacheConfig(),
 		HTTP: config.HTTPConfig{
 			SkipCertValidation: false,
 		},

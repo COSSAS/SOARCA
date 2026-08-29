@@ -28,7 +28,7 @@ func testRuntime(t *testing.T) *appruntime.Runtime {
 }
 
 func TestSetupServerReturnsEngineWithAuthDisabled(t *testing.T) {
-	server := New(testRuntime(t), Options{
+	cfg := config.Config{
 		Server: config.ServerConfig{Port: "0"},
 		Fin:    config.FinConfig{},
 		HTTP:   config.HTTPConfig{},
@@ -37,7 +37,12 @@ func TestSetupServerReturnsEngineWithAuthDisabled(t *testing.T) {
 			Activate: false,
 		},
 		CORS: config.CORSConfig{AllowedOrigins: "*"},
-	})
+	}
+
+	server, err := New(testRuntime(t), cfg)
+	if err != nil {
+		t.Fatalf("New() returned error: %v", err)
+	}
 
 	engine, err := server.SetupServer()
 	if err != nil {
