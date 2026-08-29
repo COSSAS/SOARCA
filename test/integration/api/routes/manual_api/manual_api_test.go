@@ -65,11 +65,11 @@ func TestGetPendingCommandCalled(t *testing.T) {
 	}
 
 	testEmptyResponsePendingCommand := apiModel.InteractionCommandData{
-		Type:            "manual-command-info",
-		ExecutionId:     "00000000-0000-0000-0000-000000000000",
-		StepExecutionId: "00000000-0000-0000-0000-000000000000",
-		Commands:        []apiModel.ManualCommand{},
-		Targets:         []capability.ResolvedTarget{},
+		Type:      "manual-command-info",
+		RunId:     "00000000-0000-0000-0000-000000000000",
+		StepRunId: "00000000-0000-0000-0000-000000000000",
+		Commands:  []apiModel.ManualCommand{},
+		Targets:   []capability.ResolvedTarget{},
 	}
 	emptyCommandInfoList := manual.CommandInfo{}
 

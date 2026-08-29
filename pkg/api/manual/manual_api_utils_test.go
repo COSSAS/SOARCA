@@ -108,11 +108,11 @@ func TestParseCommandInfoToResponseIncludesAllCommandsAndTargets(t *testing.T) {
 	}
 
 	expectedInteractionCommand := api.InteractionCommandData{
-		Type:            "manual-command-info",
-		ExecutionId:     testExecId,
-		PlaybookId:      testPlaybookId,
-		StepId:          testStepId,
-		StepExecutionId: testStepExecId,
+		Type:       "manual-command-info",
+		RunId:      testExecId,
+		PlaybookId: testPlaybookId,
+		StepId:     testStepId,
+		StepRunId:  testStepExecId,
 		Commands: []api.ManualCommand{
 			{Description: "testing!", Command: "please do a test thanks", CommandIsBase64: false},
 			{Description: "testing again!", Command: "cGxlYXNlIGRvIGFub3RoZXIgdGVzdA==", CommandIsBase64: true},

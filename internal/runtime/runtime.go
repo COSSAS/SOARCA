@@ -6,8 +6,8 @@ import (
 	"reflect"
 
 	"soarca/internal/config"
-	"soarca/internal/executions"
-	"soarca/internal/executions/engine"
+	"soarca/internal/runs"
+	"soarca/internal/runs/engine"
 	"soarca/internal/logger"
 	"soarca/internal/services"
 	finsvc "soarca/internal/services/fin"
@@ -44,7 +44,7 @@ type Options struct {
 // never the Runtime itself.
 type Operations struct {
 	Playbooks  services.PlaybookService
-	Executions executions.Runner
+	Executions runs.Runner
 	Fins       services.FinRegistry
 	Work       services.FinWorkService
 	Manual     services.ManualInbox
@@ -60,7 +60,7 @@ type Runtime struct {
 	finQueue      *queue.Queue
 
 	// Application services
-	executions      executions.Runner
+	executions      runs.Runner
 	finRegistry     services.FinRegistry
 	finWorkService  services.FinWorkService
 	manualInbox     services.ManualInbox
@@ -117,7 +117,7 @@ func New(opts Options) (*Runtime, error) {
 		FinStaleAfter:      opts.Fin.StaleAfter,
 		TheHive:            opts.TheHive,
 	})
-	runtime.executions = executions.New(executionEngine, runtime.playbookStore, runtime.cache)
+	runtime.executions = runs.New(executionEngine, runtime.playbookStore, runtime.cache)
 
 	return runtime, nil
 }

@@ -7,12 +7,12 @@ import (
 
 const defaultRequestInterval int = 5
 
-func parseCachePlaybookEntry(cacheEntry cache_model.ExecutionEntry) (api_model.PlaybookExecutionReport, error) {
+func parseCachePlaybookEntry(cacheEntry cache_model.ExecutionEntry) (api_model.PlaybookRunReport, error) {
 	playbookStatus := api_model.CacheStatusEnum2String(cacheEntry.Status)
 
 	playbookStatusText, err := api_model.GetCacheStatusText(playbookStatus, api_model.ReportLevelPlaybook)
 	if err != nil {
-		return api_model.PlaybookExecutionReport{}, err
+		return api_model.PlaybookRunReport{}, err
 	}
 	if cacheEntry.Error != nil {
 		playbookStatusText = playbookStatusText + " - error: " + cacheEntry.Error.Error()
@@ -20,14 +20,14 @@ func parseCachePlaybookEntry(cacheEntry cache_model.ExecutionEntry) (api_model.P
 
 	stepResults, err := parseCacheStepEntries(cacheEntry.StepResults)
 	if err != nil {
-		return api_model.PlaybookExecutionReport{}, err
+		return api_model.PlaybookRunReport{}, err
 	}
 
-	executionReport := api_model.PlaybookExecutionReport{
-		Type:            "execution_status",
+	runReport := api_model.PlaybookRunReport{
+		Type:            "run_status",
 		Name:            cacheEntry.Name,
 		Description:     cacheEntry.Description,
-		ExecutionId:     cacheEntry.ExecutionId.String(),
+		RunId:           cacheEntry.ExecutionId.String(),
 		PlaybookId:      cacheEntry.PlaybookId,
 		Started:         cacheEntry.Started,
 		Ended:           cacheEntry.Ended,
@@ -36,28 +36,28 @@ func parseCachePlaybookEntry(cacheEntry cache_model.ExecutionEntry) (api_model.P
 		StepResults:     stepResults,
 		RequestInterval: defaultRequestInterval,
 	}
-	return executionReport, nil
+	return runReport, nil
 }
 
-func parseCacheStepEntries(cacheStepEntries map[string]cache_model.StepResult) (map[string]api_model.StepExecutionReport, error) {
-	parsedEntries := map[string]api_model.StepExecutionReport{}
-	for stepExecutionKey, stepEntry := range cacheStepEntries {
+func parseCacheStepEntries(cacheStepEntries map[string]cache_model.StepResult) (map[string]api_model.StepRunReport, error) {
+	parsedEntries := map[string]api_model.StepRunReport{}
+	for stepRunKey, stepEntry := range cacheStepEntries {
 
 		stepStatus := api_model.CacheStatusEnum2String(stepEntry.Status)
 
 		stepStatusText, err := api_model.GetCacheStatusText(stepStatus, api_model.ReportLevelStep)
 		if err != nil {
-			return map[string]api_model.StepExecutionReport{}, err
+			return map[string]api_model.StepRunReport{}, err
 		}
 
 		if stepEntry.Error != nil {
 			stepStatusText = stepStatusText + " - error: " + stepEntry.Error.Error()
 		}
 
-		parsedEntries[stepExecutionKey] = api_model.StepExecutionReport{
-			ExecutionId:        stepEntry.ExecutionId.String(),
+		parsedEntries[stepRunKey] = api_model.StepRunReport{
+			RunId:              stepEntry.ExecutionId.String(),
 			StepId:             stepEntry.StepId,
-			StepExecutionId:    stepEntry.StepExecutionId.String(),
+			StepRunId:          stepEntry.StepExecutionId.String(),
 			Name:               stepEntry.Name,
 			Description:        stepEntry.Description,
 			Started:            stepEntry.Started,

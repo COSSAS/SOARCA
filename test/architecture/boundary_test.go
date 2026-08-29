@@ -14,7 +14,7 @@ import (
 // corePackages are the orchestrator-side package trees.
 var corePackages = []string{
 	"soarca/internal/runtime/...",
-	"soarca/internal/executions/...",
+	"soarca/internal/runs/...",
 	"soarca/internal/services/...",
 	"soarca/internal/storage/...",
 }

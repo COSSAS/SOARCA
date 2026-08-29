@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 	"reflect"
-	"soarca/internal/executions"
+	"soarca/internal/runs"
 	"soarca/internal/logger"
 	apiError "soarca/pkg/api/error"
 	"soarca/pkg/models/api"
@@ -29,11 +29,11 @@ func init() {
 }
 
 type TriggerHandler struct {
-	executions executions.Runner
+	runs runs.Runner
 }
 
-func NewTriggerHandler(runner executions.Runner) *TriggerHandler {
-	return &TriggerHandler{executions: runner}
+func NewTriggerHandler(runner runs.Runner) *TriggerHandler {
+	return &TriggerHandler{runs: runner}
 }
 
 func (handler *TriggerHandler) ExecuteById(context *gin.Context) {
@@ -47,17 +47,17 @@ func (handler *TriggerHandler) ExecuteById(context *gin.Context) {
 			apiError.SendErrorResponse(context, http.StatusBadRequest, "Failed to decode request body", "POST /trigger/playbook/"+id, "")
 			return
 		}
-		variables, err = executions.DecodeVariables(jsonData)
+		variables, err = runs.DecodeVariables(jsonData)
 		if err != nil {
 			log.Error(err)
 			apiError.SendErrorResponse(context, http.StatusBadRequest, fmt.Sprintf("Cannot execute. reason: %s", err), "POST /trigger/playbook/"+id, "")
 			return
 		}
 	}
-	executionID, err := handler.executions.StartByID(context.Request.Context(), id, variables)
+	runID, err := handler.runs.StartByID(context.Request.Context(), id, variables)
 	if err != nil {
 		log.Error(err)
-		var validationErr executions.ValidationError
+		var validationErr runs.ValidationError
 		if errors.As(err, &validationErr) {
 			apiError.SendErrorResponse(context, http.StatusBadRequest, fmt.Sprintf("Cannot execute. reason: %s", validationErr.Error()), "POST /trigger/playbook/"+id, "")
 			return
@@ -65,9 +65,9 @@ func (handler *TriggerHandler) ExecuteById(context *gin.Context) {
 		apiError.SendErrorResponse(context, http.StatusRequestTimeout, err.Error(), "POST "+context.Request.URL.Path, "")
 		return
 	}
-	context.JSON(http.StatusOK, api.Execution{
-		ExecutionId: executionID,
-		PlaybookId:  id,
+	context.JSON(http.StatusOK, api.RunStarted{
+		RunId:      runID,
+		PlaybookId: id,
 	})
 }
 
@@ -90,10 +90,10 @@ func (handler *TriggerHandler) Execute(context *gin.Context) {
 		return
 	}
 
-	executionID, err := handler.executions.Start(context.Request.Context(), playbook, cacao.Variables{})
+	runID, err := handler.runs.Start(context.Request.Context(), playbook, cacao.Variables{})
 	if err != nil {
 		log.Error(err)
-		var validationErr executions.ValidationError
+		var validationErr runs.ValidationError
 		if errors.As(err, &validationErr) {
 			apiError.SendErrorResponse(context, http.StatusBadRequest, fmt.Sprintf("Cannot execute. reason: %s", validationErr.Error()), "POST /trigger/playbook", "")
 			return
@@ -105,8 +105,8 @@ func (handler *TriggerHandler) Execute(context *gin.Context) {
 		return
 	}
 	context.JSON(http.StatusOK,
-		api.Execution{
-			ExecutionId: executionID,
-			PlaybookId:  playbook.ID,
+		api.RunStarted{
+			RunId:      runID,
+			PlaybookId: playbook.ID,
 		})
 }

@@ -3,7 +3,7 @@ package api
 import (
 	"reflect"
 	open_api "soarca/api"
-	"soarca/internal/executions"
+	"soarca/internal/runs"
 	"soarca/internal/logger"
 	"soarca/internal/services"
 	fin_handler "soarca/pkg/api/fin"
@@ -31,7 +31,7 @@ func init() {
 // Handler constructors (for callers that inject services directly)
 // ============================================================================
 
-func NewTriggerHandler(runner executions.Runner) *trigger_handler.TriggerHandler {
+func NewTriggerHandler(runner runs.Runner) *trigger_handler.TriggerHandler {
 	return trigger_handler.NewTriggerHandler(runner)
 }
 
@@ -81,8 +81,8 @@ func ManualRoutes(route *gin.Engine, manualHandler *manual_handler.ManualHandler
 	manualRoutes := route.Group("/manual")
 	{
 		manualRoutes.GET("/", manualHandler.GetPendingCommands)
-		manualRoutes.GET(":exec_id/:step_execution_id", manualHandler.GetPendingCommand)
-		manualRoutes.PUT(":exec_id/:step_execution_id", manualHandler.PutContinue)
+		manualRoutes.GET(":run_id/:step_run_id", manualHandler.GetPendingCommand)
+		manualRoutes.PUT(":run_id/:step_run_id", manualHandler.PutContinue)
 	}
 }
 
@@ -102,7 +102,7 @@ func PlaybookRoutesWithService(route *gin.Engine, svc services.PlaybookService) 
 }
 
 // ReporterRoutesWithService registers reporter routes using an injected service.
-func ReporterRoutesWithService(route *gin.Engine, runner executions.Runner) {
+func ReporterRoutesWithService(route *gin.Engine, runner runs.Runner) {
 	log.Trace("Setting up reporter routes")
 	reportHandler := reporter_handler.NewReportHandler(runner)
 	reportRoutes := route.Group("/reporter")

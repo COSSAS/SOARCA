@@ -68,10 +68,10 @@ func (finCapability *Capability) Execute(metadata execution.Metadata, commandCon
 	timeout := leaseDuration(commandContext.Step.Timeout)
 	job := fin.Job{
 		JobId:                 finCapability.guid.New(),
-		ExecutionId:           metadata.ExecutionId,
+		RunId:                 metadata.ExecutionId,
 		PlaybookId:            metadata.PlaybookId,
 		StepId:                metadata.StepId,
-		StepExecutionId:       metadata.StepExecutionId,
+		StepRunId:             metadata.StepExecutionId,
 		CapabilityType:        commandContext.Agent.Type,
 		LeaseExpiresInSeconds: int(timeout.Seconds()),
 		Step:                  fin.StepInfo{Name: commandContext.Step.Name, Description: commandContext.Step.Description, Timeout: commandContext.Step.Timeout, Delay: commandContext.Step.Delay},

@@ -145,7 +145,7 @@ func TestFullFinProtocolFlow(t *testing.T) {
 		t.Fatal(err)
 	}
 	assert.Equal(t, pollResponse.Job.JobId, jobId)
-	assert.Equal(t, pollResponse.Job.ExecutionId, executionId)
+	assert.Equal(t, pollResponse.Job.RunId, executionId)
 	assert.Equal(t, pollResponse.Job.CapabilityType, "custom-ssh-fin")
 	assert.Equal(t, len(pollResponse.Job.Commands), 1)
 	assert.Equal(t, pollResponse.Job.Commands[0].Command, "sudo systemctl restart nginx")

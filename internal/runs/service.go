@@ -1,6 +1,6 @@
-// Package executions owns playbook execution: starting runs, and reading back
-// their recorded state.
-package executions
+// Package runs owns playbook runs: starting them, and reading back their
+// recorded state.
+package runs
 
 import (
 	"context"
@@ -17,29 +17,29 @@ import (
 	"soarca/pkg/models/cache"
 )
 
-// Runner is the execution use case surface offered to any driver
+// Runner is the run use case surface offered to any driver
 // (HTTP, gRPC, CLI, embedded SDK).
 type Runner interface {
-	// Start executes a playbook supplied by the caller.
-	Start(ctx context.Context, playbook *cacao.Playbook, variables cacao.Variables) (executionID uuid.UUID, err error)
+	// Start runs a playbook supplied by the caller.
+	Start(ctx context.Context, playbook *cacao.Playbook, variables cacao.Variables) (runID uuid.UUID, err error)
 
-	// StartByID executes a stored playbook.
-	StartByID(ctx context.Context, playbookID string, variables cacao.Variables) (executionID uuid.UUID, err error)
+	// StartByID runs a stored playbook.
+	StartByID(ctx context.Context, playbookID string, variables cacao.Variables) (runID uuid.UUID, err error)
 
-	// List returns all recorded execution summaries.
+	// List returns all recorded run summaries.
 	List(ctx context.Context) ([]cache.ExecutionEntry, error)
 
-	// Report returns the detailed report for a single execution.
-	Report(ctx context.Context, executionID uuid.UUID) (cache.ExecutionEntry, error)
+	// Report returns the detailed report for a single run.
+	Report(ctx context.Context, runID uuid.UUID) (cache.ExecutionEntry, error)
 }
 
-// Reports reads recorded execution state.
+// Reports reads recorded run state.
 type Reports interface {
 	GetExecutions() ([]cache.ExecutionEntry, error)
-	GetExecutionReport(executionID uuid.UUID) (cache.ExecutionEntry, error)
+	GetExecutionReport(runID uuid.UUID) (cache.ExecutionEntry, error)
 }
 
-// ValidationError marks a rejected execution request.
+// ValidationError marks a rejected run request.
 type ValidationError struct {
 	Err error
 }
@@ -67,7 +67,7 @@ func New(engine decomposer_controller.IController, playbooks storage.PlaybookSto
 	}
 }
 
-// StartByID loads a stored playbook, applies the supplied variables and starts execution.
+// StartByID loads a stored playbook, applies the supplied variables and starts a run.
 func (s *Service) StartByID(ctx context.Context, playbookID string, variables cacao.Variables) (uuid.UUID, error) {
 	playbook, err := s.playbooks.Get(ctx, playbookID)
 	if err != nil {
@@ -76,7 +76,7 @@ func (s *Service) StartByID(ctx context.Context, playbookID string, variables ca
 	return s.Start(ctx, &playbook, variables)
 }
 
-// Start applies the supplied variables to the playbook and starts execution.
+// Start applies the supplied variables to the playbook and starts a run.
 func (s *Service) Start(ctx context.Context, playbook *cacao.Playbook, variables cacao.Variables) (uuid.UUID, error) {
 	if err := mergeVariablesInPlaybook(playbook, variables); err != nil {
 		return uuid.Nil, ValidationError{Err: err}
@@ -95,16 +95,16 @@ func (s *Service) Start(ctx context.Context, playbook *cacao.Playbook, variables
 	}
 }
 
-// List returns all recorded execution summaries.
+// List returns all recorded run summaries.
 func (s *Service) List(ctx context.Context) ([]cache.ExecutionEntry, error) {
 	_ = ctx
 	return s.reports.GetExecutions()
 }
 
-// Report returns the detailed report for a single execution.
-func (s *Service) Report(ctx context.Context, executionID uuid.UUID) (cache.ExecutionEntry, error) {
+// Report returns the detailed report for a single run.
+func (s *Service) Report(ctx context.Context, runID uuid.UUID) (cache.ExecutionEntry, error) {
 	_ = ctx
-	return s.reports.GetExecutionReport(executionID)
+	return s.reports.GetExecutionReport(runID)
 }
 
 func mergeVariablesInPlaybook(playbook *cacao.Playbook, payloadVariables cacao.Variables) error {
@@ -132,7 +132,7 @@ func mergeVariablesInPlaybook(playbook *cacao.Playbook, payloadVariables cacao.V
 	return nil
 }
 
-// DecodeVariables decodes a JSON trigger payload into variables.
+// DecodeVariables decodes a JSON run payload into variables.
 func DecodeVariables(body []byte) (cacao.Variables, error) {
 	payloadVariables := cacao.NewVariables()
 	if err := json.Unmarshal(body, &payloadVariables); err != nil {

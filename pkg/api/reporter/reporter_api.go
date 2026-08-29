@@ -3,7 +3,7 @@ package reporter
 import (
 	"net/http"
 	"reflect"
-	execsvc "soarca/internal/executions"
+	execsvc "soarca/internal/runs"
 	"soarca/internal/logger"
 	"soarca/pkg/api/error"
 	"soarca/pkg/models/api"
@@ -38,7 +38,7 @@ func NewReportHandler(runner execsvc.Runner) *reportHandler {
 //	@Description	return all stored executions
 //	@Tags			reporter
 //	@Produce		json
-//	@success		200	{array}		api.PlaybookExecutionReport
+//	@success		200	{array}		api.PlaybookRunReport
 //	@failure		400	{object}	api.Error
 //	@Router			/reporter [GET]
 func (reportHandler *reportHandler) GetExecutions(g *gin.Context) {
@@ -49,7 +49,7 @@ func (reportHandler *reportHandler) GetExecutions(g *gin.Context) {
 		return
 	}
 
-	executionsParsed := []api.PlaybookExecutionReport{}
+	executionsParsed := []api.PlaybookRunReport{}
 	for _, executionEntry := range executions {
 		executionEntryParsed, err := parseCachePlaybookEntry(executionEntry)
 		if err != nil {
@@ -73,7 +73,7 @@ func (reportHandler *reportHandler) GetExecutions(g *gin.Context) {
 //	@Tags			reporter
 //	@Produce		json
 //	@Param			id	path		string	true	"execution identifier"
-//	@success		200	{object}	api.PlaybookExecutionReport
+//	@success		200	{object}	api.PlaybookRunReport
 //	@failure		400	{object}	api.Error
 //	@Router			/reporter/{id} [GET]
 func (handler *reportHandler) GetExecutionReport(g *gin.Context) {

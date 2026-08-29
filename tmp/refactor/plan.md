@@ -253,14 +253,36 @@ Still to do in 4a: move the remaining `test/integration/api/**` suites next to t
 they exercise, turn `test/unittest/mocks` into per-package mocks, and move playbook JSON
 fixtures into `testdata/` (which the go tool ignores by convention).
 
-#### 4b — package renames (PENDING SIGN-OFF)
+#### 4b — package renames (IN PROGRESS)
 
-`git mv` + import rewrites, one PR per slice. Zero behaviour change. Includes the
-`pkg/` → `internal/` split and the `pkg/soarca` embeddable entrypoint.
+Decision: option 2 — `run` everywhere including the wire. The FIN protocol is alpha, so
+breaking changes are acceptable and no compatibility shim is needed.
 
-Constraint: `execution_id` / `execution_status` appear in the HTTP API *and* in the FIN
-wire protocol, which the existing Python FIN package depends on. Go identifiers can be
-renamed freely; wire field names must not change.
+Done:
+
+- `internal/executions` → `internal/runs`; `executions.Runner` → `runs.Runner`.
+- Wire vocabulary renamed: `execution_id` → `run_id`, `step_execution_id` → `step_run_id`,
+  `"execution_status"` → `"run_status"`. Route params `/manual/:exec_id/:step_execution_id`
+  → `/manual/:run_id/:step_run_id`.
+- API models: `PlaybookExecutionReport` → `PlaybookRunReport`, `StepExecutionReport` →
+  `StepRunReport`, `api.Execution` → `api.RunStarted`.
+- `fin.Job.ExecutionId`/`StepExecutionId` → `RunId`/`StepRunId` (FIN protocol break).
+- Fixed the `json:"payload"` bug on the trigger response as part of the model rename;
+  it now correctly serialises as `playbook_id`.
+- Swagger regenerated: 0 occurrences of `execution_id`, 15 of `run_id`.
+
+Remaining:
+
+- `pkg/models/execution.Metadata` → run vocabulary (`RunId`, `StepRunId`). This is the
+  deep one: ~150 references across decomposer, cache, reporters and capabilities.
+- `Decomposer` → `WorkflowRunner`, `executors/` → `workflow/steps/`, drop `I` prefixes.
+- `internal/runtime` → `internal/orchestrator`, `internal/controller` → `internal/app`.
+- `internal/services/{fin,manual,playbook}` → `internal/fins/{registry,dispatch}`,
+  `internal/manual`, `internal/playbooks`; `internal/storage` → `internal/store`.
+- `pkg/` → `internal/` split and the `pkg/soarca` embeddable entrypoint.
+
+Constraint that no longer applies: wire compatibility. Kept for the record because the
+Python FIN package must be updated in lockstep with the `run_id`/`step_run_id` rename.
 
 ### Phase 5 — enforce (DONE, ahead of Phase 4)
 

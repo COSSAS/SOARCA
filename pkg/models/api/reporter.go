@@ -33,26 +33,26 @@ const (
 	AwaitUserInputText          = "waiting for users to provide input for the %s execution"
 )
 
-type PlaybookExecutionReport struct {
-	Name            string                         `bson:"name" json:"name"`
-	Description     string                         `bson:"description" json:"description"`
-	Type            string                         `bson:"type" json:"type"`
-	ExecutionId     string                         `bson:"execution_id" json:"execution_id"`
-	PlaybookId      string                         `bson:"playbook_id" json:"playbook_id"`
-	Started         time.Time                      `bson:"started" json:"started"`
-	Ended           time.Time                      `bson:"ended" json:"ended"`
-	Status          string                         `bson:"status" json:"status"`
-	StatusText      string                         `bson:"status_text" json:"status_text"`
-	StepResults     map[string]StepExecutionReport `bson:"step_results" json:"step_results"`
-	RequestInterval int                            `bson:"request_interval" json:"request_interval"`
+type PlaybookRunReport struct {
+	Name            string                   `bson:"name" json:"name"`
+	Description     string                   `bson:"description" json:"description"`
+	Type            string                   `bson:"type" json:"type"`
+	RunId           string                   `bson:"run_id" json:"run_id"`
+	PlaybookId      string                   `bson:"playbook_id" json:"playbook_id"`
+	Started         time.Time                `bson:"started" json:"started"`
+	Ended           time.Time                `bson:"ended" json:"ended"`
+	Status          string                   `bson:"status" json:"status"`
+	StatusText      string                   `bson:"status_text" json:"status_text"`
+	StepResults     map[string]StepRunReport `bson:"step_results" json:"step_results"`
+	RequestInterval int                      `bson:"request_interval" json:"request_interval"`
 }
 
-type StepExecutionReport struct {
+type StepRunReport struct {
 	Name               string                    `bson:"name" json:"name"`
 	Description        string                    `bson:"description" json:"description"`
-	ExecutionId        string                    `bson:"execution_id" json:"execution_id"`
+	RunId              string                    `bson:"run_id" json:"run_id"`
 	StepId             string                    `bson:"step_id" json:"step_id"`
-	StepExecutionId    string                    `bson:"step_execution_id" json:"step_execution_id"`
+	StepRunId          string                    `bson:"step_run_id" json:"step_run_id"`
 	Started            time.Time                 `bson:"started" json:"started"`
 	Ended              time.Time                 `bson:"ended" json:"ended"`
 	Status             string                    `bson:"status" json:"status"`

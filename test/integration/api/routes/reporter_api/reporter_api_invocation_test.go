@@ -11,7 +11,7 @@ import (
 	mock_cache "soarca/test/unittest/mocks/mock_cache"
 	"testing"
 
-	executionsservice "soarca/internal/executions"
+	runsservice "soarca/internal/runs"
 
 	"github.com/google/uuid"
 
@@ -27,7 +27,7 @@ func TestGetExecutionsInvocation(t *testing.T) {
 	gin.SetMode(gin.DebugMode)
 
 	recorder := httptest.NewRecorder()
-	api_routes.ReporterRoutesWithService(app, executionsservice.New(nil, nil, mock_cache_reporter))
+	api_routes.ReporterRoutesWithService(app, runsservice.New(nil, nil, mock_cache_reporter))
 
 	request, err := http.NewRequest("GET", "/reporter/", nil)
 	if err != nil {
@@ -48,7 +48,7 @@ func TestGetExecutionReportInvocation(t *testing.T) {
 	gin.SetMode(gin.DebugMode)
 
 	recorder := httptest.NewRecorder()
-	api_routes.ReporterRoutesWithService(app, executionsservice.New(nil, nil, mock_cache_reporter))
+	api_routes.ReporterRoutesWithService(app, runsservice.New(nil, nil, mock_cache_reporter))
 
 	executionId0, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
 
@@ -98,8 +98,8 @@ func TestGetExecutionReportInvocation(t *testing.T) {
 	app.ServeHTTP(recorder, request)
 
 	expectedResponse := `{
-		"type":"execution_status",
-		"execution_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
+		"type":"run_status",
+		"run_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
 		"playbook_id":"test",
 		"started":"2014-11-12T11:45:26.371Z",
 		"ended":"0001-01-01T00:00:00Z",
@@ -107,9 +107,9 @@ func TestGetExecutionReportInvocation(t *testing.T) {
 		"status_text":"this playbook is currently being executed",
 		"step_results":{
 		   "6ba7b810-9dad-11d1-80b4-00c04fd430c9":{
-			  "execution_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
+			  "run_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
 			  "step_id": "action--test",
-			  "step_execution_id": "6ba7b810-9dad-11d1-80b4-00c04fd430c9",
+			  "step_run_id": "6ba7b810-9dad-11d1-80b4-00c04fd430c9",
 			  "started": "2014-11-12T11:45:26.371Z",
 			  "ended": "2014-11-12T11:45:26.371Z",
 			  "status": "successfully_executed",
@@ -128,7 +128,7 @@ func TestGetExecutionReportInvocation(t *testing.T) {
 		},
 		"request_interval":5
 	}`
-	expectedResponseData := api_model.PlaybookExecutionReport{}
+	expectedResponseData := api_model.PlaybookRunReport{}
 	err = json.Unmarshal([]byte(expectedResponse), &expectedResponseData)
 	if err != nil {
 		t.Log(err)
@@ -136,7 +136,7 @@ func TestGetExecutionReportInvocation(t *testing.T) {
 		t.Fail()
 	}
 
-	receivedData := api_model.PlaybookExecutionReport{}
+	receivedData := api_model.PlaybookRunReport{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &receivedData)
 	if err != nil {
 		t.Log(err)

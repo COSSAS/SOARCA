@@ -75,28 +75,28 @@ func (manualHandler *ManualHandler) GetPendingCommands(g *gin.Context) {
 //	@Tags			manual
 //	@Accept			json
 //	@Produce		json
-//	@Param			exec_id				path		string	true	"execution ID"
-//	@Param			step_execution_id	path		string	true	"step execution ID (identifies a specific pending step invocation; see GET /manual/ to discover it, as multiple pending commands may share the same step ID)"
+//	@Param			run_id		path		string	true	"run ID"
+//	@Param			step_run_id	path		string	true	"step run ID (identifies a specific pending step invocation; see GET /manual/ to discover it, as multiple pending commands may share the same step ID)"
 //	@Success		200					{object}	api.InteractionCommandData
 //	@failure		400					{object}	api.Error
-//	@Router			/manual/{exec_id}/{step_execution_id} [GET]
+//	@Router			/manual/{run_id}/{step_run_id} [GET]
 func (manualHandler *ManualHandler) GetPendingCommand(g *gin.Context) {
-	execution_id := g.Param("exec_id")
-	step_execution_id := g.Param("step_execution_id")
-	execId, err := uuid.Parse(execution_id)
+	runIdParam := g.Param("run_id")
+	stepRunIdParam := g.Param("step_run_id")
+	execId, err := uuid.Parse(runIdParam)
 	if err != nil {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusBadRequest,
-			"Failed to parse execution ID",
-			"GET /manual/"+execution_id+"/"+step_execution_id, "")
+			"Failed to parse run ID",
+			"GET /manual/"+runIdParam+"/"+stepRunIdParam, "")
 		return
 	}
-	stepExecutionId, err := uuid.Parse(step_execution_id)
+	stepExecutionId, err := uuid.Parse(stepRunIdParam)
 	if err != nil {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusBadRequest,
-			"Failed to parse step execution ID",
-			"GET /manual/"+execution_id+"/"+step_execution_id, "")
+			"Failed to parse step run ID",
+			"GET /manual/"+runIdParam+"/"+stepRunIdParam, "")
 		return
 	}
 
@@ -109,7 +109,7 @@ func (manualHandler *ManualHandler) GetPendingCommand(g *gin.Context) {
 		}
 		apiError.SendErrorResponse(g, code,
 			"Failed to provide pending manual command",
-			"GET /manual/"+execution_id+"/"+step_execution_id, "")
+			"GET /manual/"+runIdParam+"/"+stepRunIdParam, "")
 		return
 	}
 
@@ -123,35 +123,35 @@ func (manualHandler *ManualHandler) GetPendingCommand(g *gin.Context) {
 //	@Summary	resolve a specific pending manual command by supplying its out args
 //	@Schemes
 //	@Description	resolve a specific pending manual command by supplying its out args. This is a PUT
-//	@Description	on the same resource GET /manual/{exec_id}/{step_execution_id} identifies, not a
+//	@Description	on the same resource GET /manual/{run_id}/{step_run_id} identifies, not a
 //	@Description	generic RPC-style action, so the ids live in the path, not the body.
 //	@Tags			manual
 //	@Accept			json
 //	@Produce		json
-//	@Param			exec_id				path		string							true	"execution ID"
-//	@Param			step_execution_id	path		string							true	"step execution ID (identifies a specific pending step invocation; see GET /manual/ to discover it, as multiple pending commands may share the same step ID)"
+//	@Param			run_id		path		string							true	"run ID"
+//	@Param			step_run_id	path		string							true	"step run ID (identifies a specific pending step invocation; see GET /manual/ to discover it, as multiple pending commands may share the same step ID)"
 //	@Param			data				body		api.ManualOutArgsUpdatePayload	true	"resolution"
-//	@Success		200					{object}	api.Execution
+//	@Success		200					{object}	api.RunStarted
 //	@failure		400					{object}	api.Error
-//	@Router			/manual/{exec_id}/{step_execution_id} [PUT]
+//	@Router			/manual/{run_id}/{step_run_id} [PUT]
 func (manualHandler *ManualHandler) PutContinue(g *gin.Context) {
-	execution_id := g.Param("exec_id")
-	step_execution_id := g.Param("step_execution_id")
-	route := "PUT /manual/" + execution_id + "/" + step_execution_id
+	runIdParam := g.Param("run_id")
+	stepRunIdParam := g.Param("step_run_id")
+	route := "PUT /manual/" + runIdParam + "/" + stepRunIdParam
 
-	execId, err := uuid.Parse(execution_id)
+	execId, err := uuid.Parse(runIdParam)
 	if err != nil {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusBadRequest,
-			"Failed to parse execution ID",
+			"Failed to parse run ID",
 			route, "")
 		return
 	}
-	stepExecutionId, err := uuid.Parse(step_execution_id)
+	stepExecutionId, err := uuid.Parse(stepRunIdParam)
 	if err != nil {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusBadRequest,
-			"Failed to parse step execution ID",
+			"Failed to parse step run ID",
 			route, "")
 		return
 	}
@@ -210,9 +210,9 @@ func (manualHandler *ManualHandler) PutContinue(g *gin.Context) {
 
 	g.JSON(
 		http.StatusOK,
-		api.Execution{
-			ExecutionId: execId,
-			PlaybookId:  pendingCommand.Metadata.PlaybookId,
+		api.RunStarted{
+			RunId:      execId,
+			PlaybookId: pendingCommand.Metadata.PlaybookId,
 		})
 }
 
@@ -276,14 +276,14 @@ func (manualHandler *ManualHandler) parseCommandInfoToResponse(commandInfo manua
 	}
 
 	response := api.InteractionCommandData{
-		Type:            "manual-command-info",
-		ExecutionId:     commandInfo.Metadata.ExecutionId.String(),
-		PlaybookId:      commandInfo.Metadata.PlaybookId,
-		StepId:          commandInfo.Metadata.StepId,
-		StepExecutionId: commandInfo.Metadata.StepExecutionId.String(),
-		Commands:        commands,
-		Targets:         targets,
-		OutVariables:    commandInfo.OutArgsVariables,
+		Type:         "manual-command-info",
+		RunId:        commandInfo.Metadata.ExecutionId.String(),
+		PlaybookId:   commandInfo.Metadata.PlaybookId,
+		StepId:       commandInfo.Metadata.StepId,
+		StepRunId:    commandInfo.Metadata.StepExecutionId.String(),
+		Commands:     commands,
+		Targets:      targets,
+		OutVariables: commandInfo.OutArgsVariables,
 	}
 
 	return response

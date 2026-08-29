@@ -13,7 +13,7 @@ import (
 	api_routes "soarca/pkg/api"
 	trigger_handler "soarca/pkg/api/trigger"
 
-	"soarca/internal/executions"
+	"soarca/internal/runs"
 	"soarca/pkg/core/decomposer"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/cache"
@@ -74,7 +74,7 @@ func close(file *os.File) {
 }
 
 func newTriggerHandler(executionID uuid.UUID, playbookStore *mock_playbook_database.MockPlaybook) *trigger_handler.TriggerHandler {
-	runner := executions.New(&testEngine{executionID: executionID}, playbookStore, &testReports{})
+	runner := runs.New(&testEngine{executionID: executionID}, playbookStore, &testReports{})
 	return trigger_handler.NewTriggerHandler(runner)
 }
 
@@ -105,7 +105,7 @@ func TestTriggerExecutionOfPlaybook(t *testing.T) {
 
 	app.ServeHTTP(recorder, request)
 	assert.Equal(t, http.StatusOK, recorder.Code)
-	assert.Equal(t, `{"execution_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c8","payload":"playbook--61a6c41e-6efc-4516-a242-dfbc5c89d562"}`, recorder.Body.String())
+	assert.Equal(t, `{"run_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c8","playbook_id":"playbook--61a6c41e-6efc-4516-a242-dfbc5c89d562"}`, recorder.Body.String())
 	_ = playbook
 }
 

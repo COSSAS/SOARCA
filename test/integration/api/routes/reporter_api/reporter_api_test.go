@@ -16,7 +16,7 @@ import (
 
 	api_routes "soarca/pkg/api"
 
-	executionsservice "soarca/internal/executions"
+	runsservice "soarca/internal/runs"
 
 	"github.com/google/uuid"
 
@@ -105,19 +105,19 @@ func TestGetExecutions(t *testing.T) {
 	expectedStatus := cache_model.Ongoing.String()
 	expectedStatusText, _ := api_model.GetCacheStatusText(expectedStatus, "playbook")
 
-	expectedExecutionsReport := []api_model.PlaybookExecutionReport{}
+	expectedExecutionsReport := []api_model.PlaybookRunReport{}
 	for _, executionId := range executionIds {
 		t.Log(executionId)
-		entry := api_model.PlaybookExecutionReport{
-			Type:            "execution_status",
-			ExecutionId:     executionId.String(),
+		entry := api_model.PlaybookRunReport{
+			Type:            "run_status",
+			RunId:           executionId.String(),
 			PlaybookId:      "test",
 			Name:            "ssh-test",
 			Started:         expectedStarted,
 			Ended:           expectedEnded,
 			Status:          expectedStatus,
 			StatusText:      expectedStatusText,
-			StepResults:     map[string]api_model.StepExecutionReport{},
+			StepResults:     map[string]api_model.StepRunReport{},
 			RequestInterval: 5,
 		}
 		expectedExecutionsReport = append(expectedExecutionsReport, entry)
@@ -141,7 +141,7 @@ func TestGetExecutions(t *testing.T) {
 	gin.SetMode(gin.DebugMode)
 
 	recorder := httptest.NewRecorder()
-	api_routes.ReporterRoutesWithService(app, executionsservice.New(nil, nil, cacheReporter))
+	api_routes.ReporterRoutesWithService(app, runsservice.New(nil, nil, cacheReporter))
 
 	request, err := http.NewRequest("GET", "/reporter/", nil)
 	if err != nil {
@@ -262,11 +262,11 @@ func TestGetExecutionReport(t *testing.T) {
 	gin.SetMode(gin.DebugMode)
 
 	recorder := httptest.NewRecorder()
-	api_routes.ReporterRoutesWithService(app, executionsservice.New(nil, nil, cacheReporter))
+	api_routes.ReporterRoutesWithService(app, runsservice.New(nil, nil, cacheReporter))
 
 	expected := `{
-		"type":"execution_status",
-		"execution_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
+		"type":"run_status",
+		"run_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
 		"playbook_id":"test",
 		"name":"ssh-test",
 		"started":"2014-11-12T11:45:26.371Z",
@@ -275,9 +275,9 @@ func TestGetExecutionReport(t *testing.T) {
 		"status_text":"this playbook is currently being executed",
 		"step_results":{
 		   "6ba7b810-9dad-11d1-80b4-00c04fd430c9":{
-			  "execution_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
+			  "run_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
 			  "step_id":"action--test",
-			  "step_execution_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c9",
+			  "step_run_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c9",
 			  "name":"ssh-tests",
 			  "started":"2014-11-12T11:45:26.371Z",
 			  "ended":"2014-11-12T11:45:26.371Z",
@@ -297,7 +297,7 @@ func TestGetExecutionReport(t *testing.T) {
 		},
 		"request_interval":5
 	}`
-	expectedData := api_model.PlaybookExecutionReport{}
+	expectedData := api_model.PlaybookRunReport{}
 	err = json.Unmarshal([]byte(expected), &expectedData)
 	if err != nil {
 		t.Log(err)
@@ -318,7 +318,7 @@ func TestGetExecutionReport(t *testing.T) {
 	}
 	app.ServeHTTP(recorder, request)
 
-	receivedData := api_model.PlaybookExecutionReport{}
+	receivedData := api_model.PlaybookRunReport{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &receivedData)
 	if err != nil {
 		t.Log(err)

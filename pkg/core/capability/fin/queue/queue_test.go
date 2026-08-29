@@ -15,9 +15,9 @@ import (
 func newJob(capabilityType string) fin.Job {
 	return fin.Job{
 		JobId:                 uuid.New(),
-		ExecutionId:           uuid.New(),
+		RunId:                 uuid.New(),
 		StepId:                "step--1",
-		StepExecutionId:       uuid.New(),
+		StepRunId:             uuid.New(),
 		CapabilityType:        capabilityType,
 		LeaseExpiresInSeconds: 60,
 	}

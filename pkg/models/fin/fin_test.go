@@ -102,10 +102,10 @@ func TestPollResponseJobJSONShape(t *testing.T) {
 
 	job := Job{
 		JobId:                 jobId,
-		ExecutionId:           executionId,
+		RunId:                 executionId,
 		PlaybookId:            "playbook--uuid",
 		StepId:                "action--uuid",
-		StepExecutionId:       stepExecutionId,
+		StepRunId:             stepExecutionId,
 		CapabilityType:        "ssh-executor",
 		LeaseExpiresInSeconds: 60,
 		Step: StepInfo{

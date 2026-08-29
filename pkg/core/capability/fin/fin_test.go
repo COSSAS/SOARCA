@@ -96,10 +96,10 @@ func TestExecuteEnqueuesJobRoutedByAgentTypeAndReturnsResultVariables(t *testing
 		Run(func(args mock.Arguments) {
 			job := args.Get(1).(fin.Job)
 			assert.Equal(t, job.JobId, jobId)
-			assert.Equal(t, job.ExecutionId, metadata.ExecutionId)
+			assert.Equal(t, job.RunId, metadata.ExecutionId)
 			assert.Equal(t, job.PlaybookId, metadata.PlaybookId)
 			assert.Equal(t, job.StepId, metadata.StepId)
-			assert.Equal(t, job.StepExecutionId, metadata.StepExecutionId)
+			assert.Equal(t, job.StepRunId, metadata.StepExecutionId)
 			// The job must be routed by the step's resolved agent.Type, not
 			// by any built-in capability name - this is the whole point of
 			// FinCapability being a dynamic-type fallback.

@@ -111,7 +111,7 @@ type PlaybookService interface {
 /*
 Dependency Flow (what depends on what):
 
-  executions.Runner (core kernel)
+  runs.Runner (core kernel)
     └─ owns: engine (decomposer factory), PlaybookStore, Cache
 
   FinRegistry (independent)

@@ -67,11 +67,11 @@ type Job struct {
 	// JobId identifies this specific poll-able unit of work (== the lease
 	// handle used for result submission and status pings).
 	JobId uuid.UUID `bson:"_id" json:"job_id"`
-	// StepExecutionId disambiguates repeated invocations of the same StepId.
-	ExecutionId     uuid.UUID `bson:"execution_id" json:"execution_id"`
-	PlaybookId      string    `bson:"playbook_id" json:"playbook_id"`
-	StepId          string    `bson:"step_id" json:"step_id"`
-	StepExecutionId uuid.UUID `bson:"step_execution_id" json:"step_execution_id"`
+	// StepRunId disambiguates repeated invocations of the same StepId.
+	RunId      uuid.UUID `bson:"run_id" json:"run_id"`
+	PlaybookId string    `bson:"playbook_id" json:"playbook_id"`
+	StepId     string    `bson:"step_id" json:"step_id"`
+	StepRunId  uuid.UUID `bson:"step_run_id" json:"step_run_id"`
 	// CapabilityType is the routing key this job was queued under — it
 	// matches Capability.Type of whichever Fin ultimately claims it.
 	CapabilityType string `bson:"capability_type" json:"capability_type"`
