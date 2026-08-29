@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	api_routes "soarca/pkg/api"
 	manual_api "soarca/pkg/api/manual"
+	"soarca/pkg/core/capability"
 	apiModel "soarca/pkg/models/api"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
@@ -67,6 +68,8 @@ func TestGetPendingCommandCalled(t *testing.T) {
 		Type:            "manual-command-info",
 		ExecutionId:     "00000000-0000-0000-0000-000000000000",
 		StepExecutionId: "00000000-0000-0000-0000-000000000000",
+		Commands:        []apiModel.ManualCommand{},
+		Targets:         []capability.ResolvedTarget{},
 	}
 	emptyCommandInfoList := manual.CommandInfo{}
 

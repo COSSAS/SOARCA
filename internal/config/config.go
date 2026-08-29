@@ -77,9 +77,9 @@ type CORSConfig struct {
 func Load() (Config, error) {
 	v := viper.New()
 
-	// Bind environment variables with automatic underscore replacement
+	// Bind environment variables. Viper's default replacer is a no-op, which
+	// keeps env keys exact; passing nil here would panic in getEnv.
 	v.AutomaticEnv()
-	v.SetEnvKeyReplacer(nil) // Keep exact keys
 
 	// Set defaults
 	v.SetDefault("PORT", "8080")

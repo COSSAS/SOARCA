@@ -3,18 +3,13 @@ package api
 import (
 	"reflect"
 	open_api "soarca/api"
-	"soarca/internal/controller/database"
-	"soarca/internal/controller/informer"
 	"soarca/internal/logger"
 	"soarca/internal/services"
-	"soarca/internal/services/playbook"
-	"soarca/internal/services/reporter"
-	triggerservice "soarca/internal/services/trigger"
+	fin_handler "soarca/pkg/api/fin"
+	manual_handler "soarca/pkg/api/manual"
 	playbook_handler "soarca/pkg/api/playbook"
 	reporter_handler "soarca/pkg/api/reporter"
 	status_handler "soarca/pkg/api/status"
-	manual_handler "soarca/pkg/api/manual"
-	fin_handler "soarca/pkg/api/fin"
 	trigger_handler "soarca/pkg/api/trigger"
 
 	"github.com/gin-contrib/cors"
@@ -147,52 +142,6 @@ func FinAdminRoutes(route *gin.Engine, finHandler *fin_handler.FinHandler) {
 		finRoutes.GET("/", finHandler.List)
 		finRoutes.GET(":fin_id", finHandler.Get)
 		finRoutes.DELETE(":fin_id", finHandler.Delete)
-	}
-}
-
-// ============================================================================
-// Legacy helpers — kept for tests that still use the old controller-based API
-// ============================================================================
-
-func Database(app *gin.Engine, controller database.IController) error {
-	log.Trace("Setting up playbook routes")
-	PlaybookRoutes(app, controller)
-	return nil
-}
-
-func Reporter(app *gin.Engine, inf informer.IExecutionInformer) error {
-	log.Trace("Setting up reporter routes")
-	ReporterRoutes(app, inf)
-	return nil
-}
-
-func Api(app *gin.Engine, executionRuntime services.ExecutionRuntime, db database.IController) error {
-	log.Trace("Setting up trigger routes")
-	triggerHandler := trigger_handler.NewTriggerHandler(triggerservice.New(executionRuntime, db.GetPlaybookStore()))
-	TriggerRoutes(app, triggerHandler)
-	StatusRoutes(app)
-	return nil
-}
-
-func PlaybookRoutes(route *gin.Engine, controller database.IController) {
-	playbookHandler := playbook_handler.NewPlaybookHandler(playbook.New(controller.GetPlaybookStore()))
-	playbookRoutes := route.Group("/playbook")
-	{
-		playbookRoutes.GET("/", playbookHandler.GetAllPlaybooks)
-		playbookRoutes.POST("/", playbookHandler.SubmitPlaybook)
-		playbookRoutes.GET("/meta/", playbookHandler.GetAllPlaybookMetas)
-		playbookRoutes.GET("/:id", playbookHandler.GetPlaybookByID)
-		playbookRoutes.PUT("/:id", playbookHandler.UpdatePlaybookByID)
-		playbookRoutes.DELETE("/:id", playbookHandler.DeleteByPlaybookID)
-	}
-}
-
-func ReporterRoutes(route *gin.Engine, inf informer.IExecutionInformer) {
-	reportHandler := reporter_handler.NewReportHandler(reporter.New(inf))
-	reportRoutes := route.Group("/reporter")
-	{
-		reportRoutes.GET("/", reportHandler.GetExecutions)
-		reportRoutes.GET("/:id", reportHandler.GetExecutionReport)
 	}
 }
 

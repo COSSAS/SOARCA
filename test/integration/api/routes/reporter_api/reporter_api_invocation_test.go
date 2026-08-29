@@ -11,6 +11,8 @@ import (
 	mock_cache "soarca/test/unittest/mocks/mock_cache"
 	"testing"
 
+	reporterservice "soarca/internal/services/reporter"
+
 	"github.com/google/uuid"
 
 	"github.com/gin-gonic/gin"
@@ -25,7 +27,7 @@ func TestGetExecutionsInvocation(t *testing.T) {
 	gin.SetMode(gin.DebugMode)
 
 	recorder := httptest.NewRecorder()
-	api_routes.ReporterRoutes(app, mock_cache_reporter)
+	api_routes.ReporterRoutesWithService(app, reporterservice.New(mock_cache_reporter))
 
 	request, err := http.NewRequest("GET", "/reporter/", nil)
 	if err != nil {
@@ -46,7 +48,7 @@ func TestGetExecutionReportInvocation(t *testing.T) {
 	gin.SetMode(gin.DebugMode)
 
 	recorder := httptest.NewRecorder()
-	api_routes.ReporterRoutes(app, mock_cache_reporter)
+	api_routes.ReporterRoutesWithService(app, reporterservice.New(mock_cache_reporter))
 
 	executionId0, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
 
@@ -56,9 +58,10 @@ func TestGetExecutionReportInvocation(t *testing.T) {
 		"Started":"2014-11-12T11:45:26.371Z",
 		"Ended":"0001-01-01T00:00:00Z",
 		"StepResults":{
-		   "action--test":{
+		   "6ba7b810-9dad-11d1-80b4-00c04fd430c9":{
 			  "ExecutionId":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
 			  "StepId":"action--test",
+			  "StepExecutionId":"6ba7b810-9dad-11d1-80b4-00c04fd430c9",
 			  "Started":"2014-11-12T11:45:26.371Z",
 			  "Ended":"2014-11-12T11:45:26.371Z",
 			  "Variables":{
@@ -103,9 +106,10 @@ func TestGetExecutionReportInvocation(t *testing.T) {
 		"status":"ongoing",
 		"status_text":"this playbook is currently being executed",
 		"step_results":{
-		   "action--test":{
+		   "6ba7b810-9dad-11d1-80b4-00c04fd430c9":{
 			  "execution_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
 			  "step_id": "action--test",
+			  "step_execution_id": "6ba7b810-9dad-11d1-80b4-00c04fd430c9",
 			  "started": "2014-11-12T11:45:26.371Z",
 			  "ended": "2014-11-12T11:45:26.371Z",
 			  "status": "successfully_executed",
