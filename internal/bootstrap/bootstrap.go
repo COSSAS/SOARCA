@@ -6,7 +6,6 @@ import (
 	"soarca/internal/config"
 	"soarca/internal/logger"
 	appruntime "soarca/internal/runtime"
-	execservice "soarca/internal/services/execution"
 	"soarca/pkg/api/fin"
 )
 
@@ -36,7 +35,7 @@ type Container struct {
 	TransportOptions TransportOptions
 }
 
-// New bootstraps the execution runtime and injects it into the app runtime.
+// New assembles the transport-facing container around an already-wired runtime.
 // HTTP handler construction belongs to the transport layer.
 func New(runtime *appruntime.Runtime, cfg config.Config) (*Container, error) {
 	c := &Container{
@@ -50,23 +49,6 @@ func New(runtime *appruntime.Runtime, cfg config.Config) (*Container, error) {
 			CORS:    cfg.CORS,
 		},
 	}
-
-	// WorkflowFactory owns all capability/executor/reporter wiring.
-	// It implements decomposer_controller.IController so ExecutionRuntime can call NewDecomposer().
-	wf := newWorkflowFactory(EngineDeps{
-		Interaction:   runtime.GetInteraction(),
-		Cache:         runtime.GetCache(),
-		FinQueue:      runtime.GetFinQueue(),
-		FinStore:      runtime.GetFinStore(),
-		PlaybookStore: runtime.GetPlaybookStore(),
-		Config:        cfg,
-	})
-
-	// Build ExecutionRuntime service
-	executionRuntime := execservice.New(wf, runtime.GetInteraction(), runtime.GetCache())
-
-	// Inject ExecutionRuntime into runtime (also constructs TriggerService there)
-	runtime.SetExecutionRuntime(executionRuntime)
 
 	return c, nil
 }

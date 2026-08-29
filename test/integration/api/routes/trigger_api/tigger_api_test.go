@@ -2,7 +2,6 @@ package trigger_test
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,10 +12,11 @@ import (
 
 	api_routes "soarca/pkg/api"
 	trigger_handler "soarca/pkg/api/trigger"
-	triggerservice "soarca/internal/services/trigger"
+
+	"soarca/internal/executions"
+	"soarca/pkg/core/decomposer"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/cache"
-	"soarca/pkg/models/manual"
 	mock_playbook_database "soarca/test/unittest/mocks/mock_playbook_database"
 
 	"github.com/gin-gonic/gin"
@@ -25,28 +25,45 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type testExecutionRuntime struct {
+// testDecomposer reports a fixed execution id instead of running a playbook.
+type testDecomposer struct {
 	executionID uuid.UUID
 }
 
-func (r *testExecutionRuntime) StartExecution(ctx context.Context, playbook *cacao.Playbook, variables cacao.Variables) (uuid.UUID, error) {
-	_ = ctx
-	_ = playbook
-	_ = variables
-	return r.executionID, nil
+func (d *testDecomposer) ExecuteAsync(playbook cacao.Playbook, detailsch chan decomposer.ExecutionDetails) {
+	if detailsch != nil {
+		detailsch <- decomposer.ExecutionDetails{
+			ExecutionId: d.executionID,
+			PlaybookId:  playbook.ID,
+			Variables:   playbook.PlaybookVariables,
+		}
+	}
 }
 
-func (r *testExecutionRuntime) ResumeManualStep(ctx context.Context, execID uuid.UUID, stepExecID uuid.UUID, response manual.InteractionResponse) error {
-	_ = ctx
-	_ = execID
-	_ = stepExecID
-	_ = response
-	return nil
+func (d *testDecomposer) Execute(playbook cacao.Playbook) (*decomposer.ExecutionDetails, error) {
+	return &decomposer.ExecutionDetails{
+		ExecutionId: d.executionID,
+		PlaybookId:  playbook.ID,
+		Variables:   playbook.PlaybookVariables,
+	}, nil
 }
 
-func (r *testExecutionRuntime) GetExecutionStatus(ctx context.Context, execID uuid.UUID) (cache.ExecutionEntry, error) {
-	_ = ctx
-	_ = execID
+type testEngine struct {
+	executionID uuid.UUID
+}
+
+func (e *testEngine) NewDecomposer() decomposer.IDecomposer {
+	return &testDecomposer{executionID: e.executionID}
+}
+
+type testReports struct{}
+
+func (r *testReports) GetExecutions() ([]cache.ExecutionEntry, error) {
+	return []cache.ExecutionEntry{}, nil
+}
+
+func (r *testReports) GetExecutionReport(executionID uuid.UUID) (cache.ExecutionEntry, error) {
+	_ = executionID
 	return cache.ExecutionEntry{}, nil
 }
 
@@ -57,7 +74,8 @@ func close(file *os.File) {
 }
 
 func newTriggerHandler(executionID uuid.UUID, playbookStore *mock_playbook_database.MockPlaybook) *trigger_handler.TriggerHandler {
-	return trigger_handler.NewTriggerHandler(triggerservice.New(&testExecutionRuntime{executionID: executionID}, playbookStore))
+	runner := executions.New(&testEngine{executionID: executionID}, playbookStore, &testReports{})
+	return trigger_handler.NewTriggerHandler(runner)
 }
 
 func TestTriggerExecutionOfPlaybook(t *testing.T) {

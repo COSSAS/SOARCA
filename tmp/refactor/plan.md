@@ -149,11 +149,52 @@ the only place that reads runtime getters, which is legitimate for a composition
 No service or engine holds `*Runtime` any more. It survives only in `bootstrap.New`,
 `controller.go`, `httptransport.New` and tests — all removed in Phase 3.
 
-### Phase 2 — collapse the fake cycle
+### Phase 2 — collapse the fake cycle (DONE)
 
-Merge trigger/execution/reporter into `internal/executions`. Delete
-`SetExecutionRuntime`, `runtime.triggerService = nil`, `controller/informer`.
-Construction becomes a straight top-down sequence with no setters.
+Merged `trigger` + `execution` + `reporter` into `internal/executions`, exposing one
+interface:
+
+```go
+type Runner interface {
+	Start(ctx, playbook, variables) (uuid.UUID, error)
+	StartByID(ctx, playbookID, variables) (uuid.UUID, error)
+	List(ctx) ([]cache.ExecutionEntry, error)
+	Report(ctx, executionID) (cache.ExecutionEntry, error)
+}
+```
+
+The engine moved to `internal/executions/engine` — required, not cosmetic: `bootstrap`
+imports `runtime`, so `runtime` could not import the factory while it lived in
+`bootstrap`. With the engine outside, `Runtime` now constructs strictly top-down:
+
+```
+storage -> cache/interaction/queue -> engine.New(deps) -> executions.New(engine, store, cache)
+```
+
+Deleted: `SetExecutionRuntime`, `runtime.triggerService = nil`, `GetExecutionRuntime`,
+`GetTriggerService`, `GetReporterService`, `internal/services/{execution,trigger,reporter}`,
+`internal/controller/informer`, `internal/bootstrap/workflow_factory.go`, and the
+`ExecutionRuntime` / `TriggerService` / `ReporterService` interfaces.
+
+`bootstrap.New` no longer constructs anything; it only builds `TransportOptions`.
+Phase 3 deletes it entirely.
+
+Dead code removed in the process (no production callers, found by usage audit):
+
+- `ExecutionRuntime.ResumeManualStep` — duplicated `ManualInbox.ContinuePendingCommand`;
+  both ended at `interaction.PostContinue`. The manual handler only ever used the inbox.
+- `ExecutionRuntime.GetExecutionStatus` — duplicated `ReporterService.GetExecutionReport`.
+
+Also fixed here (were listed as known defects):
+
+- the discarded `variables` argument — `Start` now applies the variables it is given
+  instead of `_ = variables`
+- the dead channel-filter loop over a buffered size-1 channel written by exactly one
+  decomposer — replaced with a plain select
+
+Note: `runtime.Options` gained `HTTP` and `TheHive`, and `controller.Initialize` now
+passes them. Without that, `SkipCertValidation` and the whole TheHive integration would
+have silently stopped being configured.
 
 ### Phase 3 — install the boundary
 
@@ -185,12 +226,10 @@ mapping. Notably `cacao.Playbook.ID` is `bson:"_id" json:"id"` today.
 - [x] `config.Load()` panicked: `v.SetEnvKeyReplacer(nil)` overwrote viper's default
       replacer, so `getEnv` nil-dereferenced. Viper's default is already a no-op.
       **Production bug**, fixed in Phase 0.
-- [ ] `execution.Service.StartExecution` does `_ = variables`, silently discarding the
-      argument. Harmless today only because `trigger.Service` pre-merges into
-      `playbook.PlaybookVariables` and passes `cacao.Variables{}`. Remove or honour it.
-- [ ] Same function loops on `details.PlaybookId != playbook.ID` over a buffered
-      size-1 channel written by exactly one decomposer. Dead logic from a shared-channel
-      design.
+- [x] `execution.Service.StartExecution` did `_ = variables`, silently discarding the
+      argument. Fixed in Phase 2.
+- [x] Same function looped on `details.PlaybookId != playbook.ID` over a buffered
+      size-1 channel written by exactly one decomposer. Dead logic, removed in Phase 2.
 - [ ] `pkg/models/api.Execution.PlaybookId` is tagged `json:"payload"` — wrong wire name.
 - [ ] `fin.Record` is simultaneously persistence type (`bson:"_id"`), admin wire type
       (`ListFins` returns it straight to a handler) and secret holder (`FinTokenHash`),

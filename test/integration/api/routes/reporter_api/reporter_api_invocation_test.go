@@ -11,7 +11,7 @@ import (
 	mock_cache "soarca/test/unittest/mocks/mock_cache"
 	"testing"
 
-	reporterservice "soarca/internal/services/reporter"
+	executionsservice "soarca/internal/executions"
 
 	"github.com/google/uuid"
 
@@ -27,7 +27,7 @@ func TestGetExecutionsInvocation(t *testing.T) {
 	gin.SetMode(gin.DebugMode)
 
 	recorder := httptest.NewRecorder()
-	api_routes.ReporterRoutesWithService(app, reporterservice.New(mock_cache_reporter))
+	api_routes.ReporterRoutesWithService(app, executionsservice.New(nil, nil, mock_cache_reporter))
 
 	request, err := http.NewRequest("GET", "/reporter/", nil)
 	if err != nil {
@@ -48,7 +48,7 @@ func TestGetExecutionReportInvocation(t *testing.T) {
 	gin.SetMode(gin.DebugMode)
 
 	recorder := httptest.NewRecorder()
-	api_routes.ReporterRoutesWithService(app, reporterservice.New(mock_cache_reporter))
+	api_routes.ReporterRoutesWithService(app, executionsservice.New(nil, nil, mock_cache_reporter))
 
 	executionId0, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
 

@@ -3,6 +3,7 @@ package api
 import (
 	"reflect"
 	open_api "soarca/api"
+	"soarca/internal/executions"
 	"soarca/internal/logger"
 	"soarca/internal/services"
 	fin_handler "soarca/pkg/api/fin"
@@ -30,8 +31,8 @@ func init() {
 // Handler constructors (for callers that inject services directly)
 // ============================================================================
 
-func NewTriggerHandler(svc services.TriggerService) *trigger_handler.TriggerHandler {
-	return trigger_handler.NewTriggerHandler(svc)
+func NewTriggerHandler(runner executions.Runner) *trigger_handler.TriggerHandler {
+	return trigger_handler.NewTriggerHandler(runner)
 }
 
 func NewManualHandler(inbox services.ManualInbox) *manual_handler.ManualHandler {
@@ -101,9 +102,9 @@ func PlaybookRoutesWithService(route *gin.Engine, svc services.PlaybookService) 
 }
 
 // ReporterRoutesWithService registers reporter routes using an injected service.
-func ReporterRoutesWithService(route *gin.Engine, svc services.ReporterService) {
+func ReporterRoutesWithService(route *gin.Engine, runner executions.Runner) {
 	log.Trace("Setting up reporter routes")
-	reportHandler := reporter_handler.NewReportHandler(svc)
+	reportHandler := reporter_handler.NewReportHandler(runner)
 	reportRoutes := route.Group("/reporter")
 	{
 		reportRoutes.GET("/", reportHandler.GetExecutions)

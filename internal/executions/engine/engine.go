@@ -1,7 +1,10 @@
-package bootstrap
+// Package engine builds the per-execution decomposer and owns all capability,
+// executor and reporter wiring.
+package engine
 
 import (
 	"reflect"
+	"time"
 
 	"soarca/internal/config"
 	"soarca/internal/logger"
@@ -32,44 +35,43 @@ import (
 	timeutil "soarca/pkg/utils/time"
 )
 
-var wflog *logger.Log
+var log *logger.Log
 
-type wfEmpty struct{}
+type empty struct{}
 
 func init() {
-	wflog = logger.Logger(reflect.TypeOf(wfEmpty{}).PkgPath(), logger.Info, "", logger.Json)
+	log = logger.Logger(reflect.TypeOf(empty{}).PkgPath(), logger.Info, "", logger.Json)
 }
 
-// EngineDeps are the collaborators a decomposer needs. They are passed
-// explicitly so the engine never depends on the runtime container.
-type EngineDeps struct {
-	Interaction   interaction.ICapabilityInteraction
-	Cache         downstreamreport.IDownStreamReporter
-	FinQueue      *queue.Queue
-	FinStore      storage.FinStore
-	PlaybookStore storage.PlaybookStore
-	Config        config.Config
+// Deps are the collaborators a decomposer needs, passed explicitly so the
+// engine never depends on the runtime container.
+type Deps struct {
+	Interaction        interaction.ICapabilityInteraction
+	Cache              downstreamreport.IDownStreamReporter
+	FinQueue           *queue.Queue
+	FinStore           storage.FinStore
+	PlaybookStore      storage.PlaybookStore
+	SkipCertValidation bool
+	FinStaleAfter      time.Duration
+	TheHive            config.TheHiveConfig
 }
 
-// WorkflowFactory creates decomposers for playbook execution.
-// It owns all capability wiring (SSH, HTTP, OpenC2, PowerShell, Manual, FIN),
-// the reporter chain, and optional TheHive integration.
-type WorkflowFactory struct {
-	deps EngineDeps
+// Factory creates a decomposer per playbook execution.
+type Factory struct {
+	deps Deps
 }
 
-func newWorkflowFactory(deps EngineDeps) *WorkflowFactory {
-	return &WorkflowFactory{deps: deps}
+func New(deps Deps) *Factory {
+	return &Factory{deps: deps}
 }
 
-// NewDecomposer implements decomposer_controller.IController.
-// Called by the execution runtime once per playbook execution.
-func (f *WorkflowFactory) NewDecomposer() decomposer.IDecomposer {
+// NewDecomposer builds a decomposer for a single playbook execution.
+func (f *Factory) NewDecomposer() decomposer.IDecomposer {
 	sshCap := new(sshcap.SshCapability)
 	capabilities := map[string]capability.ICapability{sshCap.GetType(): sshCap}
 
 	httpUtil := new(httputil.HttpRequest)
-	httpUtil.SkipCertificateValidation(f.deps.Config.HTTP.SkipCertValidation)
+	httpUtil.SkipCertificateValidation(f.deps.SkipCertValidation)
 	httpCap := httpcap.New(httpUtil)
 	capabilities[httpCap.GetType()] = httpCap
 
@@ -101,7 +103,7 @@ func (f *WorkflowFactory) NewDecomposer() decomposer.IDecomposer {
 		GUID:       new(guid.Guid),
 		Store:      f.deps.FinStore,
 		Time:       soarcaTime,
-		StaleAfter: f.deps.Config.Fin.StaleAfter,
+		StaleAfter: f.deps.FinStaleAfter,
 	}))
 
 	pbExec := pbactionexec.New(f, f.deps.PlaybookStore, report, soarcaTime)
@@ -118,30 +120,30 @@ func (f *WorkflowFactory) NewDecomposer() decomposer.IDecomposer {
 }
 
 // initializeTheHiveReporting sets up The Hive integration if configured.
-func (f *WorkflowFactory) initializeTheHiveReporting() (downstreamreport.IDownStreamReporter, cases.ICasesManager) {
-	cfg := f.deps.Config
-	if !cfg.TheHive.Activate {
+func (f *Factory) initializeTheHiveReporting() (downstreamreport.IDownStreamReporter, cases.ICasesManager) {
+	cfg := f.deps.TheHive
+	if !cfg.Activate {
 		return nil, nil
 	}
 
-	wflog.Info("Initializing The Hive reporting integration")
+	log.Info("Initializing The Hive reporting integration")
 
-	if len(cfg.TheHive.APIBaseURL) < 1 || len(cfg.TheHive.APIToken) < 1 {
-		wflog.Warning("Could not initialize The Hive reporting integration. Check environment variables.")
+	if len(cfg.APIBaseURL) < 1 || len(cfg.APIToken) < 1 {
+		log.Warning("Could not initialize The Hive reporting integration. Check environment variables.")
 		return nil, nil
 	}
 
-	wflog.Infof("Creating The Hive connector with API base URL: %s", cfg.TheHive.APIBaseURL)
-	conn := thehiveconnector.NewConnector(cfg.TheHive.APIBaseURL, cfg.TheHive.APIToken, cfg.TheHive.AllowInsecure)
+	log.Infof("Creating The Hive connector with API base URL: %s", cfg.APIBaseURL)
+	conn := thehiveconnector.NewConnector(cfg.APIBaseURL, cfg.APIToken, cfg.AllowInsecure)
 
-	if cfg.TheHive.EnableCaseManager {
-		wflog.Info("Enabling The Hive case manager")
+	if cfg.EnableCaseManager {
+		log.Info("Enabling The Hive case manager")
 		caseMgr := thehivecases.NewCaseManager(conn)
 		return caseMgr, caseMgr
 	}
 
-	if cfg.TheHive.EnableReporter {
-		wflog.Info("Enabling The Hive reporter")
+	if cfg.EnableReporter {
+		log.Info("Enabling The Hive reporter")
 		rep := thehivereport.NewReporter(conn)
 		return rep, nil
 	}

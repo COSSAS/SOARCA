@@ -6,9 +6,8 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+	"soarca/internal/executions"
 	"soarca/internal/logger"
-	"soarca/internal/services"
-	triggersvc "soarca/internal/services/trigger"
 	apiError "soarca/pkg/api/error"
 	"soarca/pkg/models/api"
 	"soarca/pkg/models/cacao"
@@ -30,11 +29,11 @@ func init() {
 }
 
 type TriggerHandler struct {
-	triggerService services.TriggerService
+	executions executions.Runner
 }
 
-func NewTriggerHandler(triggerService services.TriggerService) *TriggerHandler {
-	return &TriggerHandler{triggerService: triggerService}
+func NewTriggerHandler(runner executions.Runner) *TriggerHandler {
+	return &TriggerHandler{executions: runner}
 }
 
 func (handler *TriggerHandler) ExecuteById(context *gin.Context) {
@@ -48,17 +47,17 @@ func (handler *TriggerHandler) ExecuteById(context *gin.Context) {
 			apiError.SendErrorResponse(context, http.StatusBadRequest, "Failed to decode request body", "POST /trigger/playbook/"+id, "")
 			return
 		}
-		variables, err = triggersvc.DecodeVariables(jsonData)
+		variables, err = executions.DecodeVariables(jsonData)
 		if err != nil {
 			log.Error(err)
 			apiError.SendErrorResponse(context, http.StatusBadRequest, fmt.Sprintf("Cannot execute. reason: %s", err), "POST /trigger/playbook/"+id, "")
 			return
 		}
 	}
-	executionID, err := handler.triggerService.ExecutePlaybook(context.Request.Context(), id, variables)
+	executionID, err := handler.executions.StartByID(context.Request.Context(), id, variables)
 	if err != nil {
 		log.Error(err)
-		var validationErr triggersvc.ValidationError
+		var validationErr executions.ValidationError
 		if errors.As(err, &validationErr) {
 			apiError.SendErrorResponse(context, http.StatusBadRequest, fmt.Sprintf("Cannot execute. reason: %s", validationErr.Error()), "POST /trigger/playbook/"+id, "")
 			return
@@ -91,10 +90,10 @@ func (handler *TriggerHandler) Execute(context *gin.Context) {
 		return
 	}
 
-	executionID, err := handler.triggerService.ExecuteUploadedPlaybook(context.Request.Context(), playbook, cacao.Variables{})
+	executionID, err := handler.executions.Start(context.Request.Context(), playbook, cacao.Variables{})
 	if err != nil {
 		log.Error(err)
-		var validationErr triggersvc.ValidationError
+		var validationErr executions.ValidationError
 		if errors.As(err, &validationErr) {
 			apiError.SendErrorResponse(context, http.StatusBadRequest, fmt.Sprintf("Cannot execute. reason: %s", validationErr.Error()), "POST /trigger/playbook", "")
 			return

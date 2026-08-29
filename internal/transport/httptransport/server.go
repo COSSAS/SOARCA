@@ -69,10 +69,10 @@ func (s *Server) SetupServer() (*gin.Engine, error) {
 		return nil, fmt.Errorf("failed to setup auth middleware: %w", err)
 	}
 
-	api.TriggerRoutes(engine, api.NewTriggerHandler(s.container.Runtime.GetTriggerService()))
+	api.TriggerRoutes(engine, api.NewTriggerHandler(s.container.Runtime.GetExecutions()))
 	api.StatusRoutes(engine)
 	api.PlaybookRoutesWithService(engine, s.container.Runtime.GetPlaybookService())
-	api.ReporterRoutesWithService(engine, s.container.Runtime.GetReporterService())
+	api.ReporterRoutesWithService(engine, s.container.Runtime.GetExecutions())
 	api.ManualRoutes(engine, api.NewManualHandler(s.container.Runtime.GetManualInbox()))
 	api.FinAdmin(engine, s.container.FinHandler)
 	api.Logging(engine)

@@ -16,7 +16,7 @@ import (
 
 	api_routes "soarca/pkg/api"
 
-	reporterservice "soarca/internal/services/reporter"
+	executionsservice "soarca/internal/executions"
 
 	"github.com/google/uuid"
 
@@ -141,7 +141,7 @@ func TestGetExecutions(t *testing.T) {
 	gin.SetMode(gin.DebugMode)
 
 	recorder := httptest.NewRecorder()
-	api_routes.ReporterRoutesWithService(app, reporterservice.New(cacheReporter))
+	api_routes.ReporterRoutesWithService(app, executionsservice.New(nil, nil, cacheReporter))
 
 	request, err := http.NewRequest("GET", "/reporter/", nil)
 	if err != nil {
@@ -262,7 +262,7 @@ func TestGetExecutionReport(t *testing.T) {
 	gin.SetMode(gin.DebugMode)
 
 	recorder := httptest.NewRecorder()
-	api_routes.ReporterRoutesWithService(app, reporterservice.New(cacheReporter))
+	api_routes.ReporterRoutesWithService(app, executionsservice.New(nil, nil, cacheReporter))
 
 	expected := `{
 		"type":"execution_status",

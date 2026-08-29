@@ -6,21 +6,21 @@ import (
 	"reflect"
 
 	"soarca/internal/config"
+	"soarca/internal/executions"
+	"soarca/internal/executions/engine"
 	"soarca/internal/logger"
 	"soarca/internal/services"
 	finsvc "soarca/internal/services/fin"
 	manualsvc "soarca/internal/services/manual"
 	playbookservice "soarca/internal/services/playbook"
-	reporterservice "soarca/internal/services/reporter"
-	triggerservice "soarca/internal/services/trigger"
 	"soarca/internal/storage"
 	storagememory "soarca/internal/storage/memory"
 	storagemongo "soarca/internal/storage/mongodb"
 	"soarca/pkg/core/capability/fin/queue"
 	"soarca/pkg/core/capability/manual/interaction"
 	"soarca/pkg/reporting/reporter/downstream_reporter/cache"
-	timeutil "soarca/pkg/utils/time"
 	"soarca/pkg/utils/guid"
+	timeutil "soarca/pkg/utils/time"
 )
 
 var log *logger.Log
@@ -34,12 +34,13 @@ type Options struct {
 	Storage config.StorageConfig
 	Cache   config.CacheConfig
 	Fin     config.FinConfig
+	HTTP    config.HTTPConfig
+	TheHive config.TheHiveConfig
 }
 
 // Runtime holds all wired application dependencies for the core SOAR orchestrator.
-// It constructs and owns application services (non-ExecutionRuntime).
-// Bootstrap handles ExecutionRuntime construction due to circular dependency.
-// Transport layers retrieve services from getters, never constructing services directly.
+// It constructs and owns the application services. Transport layers retrieve
+// services from getters, never constructing services directly.
 type Runtime struct {
 	// Core infrastructure (shared across services)
 	PlaybookStore storage.PlaybookStore
@@ -48,19 +49,15 @@ type Runtime struct {
 	Interaction   *interaction.InteractionController
 	FinQueue      *queue.Queue
 
-	// Application services (ExecutionRuntime injected by bootstrap due to circular dep)
-	executionRuntime services.ExecutionRuntime
-	finRegistry      services.FinRegistry
-	finWorkService   services.FinWorkService
-	manualInbox      services.ManualInbox
-	triggerService   services.TriggerService
-	playbookService  services.PlaybookService
-	reporterService  services.ReporterService
+	// Application services
+	executions      executions.Runner
+	finRegistry     services.FinRegistry
+	finWorkService  services.FinWorkService
+	manualInbox     services.ManualInbox
+	playbookService services.PlaybookService
 }
 
 // New creates and initializes application dependencies and services.
-// Note: ExecutionRuntime is constructed by bootstrap due to circular dependency
-// (ExecutionRuntime needs runtime as a parameter).
 func New(opts Options) (*Runtime, error) {
 	runtime := &Runtime{}
 
@@ -96,15 +93,21 @@ func New(opts Options) (*Runtime, error) {
 	// Create manual service
 	runtime.manualInbox = manualsvc.NewInbox(runtime.Interaction)
 
-	// Create trigger service
-	// Note: TriggerService depends on ExecutionRuntime, which will be injected by bootstrap
-	runtime.triggerService = nil // Injected by bootstrap via SetExecutionRuntime
-
 	// Create playbook service
 	runtime.playbookService = playbookservice.New(runtime.PlaybookStore)
 
-	// Create reporter service
-	runtime.reporterService = reporterservice.New(runtime.Cache)
+	// Create the execution engine and the execution service that drives it.
+	executionEngine := engine.New(engine.Deps{
+		Interaction:        runtime.Interaction,
+		Cache:              runtime.Cache,
+		FinQueue:           runtime.FinQueue,
+		FinStore:           runtime.FinStore,
+		PlaybookStore:      runtime.PlaybookStore,
+		SkipCertValidation: opts.HTTP.SkipCertValidation,
+		FinStaleAfter:      opts.Fin.StaleAfter,
+		TheHive:            opts.TheHive,
+	})
+	runtime.executions = executions.New(executionEngine, runtime.PlaybookStore, runtime.Cache)
 
 	return runtime, nil
 }
@@ -167,11 +170,6 @@ func (r *Runtime) GetFinQueue() *queue.Queue {
 // SERVICE GETTERS (for HTTP handlers and other transport layers)
 // ============================================================================
 
-// GetExecutionRuntime returns the core execution runtime service.
-func (r *Runtime) GetExecutionRuntime() services.ExecutionRuntime {
-	return r.executionRuntime
-}
-
 // GetFinRegistry returns the FIN registry service.
 func (r *Runtime) GetFinRegistry() services.FinRegistry {
 	return r.finRegistry
@@ -187,9 +185,9 @@ func (r *Runtime) GetManualInbox() services.ManualInbox {
 	return r.manualInbox
 }
 
-// GetTriggerService returns the trigger orchestration service.
-func (r *Runtime) GetTriggerService() services.TriggerService {
-	return r.triggerService
+// GetExecutions returns the playbook execution service.
+func (r *Runtime) GetExecutions() executions.Runner {
+	return r.executions
 }
 
 // GetPlaybookService returns the playbook CRUD service.
@@ -197,18 +195,3 @@ func (r *Runtime) GetPlaybookService() services.PlaybookService {
 	return r.playbookService
 }
 
-// GetReporterService returns the execution reporting service.
-func (r *Runtime) GetReporterService() services.ReporterService {
-	return r.reporterService
-}
-
-// ============================================================================
-// BOOTSTRAP INJECTION (for services with circular dependencies)
-// ============================================================================
-
-// SetExecutionRuntime injects the ExecutionRuntime service.
-// Called by bootstrap after constructing ExecutionRuntime.
-func (r *Runtime) SetExecutionRuntime(executionRuntime services.ExecutionRuntime) {
-	// Note: TriggerService can now be constructed with ExecutionRuntime
-	r.triggerService = triggerservice.New(executionRuntime, r.PlaybookStore)
-}

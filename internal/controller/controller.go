@@ -48,6 +48,8 @@ func Initialize() error {
 		Storage: cfg.Storage,
 		Cache:   cfg.Cache,
 		Fin:     cfg.Fin,
+		HTTP:    cfg.HTTP,
+		TheHive: cfg.TheHive,
 	})
 	if err != nil {
 		log.Error("Failed to initialize application:", err)
