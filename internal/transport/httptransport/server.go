@@ -9,6 +9,7 @@ import (
 	"soarca/internal/config"
 	"soarca/internal/logger"
 	appruntime "soarca/internal/runtime"
+	execservice "soarca/internal/services/execution"
 	"soarca/internal/storage"
 	"soarca/pkg/api"
 	finapi "soarca/pkg/api/fin"
@@ -86,7 +87,9 @@ func (s *Server) SetupServer() (*gin.Engine, error) {
 		return nil, fmt.Errorf("failed to setup auth middleware: %w", err)
 	}
 
-	if err := api.Api(engine, s, s); err != nil {
+	executionRuntime := execservice.New(s.runtime, s)
+
+	if err := api.Api(engine, executionRuntime, s); err != nil {
 		return nil, fmt.Errorf("failed to setup API routes: %w", err)
 	}
 

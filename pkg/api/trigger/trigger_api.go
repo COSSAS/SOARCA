@@ -8,15 +8,12 @@ import (
 	"net/http"
 	"reflect"
 	"soarca/internal/logger"
+	"soarca/internal/services"
 	"soarca/internal/storage"
-	"soarca/pkg/core/decomposer"
+	apiError "soarca/pkg/api/error"
 	"soarca/pkg/models/api"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/decoder"
-	"time"
-
-	"soarca/internal/controller/decomposer_controller"
-	apiError "soarca/pkg/api/error"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,17 +31,15 @@ func init() {
 }
 
 type TriggerHandler struct {
-	controller        decomposer_controller.IController
-	playbookStore     storage.PlaybookStore
-	ExecutionsChannel chan decomposer.ExecutionDetails
+	executionRuntime services.ExecutionRuntime
+	playbookStore    storage.PlaybookStore
 }
 
-func NewTriggerHandler(controller decomposer_controller.IController, playbookStore storage.PlaybookStore) *TriggerHandler {
-	instance := TriggerHandler{}
-	instance.controller = controller
-	instance.playbookStore = playbookStore
-	instance.ExecutionsChannel = make(chan decomposer.ExecutionDetails)
-	return &instance
+func NewTriggerHandler(executionRuntime services.ExecutionRuntime, playbookStore storage.PlaybookStore) *TriggerHandler {
+	return &TriggerHandler{
+		executionRuntime: executionRuntime,
+		playbookStore:    playbookStore,
+	}
 }
 
 func (handler *TriggerHandler) ExecuteById(context *gin.Context) {
@@ -99,32 +94,20 @@ func (handler *TriggerHandler) Execute(context *gin.Context) {
 }
 
 func (handler *TriggerHandler) executePlaybook(playbook *cacao.Playbook, context *gin.Context) {
-	decomposer := handler.controller.NewDecomposer()
-	go decomposer.ExecuteAsync(*playbook, handler.ExecutionsChannel)
-	timer := time.NewTimer(time.Duration(3) * time.Second)
-	for {
-		select {
-		case <-timer.C:
-			log.Error("async execution timed out for playbook ", playbook.ID)
-			apiError.SendErrorResponse(context,
-				http.StatusRequestTimeout,
-				"async execution timed out for playbook "+playbook.ID,
-				"POST "+context.Request.URL.Path, "")
-			return
-
-		case executionsDetail := <-handler.ExecutionsChannel:
-			playbookId := executionsDetail.PlaybookId
-			executionId := executionsDetail.ExecutionId
-			if playbookId == playbook.ID {
-				context.JSON(http.StatusOK,
-					api.Execution{
-						ExecutionId: executionId,
-						PlaybookId:  playbookId,
-					})
-				return
-			}
-		}
+	executionId, err := handler.executionRuntime.StartExecution(context.Request.Context(), playbook, cacao.Variables{})
+	if err != nil {
+		log.Error(err)
+		apiError.SendErrorResponse(context,
+			http.StatusRequestTimeout,
+			err.Error(),
+			"POST "+context.Request.URL.Path, "")
+		return
 	}
+	context.JSON(http.StatusOK,
+		api.Execution{
+			ExecutionId: executionId,
+			PlaybookId:  playbook.ID,
+		})
 }
 
 func MergeVariablesInPlaybook(playbook *cacao.Playbook, body []byte) error {

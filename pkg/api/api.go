@@ -4,9 +4,9 @@ import (
 	"reflect"
 	open_api "soarca/api"
 	"soarca/internal/controller/database"
-	"soarca/internal/controller/decomposer_controller"
 	"soarca/internal/controller/informer"
 	"soarca/internal/logger"
+	"soarca/internal/services"
 	playbook_handler "soarca/pkg/api/playbook"
 	reporter_handler "soarca/pkg/api/reporter"
 	status_handler "soarca/pkg/api/status"
@@ -62,9 +62,9 @@ func FinAdmin(app *gin.Engine, finHandler *fin_handler.FinHandler) {
 	FinAdminRoutes(app, finHandler)
 }
 
-func Api(app *gin.Engine, controller decomposer_controller.IController, database database.IController) error {
+func Api(app *gin.Engine, executionRuntime services.ExecutionRuntime, database database.IController) error {
 	log.Trace("Trying to setup all Routes")
-	triggerHandler := trigger_handler.NewTriggerHandler(controller, database.GetPlaybookStore())
+	triggerHandler := trigger_handler.NewTriggerHandler(executionRuntime, database.GetPlaybookStore())
 	TriggerRoutes(app, triggerHandler)
 	StatusRoutes(app)
 	return nil
