@@ -1,3 +1,7 @@
+//go:build manual
+
+// Requires a reachable Windows host with PowerShell remoting enabled.
+
 package powershell_integration_test
 
 import (

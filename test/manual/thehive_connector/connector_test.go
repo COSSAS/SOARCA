@@ -1,3 +1,7 @@
+//go:build manual
+
+// Requires a reachable TheHive instance configured via environment variables.
+
 package connector_test
 
 import (

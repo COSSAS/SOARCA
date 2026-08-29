@@ -1,3 +1,5 @@
+//go:build integration
+
 package ssh_integration_test
 
 import (

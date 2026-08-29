@@ -1,3 +1,7 @@
+//go:build integration
+
+// These tests require the httpbin service from deployments/docker/testing.
+
 package http
 
 import (

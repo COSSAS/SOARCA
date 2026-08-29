@@ -233,10 +233,34 @@ than deleted — the objection was three meanings of "controller", not this file
 the service-locator shape. It now asserts `Operations` is fully populated and documents
 the getters that must not come back.
 
-### Phase 4 — renames and moves only (TODO)
+### Phase 4 — renames and moves only (IN PROGRESS)
 
-`git mv` + import rewrites, one PR per slice. Zero behaviour change. See the naming table
-above. Includes the `pkg/` → `internal/` split and `pkg/soarca` embeddable entrypoint.
+#### 4a — test layout (DONE)
+
+Idiomatic Go puts `foo_test.go` beside `foo.go` in the same directory; a top-level
+`test/` tree is not a Go convention. 43 of 58 test files were already beside their code.
+
+Tests needing external services are now selected by build tag rather than by directory:
+
+- `//go:build integration` — needs `deployments/docker/testing` (httpbin, ssh)
+- `//go:build manual` — needs a special environment (Windows/PowerShell host, live TheHive)
+
+`go test ./...` is now green for the first time. Previously six suites failed by design
+on any machine without those services, which trains everyone to ignore a red suite.
+Makefile targets: `test` (default, no services), `integration-test`, `manual-test`.
+
+Still to do in 4a: move the remaining `test/integration/api/**` suites next to the code
+they exercise, turn `test/unittest/mocks` into per-package mocks, and move playbook JSON
+fixtures into `testdata/` (which the go tool ignores by convention).
+
+#### 4b — package renames (PENDING SIGN-OFF)
+
+`git mv` + import rewrites, one PR per slice. Zero behaviour change. Includes the
+`pkg/` → `internal/` split and the `pkg/soarca` embeddable entrypoint.
+
+Constraint: `execution_id` / `execution_status` appear in the HTTP API *and* in the FIN
+wire protocol, which the existing Python FIN package depends on. Go identifiers can be
+renamed freely; wire field names must not change.
 
 ### Phase 5 — enforce (DONE, ahead of Phase 4)
 
