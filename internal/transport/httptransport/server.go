@@ -94,11 +94,11 @@ func (s *Server) SetupServer() (*gin.Engine, error) {
 		return nil, fmt.Errorf("failed to setup database routes: %w", err)
 	}
 
-	if err := api.Reporter(engine, s.runtime.Cache); err != nil {
+	if err := api.Reporter(engine, s.runtime.GetCache()); err != nil {
 		return nil, fmt.Errorf("failed to setup reporter routes: %w", err)
 	}
 
-	api.Manual(engine, s.runtime.Interaction)
+	api.Manual(engine, s.runtime.GetInteraction())
 	api.FinAdmin(engine, finHandler)
 	api.Logging(engine)
 	api.Swagger(engine)
@@ -132,8 +132,8 @@ func (s *Server) newFinHandler() *finapi.FinHandler {
 		StaleAfter:             s.config.Fin.StaleAfter,
 	}
 	return finapi.NewFinHandler(finapi.HandlerDependencies{
-		Store:  s.runtime.FinStore,
-		Queue:  s.runtime.FinQueue,
+		Store:  s.runtime.GetFinStore(),
+		Queue:  s.runtime.GetFinQueue(),
 		Config: cfg,
 		GUID:   new(guid.Guid),
 	})
@@ -181,11 +181,11 @@ func (s *Server) NewDecomposer() decomposer.IDecomposer {
 	powershellCap := pscap.New()
 	capabilities[powershellCap.GetType()] = powershellCap
 
-	man := manualcap.New(s.runtime.Interaction)
+	man := manualcap.New(s.runtime.GetInteraction())
 	capabilities[man.GetType()] = &man
 
 	report := reporter.New([]downstreamreport.IDownStreamReporter{})
-	downstreamReporters := []downstreamreport.IDownStreamReporter{s.runtime.Cache}
+	downstreamReporters := []downstreamreport.IDownStreamReporter{s.runtime.GetCache()}
 
 	thehiveReporter, theHiveCaseManager := s.initializeTheHiveReporting()
 	if thehiveReporter != nil {
@@ -199,14 +199,14 @@ func (s *Server) NewDecomposer() decomposer.IDecomposer {
 	actionExec := actionexec.New(capabilities, report, soarcaTime, assignmentExt)
 
 	actionExec.SetFinFallback(fincap.New(fincap.Dependencies{
-		Queue:      s.runtime.FinQueue,
+		Queue:      s.runtime.GetFinQueue(),
 		GUID:       new(guid.Guid),
-		Store:      s.runtime.FinStore,
+		Store:      s.runtime.GetFinStore(),
 		Time:       soarcaTime,
 		StaleAfter: s.config.Fin.StaleAfter,
 	}))
 
-	pbExec := pbactionexec.New(s, s.runtime.PlaybookStore, report, soarcaTime)
+	pbExec := pbactionexec.New(s, s.runtime.GetPlaybookStore(), report, soarcaTime)
 	stixCmp := stixcmp.New()
 	condExec := condexec.New(stixCmp, report, soarcaTime)
 	guidGen := new(guid.Guid)
@@ -222,7 +222,7 @@ func (s *Server) NewDecomposer() decomposer.IDecomposer {
 // GetPlaybookStore returns the playbook store.
 // Implements database.IController.
 func (s *Server) GetPlaybookStore() storage.PlaybookStore {
-	return s.runtime.PlaybookStore
+	return s.runtime.GetPlaybookStore()
 }
 
 // initializeTheHiveReporting sets up The Hive integration if configured.

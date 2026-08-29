@@ -80,3 +80,28 @@ func (r *Runtime) Close() error {
 	}
 	return nil
 }
+
+// GetPlaybookStore returns the playbook store.
+func (r *Runtime) GetPlaybookStore() storage.PlaybookStore {
+	return r.PlaybookStore
+}
+
+// GetFinStore returns the FIN store.
+func (r *Runtime) GetFinStore() storage.FinStore {
+	return r.FinStore
+}
+
+// GetCache returns the execution result cache.
+func (r *Runtime) GetCache() *cache.Cache {
+	return r.Cache
+}
+
+// GetInteraction returns the interaction controller.
+func (r *Runtime) GetInteraction() *interaction.InteractionController {
+	return r.Interaction
+}
+
+// GetFinQueue returns the FIN job queue.
+func (r *Runtime) GetFinQueue() *queue.Queue {
+	return r.FinQueue
+}
