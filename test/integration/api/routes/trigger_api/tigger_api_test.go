@@ -13,6 +13,7 @@ import (
 
 	api_routes "soarca/pkg/api"
 	trigger_handler "soarca/pkg/api/trigger"
+	triggerservice "soarca/internal/services/trigger"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/cache"
 	"soarca/pkg/models/manual"
@@ -56,7 +57,7 @@ func close(file *os.File) {
 }
 
 func newTriggerHandler(executionID uuid.UUID, playbookStore *mock_playbook_database.MockPlaybook) *trigger_handler.TriggerHandler {
-	return trigger_handler.NewTriggerHandler(&testExecutionRuntime{executionID: executionID}, playbookStore)
+	return trigger_handler.NewTriggerHandler(triggerservice.New(&testExecutionRuntime{executionID: executionID}, playbookStore))
 }
 
 func TestTriggerExecutionOfPlaybook(t *testing.T) {

@@ -8,6 +8,7 @@ import (
 	"soarca/internal/logger"
 	"soarca/internal/services"
 	playbookservice "soarca/internal/services/playbook"
+	triggerservice "soarca/internal/services/trigger"
 	reporterservice "soarca/internal/services/reporter"
 	playbook_handler "soarca/pkg/api/playbook"
 	reporter_handler "soarca/pkg/api/reporter"
@@ -65,7 +66,7 @@ func FinAdmin(app *gin.Engine, finHandler *fin_handler.FinHandler) {
 
 func Api(app *gin.Engine, executionRuntime services.ExecutionRuntime, database database.IController) error {
 	log.Trace("Trying to setup all Routes")
-	triggerHandler := trigger_handler.NewTriggerHandler(executionRuntime, database.GetPlaybookStore())
+	triggerHandler := trigger_handler.NewTriggerHandler(triggerservice.New(executionRuntime, database.GetPlaybookStore()))
 	TriggerRoutes(app, triggerHandler)
 	StatusRoutes(app)
 	return nil
