@@ -11,9 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// These tests pin the wire shape of the Fin protocol JSON payloads against
-// docs/adr/FIN-WEBHOOK-PROTOCOL-PROPOSAL.md — a regression here means the
-// wire contract silently drifted from the documented protocol.
+// These tests pin the Fin protocol JSON wire shape.
 
 func TestRegisterRequestJSONShape(t *testing.T) {
 	request := RegisterRequest{

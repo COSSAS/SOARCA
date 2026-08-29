@@ -49,12 +49,17 @@ func TestFinPublicRoutesAreExemptFromAdminAuthButFinAdminRoutesAreNot(t *testing
 	guidMock := new(mock_guid.Mock_Guid)
 	guidMock.On("New").Return(uuid.New())
 
-	finHandler := fin.NewFinHandler(repository, jobQueue, fin.Config{
-		RegistrationToken:      "test-registration-token",
-		PollIntervalSeconds:    5,
-		LongPollTimeoutSeconds: 1,
-		JobLeaseSeconds:        60,
-	}, guidMock)
+	finHandler := fin.NewFinHandler(fin.HandlerDependencies{
+		Store: repository,
+		Queue: jobQueue,
+		Config: fin.Config{
+			RegistrationToken:      "test-registration-token",
+			PollIntervalSeconds:    5,
+			LongPollTimeoutSeconds: 1,
+			JobLeaseSeconds:        60,
+		},
+		GUID: guidMock,
+	})
 
 	// Simulates: routes.FinPublic(app, finHandler) called before
 	// intializeAuthenticationMiddleware(app) in controller.go.

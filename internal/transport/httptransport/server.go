@@ -132,10 +132,10 @@ func (s *Server) newFinHandler() *finapi.FinHandler {
 		StaleAfter:             s.config.Fin.StaleAfter,
 	}
 	return finapi.NewFinHandler(finapi.HandlerDependencies{
-		Repository: s.runtime.FinStore,
-		Queue:      s.runtime.FinQueue,
-		Config:     cfg,
-		GUID:       new(guid.Guid),
+		Store:  s.runtime.FinStore,
+		Queue:  s.runtime.FinQueue,
+		Config: cfg,
+		GUID:   new(guid.Guid),
 	})
 }
 
@@ -201,7 +201,7 @@ func (s *Server) NewDecomposer() decomposer.IDecomposer {
 	actionExec.SetFinFallback(fincap.New(fincap.Dependencies{
 		Queue:      s.runtime.FinQueue,
 		GUID:       new(guid.Guid),
-		Repository: s.runtime.FinStore,
+		Store:      s.runtime.FinStore,
 		Time:       soarcaTime,
 		StaleAfter: s.config.Fin.StaleAfter,
 	}))

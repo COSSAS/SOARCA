@@ -35,20 +35,31 @@ type Config struct {
 	PollIntervalSeconds    int
 	LongPollTimeoutSeconds int
 	JobLeaseSeconds        int
-	StaleAfterSeconds      int
+	StaleAfter             time.Duration
 }
 
-const defaultStaleAfter = 2 * time.Minute
+// HandlerDependencies groups the dependencies needed to construct a FinHandler.
+type HandlerDependencies struct {
+	Store  storage.FinStore
+	Queue  *queue.Queue
+	Config Config
+	GUID   guid.IGuid
+}
 
 type FinHandler struct {
-	repository storage.FinStore
-	queue      *queue.Queue
-	config     Config
-	guid       guid.IGuid
+	store  storage.FinStore
+	queue  *queue.Queue
+	config Config
+	guid   guid.IGuid
 }
 
-func NewFinHandler(repository storage.FinStore, jobQueue *queue.Queue, config Config, guid guid.IGuid) *FinHandler {
-	return &FinHandler{repository: repository, queue: jobQueue, config: config, guid: guid}
+func NewFinHandler(deps HandlerDependencies) *FinHandler {
+	return &FinHandler{
+		store:  deps.Store,
+		queue:  deps.Queue,
+		config: deps.Config,
+		guid:   deps.GUID,
+	}
 }
 
 func (finHandler *FinHandler) Register(g *gin.Context) {
@@ -99,7 +110,7 @@ func (finHandler *FinHandler) Register(g *gin.Context) {
 		LastSeen:        time.Now(),
 	}
 
-	if err := finHandler.repository.Create(g.Request.Context(), record); err != nil {
+	if err := finHandler.store.Create(g.Request.Context(), record); err != nil {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusInternalServerError, "Failed to register fin", route, "")
 		return
@@ -118,7 +129,7 @@ func (finHandler *FinHandler) RequireFinToken(g *gin.Context) {
 		return
 	}
 
-	record, err := finHandler.repository.GetByTokenHash(g.Request.Context(), token.Hash(presentedToken))
+	record, err := finHandler.store.GetByTokenHash(g.Request.Context(), token.Hash(presentedToken))
 	if err != nil {
 		apiError.SendErrorResponse(g, http.StatusUnauthorized, "Invalid or unknown fin token", route, "")
 		g.Abort()
@@ -139,7 +150,7 @@ func (finHandler *FinHandler) Poll(g *gin.Context) {
 			return
 		}
 	}
-	if err := finHandler.repository.Touch(g.Request.Context(), record.FinId, time.Now()); err != nil {
+	if err := finHandler.store.Touch(g.Request.Context(), record.FinId, time.Now()); err != nil {
 		log.Warning("failed to update last-seen for fin ", record.FinId, ": ", err)
 	}
 
@@ -180,7 +191,7 @@ func (finHandler *FinHandler) SubmitResult(g *gin.Context) {
 		finHandler.sendJobError(g, route, err)
 		return
 	}
-	if err := finHandler.repository.Touch(g.Request.Context(), record.FinId, time.Now()); err != nil {
+	if err := finHandler.store.Touch(g.Request.Context(), record.FinId, time.Now()); err != nil {
 		log.Warning("failed to update last-seen for fin ", record.FinId, ": ", err)
 	}
 	g.Status(http.StatusNoContent)
@@ -206,7 +217,7 @@ func (finHandler *FinHandler) StatusPing(g *gin.Context) {
 		finHandler.sendJobError(g, route, err)
 		return
 	}
-	if err := finHandler.repository.Touch(g.Request.Context(), record.FinId, time.Now()); err != nil {
+	if err := finHandler.store.Touch(g.Request.Context(), record.FinId, time.Now()); err != nil {
 		log.Warning("failed to update last-seen for fin ", record.FinId, ": ", err)
 	}
 	g.JSON(http.StatusOK, fin.StatusPingResponse{})
@@ -215,7 +226,7 @@ func (finHandler *FinHandler) StatusPing(g *gin.Context) {
 func (finHandler *FinHandler) Unregister(g *gin.Context) {
 	record := finHandler.currentFin(g)
 	route := "DELETE /fin/"
-	if err := finHandler.repository.Delete(g.Request.Context(), record.FinId); err != nil {
+	if err := finHandler.store.Delete(g.Request.Context(), record.FinId); err != nil {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusNotFound, "Fin not found", route, "")
 		return
@@ -224,7 +235,7 @@ func (finHandler *FinHandler) Unregister(g *gin.Context) {
 }
 
 func (finHandler *FinHandler) List(g *gin.Context) {
-	records, err := finHandler.repository.List(g.Request.Context())
+	records, err := finHandler.store.List(g.Request.Context())
 	if err != nil {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusInternalServerError, "Failed to list fins", "GET /fin/", "")
@@ -238,7 +249,7 @@ func (finHandler *FinHandler) List(g *gin.Context) {
 
 func (finHandler *FinHandler) Get(g *gin.Context) {
 	finId := g.Param("fin_id")
-	record, err := finHandler.repository.Get(g.Request.Context(), finId)
+	record, err := finHandler.store.Get(g.Request.Context(), finId)
 	if err != nil {
 		apiError.SendErrorResponse(g, http.StatusNotFound, "Fin not found", "GET /fin/"+finId, "")
 		return
@@ -250,7 +261,7 @@ func (finHandler *FinHandler) Get(g *gin.Context) {
 func (finHandler *FinHandler) Delete(g *gin.Context) {
 	finId := g.Param("fin_id")
 	route := "DELETE /fin/" + finId
-	if err := finHandler.repository.Delete(g.Request.Context(), finId); err != nil {
+	if err := finHandler.store.Delete(g.Request.Context(), finId); err != nil {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusNotFound, "Fin not found", route, "")
 		return
@@ -259,11 +270,7 @@ func (finHandler *FinHandler) Delete(g *gin.Context) {
 }
 
 func (finHandler *FinHandler) isStale(record fin.Record) bool {
-	staleAfter := defaultStaleAfter
-	if finHandler.config.StaleAfterSeconds > 0 {
-		staleAfter = time.Duration(finHandler.config.StaleAfterSeconds) * time.Second
-	}
-	return time.Since(record.LastSeen) > staleAfter
+	return time.Since(record.LastSeen) > finHandler.config.StaleAfter
 }
 
 func (finHandler *FinHandler) currentFin(g *gin.Context) fin.Record {

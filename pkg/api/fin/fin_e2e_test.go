@@ -41,12 +41,18 @@ func TestFullFinProtocolFlow(t *testing.T) {
 	finGuidMock := new(mock_guid.Mock_Guid)
 	finGuidMock.On("New").Return(fixedFinId)
 
-	handler := fin.NewFinHandler(repo, jobQueue, fin.Config{
-		RegistrationToken:      "test-registration-token",
-		PollIntervalSeconds:    5,
-		LongPollTimeoutSeconds: 1,
-		JobLeaseSeconds:        60,
-	}, finGuidMock)
+	handler := fin.NewFinHandler(fin.HandlerDependencies{
+		Store: repo,
+		Queue: jobQueue,
+		Config: fin.Config{
+			RegistrationToken:      "test-registration-token",
+			PollIntervalSeconds:    5,
+			LongPollTimeoutSeconds: 1,
+			JobLeaseSeconds:        60,
+			StaleAfter:             2 * time.Minute,
+		},
+		GUID: finGuidMock,
+	})
 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
@@ -87,7 +93,13 @@ func TestFullFinProtocolFlow(t *testing.T) {
 	stepGuidMock := new(mock_guid.Mock_Guid)
 	jobId := uuid.MustParse("33333333-3333-3333-3333-333333333333")
 	stepGuidMock.On("New").Return(jobId)
-	finCap := fincapability.New(jobQueue, stepGuidMock, repo, &timeUtil.Time{}, 0)
+	finCap := fincapability.New(fincapability.Dependencies{
+		Queue:      jobQueue,
+		GUID:       stepGuidMock,
+		Store:      repo,
+		Time:       &timeUtil.Time{},
+		StaleAfter: 2 * time.Minute,
+	})
 
 	executionId := uuid.MustParse("44444444-4444-4444-4444-444444444444")
 	metadata := execution.Metadata{

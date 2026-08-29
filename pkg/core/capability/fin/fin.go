@@ -26,8 +26,6 @@ func init() {
 	log = logger.Logger(reflect.TypeOf(Empty{}).PkgPath(), logger.Info, "", logger.Json)
 }
 
-const defaultStaleAfter = 2 * time.Minute
-
 type IJobQueue interface {
 	Enqueue(ctx context.Context, job fin.Job) (fin.JobResult, error)
 }
@@ -35,16 +33,28 @@ type IJobQueue interface {
 type Capability struct {
 	queue      IJobQueue
 	guid       guid.IGuid
-	repository storage.FinStore
+	store      storage.FinStore
 	time       timeUtil.ITime
 	staleAfter time.Duration
 }
 
-func New(jobQueue IJobQueue, guidGenerator guid.IGuid, repository storage.FinStore, clock timeUtil.ITime, staleAfter time.Duration) *Capability {
-	if staleAfter <= 0 {
-		staleAfter = defaultStaleAfter
+// Dependencies groups the dependencies needed to construct a Fin capability.
+type Dependencies struct {
+	Queue      IJobQueue
+	GUID       guid.IGuid
+	Store      storage.FinStore
+	Time       timeUtil.ITime
+	StaleAfter time.Duration
+}
+
+func New(deps Dependencies) *Capability {
+	return &Capability{
+		queue:      deps.Queue,
+		guid:       deps.GUID,
+		store:      deps.Store,
+		time:       deps.Time,
+		staleAfter: deps.StaleAfter,
 	}
-	return &Capability{queue: jobQueue, guid: guidGenerator, repository: repository, time: clock, staleAfter: staleAfter}
 }
 
 func (finCapability *Capability) GetType() string { return "" }
@@ -88,10 +98,10 @@ func (finCapability *Capability) Execute(metadata execution.Metadata, commandCon
 }
 
 func (finCapability *Capability) checkCapableFin(capabilityType string) error {
-	if finCapability.repository == nil {
+	if finCapability.store == nil {
 		return nil
 	}
-	records, err := finCapability.repository.List(context.Background())
+	records, err := finCapability.store.List(context.Background())
 	if err != nil {
 		log.Warning("failed to list registered fins for capability type ", capabilityType, ": ", err)
 		return nil

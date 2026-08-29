@@ -14,12 +14,7 @@ import (
 
 // Capability describes one capability a Fin can execute.
 type Capability struct {
-	// Type is the routing key: the value playbook authors write into
-	// agent_definitions[...].type to target this capability pool. Multiple
-	// independently-deployed Fin processes may register the same Type;
-	// SOARCA treats them as one interchangeable pool and load-balances/
-	// fails over across them (see docs/adr/FIN-WEBHOOK-PROTOCOL-PROPOSAL.md
-	// §2.1b).
+	// Type is the routing key used to match jobs to Fins.
 	Type string `bson:"type" json:"type" validate:"required"`
 	// Description is free text for humans (dashboards, logs) — it plays no
 	// role in routing.

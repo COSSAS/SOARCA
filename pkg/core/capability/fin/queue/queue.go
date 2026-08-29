@@ -1,17 +1,7 @@
-// Package queue implements the in-memory Fin job queue: the pull-side
-// counterpart of the Fin protocol described in
-// docs/adr/FIN-WEBHOOK-PROTOCOL-PROPOSAL.md. A FinCapability enqueues one
-// Job per step invocation and blocks (bounded by the step's own deadline)
-// waiting for a result; any number of independently-polling Fin processes
-// registered under the job's CapabilityType compete to claim it via
-// long-poll.
+// Package queue implements the in-memory Fin job queue.
 //
-// The queue is deliberately not persisted: SOARCA does not persist or
-// resume in-flight executions across a restart today either (see
-// docs/adr/EXECUTION-MODEL.md), so persisting only the job queue would not
-// make executions actually resumable — it would just add complexity for no
-// real gain. A restart loses in-flight jobs the same way it loses
-// everything else about an in-flight execution.
+// It is intentionally not persisted because in-flight executions are not
+// resumed across restarts either.
 package queue
 
 import (
@@ -173,9 +163,7 @@ func (q *Queue) Submit(jobId uuid.UUID, finId string, result fin.JobResult) erro
 	return nil
 }
 
-// ExtendLease refreshes jobId's lease, provided it is currently leased to
-// finId - the status-ping-based liveness/lease-extension mechanism from
-// docs/adr/FIN-WEBHOOK-PROTOCOL-PROPOSAL.md §2.4/§2.5.
+// ExtendLease refreshes a leased job's timeout for status-ping-driven work.
 func (q *Queue) ExtendLease(jobId uuid.UUID, finId string, extendBySeconds int) error {
 	q.mu.Lock()
 	defer q.mu.Unlock()

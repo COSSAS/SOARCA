@@ -28,36 +28,36 @@ func (m *mockQueue) Enqueue(ctx context.Context, job fin.Job) (fin.JobResult, er
 	return args.Get(0).(fin.JobResult), args.Error(1)
 }
 
-type mockRepository struct {
+type mockStore struct {
 	mock.Mock
 }
 
-func (m *mockRepository) Create(ctx context.Context, record fin.Record) error {
+func (m *mockStore) Create(ctx context.Context, record fin.Record) error {
 	args := m.Called(ctx, record)
 	return args.Error(0)
 }
 
-func (m *mockRepository) Get(ctx context.Context, finID string) (fin.Record, error) {
+func (m *mockStore) Get(ctx context.Context, finID string) (fin.Record, error) {
 	args := m.Called(ctx, finID)
 	return args.Get(0).(fin.Record), args.Error(1)
 }
 
-func (m *mockRepository) GetByTokenHash(ctx context.Context, tokenHash string) (fin.Record, error) {
+func (m *mockStore) GetByTokenHash(ctx context.Context, tokenHash string) (fin.Record, error) {
 	args := m.Called(ctx, tokenHash)
 	return args.Get(0).(fin.Record), args.Error(1)
 }
 
-func (m *mockRepository) List(ctx context.Context) ([]fin.Record, error) {
+func (m *mockStore) List(ctx context.Context) ([]fin.Record, error) {
 	args := m.Called(ctx)
 	return args.Get(0).([]fin.Record), args.Error(1)
 }
 
-func (m *mockRepository) Touch(ctx context.Context, finID string, lastSeen time.Time) error {
+func (m *mockStore) Touch(ctx context.Context, finID string, lastSeen time.Time) error {
 	args := m.Called(ctx, finID, lastSeen)
 	return args.Error(0)
 }
 
-func (m *mockRepository) Delete(ctx context.Context, finID string) error {
+func (m *mockStore) Delete(ctx context.Context, finID string) error {
 	args := m.Called(ctx, finID)
 	return args.Error(0)
 }
@@ -113,10 +113,10 @@ func TestExecuteEnqueuesJobRoutedByAgentTypeAndReturnsResultVariables(t *testing
 		}).
 		Return(fin.JobResult{State: fin.JobStateSuccess, Variables: expectedVariables}, nil)
 
-	// A nil repository disables the liveness check entirely, so Execute
+	// A nil store disables the liveness check entirely, so Execute
 	// always proceeds straight to Enqueue - this is the pre-existing
 	// behavior these tests are pinning.
-	finCapability := New(queue, guidMock, nil, nil, 0)
+	finCapability := New(Dependencies{Queue: queue, GUID: guidMock})
 	variables, err := finCapability.Execute(metadata, commandContext)
 
 	assert.Equal(t, err, nil)
@@ -134,7 +134,7 @@ func TestExecuteReturnsErrorWhenJobResultIsFailure(t *testing.T) {
 	queue.On("Enqueue", mock.Anything, mock.Anything).
 		Return(fin.JobResult{State: fin.JobStateFailure, Error: "command exited 1"}, nil)
 
-	finCapability := New(queue, guidMock, nil, nil, 0)
+	finCapability := New(Dependencies{Queue: queue, GUID: guidMock})
 	_, err := finCapability.Execute(metadata, commandContext)
 
 	assert.NotEqual(t, err, nil)
@@ -152,7 +152,7 @@ func TestExecuteReturnsErrorWhenQueueFailsOrTimesOut(t *testing.T) {
 	queue.On("Enqueue", mock.Anything, mock.Anything).
 		Return(fin.JobResult{}, queueErr)
 
-	finCapability := New(queue, guidMock, nil, nil, 0)
+	finCapability := New(Dependencies{Queue: queue, GUID: guidMock})
 	_, err := finCapability.Execute(metadata, commandContext)
 
 	assert.Equal(t, err, queueErr)
@@ -173,7 +173,7 @@ func TestExecuteFallsBackToDefaultLeaseWhenStepTimeoutIsUnset(t *testing.T) {
 		}).
 		Return(fin.JobResult{State: fin.JobStateSuccess, Variables: cacao.NewVariables()}, nil)
 
-	finCapability := New(queue, guidMock, nil, nil, 0)
+	finCapability := New(Dependencies{Queue: queue, GUID: guidMock})
 	_, err := finCapability.Execute(metadata, commandContext)
 	assert.Equal(t, err, nil)
 }
@@ -185,17 +185,23 @@ func TestExecuteFallsBackToDefaultLeaseWhenStepTimeoutIsUnset(t *testing.T) {
 func TestExecuteFailsFastWhenNoFinIsRegisteredForCapabilityType(t *testing.T) {
 	queue := new(mockQueue)
 	guidMock := new(mock_guid.Mock_Guid)
-	repository := new(mockRepository)
+	store := new(mockStore)
 	clock := new(mock_time.MockTime)
 	clock.On("Now").Return(time.Unix(1000, 0))
 
 	metadata, commandContext := newMetadataAndContext()
 
-	repository.On("List", mock.Anything).Return([]fin.Record{
+	store.On("List", mock.Anything).Return([]fin.Record{
 		{FinId: "other-fin", LastSeen: time.Unix(1000, 0), Capabilities: []fin.Capability{{Type: "some-other-type"}}},
 	}, nil)
 
-	finCapability := New(queue, guidMock, repository, clock, time.Minute)
+	finCapability := New(Dependencies{
+		Queue:      queue,
+		GUID:       guidMock,
+		Store:      store,
+		Time:       clock,
+		StaleAfter: time.Minute,
+	})
 	_, err := finCapability.Execute(metadata, commandContext)
 
 	var noCapableFin fin.ErrNoCapableFin
@@ -208,7 +214,7 @@ func TestExecuteFailsFastWhenNoFinIsRegisteredForCapabilityType(t *testing.T) {
 func TestExecuteFailsFastWhenEveryCapableFinIsStale(t *testing.T) {
 	queue := new(mockQueue)
 	guidMock := new(mock_guid.Mock_Guid)
-	repository := new(mockRepository)
+	store := new(mockStore)
 	clock := new(mock_time.MockTime)
 	now := time.Unix(10000, 0)
 	clock.On("Now").Return(now)
@@ -216,7 +222,7 @@ func TestExecuteFailsFastWhenEveryCapableFinIsStale(t *testing.T) {
 	metadata, commandContext := newMetadataAndContext()
 
 	staleAfter := time.Minute
-	repository.On("List", mock.Anything).Return([]fin.Record{
+	store.On("List", mock.Anything).Return([]fin.Record{
 		{
 			FinId:        "stale-fin",
 			LastSeen:     now.Add(-2 * staleAfter),
@@ -224,7 +230,13 @@ func TestExecuteFailsFastWhenEveryCapableFinIsStale(t *testing.T) {
 		},
 	}, nil)
 
-	finCapability := New(queue, guidMock, repository, clock, staleAfter)
+	finCapability := New(Dependencies{
+		Queue:      queue,
+		GUID:       guidMock,
+		Store:      store,
+		Time:       clock,
+		StaleAfter: staleAfter,
+	})
 	_, err := finCapability.Execute(metadata, commandContext)
 
 	var onlyStale fin.ErrOnlyStaleCapableFins
@@ -238,7 +250,7 @@ func TestExecuteProceedsWhenAtLeastOneCapableFinIsLive(t *testing.T) {
 	queue := new(mockQueue)
 	guidMock := new(mock_guid.Mock_Guid)
 	guidMock.On("New").Return(uuid.New())
-	repository := new(mockRepository)
+	store := new(mockStore)
 	clock := new(mock_time.MockTime)
 	now := time.Unix(10000, 0)
 	clock.On("Now").Return(now)
@@ -246,7 +258,7 @@ func TestExecuteProceedsWhenAtLeastOneCapableFinIsLive(t *testing.T) {
 	metadata, commandContext := newMetadataAndContext()
 
 	staleAfter := time.Minute
-	repository.On("List", mock.Anything).Return([]fin.Record{
+	store.On("List", mock.Anything).Return([]fin.Record{
 		{
 			FinId:        "stale-fin",
 			LastSeen:     now.Add(-2 * staleAfter),
@@ -262,30 +274,42 @@ func TestExecuteProceedsWhenAtLeastOneCapableFinIsLive(t *testing.T) {
 	queue.On("Enqueue", mock.Anything, mock.Anything).
 		Return(fin.JobResult{State: fin.JobStateSuccess, Variables: cacao.NewVariables()}, nil)
 
-	finCapability := New(queue, guidMock, repository, clock, staleAfter)
+	finCapability := New(Dependencies{
+		Queue:      queue,
+		GUID:       guidMock,
+		Store:      store,
+		Time:       clock,
+		StaleAfter: staleAfter,
+	})
 	_, err := finCapability.Execute(metadata, commandContext)
 
 	assert.Equal(t, err, nil)
 	queue.AssertExpectations(t)
 }
 
-func TestExecuteProceedsWhenRepositoryListFails(t *testing.T) {
+func TestExecuteProceedsWhenStoreListFails(t *testing.T) {
 	queue := new(mockQueue)
 	guidMock := new(mock_guid.Mock_Guid)
 	guidMock.On("New").Return(uuid.New())
-	repository := new(mockRepository)
+	store := new(mockStore)
 	clock := new(mock_time.MockTime)
 
 	metadata, commandContext := newMetadataAndContext()
 
-	repository.On("List", mock.Anything).Return([]fin.Record{}, errors.New("database unavailable"))
+	store.On("List", mock.Anything).Return([]fin.Record{}, errors.New("database unavailable"))
 	queue.On("Enqueue", mock.Anything, mock.Anything).
 		Return(fin.JobResult{State: fin.JobStateSuccess, Variables: cacao.NewVariables()}, nil)
 
-	// A repository error must fail open - fall back to the pre-existing
+	// A store error must fail open - fall back to the pre-existing
 	// enqueue-and-wait behavior rather than blocking a step over an
 	// inability to check liveness.
-	finCapability := New(queue, guidMock, repository, clock, time.Minute)
+	finCapability := New(Dependencies{
+		Queue:      queue,
+		GUID:       guidMock,
+		Store:      store,
+		Time:       clock,
+		StaleAfter: time.Minute,
+	})
 	_, err := finCapability.Execute(metadata, commandContext)
 
 	assert.Equal(t, err, nil)

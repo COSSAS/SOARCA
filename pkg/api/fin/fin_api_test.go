@@ -32,12 +32,18 @@ func newTestHandler(t *testing.T) (*FinHandler, storage.FinStore, *queue.Queue) 
 	guidMock := new(mock_guid.Mock_Guid)
 	guidMock.On("New").Return(fixedId)
 
-	handler := NewFinHandler(repo, jobQueue, Config{
-		RegistrationToken:      registrationToken,
-		PollIntervalSeconds:    5,
-		LongPollTimeoutSeconds: 1,
-		JobLeaseSeconds:        60,
-	}, guidMock)
+	handler := NewFinHandler(HandlerDependencies{
+		Store: repo,
+		Queue: jobQueue,
+		Config: Config{
+			RegistrationToken:      registrationToken,
+			PollIntervalSeconds:    5,
+			LongPollTimeoutSeconds: 1,
+			JobLeaseSeconds:        60,
+			StaleAfter:             2 * time.Minute,
+		},
+		GUID: guidMock,
+	})
 	return handler, repo, jobQueue
 }
 
@@ -143,7 +149,12 @@ func TestRegisterFailsWhenNotConfigured(t *testing.T) {
 	jobQueue := queue.New()
 	defer jobQueue.Close()
 	guidMock := new(mock_guid.Mock_Guid)
-	handler := NewFinHandler(repo, jobQueue, Config{}, guidMock)
+	handler := NewFinHandler(HandlerDependencies{
+		Store:  repo,
+		Queue:  jobQueue,
+		Config: Config{},
+		GUID:   guidMock,
+	})
 	router := newTestRouter(handler)
 
 	recorder := doRequest(router, http.MethodPost, "/fin/register", fin.RegisterRequest{
@@ -398,7 +409,7 @@ func TestListAndGet(t *testing.T) {
 
 func TestListAndGetMarkFinStaleAfterThreshold(t *testing.T) {
 	handler, repo, _ := newTestHandler(t)
-	handler.config.StaleAfterSeconds = 1
+	handler.config.StaleAfter = time.Second
 	router := newTestRouter(handler)
 
 	registered := registerTestFin(t, router, "pong")
