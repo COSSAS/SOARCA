@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"reflect"
 	"soarca/internal/logger"
+	"soarca/internal/services"
 	"soarca/pkg/core/capability"
-	"soarca/pkg/core/capability/manual/interaction"
 	"soarca/pkg/models/api"
 	"soarca/pkg/models/execution"
 	"soarca/pkg/models/manual"
@@ -21,20 +21,6 @@ import (
 	apiError "soarca/pkg/api/error"
 )
 
-// Notes:
-// A manual command in CACAO is simply the operation:
-// 		{ post_message; wait_for_response (returning a result) }
-// The manual API expose general manual executions wide information
-// Thus, we need a ManualHandler that uses an IInteractionStorage, implemented by interactionCapability
-// The API routes will invoke the ManualHandler.interactionCapability interface instance
-// The InteractionCapability manages the manual command infromation and status, like a cache. And interfaces any interactor type (e.g. API, integration)
-
-// It is always either only the internal API, or the internal API and ONE integration for manual.
-// Env variable: can only have one active manual interactor.
-//
-// In light of this, for hierarchical and distributed playbooks executions (via multiple playbook actions),
-// 	there will be ONE manual integration (besides internal API) per every ONE SOARCA instance.
-
 var log *logger.Log
 
 type Empty struct{}
@@ -44,11 +30,11 @@ func init() {
 }
 
 type ManualHandler struct {
-	interactionCapability interaction.IInteractionStorage
+	inbox services.ManualInbox
 }
 
-func NewManualHandler(interaction interaction.IInteractionStorage) *ManualHandler {
-	return &ManualHandler{interactionCapability: interaction}
+func NewManualHandler(inbox services.ManualInbox) *ManualHandler {
+	return &ManualHandler{inbox: inbox}
 }
 
 // manual
@@ -63,7 +49,7 @@ func NewManualHandler(interaction interaction.IInteractionStorage) *ManualHandle
 //	@failure		400	{object}	[]api.InteractionCommandData
 //	@Router			/manual/ [GET]
 func (manualHandler *ManualHandler) GetPendingCommands(g *gin.Context) {
-	commands, err := manualHandler.interactionCapability.GetPendingCommands()
+	commands, err := manualHandler.inbox.ListPendingCommands()
 	if err != nil {
 		log.Error(err)
 		apiError.SendErrorResponse(g, http.StatusInternalServerError,
@@ -114,8 +100,7 @@ func (manualHandler *ManualHandler) GetPendingCommand(g *gin.Context) {
 		return
 	}
 
-	executionMetadata := execution.Metadata{ExecutionId: execId, StepExecutionId: stepExecutionId}
-	commandData, err := manualHandler.interactionCapability.GetPendingCommand(executionMetadata)
+	commandData, err := manualHandler.inbox.GetPendingCommand(execution.Metadata{ExecutionId: execId, StepExecutionId: stepExecutionId})
 	if err != nil {
 		log.Error(err)
 		code := http.StatusBadRequest
@@ -170,8 +155,6 @@ func (manualHandler *ManualHandler) PutContinue(g *gin.Context) {
 			route, "")
 		return
 	}
-	executionMetadata := execution.Metadata{ExecutionId: execId, StepExecutionId: stepExecutionId}
-
 	byteData, err := io.ReadAll(g.Request.Body)
 	if err != nil {
 		log.Error("failed")
@@ -192,7 +175,7 @@ func (manualHandler *ManualHandler) PutContinue(g *gin.Context) {
 	// Looked up here (rather than only implicitly inside PostContinue below)
 	// so the response can report the PlaybookId, and so an unknown resource
 	// is reported before any out-args validation runs against it.
-	pendingCommand, err := manualHandler.interactionCapability.GetPendingCommand(executionMetadata)
+	pendingCommand, err := manualHandler.inbox.GetPendingCommand(execution.Metadata{ExecutionId: execId, StepExecutionId: stepExecutionId})
 	if err != nil {
 		log.Error(err)
 		code := http.StatusBadRequest
@@ -207,7 +190,7 @@ func (manualHandler *ManualHandler) PutContinue(g *gin.Context) {
 
 	interactionResponse := manualHandler.parseManualOutArgsToInteractionResponse(pendingCommand.Metadata, outArgsUpdate)
 
-	err = manualHandler.interactionCapability.PostContinue(interactionResponse)
+	err = manualHandler.inbox.ContinuePendingCommand(interactionResponse)
 	if err != nil {
 		log.Error(err)
 		code := http.StatusBadRequest

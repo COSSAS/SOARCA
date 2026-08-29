@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	finservice "soarca/internal/services/fin"
 	"soarca/internal/storage/memory"
 	"soarca/pkg/api/fin"
 	"soarca/pkg/core/capability/fin/queue"
@@ -49,17 +50,21 @@ func TestFinPublicRoutesAreExemptFromAdminAuthButFinAdminRoutesAreNot(t *testing
 	guidMock := new(mock_guid.Mock_Guid)
 	guidMock.On("New").Return(uuid.New())
 
-	finHandler := fin.NewFinHandler(fin.HandlerDependencies{
-		Store: repository,
-		Queue: jobQueue,
-		Config: fin.Config{
+	finHandler := fin.NewFinHandler(
+		finservice.NewRegistry(repository, finservice.RegistryConfig{
+			RegistrationToken: "test-registration-token",
+		}, guidMock),
+		finservice.NewWorkService(repository, jobQueue, finservice.WorkServiceConfig{
+			LongPollTimeoutSeconds: 1,
+			JobLeaseSeconds:        60,
+		}),
+		fin.Config{
 			RegistrationToken:      "test-registration-token",
 			PollIntervalSeconds:    5,
 			LongPollTimeoutSeconds: 1,
 			JobLeaseSeconds:        60,
 		},
-		GUID: guidMock,
-	})
+	)
 
 	// Simulates: routes.FinPublic(app, finHandler) called before
 	// intializeAuthenticationMiddleware(app) in controller.go.

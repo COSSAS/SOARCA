@@ -11,6 +11,7 @@ import (
 	appruntime "soarca/internal/runtime"
 	execservice "soarca/internal/services/execution"
 	finsvc "soarca/internal/services/fin"
+	manualsvc "soarca/internal/services/manual"
 	"soarca/internal/storage"
 	"soarca/pkg/api"
 	finapi "soarca/pkg/api/fin"
@@ -104,7 +105,7 @@ func (s *Server) SetupServer() (*gin.Engine, error) {
 		return nil, fmt.Errorf("failed to setup reporter routes: %w", err)
 	}
 
-	api.Manual(engine, s.runtime.GetInteraction())
+	api.Manual(engine, manualsvc.NewInbox(s.runtime.GetInteraction()))
 	api.FinAdmin(engine, finHandler)
 	api.Logging(engine)
 	api.Swagger(engine)

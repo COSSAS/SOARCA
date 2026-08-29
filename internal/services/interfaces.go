@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/cache"
+	"soarca/pkg/models/execution"
 	"soarca/pkg/models/fin"
 	"soarca/pkg/models/manual"
 )
@@ -87,17 +88,16 @@ type FinWorkService interface {
 // Does NOT depend on: FIN leasing or claim semantics.
 //
 // Responsibility: tracking pending manual commands, allowing operators to
-// view pending steps, and providing responses that resume execution.
+// view pending steps, and providing responses for outstanding manual work.
 type ManualInbox interface {
 	// ListPendingCommands returns all pending manual steps across all executions.
-	ListPendingCommands(ctx context.Context) (commands []manual.CommandInfo, err error)
+	ListPendingCommands() (commands []manual.CommandInfo, err error)
 
 	// GetPendingCommand retrieves a specific pending manual step.
-	GetPendingCommand(ctx context.Context, execID uuid.UUID, stepExecID uuid.UUID) (command manual.CommandInfo, err error)
+	GetPendingCommand(metadata execution.Metadata) (command manual.CommandInfo, err error)
 
 	// ContinuePendingCommand resolves a pending manual step with the operator's response.
-	// Resumes the paused execution.
-	ContinuePendingCommand(ctx context.Context, execID uuid.UUID, stepExecID uuid.UUID, response manual.InteractionResponse) error
+	ContinuePendingCommand(response manual.InteractionResponse) error
 }
 
 // ============================================================================

@@ -16,6 +16,10 @@ func (mock *MockInteractionStorage) GetPendingCommands() ([]manual.CommandInfo, 
 	return args.Get(0).([]manual.CommandInfo), args.Error(1)
 }
 
+func (mock *MockInteractionStorage) ListPendingCommands() ([]manual.CommandInfo, error) {
+	return mock.GetPendingCommands()
+}
+
 func (mock *MockInteractionStorage) GetPendingCommand(metadata execution.Metadata) (manual.CommandInfo, error) {
 	args := mock.Called(metadata)
 	return args.Get(0).(manual.CommandInfo), args.Error(1)
@@ -24,4 +28,8 @@ func (mock *MockInteractionStorage) GetPendingCommand(metadata execution.Metadat
 func (mock *MockInteractionStorage) PostContinue(response manual.InteractionResponse) error {
 	args := mock.Called(response)
 	return args.Error(0)
+}
+
+func (mock *MockInteractionStorage) ContinuePendingCommand(response manual.InteractionResponse) error {
+	return mock.PostContinue(response)
 }

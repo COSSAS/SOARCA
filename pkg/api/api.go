@@ -10,7 +10,6 @@ import (
 	playbook_handler "soarca/pkg/api/playbook"
 	reporter_handler "soarca/pkg/api/reporter"
 	status_handler "soarca/pkg/api/status"
-	"soarca/pkg/core/capability/manual/interaction"
 
 	manual_handler "soarca/pkg/api/manual"
 
@@ -46,9 +45,9 @@ func Reporter(app *gin.Engine, informer informer.IExecutionInformer) error {
 	return nil
 }
 
-func Manual(app *gin.Engine, interaction interaction.IInteractionStorage) {
+func Manual(app *gin.Engine, inbox services.ManualInbox) {
 	log.Trace("Setting up manual routes")
-	manualHandler := manual_handler.NewManualHandler(interaction)
+	manualHandler := manual_handler.NewManualHandler(inbox)
 	ManualRoutes(app, manualHandler)
 }
 
