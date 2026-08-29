@@ -21,13 +21,8 @@ type transport interface {
 
 var loadConfig = config.Load
 var newRuntime = appruntime.New
-var newTransport = func(runtime *appruntime.Runtime, cfg config.Config) transport {
-	server, err := httptransport.New(runtime, cfg)
-	if err != nil {
-		log.Error("Failed to create HTTP transport:", err)
-		panic(err)
-	}
-	return server
+var newTransport = func(ops appruntime.Operations, opts httptransport.Options) transport {
+	return httptransport.New(ops, opts)
 }
 
 func init() {
@@ -57,7 +52,12 @@ func Initialize() error {
 	}
 	defer runtime.Close()
 
-	server := newTransport(runtime, cfg)
+	server := newTransport(runtime.Operations(), httptransport.Options{
+		Server: cfg.Server,
+		Fin:    cfg.Fin,
+		Auth:   cfg.Auth,
+		CORS:   cfg.CORS,
+	})
 	engine, err := server.SetupServer()
 	if err != nil {
 		log.Error("Failed to setup server:", err)

@@ -24,19 +24,21 @@ func TestNewInitializesDependencies(t *testing.T) {
 		}
 	})
 
-	if runtime.PlaybookStore == nil {
-		t.Fatal("PlaybookStore is nil")
+	ops := runtime.Operations()
+
+	if ops.Playbooks == nil {
+		t.Fatal("Operations.Playbooks is nil")
 	}
-	if runtime.FinStore == nil {
-		t.Fatal("FinStore is nil")
+	if ops.Executions == nil {
+		t.Fatal("Operations.Executions is nil")
 	}
-	if runtime.Cache == nil {
-		t.Fatal("Cache is nil")
+	if ops.Fins == nil {
+		t.Fatal("Operations.Fins is nil")
 	}
-	if runtime.Interaction == nil {
-		t.Fatal("Interaction is nil")
+	if ops.Work == nil {
+		t.Fatal("Operations.Work is nil")
 	}
-	if runtime.FinQueue == nil {
-		t.Fatal("FinQueue is nil")
+	if ops.Manual == nil {
+		t.Fatal("Operations.Manual is nil")
 	}
 }

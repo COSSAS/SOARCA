@@ -38,16 +38,26 @@ type Options struct {
 	TheHive config.TheHiveConfig
 }
 
-// Runtime holds all wired application dependencies for the core SOAR orchestrator.
-// It constructs and owns the application services. Transport layers retrieve
-// services from getters, never constructing services directly.
+// Operations is the use case surface the runtime offers to any driver
+// (HTTP, gRPC, CLI, embedded SDK). It carries behaviour only: no
+// infrastructure and no getters to reach through. Drivers hold this value,
+// never the Runtime itself.
+type Operations struct {
+	Playbooks  services.PlaybookService
+	Executions executions.Runner
+	Fins       services.FinRegistry
+	Work       services.FinWorkService
+	Manual     services.ManualInbox
+}
+
+// Runtime owns construction and lifetime of the orchestrator's dependencies.
 type Runtime struct {
 	// Core infrastructure (shared across services)
-	PlaybookStore storage.PlaybookStore
-	FinStore      storage.FinStore
-	Cache         *cache.Cache
-	Interaction   *interaction.InteractionController
-	FinQueue      *queue.Queue
+	playbookStore storage.PlaybookStore
+	finStore      storage.FinStore
+	cache         *cache.Cache
+	interaction   *interaction.InteractionController
+	finQueue      *queue.Queue
 
 	// Application services
 	executions      executions.Runner
@@ -67,13 +77,13 @@ func New(opts Options) (*Runtime, error) {
 	}
 
 	// Initialize shared infrastructure
-	runtime.Cache = cache.New(&timeutil.Time{}, opts.Cache.MaxExecutions)
-	runtime.Interaction = interaction.New([]interaction.IInteractionIntegrationNotifier{})
-	runtime.FinQueue = queue.New()
+	runtime.cache = cache.New(&timeutil.Time{}, opts.Cache.MaxExecutions)
+	runtime.interaction = interaction.New([]interaction.IInteractionIntegrationNotifier{})
+	runtime.finQueue = queue.New()
 
 	// Create FIN services
 	runtime.finRegistry = finsvc.NewRegistry(
-		runtime.FinStore,
+		runtime.finStore,
 		finsvc.RegistryConfig{
 			RegistrationToken: opts.Fin.RegistrationToken,
 			StaleAfter:        opts.Fin.StaleAfter,
@@ -82,8 +92,8 @@ func New(opts Options) (*Runtime, error) {
 	)
 
 	runtime.finWorkService = finsvc.NewWorkService(
-		runtime.FinStore,
-		runtime.FinQueue,
+		runtime.finStore,
+		runtime.finQueue,
 		finsvc.WorkServiceConfig{
 			LongPollTimeoutSeconds: opts.Fin.LongPollTimeoutSeconds,
 			JobLeaseSeconds:        opts.Fin.JobLeaseSeconds,
@@ -91,23 +101,23 @@ func New(opts Options) (*Runtime, error) {
 	)
 
 	// Create manual service
-	runtime.manualInbox = manualsvc.NewInbox(runtime.Interaction)
+	runtime.manualInbox = manualsvc.NewInbox(runtime.interaction)
 
 	// Create playbook service
-	runtime.playbookService = playbookservice.New(runtime.PlaybookStore)
+	runtime.playbookService = playbookservice.New(runtime.playbookStore)
 
 	// Create the execution engine and the execution service that drives it.
 	executionEngine := engine.New(engine.Deps{
-		Interaction:        runtime.Interaction,
-		Cache:              runtime.Cache,
-		FinQueue:           runtime.FinQueue,
-		FinStore:           runtime.FinStore,
-		PlaybookStore:      runtime.PlaybookStore,
+		Interaction:        runtime.interaction,
+		Cache:              runtime.cache,
+		FinQueue:           runtime.finQueue,
+		FinStore:           runtime.finStore,
+		PlaybookStore:      runtime.playbookStore,
 		SkipCertValidation: opts.HTTP.SkipCertValidation,
 		FinStaleAfter:      opts.Fin.StaleAfter,
 		TheHive:            opts.TheHive,
 	})
-	runtime.executions = executions.New(executionEngine, runtime.PlaybookStore, runtime.Cache)
+	runtime.executions = executions.New(executionEngine, runtime.playbookStore, runtime.cache)
 
 	return runtime, nil
 }
@@ -128,70 +138,26 @@ func (r *Runtime) initializeStorage(storageCfg config.StorageConfig) error {
 		store = storagememory.New()
 	}
 
-	r.PlaybookStore = store.Playbooks()
-	r.FinStore = store.Fins()
+	r.playbookStore = store.Playbooks()
+	r.finStore = store.Fins()
 	return nil
 }
 
 // Close releases any resources held by the app.
 func (r *Runtime) Close() error {
-	if r.FinQueue != nil {
-		r.FinQueue.Close()
+	if r.finQueue != nil {
+		r.finQueue.Close()
 	}
 	return nil
 }
 
-// GetPlaybookStore returns the playbook store.
-func (r *Runtime) GetPlaybookStore() storage.PlaybookStore {
-	return r.PlaybookStore
+// Operations returns the use case surface for drivers.
+func (r *Runtime) Operations() Operations {
+	return Operations{
+		Playbooks:  r.playbookService,
+		Executions: r.executions,
+		Fins:       r.finRegistry,
+		Work:       r.finWorkService,
+		Manual:     r.manualInbox,
+	}
 }
-
-// GetFinStore returns the FIN store.
-func (r *Runtime) GetFinStore() storage.FinStore {
-	return r.FinStore
-}
-
-// GetCache returns the execution result cache.
-func (r *Runtime) GetCache() *cache.Cache {
-	return r.Cache
-}
-
-// GetInteraction returns the interaction controller.
-func (r *Runtime) GetInteraction() *interaction.InteractionController {
-	return r.Interaction
-}
-
-// GetFinQueue returns the FIN job queue.
-func (r *Runtime) GetFinQueue() *queue.Queue {
-	return r.FinQueue
-}
-
-// ============================================================================
-// SERVICE GETTERS (for HTTP handlers and other transport layers)
-// ============================================================================
-
-// GetFinRegistry returns the FIN registry service.
-func (r *Runtime) GetFinRegistry() services.FinRegistry {
-	return r.finRegistry
-}
-
-// GetFinWorkService returns the FIN work service.
-func (r *Runtime) GetFinWorkService() services.FinWorkService {
-	return r.finWorkService
-}
-
-// GetManualInbox returns the manual interaction inbox service.
-func (r *Runtime) GetManualInbox() services.ManualInbox {
-	return r.manualInbox
-}
-
-// GetExecutions returns the playbook execution service.
-func (r *Runtime) GetExecutions() executions.Runner {
-	return r.executions
-}
-
-// GetPlaybookService returns the playbook CRUD service.
-func (r *Runtime) GetPlaybookService() services.PlaybookService {
-	return r.playbookService
-}
-

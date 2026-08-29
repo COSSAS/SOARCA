@@ -9,7 +9,7 @@ import (
 	appruntime "soarca/internal/runtime"
 )
 
-func testRuntime(t *testing.T) *appruntime.Runtime {
+func testOperations(t *testing.T) appruntime.Operations {
 	t.Helper()
 
 	runtime, err := appruntime.New(appruntime.Options{
@@ -24,25 +24,18 @@ func testRuntime(t *testing.T) *appruntime.Runtime {
 			t.Fatalf("runtime.Close() returned error: %v", err)
 		}
 	})
-	return runtime
+	return runtime.Operations()
 }
 
 func TestSetupServerReturnsEngineWithAuthDisabled(t *testing.T) {
-	cfg := config.Config{
+	opts := Options{
 		Server: config.ServerConfig{Port: "0"},
 		Fin:    config.FinConfig{},
-		HTTP:   config.HTTPConfig{},
 		Auth:   config.AuthConfig{Enabled: false},
-		TheHive: config.TheHiveConfig{
-			Activate: false,
-		},
-		CORS: config.CORSConfig{AllowedOrigins: "*"},
+		CORS:   config.CORSConfig{AllowedOrigins: "*"},
 	}
 
-	server, err := New(testRuntime(t), cfg)
-	if err != nil {
-		t.Fatalf("New() returned error: %v", err)
-	}
+	server := New(testOperations(t), opts)
 
 	engine, err := server.SetupServer()
 	if err != nil {

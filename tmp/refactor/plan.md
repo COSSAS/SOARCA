@@ -196,25 +196,61 @@ Note: `runtime.Options` gained `HTTP` and `TheHive`, and `controller.Initialize`
 passes them. Without that, `SkipCertValidation` and the whole TheHive integration would
 have silently stopped being configured.
 
-### Phase 3 — install the boundary
+### Phase 3 — install the boundary (DONE)
 
-Introduce `Operations`. `httptransport.New` takes `Operations` + config instead of
-`*Runtime` + `Config`. Move `FinHandler` construction into transport. Delete
-`bootstrap.Container` and `internal/controller/controller.go` (logic moves to `main.go`).
+`Runtime` now exposes exactly one surface:
 
-Proof: a ~30-line `soarca run playbook.json` CLI that builds an orchestrator, takes
-`Operations()`, calls `Executions.Start` + `Executions.Status`, and imports nothing
-under `transport/`.
+```go
+type Operations struct {
+	Playbooks  services.PlaybookService
+	Executions executions.Runner
+	Fins       services.FinRegistry
+	Work       services.FinWorkService
+	Manual     services.ManualInbox
+}
 
-### Phase 4 — renames and moves only
+func (r *Runtime) Operations() Operations
+```
 
-`git mv` + import rewrites, one PR per slice. Zero behaviour change.
+All infrastructure fields and getters went private (`playbookStore`, `finStore`,
+`finQueue`, `cache`, `interaction`). `GetPlaybookStore`, `GetCache`, `GetFinQueue`,
+`GetInteraction`, `GetFinStore` are gone, so transport cannot reach through the
+container even by accident.
 
-### Phase 5 — enforce
+`httptransport.New(ops, opts)` now takes `Operations` plus its own narrow `Options`
+(Server, Fin, Auth, CORS) instead of `*Runtime` + the whole `config.Config`. Note what
+is no longer passed to transport: storage config, TheHive config and outbound TLS
+settings — all orchestrator concerns. The transport also constructs its own FinHandler.
 
-A `go test` that shells `go list -deps` and fails if any package under
-`internal/{orchestrator,playbooks,executions,fins,manual}` transitively imports
-`net/http`, `gin`, or `soarca/internal/transport/...`.
+`internal/bootstrap` is deleted entirely (Container, TransportOptions, workflow factory).
+
+`internal/controller/controller.go` was kept rather than folded into `main.go`: it is the
+composition root and its `loadConfig`/`newRuntime`/`newTransport` seams are what make
+`controller_test.go` possible. It should be renamed (`internal/app`) in Phase 4 rather
+than deleted — the objection was three meanings of "controller", not this file's job.
+
+`boundary_test.go` was rewritten: it asserted every getter returned non-nil, which pinned
+the service-locator shape. It now asserts `Operations` is fully populated and documents
+the getters that must not come back.
+
+### Phase 4 — renames and moves only (TODO)
+
+`git mv` + import rewrites, one PR per slice. Zero behaviour change. See the naming table
+above. Includes the `pkg/` → `internal/` split and `pkg/soarca` embeddable entrypoint.
+
+### Phase 5 — enforce (DONE, ahead of Phase 4)
+
+`test/architecture/boundary_test.go` runs `go list -deps` over the orchestrator packages
+and fails if any of them transitively depends on gin, gauth, swagger,
+`soarca/internal/transport` or `soarca/pkg/api`. Currently passing: the core is genuinely
+transport-free.
+
+`net/http` is deliberately *not* forbidden — the http and openc2 capabilities make
+outbound calls and legitimately need it. The rule targets inbound web framework, routing
+and auth middleware.
+
+A second test (`TestDetectorWorks`) asserts that the transport layer *does* depend on
+gin, so the check cannot silently degrade into one that inspects nothing.
 
 ### Phase 6 — optional, non-blocking
 
@@ -290,6 +326,9 @@ hash off the wire.
 
 ## Notes for later phases
 
-- `internal/controller/boundary_test.go` asserts that every `Runtime` getter returns
-  non-nil. It pins the service-locator shape and must be rewritten in Phase 3 to assert
-  on `Operations` instead.
+- `internal/controller/boundary_test.go` asserted that every `Runtime` getter returns
+  non-nil. It pinned the service-locator shape. Rewritten in Phase 3.
+- Something in the editor/toolchain repeatedly prepends a duplicate `package X` line to
+  newly created Go files, producing `expected declaration, found 'package'`. Hit on
+  `fin_api_test.go`, `engine.go`, `service.go` and `boundary_test.go`. Check the first
+  two lines of any new file before building.

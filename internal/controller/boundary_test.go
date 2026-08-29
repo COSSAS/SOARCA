@@ -8,54 +8,52 @@ import (
 	httptransport "soarca/internal/transport/httptransport"
 )
 
-// TestRuntimeBoundary verifies that runtime properly exposes dependencies through narrow accessors.
+// TestRuntimeBoundary verifies the runtime exposes its use cases as behaviour
+// only. Operations must carry no infrastructure: if a store, cache, queue or
+// decomposer factory ever appears here, transport can reach through it again.
 func TestRuntimeBoundary(t *testing.T) {
-	runtime, err := appruntime.New(appruntime.Options{
-		Storage: mockStorageConfig(),
-		Cache:   mockCacheConfig(),
-	})
+	runtime, err := appruntime.New(mockRuntimeOptions())
 	if err != nil {
 		t.Fatalf("Failed to create runtime: %v", err)
 	}
 	defer runtime.Close()
 
-	// Verify all getters return non-nil values
-	if runtime.GetPlaybookStore() == nil {
-		t.Error("GetPlaybookStore returned nil")
+	ops := runtime.Operations()
+
+	if ops.Playbooks == nil {
+		t.Error("Operations.Playbooks is nil")
 	}
-	if runtime.GetFinStore() == nil {
-		t.Error("GetFinStore returned nil")
+	if ops.Executions == nil {
+		t.Error("Operations.Executions is nil")
 	}
-	if runtime.GetCache() == nil {
-		t.Error("GetCache returned nil")
+	if ops.Fins == nil {
+		t.Error("Operations.Fins is nil")
 	}
-	if runtime.GetInteraction() == nil {
-		t.Error("GetInteraction returned nil")
+	if ops.Work == nil {
+		t.Error("Operations.Work is nil")
 	}
-	if runtime.GetFinQueue() == nil {
-		t.Error("GetFinQueue returned nil")
+	if ops.Manual == nil {
+		t.Error("Operations.Manual is nil")
 	}
+
+	// The runtime must not hand out infrastructure. If any of these compile,
+	// the boundary has been violated:
+	//   _ = runtime.GetPlaybookStore()
+	//   _ = runtime.GetCache()
+	//   _ = runtime.GetFinQueue()
 }
 
-// TestTransportBoundary verifies that the transport layer only does route registration and startup.
-// It must NOT expose runtime internals (playbook store, decomposer factory, etc.).
+// TestTransportBoundary verifies the transport layer only does route
+// registration and startup, driven purely by Operations.
 func TestTransportBoundary(t *testing.T) {
-	runtime, err := appruntime.New(appruntime.Options{
-		Storage: mockStorageConfig(),
-		Cache:   mockCacheConfig(),
-	})
+	runtime, err := appruntime.New(mockRuntimeOptions())
 	if err != nil {
 		t.Fatalf("Failed to create runtime: %v", err)
 	}
 	defer runtime.Close()
 
-	cfg := mockTransportConfig()
-	server, err := httptransport.New(runtime, cfg)
-	if err != nil {
-		t.Fatalf("Failed to create server: %v", err)
-	}
+	server := httptransport.New(runtime.Operations(), mockTransportOptions())
 
-	// Server should be able to set up routes
 	engine, err := server.SetupServer()
 	if err != nil {
 		t.Fatalf("Failed to setup server: %v", err)
@@ -63,54 +61,50 @@ func TestTransportBoundary(t *testing.T) {
 	if engine == nil {
 		t.Error("SetupServer returned nil engine")
 	}
-
-	// Server should have routes registered — the exact count is a sanity check
 	if got := len(engine.Routes()); got == 0 {
 		t.Error("SetupServer registered no routes")
 	}
 
-	// The transport layer must NOT expose GetPlaybookStore or NewDecomposer.
-	// Those belong in the bootstrap/runtime layer. If the following lines compile,
-	// the boundary has been violated:
-	//   _ = server.GetPlaybookStore()   // must not compile
-	//   _ = server.NewDecomposer()      // must not compile
+	// The transport must not expose runtime internals. If any of these
+	// compile, the boundary has been violated:
+	//   _ = server.GetPlaybookStore()
+	//   _ = server.NewDecomposer()
 }
 
-// TestConfigBoundary verifies that config is properly split between layers.
+// TestConfigBoundary verifies config is split by ownership: the transport is
+// handed only what HTTP actually needs, never the whole application config.
 func TestConfigBoundary(t *testing.T) {
-	// Verify runtime options are narrow (only storage/cache)
-	runtimeOpts := appruntime.Options{
-		Storage: mockStorageConfig(),
-		Cache:   mockCacheConfig(),
-	}
+	runtimeOpts := mockRuntimeOptions()
 
-	// Runtime should have cache max executions set
 	if runtimeOpts.Cache.MaxExecutions != 5 {
-		t.Error("Runtime should have Cache config")
+		t.Error("Runtime should own Cache config")
+	}
+	if runtimeOpts.TheHive.Activate != false {
+		t.Error("Runtime should own TheHive config")
+	}
+	if runtimeOpts.HTTP.SkipCertValidation != false {
+		t.Error("Runtime should own outbound HTTP config")
 	}
 
-	// Verify transport config includes HTTP-specific config
-	transportCfg := mockTransportConfig()
+	transportOpts := mockTransportOptions()
 
-	// Transport should have server port
-	if transportCfg.Server.Port != "8080" {
+	if transportOpts.Server.Port != "8080" {
 		t.Error("Transport should have Server config with port")
 	}
-
-	// Transport should have FIN config
-	if transportCfg.Fin.RegistrationToken != "test-token" {
+	if transportOpts.Fin.RegistrationToken != "test-token" {
 		t.Error("Transport should have Fin config")
 	}
-
-	// Transport should have HTTP config
-	if transportCfg.HTTP.SkipCertValidation != false {
-		t.Error("Transport should have HTTP config")
-	}
-
-	// Transport should have Auth config
-	if transportCfg.Auth.Enabled != false {
+	if transportOpts.Auth.Enabled != false {
 		t.Error("Transport should have Auth config")
 	}
+	if transportOpts.CORS.AllowedOrigins != "*" {
+		t.Error("Transport should have CORS config")
+	}
+
+	// Transport options must not carry orchestrator concerns. If any of these
+	// compile, the split has regressed:
+	//   _ = transportOpts.Storage
+	//   _ = transportOpts.TheHive
 }
 
 // Helper functions for testing
@@ -128,32 +122,38 @@ func mockCacheConfig() config.CacheConfig {
 	}
 }
 
-func mockTransportConfig() config.Config {
-	return config.Config{
-		Server: config.ServerConfig{
-			Port:      "8080",
-			EnableTLS: false,
-		},
-		Fin: config.FinConfig{
-			RegistrationToken:      "test-token",
-			PollIntervalSeconds:    5,
-			LongPollTimeoutSeconds: 30,
-			JobLeaseSeconds:        60,
-			StaleAfter:             300,
-		},
+func mockFinConfig() config.FinConfig {
+	return config.FinConfig{
+		RegistrationToken:      "test-token",
+		PollIntervalSeconds:    5,
+		LongPollTimeoutSeconds: 30,
+		JobLeaseSeconds:        60,
+		StaleAfter:             300,
+	}
+}
+
+func mockRuntimeOptions() appruntime.Options {
+	return appruntime.Options{
 		Storage: mockStorageConfig(),
 		Cache:   mockCacheConfig(),
+		Fin:     mockFinConfig(),
 		HTTP: config.HTTPConfig{
 			SkipCertValidation: false,
-		},
-		Auth: config.AuthConfig{
-			Enabled: false,
 		},
 		TheHive: config.TheHiveConfig{
 			Activate: false,
 		},
-		CORS: config.CORSConfig{
-			AllowedOrigins: "*",
+	}
+}
+
+func mockTransportOptions() httptransport.Options {
+	return httptransport.Options{
+		Server: config.ServerConfig{
+			Port:      "8080",
+			EnableTLS: false,
 		},
+		Fin:  mockFinConfig(),
+		Auth: config.AuthConfig{Enabled: false},
+		CORS: config.CORSConfig{AllowedOrigins: "*"},
 	}
 }

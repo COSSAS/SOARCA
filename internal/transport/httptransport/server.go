@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"strings"
 
-	"soarca/internal/bootstrap"
 	"soarca/internal/config"
 	"soarca/internal/logger"
 	appruntime "soarca/internal/runtime"
@@ -25,31 +24,39 @@ func init() {
 	log = logger.Logger(reflect.TypeOf(Empty{}).PkgPath(), logger.Info, "", logger.Json)
 }
 
-// Server owns the HTTP transport wiring for a runtime app.
-// It is responsible for route registration, middleware, and listener startup only.
-// All application logic lives in the bootstrap container.
-type Server struct {
-	container *bootstrap.Container
+// Options is the configuration the HTTP transport needs. It is deliberately
+// narrower than the application config: anything the orchestrator owns
+// (storage, TheHive, outbound TLS) does not belong here.
+type Options struct {
+	Server config.ServerConfig
+	Fin    config.FinConfig
+	Auth   config.AuthConfig
+	CORS   config.CORSConfig
 }
 
-// New creates a new HTTP server adapter with a bootstrapped service container.
-func New(runtime *appruntime.Runtime, cfg config.Config) (*Server, error) {
-	container, err := bootstrap.New(runtime, cfg)
-	if err != nil {
-		return nil, fmt.Errorf("failed to bootstrap services: %w", err)
-	}
-	container.FinHandler = finapi.NewFinHandler(
-		container.Runtime.GetFinRegistry(),
-		container.Runtime.GetFinWorkService(),
+// Server owns the HTTP transport wiring: route registration, middleware and
+// listener startup. It holds the orchestrator's use case surface and nothing else.
+type Server struct {
+	ops        appruntime.Operations
+	opts       Options
+	finHandler *finapi.FinHandler
+}
+
+// New creates an HTTP server adapter over the given operations.
+func New(ops appruntime.Operations, opts Options) *Server {
+	finHandler := finapi.NewFinHandler(
+		ops.Fins,
+		ops.Work,
 		finapi.Config{
-			RegistrationToken:      cfg.Fin.RegistrationToken,
-			PollIntervalSeconds:    cfg.Fin.PollIntervalSeconds,
-			LongPollTimeoutSeconds: cfg.Fin.LongPollTimeoutSeconds,
-			JobLeaseSeconds:        cfg.Fin.JobLeaseSeconds,
-			StaleAfter:             cfg.Fin.StaleAfter,
+			RegistrationToken:      opts.Fin.RegistrationToken,
+			PollIntervalSeconds:    opts.Fin.PollIntervalSeconds,
+			LongPollTimeoutSeconds: opts.Fin.LongPollTimeoutSeconds,
+			JobLeaseSeconds:        opts.Fin.JobLeaseSeconds,
+			StaleAfter:             opts.Fin.StaleAfter,
 		},
 	)
-	return &Server{container: container}, nil
+
+	return &Server{ops: ops, opts: opts, finHandler: finHandler}
 }
 
 // SetupServer initializes the Gin engine with all routes and middleware.
@@ -60,21 +67,21 @@ func (s *Server) SetupServer() (*gin.Engine, error) {
 	log.Debug("Log level is debug")
 	log.Trace("Log level is trace")
 
-	origins := strings.Split(strings.ReplaceAll(s.container.TransportOptions.CORS.AllowedOrigins, " ", ""), ",")
+	origins := strings.Split(strings.ReplaceAll(s.opts.CORS.AllowedOrigins, " ", ""), ",")
 	api.Cors(engine, origins)
 
-	api.FinPublic(engine, s.container.FinHandler)
+	api.FinPublic(engine, s.finHandler)
 
 	if err := s.setupAuthMiddleware(engine); err != nil {
 		return nil, fmt.Errorf("failed to setup auth middleware: %w", err)
 	}
 
-	api.TriggerRoutes(engine, api.NewTriggerHandler(s.container.Runtime.GetExecutions()))
+	api.TriggerRoutes(engine, api.NewTriggerHandler(s.ops.Executions))
 	api.StatusRoutes(engine)
-	api.PlaybookRoutesWithService(engine, s.container.Runtime.GetPlaybookService())
-	api.ReporterRoutesWithService(engine, s.container.Runtime.GetExecutions())
-	api.ManualRoutes(engine, api.NewManualHandler(s.container.Runtime.GetManualInbox()))
-	api.FinAdmin(engine, s.container.FinHandler)
+	api.PlaybookRoutesWithService(engine, s.ops.Playbooks)
+	api.ReporterRoutesWithService(engine, s.ops.Executions)
+	api.ManualRoutes(engine, api.NewManualHandler(s.ops.Manual))
+	api.FinAdmin(engine, s.finHandler)
 	api.Logging(engine)
 	api.Swagger(engine)
 
@@ -83,7 +90,7 @@ func (s *Server) SetupServer() (*gin.Engine, error) {
 
 // setupAuthMiddleware configures authentication if enabled.
 func (s *Server) setupAuthMiddleware(engine *gin.Engine) error {
-	if !s.container.TransportOptions.Auth.Enabled {
+	if !s.opts.Auth.Enabled {
 		return nil
 	}
 
@@ -99,16 +106,16 @@ func (s *Server) setupAuthMiddleware(engine *gin.Engine) error {
 
 // RunServer starts the HTTP server on the configured port.
 func (s *Server) RunServer(engine *gin.Engine) error {
-	if s.container.TransportOptions.Server.EnableTLS {
-		if err := validateCertificates(s.container.TransportOptions.Server.CertFile, s.container.TransportOptions.Server.CertKey); err != nil {
+	if s.opts.Server.EnableTLS {
+		if err := validateCertificates(s.opts.Server.CertFile, s.opts.Server.CertKey); err != nil {
 			return err
 		}
-		log.Infof("Starting HTTPS server on port %s", s.container.TransportOptions.Server.Port)
-		return engine.RunTLS(":"+s.container.TransportOptions.Server.Port, s.container.TransportOptions.Server.CertFile, s.container.TransportOptions.Server.CertKey)
+		log.Infof("Starting HTTPS server on port %s", s.opts.Server.Port)
+		return engine.RunTLS(":"+s.opts.Server.Port, s.opts.Server.CertFile, s.opts.Server.CertKey)
 	}
 
-	log.Infof("Starting HTTP server on port %s", s.container.TransportOptions.Server.Port)
-	return engine.Run(":" + s.container.TransportOptions.Server.Port)
+	log.Infof("Starting HTTP server on port %s", s.opts.Server.Port)
+	return engine.Run(":" + s.opts.Server.Port)
 }
 
 // validateCertificates checks that TLS certificate files exist.
