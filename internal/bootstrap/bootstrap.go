@@ -7,14 +7,7 @@ import (
 	"soarca/internal/logger"
 	appruntime "soarca/internal/runtime"
 	execservice "soarca/internal/services/execution"
-	finsvc "soarca/internal/services/fin"
-	manualsvc "soarca/internal/services/manual"
-	"soarca/internal/services"
-	playbookservice "soarca/internal/services/playbook"
-	reporterservice "soarca/internal/services/reporter"
-	triggerservice "soarca/internal/services/trigger"
 	"soarca/pkg/api/fin"
-	"soarca/pkg/utils/guid"
 )
 
 var log *logger.Log
@@ -36,22 +29,20 @@ type TransportOptions struct {
 }
 
 // Container holds all bootstrapped services and handlers ready for injection into the transport layer.
+// FinHandler is the only HTTP handler; other services are retrieved from runtime via getters.
 // The HTTP server receives this and only uses it for route registration — no runtime internals exposed.
 type Container struct {
-	ExecutionRuntime services.ExecutionRuntime
+	Runtime          *appruntime.Runtime
 	FinHandler       *fin.FinHandler
-	TriggerService   services.TriggerService
-	PlaybookService  services.PlaybookService
-	ReporterService  services.ReporterService
-	ManualInbox      services.ManualInbox
 	TransportOptions TransportOptions
 }
 
-// New bootstraps all services and handlers.
-// The workflow factory (capability wiring, decomposer construction) is built here,
-// not in the HTTP transport layer.
+// New bootstraps services and handlers.
+// Runtime already constructs most services. Bootstrap constructs ExecutionRuntime (special case)
+// and FinHandler, then injects ExecutionRuntime into runtime.
 func New(runtime *appruntime.Runtime, cfg config.Config) (*Container, error) {
 	c := &Container{
+		Runtime: runtime,
 		TransportOptions: TransportOptions{
 			Server:  cfg.Server,
 			Fin:     cfg.Fin,
@@ -63,31 +54,16 @@ func New(runtime *appruntime.Runtime, cfg config.Config) (*Container, error) {
 	}
 
 	// WorkflowFactory owns all capability/executor/reporter wiring.
-	// It implements decomposer_controller.IController so the runtime can call NewDecomposer().
+	// It implements decomposer_controller.IController so ExecutionRuntime can call NewDecomposer().
 	wf := newWorkflowFactory(runtime, cfg)
 
-	// Build execution runtime
-	c.ExecutionRuntime = execservice.New(runtime, wf)
+	// Build ExecutionRuntime service
+	executionRuntime := execservice.New(runtime, wf)
 
-	// Build FIN services and handler
-	finRegistry := finsvc.NewRegistry(
-		runtime.GetFinStore(),
-		finsvc.RegistryConfig{
-			RegistrationToken: cfg.Fin.RegistrationToken,
-			StaleAfter:        cfg.Fin.StaleAfter,
-		},
-		new(guid.Guid),
-	)
+	// Inject ExecutionRuntime into runtime (also constructs TriggerService there)
+	runtime.SetExecutionRuntime(executionRuntime)
 
-	finWorkService := finsvc.NewWorkService(
-		runtime.GetFinStore(),
-		runtime.GetFinQueue(),
-		finsvc.WorkServiceConfig{
-			LongPollTimeoutSeconds: cfg.Fin.LongPollTimeoutSeconds,
-			JobLeaseSeconds:        cfg.Fin.JobLeaseSeconds,
-		},
-	)
-
+	// Build FinHandler from runtime services
 	finHandlerConfig := fin.Config{
 		RegistrationToken:      cfg.Fin.RegistrationToken,
 		PollIntervalSeconds:    cfg.Fin.PollIntervalSeconds,
@@ -96,13 +72,11 @@ func New(runtime *appruntime.Runtime, cfg config.Config) (*Container, error) {
 		StaleAfter:             cfg.Fin.StaleAfter,
 	}
 
-	c.FinHandler = fin.NewFinHandler(finRegistry, finWorkService, finHandlerConfig)
-
-	// Build other services
-	c.TriggerService = triggerservice.New(c.ExecutionRuntime, runtime.GetPlaybookStore())
-	c.PlaybookService = playbookservice.New(runtime.GetPlaybookStore())
-	c.ReporterService = reporterservice.New(runtime.GetCache())
-	c.ManualInbox = manualsvc.NewInbox(runtime.GetInteraction())
+	c.FinHandler = fin.NewFinHandler(
+		runtime.GetFinRegistry(),
+		runtime.GetFinWorkService(),
+		finHandlerConfig,
+	)
 
 	return c, nil
 }

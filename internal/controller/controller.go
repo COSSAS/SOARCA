@@ -47,6 +47,7 @@ func Initialize() error {
 	runtime, err := newRuntime(appruntime.Options{
 		Storage: cfg.Storage,
 		Cache:   cfg.Cache,
+		Fin:     cfg.Fin,
 	})
 	if err != nil {
 		log.Error("Failed to initialize application:", err)
