@@ -4,10 +4,11 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/gin-gonic/gin"
 	"soarca/internal/config"
 	appruntime "soarca/internal/runtime"
 	httptransport "soarca/internal/transport/httptransport"
+
+	"github.com/gin-gonic/gin"
 )
 
 type fakeTransport struct {

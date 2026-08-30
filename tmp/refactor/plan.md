@@ -3,6 +3,9 @@
 Working document. Lives in `./tmp` so it is not committed; move it into the repo if you
 want it tracked.
 
+Companion: `durable-execution-design.md` covers the future execution model (durable runs,
+resume, parallel steps). This document is only about the current restructure.
+
 ## Root cause
 
 `*runtime.Runtime` is a service locator that is passed *into* the things it constructs.

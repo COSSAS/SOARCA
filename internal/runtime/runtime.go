@@ -6,9 +6,9 @@ import (
 	"reflect"
 
 	"soarca/internal/config"
+	"soarca/internal/logger"
 	"soarca/internal/runs"
 	"soarca/internal/runs/engine"
-	"soarca/internal/logger"
 	"soarca/internal/services"
 	finsvc "soarca/internal/services/fin"
 	manualsvc "soarca/internal/services/manual"

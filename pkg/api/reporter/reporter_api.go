@@ -3,8 +3,8 @@ package reporter
 import (
 	"net/http"
 	"reflect"
-	execsvc "soarca/internal/runs"
 	"soarca/internal/logger"
+	execsvc "soarca/internal/runs"
 	"soarca/pkg/api/error"
 	"soarca/pkg/models/api"
 

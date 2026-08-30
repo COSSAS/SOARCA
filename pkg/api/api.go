@@ -3,8 +3,8 @@ package api
 import (
 	"reflect"
 	open_api "soarca/api"
-	"soarca/internal/runs"
 	"soarca/internal/logger"
+	"soarca/internal/runs"
 	"soarca/internal/services"
 	fin_handler "soarca/pkg/api/fin"
 	manual_handler "soarca/pkg/api/manual"
@@ -145,4 +145,3 @@ func FinAdminRoutes(route *gin.Engine, finHandler *fin_handler.FinHandler) {
 		finRoutes.DELETE(":fin_id", finHandler.Delete)
 	}
 }
-

@@ -3,11 +3,12 @@ package controller
 import (
 	"reflect"
 
-	"github.com/gin-gonic/gin"
 	"soarca/internal/config"
 	"soarca/internal/logger"
 	appruntime "soarca/internal/runtime"
 	httptransport "soarca/internal/transport/httptransport"
+
+	"github.com/gin-gonic/gin"
 )
 
 var log *logger.Log

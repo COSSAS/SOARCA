@@ -9,14 +9,14 @@ import (
 // Object interfaced to users storing info about pending manual commands
 // TODO: change to manualcommandinfo
 type InteractionCommandData struct {
-	Type            string                      `bson:"type" json:"type" validate:"required" example:"run-status"`  // The type of this content
-	RunId           string                      `bson:"run_id" json:"run_id" validate:"required"`                   // The id of the run
-	PlaybookId      string                      `bson:"playbook_id" json:"playbook_id" validate:"required"`         // The id of the CACAO playbook executed by the run
-	StepId          string                      `bson:"step_id" json:"step_id" validate:"required"`                 // The id of the step executed by the run
-	StepRunId       string                      `bson:"step_run_id" json:"step_run_id" validate:"required"`         // The id of this specific step invocation. Distinguishes concurrent/repeated pending commands that share the same StepId (e.g. overlapping loop iterations)
-	Commands        []ManualCommand             `bson:"commands" json:"commands" validate:"required"`                    // All commands of the step, in order. A manual step is a single unit of work resolved by one response, but may list multiple commands/instructions
-	Targets         []capability.ResolvedTarget `bson:"targets" json:"targets" validate:"required"`                      // All targets of the step, in order, together with their resolved authentication information (needed by a human operator to perform the step manually)
-	OutVariables    cacao.Variables             `bson:"out_args" json:"out_args" validate:"required"`                    // Map of cacao variables handled in the step out args with current values and definitions
+	Type         string                      `bson:"type" json:"type" validate:"required" example:"run-status"` // The type of this content
+	RunId        string                      `bson:"run_id" json:"run_id" validate:"required"`                  // The id of the run
+	PlaybookId   string                      `bson:"playbook_id" json:"playbook_id" validate:"required"`        // The id of the CACAO playbook executed by the run
+	StepId       string                      `bson:"step_id" json:"step_id" validate:"required"`                // The id of the step executed by the run
+	StepRunId    string                      `bson:"step_run_id" json:"step_run_id" validate:"required"`        // The id of this specific step invocation. Distinguishes concurrent/repeated pending commands that share the same StepId (e.g. overlapping loop iterations)
+	Commands     []ManualCommand             `bson:"commands" json:"commands" validate:"required"`              // All commands of the step, in order. A manual step is a single unit of work resolved by one response, but may list multiple commands/instructions
+	Targets      []capability.ResolvedTarget `bson:"targets" json:"targets" validate:"required"`                // All targets of the step, in order, together with their resolved authentication information (needed by a human operator to perform the step manually)
+	OutVariables cacao.Variables             `bson:"out_args" json:"out_args" validate:"required"`              // Map of cacao variables handled in the step out args with current values and definitions
 }
 
 // One command of a (possibly multi-command) manual step
