@@ -1,4 +1,4 @@
-package controller
+package app
 
 import (
 	"errors"
@@ -26,7 +26,7 @@ func (f *fakeTransport) RunServer(*gin.Engine) error {
 	return nil
 }
 
-func TestInitializeWiresRuntimeAndTransport(t *testing.T) {
+func TestRunWiresRuntimeAndTransport(t *testing.T) {
 	origLoadConfig := loadConfig
 	origNewRuntime := newRuntime
 	origNewTransport := newTransport
@@ -67,8 +67,8 @@ func TestInitializeWiresRuntimeAndTransport(t *testing.T) {
 		return fake
 	}
 
-	if err := Initialize(); err != nil {
-		t.Fatalf("Initialize() returned error: %v", err)
+	if err := Run(); err != nil {
+		t.Fatalf("Run() returned error: %v", err)
 	}
 
 	if gotRuntimeOpts.Storage != cfg.Storage {
@@ -103,7 +103,7 @@ func TestInitializeWiresRuntimeAndTransport(t *testing.T) {
 	}
 }
 
-func TestInitializeReturnsConfigLoadError(t *testing.T) {
+func TestRunReturnsConfigLoadError(t *testing.T) {
 	origLoadConfig := loadConfig
 	t.Cleanup(func() {
 		loadConfig = origLoadConfig
@@ -113,7 +113,7 @@ func TestInitializeReturnsConfigLoadError(t *testing.T) {
 		return config.Config{}, errors.New("boom")
 	}
 
-	if err := Initialize(); err == nil {
-		t.Fatal("expected Initialize to return an error")
+	if err := Run(); err == nil {
+		t.Fatal("expected Run to return an error")
 	}
 }

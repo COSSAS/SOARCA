@@ -1,4 +1,4 @@
-package controller
+package app
 
 import (
 	"testing"
@@ -10,7 +10,7 @@ import (
 
 // TestRuntimeBoundary verifies the runtime exposes its use cases as behaviour
 // only. Operations must carry no infrastructure: if a store, cache, queue or
-// decomposer factory ever appears here, transport can reach through it again.
+// walker factory ever appears here, transport can reach through it again.
 func TestRuntimeBoundary(t *testing.T) {
 	runtime, err := appruntime.New(mockRuntimeOptions())
 	if err != nil {
@@ -68,7 +68,7 @@ func TestTransportBoundary(t *testing.T) {
 	// The transport must not expose runtime internals. If any of these
 	// compile, the boundary has been violated:
 	//   _ = server.GetPlaybookStore()
-	//   _ = server.NewDecomposer()
+	//   _ = server.NewWalker()
 }
 
 // TestConfigBoundary verifies config is split by ownership: the transport is

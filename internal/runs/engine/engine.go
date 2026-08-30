@@ -1,4 +1,4 @@
-// Package engine builds the per-execution decomposer and owns all capability,
+// Package engine builds the per-run workflow walker and owns all capability,
 // executor and reporter wiring.
 package engine
 
@@ -18,7 +18,7 @@ import (
 	openc2cap "soarca/pkg/core/capability/openc2"
 	pscap "soarca/pkg/core/capability/powershell"
 	sshcap "soarca/pkg/core/capability/ssh"
-	"soarca/pkg/core/decomposer"
+	"soarca/internal/workflow"
 	actionexec "soarca/pkg/core/executors/action"
 	condexec "soarca/pkg/core/executors/condition"
 	pbactionexec "soarca/pkg/core/executors/playbook_action"
@@ -43,7 +43,7 @@ func init() {
 	log = logger.Logger(reflect.TypeOf(empty{}).PkgPath(), logger.Info, "", logger.Json)
 }
 
-// Deps are the collaborators a decomposer needs, passed explicitly so the
+// Deps are the collaborators a walker needs, passed explicitly so the
 // engine never depends on the runtime container.
 type Deps struct {
 	Interaction        interaction.ICapabilityInteraction
@@ -56,7 +56,7 @@ type Deps struct {
 	TheHive            config.TheHiveConfig
 }
 
-// Factory creates a decomposer per playbook execution.
+// Factory creates a workflow walker per playbook run.
 type Factory struct {
 	deps Deps
 }
@@ -65,8 +65,8 @@ func New(deps Deps) *Factory {
 	return &Factory{deps: deps}
 }
 
-// NewDecomposer builds a decomposer for a single playbook execution.
-func (f *Factory) NewDecomposer() decomposer.IDecomposer {
+// NewWalker builds a workflow walker for a single run.
+func (f *Factory) NewWalker() workflow.Walker {
 	sshCap := new(sshcap.SshCapability)
 	capabilities := map[string]capability.ICapability{sshCap.GetType(): sshCap}
 
@@ -106,17 +106,12 @@ func (f *Factory) NewDecomposer() decomposer.IDecomposer {
 		StaleAfter: f.deps.FinStaleAfter,
 	}))
 
-	pbExec := pbactionexec.New(f, f.deps.PlaybookStore, report, soarcaTime)
+	pbExec := pbactionexec.New(f.NewWalker, f.deps.PlaybookStore, report, soarcaTime)
 	stixCmp := stixcmp.New()
 	condExec := condexec.New(stixCmp, report, soarcaTime)
 	guidGen := new(guid.Guid)
-	decomp := decomposer.New(actionExec, pbExec, condExec, guidGen, report, soarcaTime)
 
-	if theHiveCaseManager != nil {
-		decomp.SetCaseManager(theHiveCaseManager)
-	}
-
-	return decomp
+	return workflow.New(actionExec, pbExec, condExec, guidGen, report, soarcaTime, theHiveCaseManager)
 }
 
 // initializeTheHiveReporting sets up The Hive integration if configured.

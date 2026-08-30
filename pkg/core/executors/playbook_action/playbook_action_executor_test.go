@@ -4,9 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"soarca/pkg/core/decomposer"
-	mock_decomposer_controller "soarca/test/unittest/mocks/mock_controller/decomposer"
-	"soarca/test/unittest/mocks/mock_decomposer"
+	"soarca/internal/workflow"
+	"soarca/test/unittest/mocks/mock_walker"
 	mocks_playbook_test "soarca/test/unittest/mocks/mock_playbook_database"
 	"soarca/test/unittest/mocks/mock_reporter"
 	mock_time "soarca/test/unittest/mocks/mock_utils/time"
@@ -22,13 +21,13 @@ import (
 func TestExecutePlaybook(t *testing.T) {
 
 	playbookRepoMock := new(mocks_playbook_test.MockPlaybook)
-	mockDecomposer := new(mock_decomposer.Mock_Decomposer)
+	mockWalker := new(mock_walker.Mock_Walker)
 	mock_reporter := new(mock_reporter.Mock_Reporter)
 	mock_time := new(mock_time.MockTime)
 
-	controller := new(mock_decomposer_controller.Mock_Controller)
+	newWalker := func() workflow.Walker { return mockWalker }
 
-	executerObject := New(controller, playbookRepoMock, mock_reporter, mock_time)
+	executerObject := New(newWalker, playbookRepoMock, mock_reporter, mock_time)
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	playbookId := "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
 	stepId := "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
@@ -72,24 +71,22 @@ func TestExecutePlaybook(t *testing.T) {
 	timeNow, _ := time.Parse(layout, str)
 	mock_time.On("Now").Return(timeNow)
 
-	controller.On("NewDecomposer").Return(mockDecomposer)
-
 	mock_reporter.On("ReportStepStart", metadata, step, cacao.NewVariables(addedVariables), timeNow).Return()
 	mock_reporter.On("ReportStepEnd", metadata, step, cacao.NewVariables(returnedVariables), nil, timeNow).Return()
 
 	playbook := cacao.Playbook{ID: playbookId, PlaybookVariables: cacao.NewVariables(initialVariables)}
 	playbookRepoMock.On("Get", mock.Anything, playbookId).Return(playbook, nil)
-	details := decomposer.ExecutionDetails{ExecutionId: executionId,
+	details := workflow.Result{ExecutionId: executionId,
 		PlaybookId: playbookId,
 		Variables:  cacao.NewVariables(returnedVariables)}
 
 	playbook2 := cacao.Playbook{ID: playbookId, PlaybookVariables: cacao.NewVariables(expectedVariables)}
 
-	mockDecomposer.On("Execute", playbook2).Return(&details, nil)
+	mockWalker.On("Execute", playbook2).Return(&details, nil)
 
 	results, err := executerObject.Execute(metadata, step, cacao.NewVariables(addedVariables))
 
-	mockDecomposer.AssertExpectations(t)
+	mockWalker.AssertExpectations(t)
 	mock_reporter.AssertExpectations(t)
 	mock_time.AssertExpectations(t)
 	assert.Equal(t, err, nil)

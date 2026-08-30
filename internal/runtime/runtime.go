@@ -117,7 +117,7 @@ func New(opts Options) (*Runtime, error) {
 		FinStaleAfter:      opts.Fin.StaleAfter,
 		TheHive:            opts.TheHive,
 	})
-	runtime.executions = runs.New(executionEngine, runtime.playbookStore, runtime.cache)
+	runtime.executions = runs.New(executionEngine.NewWalker, runtime.playbookStore, runtime.cache)
 
 	return runtime, nil
 }

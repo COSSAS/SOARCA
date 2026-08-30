@@ -1,11 +1,11 @@
-package controller
+package app
 
 import (
 	"reflect"
 
 	"soarca/internal/config"
 	"soarca/internal/logger"
-	appruntime "soarca/internal/runtime"
+	orchestrator "soarca/internal/runtime"
 	httptransport "soarca/internal/transport/httptransport"
 
 	"github.com/gin-gonic/gin"
@@ -21,8 +21,8 @@ type transport interface {
 }
 
 var loadConfig = config.Load
-var newRuntime = appruntime.New
-var newTransport = func(ops appruntime.Operations, opts httptransport.Options) transport {
+var newRuntime = orchestrator.New
+var newTransport = func(ops orchestrator.Operations, opts httptransport.Options) transport {
 	return httptransport.New(ops, opts)
 }
 
@@ -30,8 +30,8 @@ func init() {
 	log = logger.Logger(reflect.TypeOf(Empty{}).PkgPath(), logger.Info, "", logger.Json)
 }
 
-// Initialize loads configuration, wires the runtime, and starts the HTTP server.
-func Initialize() error {
+// Run loads configuration, wires the orchestrator, and starts the HTTP server.
+func Run() error {
 	cfg, err := loadConfig()
 	if err != nil {
 		log.Error("Failed to load configuration:", err)
@@ -40,7 +40,7 @@ func Initialize() error {
 
 	cfg.LogSettings()
 
-	runtime, err := newRuntime(appruntime.Options{
+	runtime, err := newRuntime(orchestrator.Options{
 		Storage: cfg.Storage,
 		Cache:   cfg.Cache,
 		Fin:     cfg.Fin,

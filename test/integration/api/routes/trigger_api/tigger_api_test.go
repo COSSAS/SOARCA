@@ -14,7 +14,7 @@ import (
 	trigger_handler "soarca/pkg/api/trigger"
 
 	"soarca/internal/runs"
-	"soarca/pkg/core/decomposer"
+	"soarca/internal/workflow"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/cache"
 	mock_playbook_database "soarca/test/unittest/mocks/mock_playbook_database"
@@ -25,14 +25,14 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// testDecomposer reports a fixed execution id instead of running a playbook.
-type testDecomposer struct {
+// testWalker reports a fixed run id instead of walking a playbook.
+type testWalker struct {
 	executionID uuid.UUID
 }
 
-func (d *testDecomposer) ExecuteAsync(playbook cacao.Playbook, detailsch chan decomposer.ExecutionDetails) {
-	if detailsch != nil {
-		detailsch <- decomposer.ExecutionDetails{
+func (d *testWalker) ExecuteAsync(playbook cacao.Playbook, results chan workflow.Result) {
+	if results != nil {
+		results <- workflow.Result{
 			ExecutionId: d.executionID,
 			PlaybookId:  playbook.ID,
 			Variables:   playbook.PlaybookVariables,
@@ -40,8 +40,8 @@ func (d *testDecomposer) ExecuteAsync(playbook cacao.Playbook, detailsch chan de
 	}
 }
 
-func (d *testDecomposer) Execute(playbook cacao.Playbook) (*decomposer.ExecutionDetails, error) {
-	return &decomposer.ExecutionDetails{
+func (d *testWalker) Execute(playbook cacao.Playbook) (*workflow.Result, error) {
+	return &workflow.Result{
 		ExecutionId: d.executionID,
 		PlaybookId:  playbook.ID,
 		Variables:   playbook.PlaybookVariables,
@@ -52,8 +52,8 @@ type testEngine struct {
 	executionID uuid.UUID
 }
 
-func (e *testEngine) NewDecomposer() decomposer.IDecomposer {
-	return &testDecomposer{executionID: e.executionID}
+func (e *testEngine) NewWalker() workflow.Walker {
+	return &testWalker{executionID: e.executionID}
 }
 
 type testReports struct{}
@@ -74,7 +74,8 @@ func close(file *os.File) {
 }
 
 func newTriggerHandler(executionID uuid.UUID, playbookStore *mock_playbook_database.MockPlaybook) *trigger_handler.TriggerHandler {
-	runner := runs.New(&testEngine{executionID: executionID}, playbookStore, &testReports{})
+	engine := &testEngine{executionID: executionID}
+	runner := runs.New(engine.NewWalker, playbookStore, &testReports{})
 	return trigger_handler.NewTriggerHandler(runner)
 }
 

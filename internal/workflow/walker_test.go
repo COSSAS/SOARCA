@@ -1,4 +1,4 @@
-package decomposer
+package workflow
 
 import (
 	"errors"

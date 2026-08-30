@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"soarca/internal/controller"
+	"soarca/internal/app"
 	"soarca/pkg/models/api"
 	"testing"
 	"time"
@@ -14,7 +14,7 @@ import (
 )
 
 func initializeSoarca(t *testing.T) {
-	err := controller.Initialize()
+	err := app.Run()
 	if err != nil {
 		t.Log(err)
 	}

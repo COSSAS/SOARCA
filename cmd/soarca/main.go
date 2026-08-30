@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	api "soarca/api"
-	"soarca/internal/controller"
+	"soarca/internal/app"
 	"soarca/internal/logger"
 	"soarca/pkg/api/status"
 	"soarca/pkg/utils"
@@ -52,7 +52,7 @@ func main() {
 
 	// Version is only available here
 	status.SetVersion(Version)
-	err = controller.Initialize()
+	err = app.Run()
 	if err != nil {
 		log.Fatal("Something Went wrong with setting-up the app, msg: ", err)
 		panic(err)

@@ -10,9 +10,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"soarca/internal/controller/decomposer_controller"
 	"soarca/internal/storage"
-	"soarca/pkg/core/decomposer"
+	"soarca/internal/workflow"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/cache"
 )
@@ -54,14 +53,14 @@ func (e ValidationError) Unwrap() error {
 
 // Service implements Runner.
 type Service struct {
-	engine    decomposer_controller.IController
+	newWalker workflow.NewWalker
 	playbooks storage.PlaybookStore
 	reports   Reports
 }
 
-func New(engine decomposer_controller.IController, playbooks storage.PlaybookStore, reports Reports) *Service {
+func New(newWalker workflow.NewWalker, playbooks storage.PlaybookStore, reports Reports) *Service {
 	return &Service{
-		engine:    engine,
+		newWalker: newWalker,
 		playbooks: playbooks,
 		reports:   reports,
 	}
@@ -82,16 +81,16 @@ func (s *Service) Start(ctx context.Context, playbook *cacao.Playbook, variables
 		return uuid.Nil, ValidationError{Err: err}
 	}
 
-	decomp := s.engine.NewDecomposer()
-	details := make(chan decomposer.ExecutionDetails, 1)
+	walker := s.newWalker()
+	results := make(chan workflow.Result, 1)
 
-	go decomp.ExecuteAsync(*playbook, details)
+	go walker.ExecuteAsync(*playbook, results)
 
 	select {
 	case <-ctx.Done():
 		return uuid.Nil, ctx.Err()
-	case d := <-details:
-		return d.ExecutionId, nil
+	case r := <-results:
+		return r.ExecutionId, nil
 	}
 }
 

@@ -237,7 +237,70 @@ with runs in flight; how much code do we own afterwards.
 Either option needs the explicit `in_args`/`out_args` model below. Temporal will not model
 CACAO variable scoping for us.
 
-## Variables
+## Storage: SQLite locally, PostgreSQL in production
+
+**Decision: move off MongoDB.** In-memory/SQLite for local and test, PostgreSQL in
+production, so an operator can run one database (cluster) for both SOARCA and Temporal.
+
+This resolves several open points at once:
+
+- **Removes the "second datastore" objection to Temporal.** Temporal supports PostgreSQL
+  and does not support MongoDB, so staying on Mongo would have forced operators to run two
+  database technologies. On Postgres it is one.
+- **Unlocks the ergonomic durable queue.** `SELECT ... FOR UPDATE SKIP LOCKED` is the
+  standard pattern for exactly the claim/lease behaviour we need. On Mongo it would have
+  been `findAndModify` with lease fields — workable but easier to get subtly wrong.
+- **Kills the `bson` tag leak.** The Phase 6 clean-up item (domain models carrying
+  `bson:"_id"`, notably `cacao.Playbook.ID`) disappears: playbooks are stored as JSONB and
+  the existing `json:` tags suffice.
+- **Keeps local dev trivial.** SQLite in-process plus Temporal's single-binary dev server
+  means `go test ./...` and local runs need no containers at all.
+
+Implementation notes:
+
+- `internal/storage` already abstracts `Store`/`PlaybookStore`/`FinStore`, so the change is
+  contained to adapters. `internal/storage/mongodb` is replaced rather than modified.
+- **Use a pure-Go SQLite driver (`modernc.org/sqlite`), not `mattn/go-sqlite3`.** The
+  makefile builds with `CGO_ENABLED=0`; a cgo driver would break the static binary and the
+  cross-compilation targets.
+- **The hand-written in-memory store can go away.** SQLite `:memory:` gives the same
+  behaviour through the real SQL code path, so tests exercise the queries that production
+  runs instead of a parallel implementation. One adapter instead of two.
+- Playbooks as JSONB give indexed queries on playbook fields, which the metadata listing
+  currently does by hand.
+
+### Schema migrations
+
+Mongo needed none — documents just carry whatever fields they have. SQL needs the tables to
+exist, and every change (new column, new index, the `step_runs` table) must be applied to
+every deployed database in order, exactly once.
+
+- **Tool: goose.** Lightweight, supports both SQLite and PostgreSQL, and embeds migrations
+  via `embed.FS`, which keeps the single-binary deployment intact.
+- **Run them automatically at startup**, so `docker compose up` still needs no extra steps.
+- **Dialect caveat:** SQLite's `ALTER TABLE` is limited compared to PostgreSQL. Either keep
+  the schema deliberately portable, or maintain dialect-specific migration sets. Decide
+  early; retrofitting is painful.
+
+### Temporal has its own schema
+
+"One cluster" does not mean one schema. Temporal manages its own schema with its own tool
+(`temporal-sql-tool`) and wants two databases:
+
+```
+postgres://…/soarca                 <- our goose migrations
+postgres://…/temporal               <- Temporal's own tooling
+postgres://…/temporal_visibility    <- Temporal's own tooling
+```
+
+Same cluster, same credentials story, separate schemas. The operational win holds; the
+compose file and deployment docs need to reflect it from the start.
+
+### No data migration from MongoDB
+
+Fresh installs are assumed. If an upgrade path is ever needed, signal the break with a new
+major version rather than writing a Mongo→SQL converter.
+
 
 CACAO already specifies this and we currently implement half of it.
 
@@ -416,8 +479,6 @@ storage instead of a map is most of the job.
    first.
 2. **Idempotency.** Re-dispatch after a crash can re-run a step. `step_run_id` is a natural
    idempotency key, but an SSH command is not idempotent. Needs a per-capability policy.
-3. **Storage backend.** We use MongoDB. Durable queues are more ergonomic on Postgres
-   (`FOR UPDATE SKIP LOCKED`); on Mongo it is `findAndModify` with lease fields — workable,
-   easier to get subtly wrong. Choose with the queue in mind.
+3. **Storage backend.** Decided: SQLite locally, PostgreSQL in production. See above.
 4. **Migration.** Build behind `runs.Runner` as a second implementation, switch by config,
    delete the old walker once it passes the same tests.

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"soarca/internal/controller/decomposer_controller"
+	"soarca/internal/workflow"
 	"soarca/internal/logger"
 	"soarca/internal/storage"
 	"soarca/pkg/models/cacao"
@@ -15,7 +15,7 @@ import (
 )
 
 type PlaybookAction struct {
-	decomposerController decomposer_controller.IController
+	newWalker     workflow.NewWalker
 	playbookStore        storage.PlaybookStore
 	reporter             reporter.IStepReporter
 	time                 timeUtil.ITime
@@ -28,8 +28,8 @@ func init() {
 	log = logger.Logger(component, logger.Info, "", logger.Json)
 }
 
-func New(controller decomposer_controller.IController, playbookStore storage.PlaybookStore, reporter reporter.IStepReporter, time timeUtil.ITime) *PlaybookAction {
-	return &PlaybookAction{decomposerController: controller, playbookStore: playbookStore, reporter: reporter, time: time}
+func New(newWalker workflow.NewWalker, playbookStore storage.PlaybookStore, reporter reporter.IStepReporter, time timeUtil.ITime) *PlaybookAction {
+	return &PlaybookAction{newWalker: newWalker, playbookStore: playbookStore, reporter: reporter, time: time}
 }
 
 func (playbookAction *PlaybookAction) Execute(metadata execution.Metadata,
@@ -59,15 +59,15 @@ func (playbookAction *PlaybookAction) Execute(metadata execution.Metadata,
 
 	playbook.PlaybookVariables.Merge(variables)
 
-	decomposer := playbookAction.decomposerController.NewDecomposer()
-	details, err := decomposer.Execute(playbook)
+	walker := playbookAction.newWalker()
+	result, err := walker.Execute(playbook)
 	if err != nil {
-		err = errors.New(fmt.Sprint("execution of playbook failed with error: ", err))
+		err = errors.New(fmt.Sprint("sub-playbook run failed with error: ", err))
 		log.Error(err)
-		reportVars = details.Variables
+		reportVars = result.Variables
 		return cacao.NewVariables(), err
 	}
-	reportVars = details.Variables
-	return details.Variables, nil
+	reportVars = result.Variables
+	return result.Variables, nil
 
 }
