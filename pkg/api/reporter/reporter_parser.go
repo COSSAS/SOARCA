@@ -41,7 +41,7 @@ func parseCachePlaybookEntry(cacheEntry cache_model.ExecutionEntry) (api_model.P
 
 func parseCacheStepEntries(cacheStepEntries map[string]cache_model.StepResult) (map[string]api_model.StepExecutionReport, error) {
 	parsedEntries := map[string]api_model.StepExecutionReport{}
-	for stepId, stepEntry := range cacheStepEntries {
+	for stepExecutionKey, stepEntry := range cacheStepEntries {
 
 		stepStatus := api_model.CacheStatusEnum2String(stepEntry.Status)
 
@@ -54,9 +54,10 @@ func parseCacheStepEntries(cacheStepEntries map[string]cache_model.StepResult) (
 			stepStatusText = stepStatusText + " - error: " + stepEntry.Error.Error()
 		}
 
-		parsedEntries[stepId] = api_model.StepExecutionReport{
+		parsedEntries[stepExecutionKey] = api_model.StepExecutionReport{
 			ExecutionId:        stepEntry.ExecutionId.String(),
 			StepId:             stepEntry.StepId,
+			StepExecutionId:    stepEntry.StepExecutionId.String(),
 			Name:               stepEntry.Name,
 			Description:        stepEntry.Description,
 			Started:            stepEntry.Started,

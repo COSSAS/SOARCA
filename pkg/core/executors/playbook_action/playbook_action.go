@@ -37,12 +37,12 @@ func (playbookAction *PlaybookAction) Execute(metadata execution.Metadata,
 	variables cacao.Variables) (cacao.Variables, error) {
 	log.Trace(metadata.ExecutionId)
 
-	playbookAction.reporter.ReportStepStart(metadata.ExecutionId, step, variables, playbookAction.time.Now())
+	playbookAction.reporter.ReportStepStart(metadata, step, variables, playbookAction.time.Now())
 
 	var reportVars = cacao.NewVariables()
 	var err error
 	defer func() {
-		playbookAction.reporter.ReportStepEnd(metadata.ExecutionId, step, reportVars, err, playbookAction.time.Now())
+		playbookAction.reporter.ReportStepEnd(metadata, step, reportVars, err, playbookAction.time.Now())
 	}()
 
 	if step.Type != cacao.StepTypePlaybookAction {

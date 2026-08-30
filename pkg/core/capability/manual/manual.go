@@ -10,6 +10,7 @@ import (
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	manualModel "soarca/pkg/models/manual"
+	"soarca/pkg/utils"
 	"time"
 )
 
@@ -21,7 +22,6 @@ var (
 const (
 	manualResultVariableName = "__soarca_manual_result__"
 	manualCapabilityName     = "soarca-manual"
-	fallbackTimeout          = time.Minute * 1
 )
 
 func New(controller interaction.ICapabilityInteraction) ManualCapability {
@@ -70,6 +70,17 @@ func (manual *ManualCapability) Execute(
 	}
 
 	result, err := manual.awaitUserInput(channel, ctx)
+
+	// Deregister synchronously, before returning, so a subsequent
+	// re-execution of this step (e.g. the next iteration of a while-loop
+	// body) can never race the async cleanup goroutine
+	// InteractionController.Queue also starts as a backstop. Keyed on this
+	// invocation's StepExecutionId, so it never touches a different
+	// invocation's still-pending entry, even one sharing the same StepId.
+	if deregErr := manual.interaction.Deregister(metadata); deregErr != nil {
+		log.Trace("manual command already deregistered: ", deregErr)
+	}
+
 	if err != nil {
 		return cacao.NewVariables(), err
 	}
@@ -96,8 +107,9 @@ func (manual *ManualCapability) awaitUserInput(channel chan manualModel.Interact
 
 func (manual *ManualCapability) getTimeoutValue(userTimeout int) time.Duration {
 	if userTimeout == 0 {
-		log.Warning("timeout is not set or set to 0 fallback timeout of 1 minute is used to complete step")
-		return fallbackTimeout
+		fallback := utils.DefaultStepTimeout()
+		log.Warning("timeout is not set or set to 0, fallback timeout of ", fallback, " is used to complete step")
+		return fallback
 	}
 	return time.Duration(userTimeout) * time.Millisecond
 }

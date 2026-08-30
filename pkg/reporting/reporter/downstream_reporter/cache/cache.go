@@ -7,6 +7,7 @@ import (
 	"slices"
 	"soarca/pkg/models/cacao"
 	cache_report "soarca/pkg/models/cache"
+	"soarca/pkg/models/execution"
 	itime "soarca/pkg/utils/time"
 	"sync"
 	"time"
@@ -145,17 +146,17 @@ func (cacheReporter *Cache) addStartExecutionStep(executionId uuid.UUID, newStep
 	if executionEntry.Status != cache_report.Ongoing {
 		return errors.New("trying to report on the execution of a step for an already reportedly terminated playbook execution")
 	}
-	_, alreadyThere := executionEntry.StepResults[newStepData.StepId]
+	stepExecutionKey := newStepData.StepExecutionId.String()
+	_, alreadyThere := executionEntry.StepResults[stepExecutionKey]
 	if alreadyThere {
-		// TODO: must fix: all steps should start empty values but already present. Check should be
-		// done on Step.Started > 0 time
-		//
-		// Should divide between instanciation of step, and modification of step,
-		// with respective checks step status
-		return errors.New("a step execution start was already reported for this step. ignoring")
+		// A collision here would mean the same StepExecutionId was minted
+		// twice, which should never happen - each step invocation gets a
+		// fresh one. Re-executions of the same StepId are expected and get
+		// their own distinct entry.
+		return errors.New("a step execution start was already reported for this step execution. ignoring")
 	}
 
-	executionEntry.StepResults[newStepData.StepId] = newStepData
+	executionEntry.StepResults[stepExecutionKey] = newStepData
 	// New code
 	cacheReporter.Cache[executionId.String()] = executionEntry
 
@@ -163,7 +164,7 @@ func (cacheReporter *Cache) addStartExecutionStep(executionId uuid.UUID, newStep
 	// Unlocked
 }
 
-func (cacheReporter *Cache) upateEndExecutionStep(executionId uuid.UUID, stepId string, returnVars cacao.Variables, stepError error, acceptedStepStati []cache_report.Status, at time.Time) error {
+func (cacheReporter *Cache) upateEndExecutionStep(executionId uuid.UUID, stepExecutionId uuid.UUID, returnVars cacao.Variables, stepError error, acceptedStepStati []cache_report.Status, at time.Time) error {
 	// Locked
 	cacheReporter.mutex.Lock()
 	defer cacheReporter.mutex.Unlock()
@@ -173,11 +174,10 @@ func (cacheReporter *Cache) upateEndExecutionStep(executionId uuid.UUID, stepId 
 		return err
 	}
 
-	executionStepResult, ok := executionEntry.StepResults[stepId]
+	stepExecutionKey := stepExecutionId.String()
+	executionStepResult, ok := executionEntry.StepResults[stepExecutionKey]
 	if !ok {
-		// TODO: must fix: all steps should start empty values but already present. Check should be
-		// done on Step.Started > 0 time
-		return errors.New("trying to update a step which was not (yet?) recorded in the cache")
+		return errors.New("trying to update a step execution which was not (yet?) recorded in the cache")
 		// Unlocked
 	}
 
@@ -193,7 +193,7 @@ func (cacheReporter *Cache) upateEndExecutionStep(executionId uuid.UUID, stepId 
 	}
 	executionStepResult.Ended = at
 	executionStepResult.Variables = returnVars
-	executionEntry.StepResults[stepId] = executionStepResult
+	executionEntry.StepResults[stepExecutionKey] = executionStepResult
 	cacheReporter.Cache[executionId.String()] = executionEntry
 
 	return nil
@@ -245,7 +245,7 @@ func (cacheReporter *Cache) ReportWorkflowEnd(executionId uuid.UUID, playbook ca
 	return err
 }
 
-func (cacheReporter *Cache) ReportStepStart(executionId uuid.UUID, step cacao.Step, variables cacao.Variables, at time.Time) error {
+func (cacheReporter *Cache) ReportStepStart(metadata execution.Metadata, step cacao.Step, variables cacao.Variables, at time.Time) error {
 
 	commandsB64 := []string{}
 	isAutomated := true
@@ -262,10 +262,11 @@ func (cacheReporter *Cache) ReportStepStart(executionId uuid.UUID, step cacao.St
 	}
 
 	newStep := cache_report.StepResult{
-		ExecutionId: executionId,
-		StepId:      step.ID,
-		Name:        step.Name,
-		Description: step.Description,
+		ExecutionId:     metadata.ExecutionId,
+		StepId:          step.ID,
+		StepExecutionId: metadata.StepExecutionId,
+		Name:            step.Name,
+		Description:     step.Description,
 		//Started:     cacheReporter.timeUtil.Now(),
 		Started:     at,
 		Ended:       time.Time{},
@@ -276,20 +277,15 @@ func (cacheReporter *Cache) ReportStepStart(executionId uuid.UUID, step cacao.St
 		IsAutomated: isAutomated,
 	}
 
-	err := cacheReporter.addStartExecutionStep(executionId, newStep)
+	err := cacheReporter.addStartExecutionStep(metadata.ExecutionId, newStep)
 
 	return err
 }
 
-func (cacheReporter *Cache) ReportStepEnd(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, stepError error, at time.Time) error {
-
-	// stepId, err := uuid.Parse(step.ID)
-	// if err != nil {
-	// 	return fmt.Errorf("could not parse to uuid the step id: %s", step.ID)
-	// }
+func (cacheReporter *Cache) ReportStepEnd(metadata execution.Metadata, step cacao.Step, returnVars cacao.Variables, stepError error, at time.Time) error {
 
 	acceptedStepStati := []cache_report.Status{cache_report.Ongoing}
-	err := cacheReporter.upateEndExecutionStep(executionId, step.ID, returnVars, stepError, acceptedStepStati, at)
+	err := cacheReporter.upateEndExecutionStep(metadata.ExecutionId, metadata.StepExecutionId, returnVars, stepError, acceptedStepStati, at)
 
 	return err
 }

@@ -44,10 +44,9 @@ func TestSshConnection(t *testing.T) {
 	var stepId = "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
 	var metadata = execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId, StepId: stepId}
 	data := capability.Context{
-		Command:        expectedCommand,
-		Target:         expectedTarget,
-		Authentication: expectedAuthenticationInformation,
-		Variables:      cacao.NewVariables(expectedVariables),
+		Commands:  []cacao.Command{expectedCommand},
+		Targets:   []capability.ResolvedTarget{{Target: expectedTarget, Authentication: expectedAuthenticationInformation}},
+		Variables: cacao.NewVariables(expectedVariables),
 	}
 	results, err := sshCapability.Execute(metadata,
 		data)
@@ -92,10 +91,9 @@ func TestSshConnectionToNonExistingServer(t *testing.T) {
 	var stepId = "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
 	var metadata = execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId, StepId: stepId}
 	data := capability.Context{
-		Command:        expectedCommand,
-		Target:         expectedTarget,
-		Authentication: expectedAuthenticationInformation,
-		Variables:      cacao.NewVariables(expectedVariables),
+		Commands:  []cacao.Command{expectedCommand},
+		Targets:   []capability.ResolvedTarget{{Target: expectedTarget, Authentication: expectedAuthenticationInformation}},
+		Variables: cacao.NewVariables(expectedVariables),
 	}
 	results, err := sshCapability.Execute(metadata,
 		data)

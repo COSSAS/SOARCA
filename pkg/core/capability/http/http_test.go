@@ -58,10 +58,9 @@ func TestHTTPOptionsCorrectlyGenerated(t *testing.T) {
 	mock_http_request.On("Request", httpOptions).Return(payload_byte, nil)
 
 	data := capability.Context{
-		Command:        command,
-		Authentication: oauth2_info,
-		Target:         target,
-		Variables:      cacao.NewVariables(variable1),
+		Commands:  []cacao.Command{command},
+		Targets:   []capability.ResolvedTarget{{Target: target, Authentication: oauth2_info}},
+		Variables: cacao.NewVariables(variable1),
 	}
 
 	results, err := httpCapability.Execute(
@@ -113,10 +112,9 @@ func TestHTTPOptionsEmptyAuth(t *testing.T) {
 	mock_http_request.On("Request", httpOptions).Return(payload_byte, nil)
 
 	data := capability.Context{
-		Command:        command,
-		Authentication: *empty_auth,
-		Target:         target,
-		Variables:      cacao.NewVariables(variable1),
+		Commands:  []cacao.Command{command},
+		Targets:   []capability.ResolvedTarget{{Target: target, Authentication: *empty_auth}},
+		Variables: cacao.NewVariables(variable1),
 	}
 
 	results, err := httpCapability.Execute(
@@ -168,10 +166,9 @@ func TestHTTPOptionsEmptyCommand(t *testing.T) {
 	mock_http_request.On("Request", httpOptions).Return([]byte{}, expected_error)
 
 	data := capability.Context{
-		Command:        *empty_command,
-		Authentication: oauth2_info,
-		Target:         target,
-		Variables:      cacao.NewVariables(variable1),
+		Commands:  []cacao.Command{*empty_command},
+		Targets:   []capability.ResolvedTarget{{Target: target, Authentication: oauth2_info}},
+		Variables: cacao.NewVariables(variable1),
 	}
 
 	results, err := httpCapability.Execute(
@@ -185,4 +182,33 @@ func TestHTTPOptionsEmptyCommand(t *testing.T) {
 	t.Log(results)
 
 	mock_http_request.AssertExpectations(t)
+}
+
+func TestHTTPExecuteNoTargetsSkipsWithoutError(t *testing.T) {
+	mock_http_request := new(mock_request.MockHttpRequest)
+	httpCapability := New(mock_http_request)
+
+	command := cacao.Command{
+		Type:    "http-api",
+		Command: "POST / HTTP/1.1",
+	}
+
+	var executionId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	var playbookId, _ = uuid.Parse("d09351a2-a075-40c8-8054-0b7c423db83f")
+	var stepId, _ = uuid.Parse("81eff59f-d084-4324-9e0a-59e353dbd28f")
+	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId.String(), StepId: stepId.String()}
+
+	data := capability.Context{
+		Commands: []cacao.Command{command},
+		Targets:  []capability.ResolvedTarget{},
+	}
+
+	results, err := httpCapability.Execute(metadata, data)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+	assert.Equal(t, len(results), 0)
+
+	mock_http_request.AssertNotCalled(t, "Request")
 }

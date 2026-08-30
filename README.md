@@ -18,7 +18,7 @@ SOARCA was developed for research and innovation purposes and allows SOC, CERT a
 
 
 ## Software
-SOARCA is a security orchestrator that can ingest, validate and execute CACAOv2 security playbooks. These playbooks and the triggers for their execution are consumed via a JSON API. SOARCA comes with native http(s), SSH and OpenC2 capabilities to interface with external tools and data resources. These native capabilities can be extended via a dedicated MQTT interface, allowing developers to compile additional integrations according their needs.
+SOARCA is a security orchestrator that can ingest, validate and execute CACAOv2 security playbooks. These playbooks and the triggers for their execution are consumed via a JSON API. SOARCA comes with native http(s), SSH and OpenC2 capabilities to interface with external tools and data resources. These native capabilities can be extended via a dedicated Fin interface, allowing developers to compile additional integrations according their needs.
 
 Development is ongoing. The current version solely supports machine and command line interfaces, but a graphical user interface will be added in the foreseeable future. Furthermore, its current capability to run CACAOv2 playbooks sequentially will evolve towards the ability to run multiple playbooks in parallel. Such further developments will be announced and published on the SOARCA repository on Github.
 

@@ -202,10 +202,12 @@ func TestRegisterRetrieveSameExecutionMultiplePendingInteraction(t *testing.T) {
 	testNewInteractionCommandSecond := localTestInteractionCommand
 	newStepId2 := "test_second_step_id"
 	testNewInteractionCommandSecond.Metadata.StepId = newStepId2
+	testNewInteractionCommandSecond.Metadata.StepExecutionId = uuid.MustParse("22a6c41e-6efc-4516-a242-dfbc5c89d562")
 
 	testNewInteractionCommandThird := localTestInteractionCommand
 	newStepId3 := "test_third_step_id"
 	testNewInteractionCommandThird.Metadata.StepId = newStepId3
+	testNewInteractionCommandThird.Metadata.StepExecutionId = uuid.MustParse("33a6c41e-6efc-4516-a242-dfbc5c89d562")
 
 	err = interaction.registerPendingInteraction(testNewInteractionCommandSecond, testChan)
 	if err != nil {
@@ -215,6 +217,58 @@ func TestRegisterRetrieveSameExecutionMultiplePendingInteraction(t *testing.T) {
 	err = interaction.registerPendingInteraction(testNewInteractionCommandThird, testChan)
 	if err != nil {
 		t.Log(err)
+		t.Fail()
+	}
+}
+
+// Two invocations of the *same* StepId (e.g. two overlapping while-loop
+// iterations, or - once implemented - two parallel branches converging on
+// the same step) must be able to have their own independently pending
+// manual command, each tracked and resolved by its own StepExecutionId.
+func TestRegisterRetrieveSameStepIdDifferentStepExecutionIdPendingInteractions(t *testing.T) {
+	interaction := New([]IInteractionIntegrationNotifier{})
+	testChan := make(chan manualModel.InteractionResponse)
+	defer close(testChan)
+
+	firstInvocation := testInteractionCommand
+	secondInvocation := testInteractionCommand
+	secondInvocation.Metadata.StepExecutionId = uuid.MustParse("44a6c41e-6efc-4516-a242-dfbc5c89d562")
+
+	// Same ExecutionId and StepId, different StepExecutionId.
+	err := interaction.registerPendingInteraction(firstInvocation, testChan)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+	err = interaction.registerPendingInteraction(secondInvocation, testChan)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+
+	firstRetrieved, err := interaction.getPendingInteraction(firstInvocation.Metadata)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+	secondRetrieved, err := interaction.getPendingInteraction(secondInvocation.Metadata)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+
+	assert.Equal(t, firstRetrieved.CommandInfo.Metadata, firstInvocation.Metadata)
+	assert.Equal(t, secondRetrieved.CommandInfo.Metadata, secondInvocation.Metadata)
+
+	// Resolving/removing one must not affect the other.
+	err = interaction.removeInteractionFromPending(firstInvocation.Metadata)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+	_, err = interaction.getPendingInteraction(secondInvocation.Metadata)
+	if err != nil {
+		t.Log("second invocation should still be pending after removing the first")
 		t.Fail()
 	}
 }
@@ -418,10 +472,10 @@ func TestFailOnRegisterSamePendingInteraction(t *testing.T) {
 		t.Fail()
 	}
 
-	expectedErr := errors.New(
-		"a manual step is already pending for execution " +
-			"61a6c41e-6efc-4516-a242-dfbc5c89d562, step test_step_id. " +
-			"There can only be one pending manual command per action step",
+	expectedErr := fmt.Errorf(
+		"a manual command is already pending for execution " +
+			"61a6c41e-6efc-4516-a242-dfbc5c89d562, step execution " +
+			"11a6c41e-6efc-4516-a242-dfbc5c89d562 (step test_step_id)",
 	)
 	assert.Equal(t, err, expectedErr)
 }
@@ -459,8 +513,8 @@ func TestFailOnRetrieveNonExistingCommandInteraction(t *testing.T) {
 	}
 
 	testDifferentMetadata := testMetadata
-	newStepId := "50b6d52c-6efc-4516-a242-dfbc5c89d421"
-	testDifferentMetadata.StepId = newStepId
+	newStepExecutionId := "50b6d52c-6efc-4516-a242-dfbc5c89d421"
+	testDifferentMetadata.StepExecutionId = uuid.MustParse(newStepExecutionId)
 
 	_, err = interaction.getPendingInteraction(testDifferentMetadata)
 	if err == nil {
@@ -469,9 +523,9 @@ func TestFailOnRetrieveNonExistingCommandInteraction(t *testing.T) {
 	}
 
 	expectedErr := manualModel.ErrorPendingCommandNotFound{
-		Err: "no pending commands found for execution " +
+		Err: "no pending command found for execution " +
 			"61a6c41e-6efc-4516-a242-dfbc5c89d562 -> " +
-			"step 50b6d52c-6efc-4516-a242-dfbc5c89d421",
+			"step execution 50b6d52c-6efc-4516-a242-dfbc5c89d421",
 	}
 	assert.Equal(t, err, expectedErr)
 }
@@ -542,10 +596,12 @@ func NewTestLogHook() *TestHook {
 }
 
 var testUUIDStr string = "61a6c41e-6efc-4516-a242-dfbc5c89d562"
+var testStepExecutionIdStr string = "11a6c41e-6efc-4516-a242-dfbc5c89d562"
 var testMetadata = execution.Metadata{
-	ExecutionId: uuid.MustParse(testUUIDStr),
-	PlaybookId:  "test_playbook_id",
-	StepId:      "test_step_id",
+	ExecutionId:     uuid.MustParse(testUUIDStr),
+	PlaybookId:      "test_playbook_id",
+	StepId:          "test_step_id",
+	StepExecutionId: uuid.MustParse(testStepExecutionIdStr),
 }
 
 var testInteractionCommand = manualModel.CommandInfo{
@@ -561,16 +617,18 @@ var testInteractionCommand = manualModel.CommandInfo{
 		},
 	},
 	Context: capability.Context{
-		Command: cacao.Command{
-			Type:             "test_type",
-			Command:          "test_command",
-			Description:      "test_description",
-			CommandB64:       "test_command_b64",
-			Version:          "1.0",
-			PlaybookActivity: "test_activity",
-			Headers:          cacao.Headers{},
-			Content:          "test_content",
-			ContentB64:       "test_content_b64",
+		Commands: []cacao.Command{
+			{
+				Type:             "test_type",
+				Command:          "test_command",
+				Description:      "test_description",
+				CommandB64:       "test_command_b64",
+				Version:          "1.0",
+				PlaybookActivity: "test_activity",
+				Headers:          cacao.Headers{},
+				Content:          "test_content",
+				ContentB64:       "test_content_b64",
+			},
 		},
 		Step: cacao.Step{
 			Type:        "test_type",
@@ -596,12 +654,16 @@ var testInteractionCommand = manualModel.CommandInfo{
 				},
 			},
 		},
-		Authentication: cacao.AuthenticationInformation{},
-		Target: cacao.AgentTarget{
-			ID:          "test_id",
-			Type:        "test_type",
-			Name:        "test_name",
-			Description: "test_description",
+		Targets: []capability.ResolvedTarget{
+			{
+				Authentication: cacao.AuthenticationInformation{},
+				Target: cacao.AgentTarget{
+					ID:          "test_id",
+					Type:        "test_type",
+					Name:        "test_name",
+					Description: "test_description",
+				},
+			},
 		},
 		Variables: cacao.Variables{
 			"var2": {

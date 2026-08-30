@@ -40,18 +40,23 @@ type ExecutionEntry struct {
 	PlaybookId  string
 	Started     time.Time
 	Ended       time.Time
+	// StepResults is keyed by StepExecutionId (not StepId): the same StepId
+	// can be invoked more than once within one execution (while-loops,
+	// cyclic on_completion graphs), and each such invocation gets its own
+	// entry here instead of overwriting/being rejected.
 	StepResults map[string]StepResult
 	Error       error
 	Status      Status
 }
 
 type StepResult struct {
-	ExecutionId uuid.UUID
-	StepId      string
-	Name        string
-	Description string
-	Started     time.Time
-	Ended       time.Time
+	ExecutionId     uuid.UUID
+	StepId          string
+	StepExecutionId uuid.UUID
+	Name            string
+	Description     string
+	Started         time.Time
+	Ended           time.Time
 	// Make sure we can have a playbookID for playbook actions, and also
 	// the execution ID for the invoked playbook
 	CommandsB64 []string

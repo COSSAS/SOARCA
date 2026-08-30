@@ -9,6 +9,7 @@ import (
 
 	"soarca/internal/logger"
 	"soarca/pkg/models/cacao"
+	"soarca/pkg/models/execution"
 	downstreamReporter "soarca/pkg/reporting/reporter/downstream_reporter"
 	"soarca/pkg/utils"
 
@@ -32,8 +33,12 @@ type IWorkflowReporter interface {
 }
 type IStepReporter interface {
 	// -> Give info to downstream reporters
-	ReportStepStart(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, at time.Time)
-	ReportStepEnd(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, stepError error, at time.Time)
+	//
+	// metadata.StepExecutionId identifies this specific invocation of
+	// metadata.StepId, so downstream reporters can key per-invocation data
+	// (e.g. re-executed steps in a while-loop) without collisions.
+	ReportStepStart(metadata execution.Metadata, step cacao.Step, returnVars cacao.Variables, at time.Time)
+	ReportStepEnd(metadata execution.Metadata, step cacao.Step, returnVars cacao.Variables, stepError error, at time.Time)
 }
 
 const MaxReporters int = 10
@@ -118,13 +123,13 @@ func (reporter *Reporter) ReportWorkflowEnd(executionId uuid.UUID, playbook caca
 
 // ######################## IStepReporter interface
 
-func (reporter *Reporter) ReportStepStart(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, at time.Time) {
-	log.Trace(fmt.Sprintf("[execution: %s, step: %s] reporting step start", executionId, step.ID))
+func (reporter *Reporter) ReportStepStart(metadata execution.Metadata, step cacao.Step, returnVars cacao.Variables, at time.Time) {
+	log.Trace(fmt.Sprintf("[execution: %s, step: %s, step-execution: %s] reporting step start", metadata.ExecutionId, step.ID, metadata.StepExecutionId))
 	reporter.wg.Add(1)
 	reporter.reportingch <- func() {
 		defer reporter.wg.Done()
 		for _, downstreamRep := range reporter.reporters {
-			err := downstreamRep.ReportStepStart(executionId, step, returnVars, at)
+			err := downstreamRep.ReportStepStart(metadata, step, returnVars, at)
 			if err != nil {
 				log.Trace("reportStepStart error")
 				log.Warning(err)
@@ -133,13 +138,13 @@ func (reporter *Reporter) ReportStepStart(executionId uuid.UUID, step cacao.Step
 	}
 }
 
-func (reporter *Reporter) ReportStepEnd(executionId uuid.UUID, step cacao.Step, returnVars cacao.Variables, stepError error, at time.Time) {
-	log.Trace(fmt.Sprintf("[execution: %s, step: %s] reporting step end", executionId, step.ID))
+func (reporter *Reporter) ReportStepEnd(metadata execution.Metadata, step cacao.Step, returnVars cacao.Variables, stepError error, at time.Time) {
+	log.Trace(fmt.Sprintf("[execution: %s, step: %s, step-execution: %s] reporting step end", metadata.ExecutionId, step.ID, metadata.StepExecutionId))
 	reporter.wg.Add(1)
 	reporter.reportingch <- func() {
 		defer reporter.wg.Done()
 		for _, downstreamRep := range reporter.reporters {
-			err := downstreamRep.ReportStepEnd(executionId, step, returnVars, stepError, at)
+			err := downstreamRep.ReportStepEnd(metadata, step, returnVars, stepError, at)
 			if err != nil {
 				log.Trace("reportStepEnd error")
 				log.Warning(err)

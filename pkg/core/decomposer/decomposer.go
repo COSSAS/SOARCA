@@ -109,9 +109,7 @@ func (decomposer *Decomposer) execute(playbook cacao.Playbook) error {
 
 	// Start case correlation and get case ID to be used in playbook
 	if decomposer.caseManager != nil {
-		startMetadata := execution.Metadata{ExecutionId: decomposer.details.ExecutionId,
-			PlaybookId: decomposer.playbook.ID,
-			StepId:     stepId}
+		startMetadata := decomposer.newStepMetadata(stepId)
 
 		caseIdVar := decomposer.caseManager.AddToExistingOrCreateNew(startMetadata, playbook)
 		playbook.PlaybookVariables.InsertOrReplace(caseIdVar)
@@ -185,6 +183,19 @@ func (decomposer *Decomposer) ExecuteBranch(stepId string, scopeVariables cacao.
 	return returnVariables, nil
 }
 
+// newStepMetadata builds the execution.Metadata for one invocation of stepId,
+// minting a fresh StepExecutionId each time it is called. Call it once per
+// actual dispatch of a step (including once per while-loop iteration), never
+// reuse a previously-built value across separate invocations.
+func (decomposer *Decomposer) newStepMetadata(stepId string) execution.Metadata {
+	return execution.Metadata{
+		ExecutionId:     decomposer.details.ExecutionId,
+		PlaybookId:      decomposer.details.PlaybookId,
+		StepId:          stepId,
+		StepExecutionId: decomposer.guid.New(),
+	}
+}
+
 // Execute a single Step within a Workflow
 func (decomposer *Decomposer) ExecuteStep(step cacao.Step, scopeVariables cacao.Variables) (cacao.Variables, error) {
 	log.Debug("Executing step type ", step.Type)
@@ -197,14 +208,9 @@ func (decomposer *Decomposer) ExecuteStep(step cacao.Step, scopeVariables cacao.
 	variables.Merge(scopeVariables)
 	variables.Merge(step.StepVariables)
 
-	metadata := execution.Metadata{
-		ExecutionId: decomposer.details.ExecutionId,
-		PlaybookId:  decomposer.details.PlaybookId,
-		StepId:      step.ID,
-	}
-
 	switch step.Type {
 	case cacao.StepTypeAction:
+		metadata := decomposer.newStepMetadata(step.ID)
 		actionMetadata := executors.PlaybookStepMetadata{
 			Step:      step,
 			Targets:   decomposer.playbook.TargetDefinitions,
@@ -214,6 +220,7 @@ func (decomposer *Decomposer) ExecuteStep(step cacao.Step, scopeVariables cacao.
 		}
 		return decomposer.actionExecutor.Execute(metadata, actionMetadata)
 	case cacao.StepTypePlaybookAction:
+		metadata := decomposer.newStepMetadata(step.ID)
 		return decomposer.playbookActionExecutor.Execute(metadata, step, variables)
 	case cacao.StepTypeIfCondition:
 		return decomposer.executeIfCondition(step, variables)
@@ -227,11 +234,7 @@ func (decomposer *Decomposer) ExecuteStep(step cacao.Step, scopeVariables cacao.
 
 func (decomposer *Decomposer) executeIfCondition(step cacao.Step,
 	variables cacao.Variables) (cacao.Variables, error) {
-	metadata := execution.Metadata{
-		ExecutionId: decomposer.details.ExecutionId,
-		PlaybookId:  decomposer.details.PlaybookId,
-		StepId:      step.ID,
-	}
+	metadata := decomposer.newStepMetadata(step.ID)
 	stepId, branch, err := decomposer.conditionExecutor.Execute(metadata,
 		executors.Context{Step: step, Variables: variables})
 	if err != nil {
@@ -245,15 +248,13 @@ func (decomposer *Decomposer) executeIfCondition(step cacao.Step,
 
 func (decomposer *Decomposer) executeLoop(step cacao.Step,
 	variables cacao.Variables) (cacao.Variables, error) {
-	metadata := execution.Metadata{
-		ExecutionId: decomposer.details.ExecutionId,
-		PlaybookId:  decomposer.details.PlaybookId,
-		StepId:      step.ID,
-	}
 
 	loop := true
 
 	for loop {
+		// A fresh StepExecutionId per iteration: each pass through the loop
+		// re-evaluates (re-executes) this same while-condition step.
+		metadata := decomposer.newStepMetadata(step.ID)
 		stepId, branch, err := decomposer.conditionExecutor.Execute(metadata,
 			executors.Context{Step: step, Variables: variables})
 		if err != nil {

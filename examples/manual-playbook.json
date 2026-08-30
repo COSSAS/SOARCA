@@ -68,10 +68,6 @@
         }
     },
     "agent_definitions": {
-        "soarca--00040001-1000-1000-a000-000100010001": {
-            "type": "soarca",
-            "name": "soarca-manual-capability"
-        },
         "soarca-manual-capability--7b0e98db-fa93-42aa-8511-e871c65131b1": {
             "type": "soarca-manual",
             "name": "soarca-manual",

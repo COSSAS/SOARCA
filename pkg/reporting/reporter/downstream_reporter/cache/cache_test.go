@@ -5,6 +5,7 @@ import (
 	"errors"
 	"soarca/pkg/models/cacao"
 	cache_model "soarca/pkg/models/cache"
+	"soarca/pkg/models/execution"
 	mock_time "soarca/test/unittest/mocks/mock_utils/time"
 	"testing"
 	"time"
@@ -77,6 +78,8 @@ func TestReportWorkflowStartFirst(t *testing.T) {
 		Workflow: map[string]cacao.Step{step1.ID: step1, end.ID: end},
 	}
 	executionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
+	stepExecutionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c9")
+	metadata0 := execution.Metadata{ExecutionId: executionId0, StepId: step1.ID, StepExecutionId: stepExecutionId0}
 
 	layout := "2006-01-02T15:04:05.000Z"
 	str := "2014-11-12T11:45:26.371Z"
@@ -90,13 +93,13 @@ func TestReportWorkflowStartFirst(t *testing.T) {
 
 	mock_time.On("Now").Return(timeNow)
 
-	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables), mock_time.Now())
+	err = cacheReporter.ReportStepStart(metadata0, step1, cacao.NewVariables(expectedVariables), mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
 
 	mock_time.On("Now").Return(timeNow)
-	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(), nil, mock_time.Now())
+	err = cacheReporter.ReportStepEnd(metadata0, step1, cacao.NewVariables(), nil, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
@@ -104,17 +107,18 @@ func TestReportWorkflowStartFirst(t *testing.T) {
 	expectedStarted, _ := time.Parse(layout, "2014-11-12T11:45:26.371Z")
 	expectedEnded, _ := time.Parse(layout, "0001-01-01T00:00:00Z")
 	expetedStepReport := cache_model.StepResult{
-		ExecutionId: executionId0,
-		StepId:      "action--test",
-		Name:        "ssh-tests",
-		Description: "test step",
-		IsAutomated: true,
-		Started:     timeNow,
-		Ended:       timeNow,
-		CommandsB64: []string{b64.StdEncoding.EncodeToString([]byte(expectedCommand.Command))},
-		Variables:   cacao.NewVariables(),
-		Status:      cache_model.SuccessfullyExecuted,
-		Error:       nil,
+		ExecutionId:     executionId0,
+		StepId:          "action--test",
+		StepExecutionId: stepExecutionId0,
+		Name:            "ssh-tests",
+		Description:     "test step",
+		IsAutomated:     true,
+		Started:         timeNow,
+		Ended:           timeNow,
+		CommandsB64:     []string{b64.StdEncoding.EncodeToString([]byte(expectedCommand.Command))},
+		Variables:       cacao.NewVariables(),
+		Status:          cache_model.SuccessfullyExecuted,
+		Error:           nil,
 	}
 
 	expectedExecutions := []cache_model.ExecutionEntry{
@@ -125,7 +129,7 @@ func TestReportWorkflowStartFirst(t *testing.T) {
 			Description: "Playbook description",
 			Started:     expectedStarted,
 			Ended:       expectedEnded,
-			StepResults: map[string]cache_model.StepResult{expetedStepReport.StepId: expetedStepReport},
+			StepResults: map[string]cache_model.StepResult{expetedStepReport.StepExecutionId.String(): expetedStepReport},
 			Error:       nil,
 			Status:      2,
 		},
@@ -456,6 +460,8 @@ func TestReportStepStartAndEnd(t *testing.T) {
 		Workflow: map[string]cacao.Step{step1.ID: step1, end.ID: end},
 	}
 	executionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
+	stepExecutionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c9")
+	metadata0 := execution.Metadata{ExecutionId: executionId0, StepId: step1.ID, StepExecutionId: stepExecutionId0}
 	layout := "2006-01-02T15:04:05.000Z"
 	str := "2014-11-12T11:45:26.371Z"
 	timeNow, _ := time.Parse(layout, str)
@@ -465,23 +471,24 @@ func TestReportStepStartAndEnd(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables), mock_time.Now())
+	err = cacheReporter.ReportStepStart(metadata0, step1, cacao.NewVariables(expectedVariables), mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
 
 	expectedStepStatus := cache_model.StepResult{
-		ExecutionId: executionId0,
-		StepId:      step1.ID,
-		Started:     timeNow,
-		Ended:       time.Time{},
-		Variables:   cacao.NewVariables(expectedVariables),
-		Status:      cache_model.Ongoing,
-		Error:       nil,
+		ExecutionId:     executionId0,
+		StepId:          step1.ID,
+		StepExecutionId: stepExecutionId0,
+		Started:         timeNow,
+		Ended:           time.Time{},
+		Variables:       cacao.NewVariables(expectedVariables),
+		Status:          cache_model.Ongoing,
+		Error:           nil,
 	}
 
 	exec, err := cacheReporter.GetExecutionReport(executionId0)
-	stepStatus := exec.StepResults[step1.ID]
+	stepStatus := exec.StepResults[stepExecutionId0.String()]
 	assert.Equal(t, stepStatus.ExecutionId, expectedStepStatus.ExecutionId)
 	assert.Equal(t, stepStatus.StepId, expectedStepStatus.StepId)
 	assert.Equal(t, stepStatus.Started, expectedStepStatus.Started)
@@ -491,23 +498,24 @@ func TestReportStepStartAndEnd(t *testing.T) {
 	assert.Equal(t, stepStatus.Error, expectedStepStatus.Error)
 	assert.Equal(t, err, nil)
 
-	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil, mock_time.Now())
+	err = cacheReporter.ReportStepEnd(metadata0, step1, cacao.NewVariables(expectedVariables), nil, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
 
 	expectedStepResult := cache_model.StepResult{
-		ExecutionId: executionId0,
-		StepId:      step1.ID,
-		Started:     timeNow,
-		Ended:       timeNow,
-		Variables:   cacao.NewVariables(expectedVariables),
-		Status:      cache_model.SuccessfullyExecuted,
-		Error:       nil,
+		ExecutionId:     executionId0,
+		StepId:          step1.ID,
+		StepExecutionId: stepExecutionId0,
+		Started:         timeNow,
+		Ended:           timeNow,
+		Variables:       cacao.NewVariables(expectedVariables),
+		Status:          cache_model.SuccessfullyExecuted,
+		Error:           nil,
 	}
 
 	exec, err = cacheReporter.GetExecutionReport(executionId0)
-	stepResult := exec.StepResults[step1.ID]
+	stepResult := exec.StepResults[stepExecutionId0.String()]
 	assert.Equal(t, stepResult.ExecutionId, expectedStepResult.ExecutionId)
 	assert.Equal(t, stepResult.StepId, expectedStepResult.StepId)
 	assert.Equal(t, stepResult.Started, expectedStepResult.Started)
@@ -584,6 +592,8 @@ func TestReportStepStartCommandsEncoding(t *testing.T) {
 		Workflow: map[string]cacao.Step{step1.ID: step1, end.ID: end},
 	}
 	executionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
+	stepExecutionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c9")
+	metadata0 := execution.Metadata{ExecutionId: executionId0, StepId: step1.ID, StepExecutionId: stepExecutionId0}
 	layout := "2006-01-02T15:04:05.000Z"
 	str := "2014-11-12T11:45:26.371Z"
 	timeNow, _ := time.Parse(layout, str)
@@ -593,7 +603,7 @@ func TestReportStepStartCommandsEncoding(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables), mock_time.Now())
+	err = cacheReporter.ReportStepStart(metadata0, step1, cacao.NewVariables(expectedVariables), mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
@@ -603,19 +613,20 @@ func TestReportStepStartCommandsEncoding(t *testing.T) {
 	expectedCommandsB64 := []string{encodedCommand1, encodedCommand2}
 
 	expectedStepStatus := cache_model.StepResult{
-		ExecutionId: executionId0,
-		StepId:      step1.ID,
-		Started:     timeNow,
-		Ended:       time.Time{},
-		Variables:   cacao.NewVariables(expectedVariables),
-		Status:      cache_model.Ongoing,
-		CommandsB64: expectedCommandsB64,
-		Error:       nil,
-		IsAutomated: false,
+		ExecutionId:     executionId0,
+		StepId:          step1.ID,
+		StepExecutionId: stepExecutionId0,
+		Started:         timeNow,
+		Ended:           time.Time{},
+		Variables:       cacao.NewVariables(expectedVariables),
+		Status:          cache_model.Ongoing,
+		CommandsB64:     expectedCommandsB64,
+		Error:           nil,
+		IsAutomated:     false,
 	}
 
 	exec, err := cacheReporter.GetExecutionReport(executionId0)
-	stepStatus := exec.StepResults[step1.ID]
+	stepStatus := exec.StepResults[stepExecutionId0.String()]
 	t.Log("stepStatus commands")
 	t.Log(stepStatus.CommandsB64)
 	t.Log("expectedStep commands")
@@ -631,23 +642,24 @@ func TestReportStepStartCommandsEncoding(t *testing.T) {
 	assert.Equal(t, stepStatus.IsAutomated, expectedStepStatus.IsAutomated)
 	assert.Equal(t, err, nil)
 
-	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil, mock_time.Now())
+	err = cacheReporter.ReportStepEnd(metadata0, step1, cacao.NewVariables(expectedVariables), nil, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
 
 	expectedStepResult := cache_model.StepResult{
-		ExecutionId: executionId0,
-		StepId:      step1.ID,
-		Started:     timeNow,
-		Ended:       timeNow,
-		Variables:   cacao.NewVariables(expectedVariables),
-		Status:      cache_model.SuccessfullyExecuted,
-		Error:       nil,
+		ExecutionId:     executionId0,
+		StepId:          step1.ID,
+		StepExecutionId: stepExecutionId0,
+		Started:         timeNow,
+		Ended:           timeNow,
+		Variables:       cacao.NewVariables(expectedVariables),
+		Status:          cache_model.SuccessfullyExecuted,
+		Error:           nil,
 	}
 
 	exec, err = cacheReporter.GetExecutionReport(executionId0)
-	stepResult := exec.StepResults[step1.ID]
+	stepResult := exec.StepResults[stepExecutionId0.String()]
 	assert.Equal(t, stepResult.ExecutionId, expectedStepResult.ExecutionId)
 	assert.Equal(t, stepResult.StepId, expectedStepResult.StepId)
 	assert.Equal(t, stepResult.Started, expectedStepResult.Started)
@@ -720,6 +732,8 @@ func TestReportStepStartManualCommand(t *testing.T) {
 		Workflow: map[string]cacao.Step{step1.ID: step1, end.ID: end},
 	}
 	executionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
+	stepExecutionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c9")
+	metadata0 := execution.Metadata{ExecutionId: executionId0, StepId: step1.ID, StepExecutionId: stepExecutionId0}
 	layout := "2006-01-02T15:04:05.000Z"
 	str := "2014-11-12T11:45:26.371Z"
 	timeNow, _ := time.Parse(layout, str)
@@ -729,7 +743,7 @@ func TestReportStepStartManualCommand(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables), mock_time.Now())
+	err = cacheReporter.ReportStepStart(metadata0, step1, cacao.NewVariables(expectedVariables), mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
@@ -737,19 +751,20 @@ func TestReportStepStartManualCommand(t *testing.T) {
 	encodedCommand := b64.StdEncoding.EncodeToString([]byte(expectedCommand.Command))
 
 	expectedStepStatus := cache_model.StepResult{
-		ExecutionId: executionId0,
-		StepId:      step1.ID,
-		Started:     timeNow,
-		Ended:       time.Time{},
-		Variables:   cacao.NewVariables(expectedVariables),
-		Status:      cache_model.Ongoing,
-		CommandsB64: []string{encodedCommand},
-		Error:       nil,
-		IsAutomated: false,
+		ExecutionId:     executionId0,
+		StepId:          step1.ID,
+		StepExecutionId: stepExecutionId0,
+		Started:         timeNow,
+		Ended:           time.Time{},
+		Variables:       cacao.NewVariables(expectedVariables),
+		Status:          cache_model.Ongoing,
+		CommandsB64:     []string{encodedCommand},
+		Error:           nil,
+		IsAutomated:     false,
 	}
 
 	exec, err := cacheReporter.GetExecutionReport(executionId0)
-	stepStatus := exec.StepResults[step1.ID]
+	stepStatus := exec.StepResults[stepExecutionId0.String()]
 	assert.Equal(t, stepStatus.ExecutionId, expectedStepStatus.ExecutionId)
 	assert.Equal(t, stepStatus.StepId, expectedStepStatus.StepId)
 	assert.Equal(t, stepStatus.Started, expectedStepStatus.Started)
@@ -761,23 +776,24 @@ func TestReportStepStartManualCommand(t *testing.T) {
 	assert.Equal(t, stepStatus.IsAutomated, expectedStepStatus.IsAutomated)
 	assert.Equal(t, err, nil)
 
-	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil, mock_time.Now())
+	err = cacheReporter.ReportStepEnd(metadata0, step1, cacao.NewVariables(expectedVariables), nil, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
 
 	expectedStepResult := cache_model.StepResult{
-		ExecutionId: executionId0,
-		StepId:      step1.ID,
-		Started:     timeNow,
-		Ended:       timeNow,
-		Variables:   cacao.NewVariables(expectedVariables),
-		Status:      cache_model.SuccessfullyExecuted,
-		Error:       nil,
+		ExecutionId:     executionId0,
+		StepId:          step1.ID,
+		StepExecutionId: stepExecutionId0,
+		Started:         timeNow,
+		Ended:           timeNow,
+		Variables:       cacao.NewVariables(expectedVariables),
+		Status:          cache_model.SuccessfullyExecuted,
+		Error:           nil,
 	}
 
 	exec, err = cacheReporter.GetExecutionReport(executionId0)
-	stepResult := exec.StepResults[step1.ID]
+	stepResult := exec.StepResults[stepExecutionId0.String()]
 	assert.Equal(t, stepResult.ExecutionId, expectedStepResult.ExecutionId)
 	assert.Equal(t, stepResult.StepId, expectedStepResult.StepId)
 	assert.Equal(t, stepResult.Started, expectedStepResult.Started)
@@ -850,6 +866,7 @@ func TestInvalidStepReportAfterStepEnd(t *testing.T) {
 		Workflow: map[string]cacao.Step{step1.ID: step1, end.ID: end},
 	}
 	executionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
+	metadata0 := execution.Metadata{ExecutionId: executionId0, StepId: step1.ID, StepExecutionId: uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c9")}
 	layout := "2006-01-02T15:04:05.000Z"
 	str := "2014-11-12T11:45:26.371Z"
 	timeNow, _ := time.Parse(layout, str)
@@ -859,16 +876,16 @@ func TestInvalidStepReportAfterStepEnd(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables), mock_time.Now())
+	err = cacheReporter.ReportStepStart(metadata0, step1, cacao.NewVariables(expectedVariables), mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
-	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil, mock_time.Now())
+	err = cacheReporter.ReportStepEnd(metadata0, step1, cacao.NewVariables(expectedVariables), nil, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
 
-	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil, mock_time.Now())
+	err = cacheReporter.ReportStepEnd(metadata0, step1, cacao.NewVariables(expectedVariables), nil, mock_time.Now())
 	if err == nil {
 		t.Fail()
 	}
@@ -940,6 +957,7 @@ func TestAcceptedStepReportAfterExecutionEnd(t *testing.T) {
 		Workflow: map[string]cacao.Step{step1.ID: step1, end.ID: end},
 	}
 	executionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
+	metadata0 := execution.Metadata{ExecutionId: executionId0, StepId: step1.ID, StepExecutionId: uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c9")}
 	layout := "2006-01-02T15:04:05.000Z"
 	str := "2014-11-12T11:45:26.371Z"
 	timeNow, _ := time.Parse(layout, str)
@@ -949,7 +967,7 @@ func TestAcceptedStepReportAfterExecutionEnd(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	err = cacheReporter.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables), mock_time.Now())
+	err = cacheReporter.ReportStepStart(metadata0, step1, cacao.NewVariables(expectedVariables), mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
@@ -958,7 +976,7 @@ func TestAcceptedStepReportAfterExecutionEnd(t *testing.T) {
 		t.Fail()
 	}
 
-	err = cacheReporter.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil, mock_time.Now())
+	err = cacheReporter.ReportStepEnd(metadata0, step1, cacao.NewVariables(expectedVariables), nil, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}

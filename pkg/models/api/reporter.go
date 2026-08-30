@@ -52,6 +52,7 @@ type StepExecutionReport struct {
 	Description        string                    `bson:"description" json:"description"`
 	ExecutionId        string                    `bson:"execution_id" json:"execution_id"`
 	StepId             string                    `bson:"step_id" json:"step_id"`
+	StepExecutionId    string                    `bson:"step_execution_id" json:"step_execution_id"`
 	Started            time.Time                 `bson:"started" json:"started"`
 	Ended              time.Time                 `bson:"ended" json:"ended"`
 	Status             string                    `bson:"status" json:"status"`

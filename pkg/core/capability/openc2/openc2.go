@@ -44,20 +44,42 @@ func (OpenC2Capability *OpenC2Capability) Execute(
 ) (cacao.Variables, error) {
 	log.Trace(metadata.ExecutionId)
 
-	httpOptions := http.HttpOptions{
-		Command: &context.Command,
-		Target:  &context.Target,
-		Auth:    &context.Authentication,
+	// This capability performs commands against a target; a step declaring
+	// zero targets has nothing to run against, so skip without error.
+	if len(context.Targets) == 0 {
+		return cacao.NewVariables(), nil
 	}
-	response, err := OpenC2Capability.httpRequest.Request(httpOptions)
-	if err != nil {
-		log.Error(err)
-		return cacao.NewVariables(), err
+	targets := context.Targets
+
+	returnVariables := cacao.NewVariables()
+	var stepErr error
+
+	for _, resolvedTarget := range targets {
+		target := resolvedTarget.Target
+		auth := resolvedTarget.Authentication
+
+		for _, command := range context.Commands {
+			httpOptions := http.HttpOptions{
+				Command: &command,
+				Target:  &target,
+				Auth:    &auth,
+			}
+			response, err := OpenC2Capability.httpRequest.Request(httpOptions)
+			if err != nil {
+				log.Error(err)
+				stepErr = err
+				// Abort this target's remaining commands on first failure,
+				// but keep processing the other targets.
+				break
+			}
+
+			results := cacao.NewVariables(cacao.Variable{Type: cacao.VariableTypeString,
+				Name:  openc2ResultVariableName,
+				Value: string(response)})
+			log.Trace("Finished openc2 execution, will return the variables: ", results)
+			returnVariables.Merge(results)
+		}
 	}
 
-	results := cacao.NewVariables(cacao.Variable{Type: cacao.VariableTypeString,
-		Name:  openc2ResultVariableName,
-		Value: string(response)})
-	log.Trace("Finished openc2 execution, will return the variables: ", results)
-	return results, nil
+	return returnVariables, stepErr
 }

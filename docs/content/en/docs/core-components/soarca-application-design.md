@@ -8,7 +8,7 @@ description: >
 ---
 
 ##  Design decisions and core dependencies
-To allow for fast execution and type-safe development SOARCA is developed in `go`. The application application can be deployed in `Docker`. Further dependencies are `MQTT` for the module system and `go-gin` for the REST API.
+To allow for fast execution and type-safe development SOARCA is developed in `go`. The application application can be deployed in `Docker`. Further dependencies are `go-gin` for the REST API.
 
 
 The overview on this page is aimed to guide you through the SOARCA architecture and components as well as the main flow. 

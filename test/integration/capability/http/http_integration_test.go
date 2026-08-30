@@ -42,8 +42,8 @@ func TestHttpConnection(t *testing.T) {
 
 	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId.String(), StepId: stepId.String()}
 	data := capability.Context{
-		Command:   expectedCommand,
-		Target:    target,
+		Commands:  []cacao.Command{expectedCommand},
+		Targets:   []capability.ResolvedTarget{{Target: target}},
 		Variables: cacao.NewVariables(variable1),
 	}
 	// But what to do if there is no target and no AuthInfo?
@@ -86,10 +86,9 @@ func TestHttpOAuth2(t *testing.T) {
 	stepId, _ := uuid.Parse("81eff59f-d084-4324-9e0a-59e353dbd28f")
 	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId.String(), StepId: stepId.String()}
 	data := capability.Context{
-		Command:        command,
-		Target:         target,
-		Authentication: auth,
-		Variables:      cacao.NewVariables(),
+		Commands:  []cacao.Command{command},
+		Targets:   []capability.ResolvedTarget{{Target: target, Authentication: auth}},
+		Variables: cacao.NewVariables(),
 	}
 	results, err := httpCapability.Execute(
 		metadata,
@@ -133,10 +132,9 @@ func TestHttpBasicAuth(t *testing.T) {
 	stepId, _ := uuid.Parse("81eff59f-d084-4324-9e0a-59e353dbd28f")
 	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId.String(), StepId: stepId.String()}
 	data := capability.Context{
-		Command:        command,
-		Target:         target,
-		Authentication: auth,
-		Variables:      cacao.NewVariables(),
+		Commands:  []cacao.Command{command},
+		Targets:   []capability.ResolvedTarget{{Target: target, Authentication: auth}},
+		Variables: cacao.NewVariables(),
 	}
 	results, err := httpCapability.Execute(
 		metadata,

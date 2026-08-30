@@ -65,10 +65,11 @@ func TestOpenC2Request(t *testing.T) {
 
 	mockHttp.On("Request", httpOptions).Return(payloadBytes, nil)
 
-	data := capability.Context{Command: command,
-		Authentication: auth,
-		Target:         target,
-		Variables:      cacao.NewVariables(cacaoVariable)}
+	data := capability.Context{
+		Commands:  []cacao.Command{command},
+		Targets:   []capability.ResolvedTarget{{Target: target, Authentication: auth}},
+		Variables: cacao.NewVariables(cacaoVariable),
+	}
 
 	results, err := openc2.Execute(
 		metadata,
@@ -79,4 +80,38 @@ func TestOpenC2Request(t *testing.T) {
 	}
 	t.Log(results)
 	assert.Equal(t, results["__soarca_openc2_http_result__"].Value, payload)
+}
+
+func TestOpenC2ExecuteNoTargetsSkipsWithoutError(t *testing.T) {
+	mockHttp := &mockRequest.MockHttpRequest{}
+	openc2 := New(mockHttp)
+
+	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	playbookId, _ := uuid.Parse("d09351a2-a075-40c8-8054-0b7c423db83f")
+	stepId, _ := uuid.Parse("81eff59f-d084-4324-9e0a-59e353dbd28f")
+
+	command := cacao.Command{
+		Type:    "http-api",
+		Command: "POST / HTTP/1.1",
+	}
+
+	metadata := execution.Metadata{
+		ExecutionId: executionId,
+		PlaybookId:  playbookId.String(),
+		StepId:      stepId.String(),
+	}
+
+	data := capability.Context{
+		Commands: []cacao.Command{command},
+		Targets:  []capability.ResolvedTarget{},
+	}
+
+	results, err := openc2.Execute(metadata, data)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+	assert.Equal(t, len(results), 0)
+
+	mockHttp.AssertNotCalled(t, "Request")
 }

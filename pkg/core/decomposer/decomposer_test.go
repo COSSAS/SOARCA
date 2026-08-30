@@ -94,7 +94,7 @@ func TestExecutePlaybook(t *testing.T) {
 	}
 
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
-	metaStep1 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step1.ID}
+	metaStep1 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step1.ID, StepExecutionId: executionId}
 
 	uuid_mock.On("New").Return(executionId)
 
@@ -234,8 +234,8 @@ func TestExecutePlaybookMultiStep(t *testing.T) {
 	}
 
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
-	metaStep1 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step1.ID}
-	metaStep2 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step2.ID}
+	metaStep1 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step1.ID, StepExecutionId: executionId}
+	metaStep2 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step2.ID, StepExecutionId: executionId}
 
 	uuid_mock.On("New").Return(executionId)
 
@@ -484,9 +484,9 @@ func TestFailingStepResultsInFailingPlaybook(t *testing.T) {
 	}
 
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
-	metaStep1 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step1.ID}
-	metaStep2 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step2.ID}
-	metaStep3 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step3.ID}
+	metaStep1 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step1.ID, StepExecutionId: executionId}
+	metaStep2 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step2.ID, StepExecutionId: executionId}
+	metaStep3 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step3.ID, StepExecutionId: executionId}
 
 	uuid_mock.On("New").Return(executionId)
 
@@ -655,7 +655,7 @@ func TestExecutePlaybookAction(t *testing.T) {
 	}
 
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
-	metaStep1 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step1.ID}
+	metaStep1 := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: step1.ID, StepExecutionId: executionId}
 
 	layout := "2006-01-02T15:04:05.000Z"
 	str := "2014-11-12T11:45:26.371Z"
@@ -816,7 +816,7 @@ func TestExecuteIfCondition(t *testing.T) {
 	mock_time.On("Now").Return(timeNow)
 
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
-	metaStepIf := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: stepIf.ID}
+	metaStepIf := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: stepIf.ID, StepExecutionId: executionId}
 
 	uuid_mock.On("New").Return(executionId)
 	mock_reporter.On("ReportWorkflowStart", executionId, playbook, timeNow).Return()
@@ -836,7 +836,7 @@ func TestExecuteIfCondition(t *testing.T) {
 		Variables: cacao.NewVariables(expectedVariables),
 	}
 
-	metaStepTrue := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: stepTrue.ID}
+	metaStepTrue := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: stepTrue.ID, StepExecutionId: executionId}
 	mock_time.On("Sleep", time.Millisecond*0).Return()
 
 	mock_action_executor.On("Execute",
@@ -851,7 +851,7 @@ func TestExecuteIfCondition(t *testing.T) {
 		Variables: cacao.NewVariables(expectedVariables, expectedVariables2),
 	}
 
-	metaStepCompletion := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: stepCompletion.ID}
+	metaStepCompletion := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: stepCompletion.ID, StepExecutionId: executionId}
 	mock_time.On("Sleep", time.Millisecond*0).Return()
 
 	mock_action_executor.On("Execute",
@@ -909,7 +909,8 @@ func TestDelayStepExecution(t *testing.T) {
 		mock_time)
 
 	executionId, _ := uuid.Parse("00000000-0000-0000-0000-000000000000")
-	metaStep1 := execution.Metadata{ExecutionId: executionId, PlaybookId: "", StepId: step1.ID}
+	metaStep1 := execution.Metadata{ExecutionId: executionId, PlaybookId: "", StepId: step1.ID, StepExecutionId: executionId}
+	uuid_mock.On("New").Return(executionId)
 	playbookStepMetadata := executors.PlaybookStepMetadata{
 		Step:      step1,
 		Variables: cacao.NewVariables(expectedVariables),
@@ -963,7 +964,8 @@ func TestDelayStepNegativeTimeExecution(t *testing.T) {
 		mock_time)
 
 	executionId, _ := uuid.Parse("00000000-0000-0000-0000-000000000000")
-	metaStep1 := execution.Metadata{ExecutionId: executionId, PlaybookId: "", StepId: step1.ID}
+	metaStep1 := execution.Metadata{ExecutionId: executionId, PlaybookId: "", StepId: step1.ID, StepExecutionId: executionId}
+	uuid_mock.On("New").Return(executionId)
 	playbookStepMetadata := executors.PlaybookStepMetadata{
 		Step:      step1,
 		Variables: cacao.NewVariables(expectedVariables),
@@ -1090,7 +1092,7 @@ func TestExecuteWhileCondition(t *testing.T) {
 	mock_time.On("Now").Return(timeNow)
 
 	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
-	metaStepIf := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: stepWhile.ID}
+	metaStepIf := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: stepWhile.ID, StepExecutionId: executionId}
 
 	uuid_mock.On("New").Return(executionId)
 	mock_reporter.On("ReportWorkflowStart", executionId, playbook, timeNow).Return()
@@ -1110,7 +1112,7 @@ func TestExecuteWhileCondition(t *testing.T) {
 		Variables: cacao.NewVariables(expectedVariables),
 	}
 
-	metaStepTrue := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: stepTrue.ID}
+	metaStepTrue := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: stepTrue.ID, StepExecutionId: executionId}
 	mock_time.On("Sleep", time.Millisecond*0).Return()
 
 	mock_action_executor.On("Execute",
@@ -1131,7 +1133,7 @@ func TestExecuteWhileCondition(t *testing.T) {
 		Variables: cacao.NewVariables(expectedVariables, expectedVariables2),
 	}
 
-	metaStepCompletion := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: stepCompletion.ID}
+	metaStepCompletion := execution.Metadata{ExecutionId: executionId, PlaybookId: "test", StepId: stepCompletion.ID, StepExecutionId: executionId}
 	mock_time.On("Sleep", time.Millisecond*0).Return()
 
 	mock_action_executor.On("Execute",

@@ -45,11 +45,11 @@ func (executor *Executor) Execute(meta execution.Metadata, stepContext executors
 		return stepContext.Step.OnFailure, false, err
 	}
 
-	executor.reporter.ReportStepStart(meta.ExecutionId, stepContext.Step, stepContext.Variables, executor.time.Now())
+	executor.reporter.ReportStepStart(meta, stepContext.Step, stepContext.Variables, executor.time.Now())
 
 	var err error
 	defer func() {
-		executor.reporter.ReportStepEnd(meta.ExecutionId, stepContext.Step, stepContext.Variables, err, executor.time.Now())
+		executor.reporter.ReportStepEnd(meta, stepContext.Step, stepContext.Variables, err, executor.time.Now())
 	}()
 	nextStepId, branch, err := executor.evaluate(stepContext)
 	return nextStepId, branch, err

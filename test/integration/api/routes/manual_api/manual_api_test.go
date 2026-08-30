@@ -57,15 +57,16 @@ func TestGetPendingCommandCalled(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	api_routes.ManualRoutes(app, manualApiHandler)
 	testExecId := "50b6d52c-6efc-4516-a242-dfbc5c89d421"
-	testStepId := "61a4d52c-6efc-4516-a242-dfbc5c89d312"
-	path := "/manual/" + testExecId + "/" + testStepId
+	testStepExecutionId := "71a4d52c-6efc-4516-a242-dfbc5c89d999"
+	path := "/manual/" + testExecId + "/" + testStepExecutionId
 	executionMetadata := execution.Metadata{
-		ExecutionId: uuid.MustParse(testExecId), StepId: testStepId,
+		ExecutionId: uuid.MustParse(testExecId), StepExecutionId: uuid.MustParse(testStepExecutionId),
 	}
 
 	testEmptyResponsePendingCommand := apiModel.InteractionCommandData{
-		Type:        "manual-command-info",
-		ExecutionId: "00000000-0000-0000-0000-000000000000",
+		Type:            "manual-command-info",
+		ExecutionId:     "00000000-0000-0000-0000-000000000000",
+		StepExecutionId: "00000000-0000-0000-0000-000000000000",
 	}
 	emptyCommandInfoList := manual.CommandInfo{}
 
@@ -92,7 +93,10 @@ func TestGetPendingCommandCalled(t *testing.T) {
 	mock_interaction_storage.AssertExpectations(t)
 }
 
-func TestPostContinueCalled(t *testing.T) {
+// PUT /manual/{exec_id}/{step_execution_id} resolves the pending command
+// identified by the path - the same resource GET identifies - rather than a
+// generic POST /manual/continue carrying its own ids in the body.
+func TestPutContinueCalled(t *testing.T) {
 	mock_interaction_storage := mock_interaction_storage.MockInteractionStorage{}
 	manualApiHandler := manual_api.NewManualHandler(&mock_interaction_storage)
 
@@ -103,14 +107,28 @@ func TestPostContinueCalled(t *testing.T) {
 	api_routes.ManualRoutes(app, manualApiHandler)
 	testExecId := "50b6d52c-6efc-4516-a242-dfbc5c89d421"
 	testStepId := "61a4d52c-6efc-4516-a242-dfbc5c89d312"
+	testStepExecutionId := "71a4d52c-6efc-4516-a242-dfbc5c89d999"
 	testPlaybookId := "21a4d52c-6efc-4516-a242-dfbc5c89d312"
-	path := "/manual/continue"
+	path := "/manual/" + testExecId + "/" + testStepExecutionId
+
+	// The metadata built from the path alone, used to look up the pending
+	// command.
+	lookupMetadata := execution.Metadata{
+		ExecutionId:     uuid.MustParse(testExecId),
+		StepExecutionId: uuid.MustParse(testStepExecutionId),
+	}
+	// The full metadata of the pending command as returned by the lookup;
+	// this - not the (ids-free) request body - is what flows into
+	// PostContinue.
+	fullMetadata := execution.Metadata{
+		ExecutionId:     uuid.MustParse(testExecId),
+		StepId:          testStepId,
+		StepExecutionId: uuid.MustParse(testStepExecutionId),
+		PlaybookId:      testPlaybookId,
+	}
 
 	testManualUpdatePayload := apiModel.ManualOutArgsUpdatePayload{
 		Type:           "manual-step-response",
-		ExecutionId:    testExecId,
-		StepId:         testStepId,
-		PlaybookId:     testPlaybookId,
 		ResponseStatus: "success",
 		ResponseOutArgs: cacao.Variables{
 			"testvar": {
@@ -121,12 +139,10 @@ func TestPostContinueCalled(t *testing.T) {
 		},
 	}
 
+	pendingCommand := manual.CommandInfo{Metadata: fullMetadata}
+
 	testManualResponse := manual.InteractionResponse{
-		Metadata: execution.Metadata{
-			ExecutionId: uuid.MustParse(testExecId),
-			StepId:      testStepId,
-			PlaybookId:  testPlaybookId,
-		},
+		Metadata:       fullMetadata,
 		ResponseStatus: "success",
 		OutArgsVariables: cacao.Variables{
 			"testvar": {
@@ -141,9 +157,10 @@ func TestPostContinueCalled(t *testing.T) {
 		t.Fatalf("Error marshalling JSON: %v", err)
 	}
 
+	mock_interaction_storage.On("GetPendingCommand", lookupMetadata).Return(pendingCommand, nil)
 	mock_interaction_storage.On("PostContinue", testManualResponse).Return(nil)
 
-	request, err := http.NewRequest("POST", path, bytes.NewBuffer(jsonData))
+	request, err := http.NewRequest("PUT", path, bytes.NewBuffer(jsonData))
 	if err != nil {
 		t.Fail()
 	}
@@ -155,7 +172,7 @@ func TestPostContinueCalled(t *testing.T) {
 	mock_interaction_storage.AssertExpectations(t)
 }
 
-func TestPostContinueFailsOnNonMatchingOutArgNames(t *testing.T) {
+func TestPutContinueFailsOnNonMatchingOutArgNames(t *testing.T) {
 	mock_interaction_storage := mock_interaction_storage.MockInteractionStorage{}
 	manualApiHandler := manual_api.NewManualHandler(&mock_interaction_storage)
 
@@ -165,15 +182,11 @@ func TestPostContinueFailsOnNonMatchingOutArgNames(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	api_routes.ManualRoutes(app, manualApiHandler)
 	testExecId := "50b6d52c-6efc-4516-a242-dfbc5c89d421"
-	testStepId := "61a4d52c-6efc-4516-a242-dfbc5c89d312"
-	testPlaybookId := "21a4d52c-6efc-4516-a242-dfbc5c89d312"
-	path := "/manual/continue"
+	testStepExecutionId := "71a4d52c-6efc-4516-a242-dfbc5c89d999"
+	path := "/manual/" + testExecId + "/" + testStepExecutionId
 
 	testManualUpdatePayload := apiModel.ManualOutArgsUpdatePayload{
 		Type:           "manual-step-response",
-		ExecutionId:    testExecId,
-		StepId:         testStepId,
-		PlaybookId:     testPlaybookId,
 		ResponseStatus: "success",
 		ResponseOutArgs: cacao.Variables{
 			"__this_var__": {
@@ -189,7 +202,7 @@ func TestPostContinueFailsOnNonMatchingOutArgNames(t *testing.T) {
 		t.Fatalf("Error marshalling JSON: %v", err)
 	}
 
-	request, err := http.NewRequest("POST", path, bytes.NewBuffer(manualUpdatePayloadJson))
+	request, err := http.NewRequest("PUT", path, bytes.NewBuffer(manualUpdatePayloadJson))
 	if err != nil {
 		t.Fail()
 	}

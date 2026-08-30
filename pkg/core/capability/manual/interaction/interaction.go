@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 	"soarca/internal/logger"
+	"soarca/pkg/core/registry"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"soarca/pkg/models/manual"
@@ -26,25 +27,38 @@ type IInteractionIntegrationNotifier interface {
 
 type ICapabilityInteraction interface {
 	Queue(command manual.CommandInfo, manualComms manual.ManualCapabilityCommunication) error
+	// Deregister removes the pending interaction for metadata, if still
+	// present. Callers that own the full lifecycle of a queued command
+	// (i.e. they know when it has been resolved or has timed out) should
+	// call this synchronously as soon as that happens, so a subsequent
+	// re-execution of the same step - e.g. a step inside a while-loop body -
+	// never races an async cleanup routine trying to remove the same,
+	// already-superseded entry.
+	Deregister(metadata execution.Metadata) error
 }
 
 type IInteractionStorage interface {
 	GetPendingCommands() ([]manual.CommandInfo, error)
-	// even if step has multiple manual commands, there should always be just one pending manual command per action step
+	// GetPendingCommand looks up one specific pending command by its
+	// StepExecutionId. Multiple pending commands may legitimately share the
+	// same StepId - e.g. overlapping while-loop iterations, or (once
+	// implemented) concurrent parallel branches converging on the same
+	// step - so StepId alone cannot identify a single pending command; it's
+	// up to the caller (UI/integrator) to disambiguate between several
+	// pending commands for the same StepId using StepExecutionId.
 	GetPendingCommand(metadata execution.Metadata) (manual.CommandInfo, error)
 	PostContinue(response manual.InteractionResponse) error
 }
 
 type InteractionController struct {
-	InteractionStorage map[string]map[string]manual.InteractionStorageEntry // Keyed on [executionID][stepID]
-	Notifiers          []IInteractionIntegrationNotifier
+	pending   *registry.Registry[manual.InteractionStorageEntry] // Keyed on [executionID][stepExecutionID]
+	Notifiers []IInteractionIntegrationNotifier
 }
 
 func New(manualIntegrations []IInteractionIntegrationNotifier) *InteractionController {
-	storage := map[string]map[string]manual.InteractionStorageEntry{}
 	return &InteractionController{
-		InteractionStorage: storage,
-		Notifiers:          manualIntegrations,
+		pending:   registry.New[manual.InteractionStorageEntry](),
+		Notifiers: manualIntegrations,
 	}
 }
 
@@ -72,19 +86,36 @@ func (manualController *InteractionController) Queue(command manual.CommandInfo,
 		go notifier.Notify(integrationCommand, integrationChannel)
 	}
 
-	// Async idle wait on command-specific channel closure
+	// Backstop cleanup: removes the pending interaction if the caller
+	// driving this command (e.g. ManualCapability.Execute) never calls
+	// Deregister itself - for instance if Queue is used directly, as in
+	// this package's own tests. If Deregister has already been called
+	// synchronously by the caller, this is a harmless no-op (see
+	// handleManualCommandResponse).
 	go manualController.handleManualCommandResponse(command, manualComms)
 
 	return nil
 }
 
+// Deregister removes the pending interaction for metadata, if still
+// present. It is safe to call even if the interaction was already
+// removed (e.g. by the internal timeout/completion cleanup goroutine
+// racing this call): in that case it returns
+// manual.ErrorPendingCommandNotFound, which callers can treat as a
+// benign, expected outcome rather than a failure.
+func (manualController *InteractionController) Deregister(metadata execution.Metadata) error {
+	return manualController.removeInteractionFromPending(metadata)
+}
+
 func (manualController *InteractionController) handleManualCommandResponse(command manual.CommandInfo, manualComms manual.ManualCapabilityCommunication) {
 	log.Trace(
 		fmt.Sprintf(
-			"goroutine handling command response %s, %s has started", command.Metadata.ExecutionId.String(), command.Metadata.StepId))
+			"goroutine handling command response %s, %s (step execution %s) has started",
+			command.Metadata.ExecutionId.String(), command.Metadata.StepId, command.Metadata.StepExecutionId.String()))
 	defer log.Trace(
 		fmt.Sprintf(
-			"goroutine handling command response %s, %s has ended", command.Metadata.ExecutionId.String(), command.Metadata.StepId))
+			"goroutine handling command response %s, %s (step execution %s) has ended",
+			command.Metadata.ExecutionId.String(), command.Metadata.StepId, command.Metadata.StepExecutionId.String()))
 
 	// Wait for either timeout or response
 	<-manualComms.TimeoutContext.Done()
@@ -155,65 +186,63 @@ func (manualController *InteractionController) registerPendingInteraction(comman
 		OutArgsVariables: command.OutArgsVariables,
 	}
 
-	execution, ok := manualController.InteractionStorage[commandInfo.Metadata.ExecutionId.String()]
-
-	if !ok {
-		// It's fine, no entry for execution registered. Register execution and step entry
-		manualController.InteractionStorage[commandInfo.Metadata.ExecutionId.String()] = map[string]manual.InteractionStorageEntry{
-			commandInfo.Metadata.StepId: {
-				CommandInfo: commandInfo,
-				Channel:     manualChan,
-			},
-		}
-		return nil
-	}
-
-	// There is an execution entry
-	if _, ok := execution[commandInfo.Metadata.StepId]; ok {
-		// Error: there is already a pending manual command for the action step
-		err := fmt.Errorf(
-			"a manual step is already pending for execution %s, step %s. There can only be one pending manual command per action step",
-			commandInfo.Metadata.ExecutionId.String(), commandInfo.Metadata.StepId)
-		log.Error(err)
-		return err
-	}
-
-	// Execution exist, and Finally register pending command in existing execution
-	// Question: is it ever the case that the same exact step is executed in parallel branches? Then this code would not work
-	execution[commandInfo.Metadata.StepId] = manual.InteractionStorageEntry{
+	entry := manual.InteractionStorageEntry{
 		CommandInfo: commandInfo,
 		Channel:     manualChan,
+	}
+
+	err := manualController.pending.Register(
+		commandInfo.Metadata.ExecutionId.String(),
+		commandInfo.Metadata.StepExecutionId.String(),
+		entry,
+	)
+	if err != nil {
+		var alreadyRegistered registry.ErrAlreadyRegistered
+		if errors.As(err, &alreadyRegistered) {
+			// Practically unreachable in normal operation: StepExecutionId
+			// is a fresh UUID minted once per step invocation
+			// (decomposer.newStepMetadata), so a collision here means Queue
+			// was called twice for the exact same invocation.
+			err := fmt.Errorf(
+				"a manual command is already pending for execution %s, step execution %s (step %s)",
+				commandInfo.Metadata.ExecutionId.String(), commandInfo.Metadata.StepExecutionId.String(), commandInfo.Metadata.StepId)
+			log.Error(err)
+			return err
+		}
+		return err
 	}
 
 	return nil
 }
 
 func (manualController *InteractionController) getAllPendingCommandsInfo() []manual.CommandInfo {
-	allPendingInteractions := []manual.CommandInfo{}
-	for _, interactions := range manualController.InteractionStorage {
-		for _, interaction := range interactions {
-			allPendingInteractions = append(allPendingInteractions, interaction.CommandInfo)
-		}
+	entries := manualController.pending.List()
+	allPendingInteractions := make([]manual.CommandInfo, 0, len(entries))
+	for _, entry := range entries {
+		allPendingInteractions = append(allPendingInteractions, entry.CommandInfo)
 	}
 	return allPendingInteractions
 }
 
 func (manualController *InteractionController) getPendingInteraction(commandMetadata execution.Metadata) (manual.InteractionStorageEntry, error) {
-	executionCommands, ok := manualController.InteractionStorage[commandMetadata.ExecutionId.String()]
-	if !ok {
-		err := fmt.Sprintf("no pending commands found for execution %s", commandMetadata.ExecutionId.String())
-		return manual.InteractionStorageEntry{}, manual.ErrorPendingCommandNotFound{Err: err}
+	entry, err := manualController.pending.Get(commandMetadata.ExecutionId.String(), commandMetadata.StepExecutionId.String())
+	if err != nil {
+		var outerNotFound registry.ErrOuterKeyNotFound
+		if errors.As(err, &outerNotFound) {
+			errMsg := fmt.Sprintf("no pending commands found for execution %s", commandMetadata.ExecutionId.String())
+			return manual.InteractionStorageEntry{}, manual.ErrorPendingCommandNotFound{Err: errMsg}
+		}
+		var innerNotFound registry.ErrInnerKeyNotFound
+		if errors.As(err, &innerNotFound) {
+			errMsg := fmt.Sprintf("no pending command found for execution %s -> step execution %s",
+				commandMetadata.ExecutionId.String(),
+				commandMetadata.StepExecutionId.String(),
+			)
+			return manual.InteractionStorageEntry{}, manual.ErrorPendingCommandNotFound{Err: errMsg}
+		}
+		return manual.InteractionStorageEntry{}, err
 	}
-	interaction, ok := executionCommands[commandMetadata.StepId]
-	if !ok {
-		err := fmt.Sprintf("no pending commands found for execution %s -> step %s",
-			commandMetadata.ExecutionId.String(),
-			commandMetadata.StepId,
-		)
-		return manual.InteractionStorageEntry{}, manual.ErrorPendingCommandNotFound{Err: err}
-
-	}
-	return interaction, nil
+	return entry, nil
 }
 
 func (manualController *InteractionController) removeInteractionFromPending(commandMetadata execution.Metadata) error {
@@ -221,17 +250,10 @@ func (manualController *InteractionController) removeInteractionFromPending(comm
 	if err != nil {
 		return err
 	}
-	// Get map of pending manual commands associated to execution
-	executionCommands := manualController.InteractionStorage[commandMetadata.ExecutionId.String()]
-	// Delete stepID-linked pending command
-	delete(executionCommands, commandMetadata.StepId)
-
-	// If no pending commands associated to the execution, delete the executions map
-	// This is done to keep the storage clean.
-	if len(executionCommands) == 0 {
-		delete(manualController.InteractionStorage, commandMetadata.ExecutionId.String())
-	}
-	return nil
+	// Errors from Remove are already covered by the getPendingInteraction
+	// check above, so this pair (execution id, step execution id) is known
+	// to exist.
+	return manualController.pending.Remove(commandMetadata.ExecutionId.String(), commandMetadata.StepExecutionId.String())
 }
 
 func (manualController *InteractionController) validateMatchingOutArgs(pendingEntry manual.InteractionStorageEntry, responseOutArgs cacao.Variables) ([]string, error) {

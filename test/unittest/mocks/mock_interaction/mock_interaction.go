@@ -2,6 +2,7 @@ package mock_interaction
 
 import (
 	"context"
+	"soarca/pkg/models/execution"
 	"soarca/pkg/models/manual"
 
 	"github.com/stretchr/testify/mock"
@@ -14,6 +15,11 @@ type MockInteraction struct {
 func (mock *MockInteraction) Queue(command manual.CommandInfo,
 	manualComms manual.ManualCapabilityCommunication) error {
 	args := mock.Called(command, manualComms)
+	return args.Error(0)
+}
+
+func (mock *MockInteraction) Deregister(metadata execution.Metadata) error {
+	args := mock.Called(metadata)
 	return args.Error(0)
 }
 

@@ -44,22 +44,43 @@ func (httpCapability *HttpCapability) Execute(
 	metadata execution.Metadata,
 	context capability.Context) (cacao.Variables, error) {
 
-	soarca_http_options := http.HttpOptions{
-		Target:  &context.Target,
-		Command: &context.Command,
-		Auth:    &context.Authentication,
+	// This capability performs commands against a target; a step declaring
+	// zero targets has nothing to run against, so skip without error.
+	if len(context.Targets) == 0 {
+		return cacao.NewVariables(), nil
+	}
+	targets := context.Targets
+
+	returnVariables := cacao.NewVariables()
+	var stepErr error
+
+	for _, resolvedTarget := range targets {
+		target := resolvedTarget.Target
+		auth := resolvedTarget.Authentication
+
+		for _, command := range context.Commands {
+			soarca_http_options := http.HttpOptions{
+				Target:  &target,
+				Command: &command,
+				Auth:    &auth,
+			}
+
+			responseBytes, err := httpCapability.soarca_http_request.Request(soarca_http_options)
+			if err != nil {
+				log.Error(err)
+				stepErr = err
+				// Abort this target's remaining commands on first failure,
+				// but keep processing the other targets.
+				break
+			}
+			respString := string(responseBytes)
+			variable := cacao.Variable{Type: cacao.VariableTypeString,
+				Name:  httpApiResultVariableName,
+				Value: respString}
+
+			returnVariables.Merge(cacao.NewVariables(variable))
+		}
 	}
 
-	responseBytes, err := httpCapability.soarca_http_request.Request(soarca_http_options)
-	if err != nil {
-		log.Error(err)
-		return cacao.NewVariables(), err
-	}
-	respString := string(responseBytes)
-	variable := cacao.Variable{Type: cacao.VariableTypeString,
-		Name:  httpApiResultVariableName,
-		Value: respString}
-
-	return cacao.NewVariables(variable), nil
-
+	return returnVariables, stepErr
 }
