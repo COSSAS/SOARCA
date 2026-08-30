@@ -471,14 +471,35 @@ This does not have to be big:
 The FIN queue already implements claim, lease, expiry and requeue. Backing that with
 storage instead of a map is most of the job.
 
-## Open decisions
+## Decisions
 
-1. **Retry grain.** Step-level (like GitLab jobs) or per command/target? Per-command needs
-   `command_run` rows, and CACAO does not define partial step success — that policy would
-   be ours to invent. Suggest: record command rows for visibility, retry at step level
-   first.
-2. **Idempotency.** Re-dispatch after a crash can re-run a step. `step_run_id` is a natural
-   idempotency key, but an SSH command is not idempotent. Needs a per-capability policy.
-3. **Storage backend.** Decided: SQLite locally, PostgreSQL in production. See above.
-4. **Migration.** Build behind `runs.Runner` as a second implementation, switch by config,
-   delete the old walker once it passes the same tests.
+1. **Retry is step-wise**, matching CI/CD pipelines so the behaviour is already familiar to
+   operators. The run-graph model supports this directly: a retry is a new step run for the
+   same `step_id` with a `retry_of` link, and causally downstream step runs are superseded.
+   Command- or target-level retry can be added later without a schema change if
+   `command_run` rows are recorded from the start.
+2. **Idempotency is the playbook author's responsibility.** Commands have side effects
+   (ssh, http, manual) and the engine cannot make them repeatable. The engine's job is
+   narrower — see the open item below.
+3. **Storage: SQLite locally, PostgreSQL in production.** A separate in-memory store is not
+   needed; SQLite `:memory:` covers testing through the real code path.
+4. **No Mongo→SQL data migration.** Fresh installs; signal the break with a major version.
+   Schema migrations via goose.
+5. **Stored branch decisions stand on resume.** An operator wanting fresh evaluation starts
+   a new run.
+
+## Open
+
+1. **The ambiguous crash window.** If SOARCA dies after dispatching a step but before
+   recording a result, the engine cannot know whether the side effect happened. Since
+   commands are not idempotent (decision 2), auto-retry is not always safe: re-running
+   "block this IP" is harmless, re-running "notify all users" is not. Options: mark such
+   step runs `unknown` and require an operator decision; or allow playbook authors to
+   declare a step safe to auto-retry. Recommend recording `step_run_id` as an idempotency
+   key on dispatch regardless, so a worker or FIN can recognise a re-delivery.
+2. **Deployment footprint / Temporal.** Whether adopters must run a Temporal cluster. A
+   product question, and likely the deciding factor for the engine choice. Settle it before
+   the spike.
+3. **Sensitive variables.** `cacao.Variable` has no way to mark a value secret, so we cannot
+   automatically decide what to redact from reports or durable history. Needs a SOARCA
+   extension.
