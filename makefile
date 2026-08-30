@@ -1,4 +1,4 @@
-.PHONY: all test integration-test ci-test clean build docker run pre-docker-build swagger sbom
+.PHONY: all test integration-test manual-test ci-test clean build docker run pre-docker-build swagger sbom
 
 BINARY_NAME=soarca
 DIRECTORY = $(sort $(dir $(wildcard ./test/*/)))
@@ -28,12 +28,17 @@ lint: swagger
 build: swagger
 	CGO_ENABLED=0 go build -o ./build/soarca $(GOFLAGS) ./cmd/soarca/main.go
 
+# Unit tests: no external services required, safe to run anywhere.
 test: swagger
-	go test ./pkg/... -v
-	go test ./internal/... -v
+	go test ./... -v
 
+# Requires the test services in deployments/docker/testing (httpbin, ssh, thehive).
 integration-test: swagger
-	go test ./test/integration/... -v
+	go test -tags=integration ./... -v
+
+# Requires a special environment (Windows/PowerShell host, live TheHive).
+manual-test: swagger
+	go test -tags=manual ./... -v
 
 ci-test: test integration-test
 

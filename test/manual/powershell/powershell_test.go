@@ -1,11 +1,15 @@
+//go:build manual
+
+// Requires a reachable Windows host with PowerShell remoting enabled.
+
 package powershell_integration_test
 
 import (
 	"fmt"
-	"soarca/pkg/core/capability"
-	"soarca/pkg/core/capability/powershell"
-	"soarca/pkg/models/cacao"
-	"soarca/pkg/models/execution"
+	"soarca/internal/workflow/capability"
+	"soarca/internal/workflow/capability/powershell"
+	"soarca/pkg/cacao"
+	run "soarca/pkg/models/execution"
 	"testing"
 
 	"github.com/google/uuid"
@@ -32,14 +36,13 @@ func TestPowershellConnection(t *testing.T) {
 		AuthInfoIdentifier: "some-authid-1",
 	}
 
-	var executionId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	var runId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	var playbookId = "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
 	var stepId = "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
-	var metadata = execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId, StepId: stepId}
+	var metadata = run.Metadata{RunId: runId, PlaybookId: playbookId, StepId: stepId}
 	var data = capability.Context{
-		Command:        expectedCommand,
-		Authentication: expectedAuthenticationInformation,
-		Target:         expectedTarget,
+		Commands: []cacao.Command{expectedCommand},
+		Targets:  []capability.ResolvedTarget{{Target: expectedTarget, Authentication: expectedAuthenticationInformation}},
 	}
 	results, err := powershell.Execute(metadata,
 		data)

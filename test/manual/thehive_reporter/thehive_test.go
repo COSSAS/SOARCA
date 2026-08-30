@@ -1,11 +1,16 @@
+//go:build manual
+
+// Requires a reachable TheHive instance configured via environment variables.
+
 package thehive_test
 
 import (
 	"fmt"
 	"os"
-	"soarca/pkg/integration/thehive/common/connector"
-	thehive "soarca/pkg/integration/thehive/reporter"
-	"soarca/pkg/models/cacao"
+	"soarca/internal/adapters/thehive/common/connector"
+	thehive "soarca/internal/adapters/thehive/reporter"
+	"soarca/pkg/cacao"
+	"soarca/internal/runs/model"
 	"testing"
 	"time"
 
@@ -117,26 +122,27 @@ func TestTheHiveReporting(t *testing.T) {
 
 		Workflow: map[string]cacao.Step{step1.ID: step1, end.ID: end},
 	}
-	executionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
+	runId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
+	metadata0 := run.Metadata{RunId: runId0, StepId: step1.ID, StepRunId: uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c9")}
 
-	err = thr.ReportWorkflowStart(executionId0, playbook, time.Now())
+	err = thr.ReportWorkflowStart(runId0, playbook, time.Now())
 	if err != nil {
 		fmt.Println("failing at report workflow start")
 		fmt.Println(err)
 		t.Fail()
 	}
-	err = thr.ReportStepStart(executionId0, step1, cacao.NewVariables(expectedVariables), time.Now())
+	err = thr.ReportStepStart(metadata0, step1, cacao.NewVariables(expectedVariables), time.Now())
 	if err != nil {
 		fmt.Println(err)
 		t.Fail()
 	}
-	err = thr.ReportStepEnd(executionId0, step1, cacao.NewVariables(expectedVariables), nil, time.Now())
+	err = thr.ReportStepEnd(metadata0, step1, cacao.NewVariables(expectedVariables), nil, time.Now())
 	if err != nil {
 		fmt.Println(err)
 		t.Fail()
 	}
 
-	err = thr.ReportWorkflowEnd(executionId0, playbook, nil, time.Now())
+	err = thr.ReportWorkflowEnd(runId0, playbook, nil, time.Now())
 	if err != nil {
 		fmt.Println(err)
 		t.Fail()

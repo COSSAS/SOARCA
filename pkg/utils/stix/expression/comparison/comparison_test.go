@@ -2,7 +2,7 @@ package comparison
 
 import (
 	"errors"
-	"soarca/pkg/models/cacao"
+	"soarca/pkg/cacao"
 	"testing"
 
 	"github.com/go-playground/assert/v2"

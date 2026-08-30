@@ -1,9 +1,9 @@
 package mock_executor
 
 import (
-	"soarca/pkg/core/executors"
-	"soarca/pkg/models/cacao"
-	"soarca/pkg/models/execution"
+	"soarca/internal/workflow/steps"
+	"soarca/pkg/cacao"
+	"soarca/internal/runs/model"
 
 	"github.com/stretchr/testify/mock"
 )
@@ -13,7 +13,7 @@ type Mock_Action_Executor struct {
 }
 
 func (executer *Mock_Action_Executor) Execute(
-	metadata execution.Metadata,
+	metadata run.Metadata,
 	details executors.PlaybookStepMetadata) (cacao.Variables,
 	error) {
 	args := executer.Called(metadata, details)

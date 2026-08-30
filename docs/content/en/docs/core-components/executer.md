@@ -100,7 +100,7 @@ The action executor consist of the following components
 
 - The capability selector
 - Native capabilities (command executors)
-- MQTT capability to interact with: Fin capabilities (third-party executors)
+- HTTP/JSON capability to interact with: Fin capabilities (third-party executors)
 
 The capability selector will select the implementation which is capable of executing the incoming command. There are native capabilities based on the CACAO `command-type-ov`:
 
@@ -121,14 +121,14 @@ The capability selector will select the implementation which is capable of execu
     * yara
 
 #### Native capabilities
-The executor will select a module that is capable of executing the command and pass the details to it. The capability selection is performed based on the agent type (see [Agent and Target Common Properties](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256509) in the CACAO 2.0 spec). The convention is that the agent type must equal `soarca-<capability identifier>`, e.g. `soarca-ssh` or `soarca-openc2-http`.
+The executor will select a module that is capable of executing the command and pass the details to it. Capability selection is performed based on the agent's `type` (see [Agent and Target Common Properties](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256509) in the CACAO 2.0 spec). The convention is that the agent type must equal `soarca-<capability identifier>`, e.g. `soarca-ssh` or `soarca-openc2-http`. `name` on the agent definition is a free-text, human-readable label only; it plays no role in routing.
 
 The result of the step execution will be returned to the decomposer. A result can be either output variables or error status.
 
 
 
-#### MQTT executor -> Fin capabilities
-The Executor will put the command on the MQTT topic that is offered by the module. How a module handles this is described in the [module documentation](/docs/core-components/modules) and in the [fin documentation](/docs/soarca-extensions/).
+#### Fin capabilities
+SOARCA is extendable via Fins — external processes that implement a pull-based HTTP/JSON protocol to claim and execute jobs for a given capability `type`. See the [fin documentation](/docs/soarca-extensions/) for more information. This is being redesigned; the diagrams below describe SOARCA's native (in-process) capabilities.
 
 #### Component overview
 
@@ -141,16 +141,9 @@ component Decomposer as parser
 package "Executor" {
     component SSH as exe2
     component "HTTP-API" as exe1
-    component MQTT as exe3
-}
-
-package "Fins" {
-    component "VirusTotal" as virustotal
-    component "E-mail Sender" as email
 }
 
 parser -- Executor
-exe3 -- Fins : " MQTT topics"
 ```
 
 #### Sequences 

@@ -2,7 +2,7 @@ package mock_assignment_extension
 
 import (
 	"soarca/pkg/extensions/soarca/assignment"
-	"soarca/pkg/models/cacao"
+	"soarca/pkg/cacao"
 
 	"github.com/stretchr/testify/mock"
 )

@@ -22,3 +22,8 @@ docs/.hugo_build.lock
 **.hugo_build.lock
 
 certs
+
+# Local SQLite databases
+soarca.db
+soarca.db-shm
+soarca.db-wal

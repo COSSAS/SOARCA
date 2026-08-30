@@ -1,8 +1,12 @@
+//go:build manual
+
+// Requires a reachable TheHive instance configured via environment variables.
+
 package connector_test
 
 import (
-	"soarca/pkg/integration/thehive/common/connector"
-	thehive_models "soarca/pkg/integration/thehive/common/models"
+	"soarca/internal/adapters/thehive/common/connector"
+	thehive_models "soarca/internal/adapters/thehive/common/models"
 	"testing"
 
 	"github.com/go-playground/assert/v2"

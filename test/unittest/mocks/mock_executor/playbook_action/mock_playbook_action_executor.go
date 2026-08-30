@@ -1,8 +1,8 @@
 package mock_playbook_action_executor
 
 import (
-	"soarca/pkg/models/cacao"
-	"soarca/pkg/models/execution"
+	"soarca/pkg/cacao"
+	"soarca/internal/runs/model"
 
 	"github.com/stretchr/testify/mock"
 )
@@ -11,7 +11,7 @@ type Mock_PlaybookActionExecutor struct {
 	mock.Mock
 }
 
-func (executer *Mock_PlaybookActionExecutor) Execute(metadata execution.Metadata,
+func (executer *Mock_PlaybookActionExecutor) Execute(metadata run.Metadata,
 	step cacao.Step,
 	variables cacao.Variables) (cacao.Variables, error) {
 	args := executer.Called(metadata, step, variables)

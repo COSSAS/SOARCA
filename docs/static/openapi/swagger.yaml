@@ -32,15 +32,12 @@ definitions:
     type: object
   api.InteractionCommandData:
     properties:
-      command:
-        description: The command for the agent either command
-        type: string
-      commandb64:
-        description: Indicates if the command is in b64
-        type: boolean
-      description:
-        description: The description from the workflow step
-        type: string
+      commands:
+        description: All commands of the step, in order. A manual step is a single
+          unit of work resolved by one response, but may list multiple commands/instructions
+        items:
+          $ref: '#/definitions/api.ManualCommand'
+        type: array
       execution_id:
         description: The id of the execution
         type: string
@@ -52,42 +49,51 @@ definitions:
       playbook_id:
         description: The id of the CACAO playbook executed by the execution
         type: string
+      step_execution_id:
+        description: The id of this specific step invocation. Distinguishes concurrent/repeated
+          pending commands that share the same StepId (e.g. overlapping loop iterations)
+        type: string
       step_id:
         description: The id of the step executed by the execution
         type: string
-      target:
-        allOf:
-        - $ref: '#/definitions/cacao.AgentTarget'
-        description: Map of cacao agent-target with the target(s) of this command
+      targets:
+        description: All targets of the step, in order, together with their resolved
+          authentication information (needed by a human operator to perform the step
+          manually)
+        items:
+          $ref: '#/definitions/capability.ResolvedTarget'
+        type: array
       type:
         description: The type of this content
         example: execution-status
         type: string
     required:
-    - command
-    - description
+    - commands
     - execution_id
     - out_args
     - playbook_id
+    - step_execution_id
     - step_id
-    - target
+    - targets
     - type
     type: object
-  api.KeyManagementKey:
+  api.ManualCommand:
     properties:
-      private:
+      command:
+        description: The command for the agent, either plain or base64
         type: string
-      public:
+      commandb64:
+        description: Indicates if the command is in b64
+        type: boolean
+      description:
+        description: The description from the workflow step
         type: string
+    required:
+    - command
+    - description
     type: object
   api.ManualOutArgsUpdatePayload:
     properties:
-      execution_id:
-        description: The id of the execution
-        type: string
-      playbook_id:
-        description: The id of the CACAO playbook executed by the execution
-        type: string
       response_out_args:
         allOf:
         - $ref: '#/definitions/cacao.Variables'
@@ -97,19 +103,13 @@ definitions:
         allOf:
         - $ref: '#/definitions/manual.ManualResponseStatus'
         description: Indicates status of command
-      step_id:
-        description: The id of the step executed by the execution
-        type: string
       type:
         description: The type of this content
         example: string
         type: string
     required:
-    - execution_id
-    - playbook_id
     - response_out_args
     - response_status
-    - step_id
     - type
     type: object
   api.PlaybookExecutionReport:
@@ -192,6 +192,8 @@ definitions:
       status:
         type: string
       status_text:
+        type: string
+      step_execution_id:
         type: string
       step_id:
         type: string
@@ -724,6 +726,256 @@ definitions:
     additionalProperties:
       $ref: '#/definitions/cacao.Step'
     type: object
+  capability.ResolvedTarget:
+    properties:
+      authentication:
+        $ref: '#/definitions/cacao.AuthenticationInformation'
+      target:
+        $ref: '#/definitions/cacao.AgentTarget'
+    required:
+    - target
+    type: object
+  fin.Command:
+    properties:
+      command:
+        type: string
+      command_b64:
+        type: string
+      content:
+        type: string
+      content_b64:
+        type: string
+      headers:
+        additionalProperties:
+          items:
+            type: string
+          type: array
+        type: object
+      type:
+        type: string
+    type: object
+  fin.Job:
+    properties:
+      capability_type:
+        description: |-
+          CapabilityType is the routing key this job was queued under — it
+          matches Capability.Type of whichever Fin ultimately claims it.
+        type: string
+      commands:
+        items:
+          $ref: '#/definitions/fin.Command'
+        type: array
+      execution_id:
+        description: |-
+          ExecutionId/PlaybookId/StepId/StepExecutionId identify which
+          execution/playbook/step invocation this job belongs to.
+          StepExecutionId disambiguates concurrent/repeated invocations of the
+          same StepId within one execution (e.g. while-loop iterations),
+          matching how the rest of the execution model is keyed.
+        type: string
+      job_id:
+        description: |-
+          JobId identifies this specific poll-able unit of work (== the lease
+          handle used for result submission and status pings).
+        type: string
+      lease_expires_in_seconds:
+        description: |-
+          LeaseExpiresInSeconds mirrors a queue visibility timeout: sized off
+          the step's own timeout, and expected to cover however many targets
+          the claiming Fin ends up processing. If no result or status ping
+          arrives before it elapses, the job is requeued for any other Fin
+          registered under the same CapabilityType.
+        type: integer
+      playbook_id:
+        type: string
+      step:
+        $ref: '#/definitions/fin.StepInfo'
+      step_execution_id:
+        type: string
+      step_id:
+        type: string
+      targets:
+        items:
+          $ref: '#/definitions/capability.ResolvedTarget'
+        type: array
+      variables:
+        $ref: '#/definitions/cacao.Variables'
+    type: object
+  fin.JobState:
+    enum:
+    - success
+    - failure
+    type: string
+    x-enum-varnames:
+    - JobStateSuccess
+    - JobStateFailure
+  fin.ListResponse:
+    properties:
+      fins:
+        items:
+          $ref: '#/definitions/fin.Record'
+        type: array
+    type: object
+  fin.PollRequest:
+    properties:
+      concurrency_available:
+        description: |-
+          ConcurrencyAvailable is an optional hint: how many more jobs this Fin
+          could take on right now. Lets SOARCA prefer idle Fins in a capability
+          pool over busy ones. A Fin that only ever runs one job at a time can
+          omit it or always send 1/0.
+        type: integer
+    type: object
+  fin.PollResponse:
+    properties:
+      job:
+        $ref: '#/definitions/fin.Job'
+    type: object
+  fin.Record:
+    properties:
+      capabilities:
+        items:
+          $ref: '#/definitions/pkg_models_fin.Capability'
+        type: array
+      display_name:
+        description: |-
+          DisplayName is free text for humans/logs only; it plays no role in
+          routing or identity.
+        type: string
+      fin_id:
+        description: |-
+          FinId is server-assigned at registration (never client-chosen),
+          avoiding id collisions and any implicit trust that a Fin picks a
+          unique id for itself.
+        type: string
+      last_seen:
+        description: |-
+          LastSeen is updated on every /poll call (whether or not a job was
+          returned), every job result submission, and every status ping (the
+          heartbeat for a long-running job, §2.5) — so a Fin busy working a
+          job via status pings is not wrongly treated as gone dark just
+          because it isn't polling. Surfaced via List/Get for operator/
+          dashboard visibility into which registered Fins are actually still
+          alive, and used to derive Stale below. A Fin that stops all of the
+          above is never actively
+          expired or removed from routing (see
+          docs/adr/FIN-WEBHOOK-PROTOCOL-PROPOSAL.md §2.4): its registration
+          stays in place, but pkg/core/capability/fin.Capability's fail-fast
+          liveness check uses LastSeen to decide whether a step should even
+          bother enqueuing a job for it - once every Fin declaring a given
+          capability type is stale, new jobs of that type are failed
+          immediately instead of being enqueued to wait out the step's own
+          timeout unclaimed.
+        type: string
+      protocol_version:
+        type: string
+      registered_at:
+        type: string
+      stale:
+        description: |-
+          Stale is computed (never persisted - bson:"-") by pkg/api/fin's
+          List/Get handlers, using the same staleness threshold as
+          pkg/core/capability/fin.Capability's fail-fast liveness check: true
+          once this Fin hasn't been seen (via /poll) in longer than that
+          threshold, so a dashboard can flag it as likely no longer running
+          without SOARCA having to actively expire or hide the registration
+          itself.
+        type: boolean
+    type: object
+  fin.RegisterRequest:
+    properties:
+      capabilities:
+        items:
+          $ref: '#/definitions/pkg_models_fin.Capability'
+        type: array
+      display_name:
+        type: string
+      protocol_version:
+        type: string
+      registration_token:
+        description: |-
+          RegistrationToken gates *creating* a new Fin identity. It is a
+          coarse, admin/instance-level shared secret (configured server-side as
+          FIN_REGISTRATION_TOKEN, distributed out-of-band), sent as a plain
+          body field because registration is the one call that happens before
+          a Fin has any credential of its own to put in a header.
+        type: string
+    required:
+    - capabilities
+    - registration_token
+    type: object
+  fin.RegisterResponse:
+    properties:
+      fin_id:
+        type: string
+      fin_token:
+        type: string
+      job_lease_seconds:
+        type: integer
+      long_poll_timeout_seconds:
+        type: integer
+      poll_interval_seconds:
+        description: |-
+          PollIntervalSeconds/LongPollTimeoutSeconds/JobLeaseSeconds are
+          server-chosen operational defaults, echoed back so a Fin doesn't need
+          its own hardcoded copy of them.
+        type: integer
+    type: object
+  fin.ResultRequest:
+    properties:
+      error:
+        type: string
+      state:
+        $ref: '#/definitions/fin.JobState'
+      target_results:
+        items:
+          $ref: '#/definitions/fin.TargetResult'
+        type: array
+      variables:
+        $ref: '#/definitions/cacao.Variables'
+    required:
+    - state
+    type: object
+  fin.StatusPingRequest:
+    properties:
+      progress:
+        type: string
+    type: object
+  fin.StatusPingResponse:
+    properties:
+      action:
+        type: string
+    type: object
+  fin.StepInfo:
+    properties:
+      delay:
+        type: integer
+      description:
+        type: string
+      name:
+        type: string
+      timeout:
+        type: integer
+    type: object
+  fin.TargetResult:
+    properties:
+      error:
+        type: string
+      failed_command_index:
+        description: |-
+          FailedCommandIndex identifies which command in Commands aborted this
+          target's sequence, if any.
+        type: integer
+      state:
+        $ref: '#/definitions/fin.JobState'
+      target_index:
+        description: |-
+          TargetIndex identifies which entry in the job's Targets this result
+          is for. Nil when the job had no targets at all.
+        type: integer
+      variables:
+        $ref: '#/definitions/cacao.Variables'
+    type: object
   manual.ManualResponseStatus:
     enum:
     - success
@@ -732,88 +984,260 @@ definitions:
     x-enum-varnames:
     - ManualResponseSuccessStatus
     - ManualResponseFailureStatus
+  pkg_models_fin.Capability:
+    properties:
+      description:
+        description: |-
+          Description is free text for humans (dashboards, logs) — it plays no
+          role in routing.
+        type: string
+      step_examples:
+        description: |-
+          StepExamples are optional, illustrative CACAO action steps showing
+          how a playbook author would invoke this capability (agent, commands,
+          targets, ...), surfaced to help playbook authors — they are never
+          interpreted or validated by SOARCA. A capability may offer more than
+          one example (e.g. to illustrate different commands or target shapes).
+        items:
+          $ref: '#/definitions/cacao.Step'
+        type: array
+      type:
+        description: |-
+          Type is the routing key: the value playbook authors write into
+          agent_definitions[...].type to target this capability pool. Multiple
+          independently-deployed Fin processes may register the same Type;
+          SOARCA treats them as one interchangeable pool and load-balances/
+          fails over across them (see docs/adr/FIN-WEBHOOK-PROTOCOL-PROPOSAL.md
+          §2.1b).
+        type: string
+      version:
+        description: |-
+          Version is the capability implementation's own version string, for
+          operator/debugging visibility only.
+        type: string
+    required:
+    - type
+    type: object
 info:
   contact: {}
   title: SOARCA API
   version: 1.0.0
 paths:
-  /keymanagement/:
-    get:
-      description: return all keys in the KMS
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              type: string
-            type: array
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.Error'
-      summary: gets all keys from the KMS
-      tags:
-      - keymanagement
-  /keymanagement/:keyname/:
+  /fin/:
     delete:
-      description: revokes the key by moving it to .revoked and renaming it
+      description: delete this Fin's own registration. The fin_id is inferred from
+        the fin_token presented in the Authorization header - a Fin can only ever
+        delete its own registration, so it never needs to name itself explicitly.
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: delete this Fin's own registration
+      tags:
+      - fin
+    get:
+      description: list all currently-registered fins and their capabilities
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            type: json
-        "400":
-          description: Bad Request
+            $ref: '#/definitions/fin.ListResponse'
+      summary: list all currently-registered fins and their capabilities
+      tags:
+      - fin
+  /fin/{fin_id}:
+    delete:
+      description: forcibly remove a registered fin's record, e.g. one that is stale/offline
+        and will never come back to unregister itself. This is an admin/dashboard
+        action, not Fin-authenticated - unlike Unregister, it is not restricted to
+        a fin removing its own registration.
+      parameters:
+      - description: fin ID
+        in: path
+        name: fin_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
           schema:
             $ref: '#/definitions/api.Error'
-      summary: remove key from KMS
+      summary: forcibly remove a registered fin (admin)
       tags:
-      - keymanagement
-    put:
-      description: adds a key to the KMS; load key into cache and write file
+      - fin
+    get:
+      description: look up a specific registered fin by id
       parameters:
-      - description: key
+      - description: fin ID
+        in: path
+        name: fin_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fin.Record'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: look up a specific registered fin by id
+      tags:
+      - fin
+  /fin/jobs/{job_id}:
+    put:
+      consumes:
+      - application/json
+      description: submit the result of a claimed job. Only the Fin the job is currently
+        leased to may submit a result for it.
+      parameters:
+      - description: job ID
+        in: path
+        name: job_id
+        required: true
+        type: string
+      - description: job result
         in: body
         name: data
         required: true
         schema:
-          $ref: '#/definitions/api.KeyManagementKey'
+          $ref: '#/definitions/fin.ResultRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: submit the result of a claimed job
+      tags:
+      - fin
+  /fin/jobs/{job_id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: extend a claimed job's lease (so a legitimately long-running job
+        isn't requeued out from under the Fin still working on it), and check for
+        a pending instruction such as cancellation
+      parameters:
+      - description: job ID
+        in: path
+        name: job_id
+        required: true
+        type: string
+      - description: progress
+        in: body
+        name: data
+        schema:
+          $ref: '#/definitions/fin.StatusPingRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            type: json
+            $ref: '#/definitions/fin.StatusPingResponse'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/api.Error'
-      summary: add key to KMS
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: extend a claimed job's lease, and check for a pending cancellation
+        instruction
       tags:
-      - keymanagement
-  /keymanagement/refresh/:
+      - fin
+  /fin/poll:
     post:
-      description: refresh the KMS and re-parse the underlying directory
+      consumes:
+      - application/json
+      description: long-poll for the next job matching this Fin's registered capability
+        types. Returns 204 No Content if long_poll_timeout_seconds elapses with no
+        job available - callers should simply poll again.
+      parameters:
+      - description: poll hints
+        in: body
+        name: data
+        schema:
+          $ref: '#/definitions/fin.PollRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            type: json
+            $ref: '#/definitions/fin.PollResponse'
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: long-poll for the next job matching this Fin's registered capability
+        types
+      tags:
+      - fin
+  /fin/register:
+    post:
+      consumes:
+      - application/json
+      description: register a new Fin process, declaring the capability types it can
+        execute, and obtain its fin_id/fin_token
+      parameters:
+      - description: registration
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/fin.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/fin.RegisterResponse'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/api.Error'
-      summary: refresh the KMS system, which allows the user to include manually added
-        files in the KMS
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: register a new Fin and obtain its fin_token
       tags:
-      - keymanagement
+      - fin
   /manual/:
     get:
       consumes:
@@ -837,7 +1261,7 @@ paths:
       summary: get all pending manual commands that still needs values to be returned
       tags:
       - manual
-  /manual/{exec_id}/{step_id}:
+  /manual/{exec_id}/{step_execution_id}:
     get:
       consumes:
       - application/json
@@ -848,9 +1272,11 @@ paths:
         name: exec_id
         required: true
         type: string
-      - description: step ID
+      - description: step execution ID (identifies a specific pending step invocation;
+          see GET /manual/ to discover it, as multiple pending commands may share
+          the same step ID)
         in: path
-        name: step_id
+        name: step_execution_id
         required: true
         type: string
       produces:
@@ -867,23 +1293,27 @@ paths:
       summary: get a specific manual command that still needs a value to be returned
       tags:
       - manual
-  /manual/continue:
-    post:
+    put:
       consumes:
       - application/json
-      description: updates the value of a variable according to the manual interaction
+      description: |-
+        resolve a specific pending manual command by supplying its out args. This is a PUT
+        on the same resource GET /manual/{exec_id}/{step_execution_id} identifies, not a
+        generic RPC-style action, so the ids live in the path, not the body.
       parameters:
       - description: execution ID
         in: path
         name: exec_id
         required: true
         type: string
-      - description: step ID
+      - description: step execution ID (identifies a specific pending step invocation;
+          see GET /manual/ to discover it, as multiple pending commands may share
+          the same step ID)
         in: path
-        name: step_id
+        name: step_execution_id
         required: true
         type: string
-      - description: playbook
+      - description: resolution
         in: body
         name: data
         required: true
@@ -900,7 +1330,7 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/api.Error'
-      summary: updates the value of a variable according to the manual interaction
+      summary: resolve a specific pending manual command by supplying its out args
       tags:
       - manual
   /playbook/:

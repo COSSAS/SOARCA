@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	api_routes "soarca/pkg/api"
-	api_model "soarca/pkg/models/api"
-	cache_model "soarca/pkg/models/cache"
-	mock_cache "soarca/test/unittest/mocks/mock_cache"
+	api_routes "soarca/internal/transport/http/handlers"
+	api_model "soarca/internal/transport/http/schema"
+	runstate_model "soarca/internal/runs/state"
+	mock_runstate "soarca/test/unittest/mocks/mock_runstate"
 	"testing"
+
+	runsservice "soarca/internal/runs"
 
 	"github.com/google/uuid"
 
@@ -17,15 +19,15 @@ import (
 	"github.com/go-playground/assert/v2"
 )
 
-func TestGetExecutionsInvocation(t *testing.T) {
-	mock_cache_reporter := &mock_cache.Mock_Cache{}
-	mock_cache_reporter.On("GetExecutions").Return([]cache_model.ExecutionEntry{}, nil)
+func TestGetRunsInvocation(t *testing.T) {
+	mock_runstate_reporter := &mock_runstate.MockRunState{}
+	mock_runstate_reporter.On("GetRuns").Return([]runstate_model.RunEntry{}, nil)
 
 	app := gin.New()
 	gin.SetMode(gin.DebugMode)
 
 	recorder := httptest.NewRecorder()
-	api_routes.ReporterRoutes(app, mock_cache_reporter)
+	api_routes.ReporterRoutesWithService(app, runsservice.New(nil, nil, mock_runstate_reporter))
 
 	request, err := http.NewRequest("GET", "/reporter/", nil)
 	if err != nil {
@@ -37,28 +39,29 @@ func TestGetExecutionsInvocation(t *testing.T) {
 	assert.Equal(t, expectedString, recorder.Body.String())
 	assert.Equal(t, 200, recorder.Code)
 
-	mock_cache_reporter.AssertExpectations(t)
+	mock_runstate_reporter.AssertExpectations(t)
 }
 
-func TestGetExecutionReportInvocation(t *testing.T) {
-	mock_cache_reporter := &mock_cache.Mock_Cache{}
+func TestGetRunReportInvocation(t *testing.T) {
+	mock_runstate_reporter := &mock_runstate.MockRunState{}
 	app := gin.New()
 	gin.SetMode(gin.DebugMode)
 
 	recorder := httptest.NewRecorder()
-	api_routes.ReporterRoutes(app, mock_cache_reporter)
+	api_routes.ReporterRoutesWithService(app, runsservice.New(nil, nil, mock_runstate_reporter))
 
-	executionId0, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
+	runId0, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
 
 	expectedCache := `{
-		"ExecutionId":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
+		"RunId":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
 		"PlaybookId":"test",
 		"Started":"2014-11-12T11:45:26.371Z",
 		"Ended":"0001-01-01T00:00:00Z",
 		"StepResults":{
-		   "action--test":{
-			  "ExecutionId":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
+		   "6ba7b810-9dad-11d1-80b4-00c04fd430c9":{
+			  "RunId":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
 			  "StepId":"action--test",
+			  "StepRunId":"6ba7b810-9dad-11d1-80b4-00c04fd430c9",
 			  "Started":"2014-11-12T11:45:26.371Z",
 			  "Ended":"2014-11-12T11:45:26.371Z",
 			  "Variables":{
@@ -77,7 +80,7 @@ func TestGetExecutionReportInvocation(t *testing.T) {
 		"PlaybookResult":null,
 		"Status":2
 	 }`
-	expectedCacheData := cache_model.ExecutionEntry{}
+	expectedCacheData := runstate_model.RunEntry{}
 	err := json.Unmarshal([]byte(expectedCache), &expectedCacheData)
 	if err != nil {
 		t.Log(err)
@@ -85,9 +88,9 @@ func TestGetExecutionReportInvocation(t *testing.T) {
 		t.Fail()
 	}
 
-	mock_cache_reporter.On("GetExecutionReport", executionId0).Return(expectedCacheData, nil)
+	mock_runstate_reporter.On("GetRunReport", runId0).Return(expectedCacheData, nil)
 
-	request, err := http.NewRequest("GET", fmt.Sprintf("/reporter/%s", executionId0), nil)
+	request, err := http.NewRequest("GET", fmt.Sprintf("/reporter/%s", runId0), nil)
 	if err != nil {
 		t.Log(err)
 		t.Fail()
@@ -95,21 +98,22 @@ func TestGetExecutionReportInvocation(t *testing.T) {
 	app.ServeHTTP(recorder, request)
 
 	expectedResponse := `{
-		"type":"execution_status",
-		"execution_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
+		"type":"run_status",
+		"run_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
 		"playbook_id":"test",
 		"started":"2014-11-12T11:45:26.371Z",
 		"ended":"0001-01-01T00:00:00Z",
 		"status":"ongoing",
 		"status_text":"this playbook is currently being executed",
 		"step_results":{
-		   "action--test":{
-			  "execution_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
+		   "6ba7b810-9dad-11d1-80b4-00c04fd430c9":{
+			  "run_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c0",
 			  "step_id": "action--test",
+			  "step_run_id": "6ba7b810-9dad-11d1-80b4-00c04fd430c9",
 			  "started": "2014-11-12T11:45:26.371Z",
 			  "ended": "2014-11-12T11:45:26.371Z",
 			  "status": "successfully_executed",
-			  "status_text": "step execution completed successfully",
+			  "status_text": "step run completed successfully",
 			  "Variables":{
 				 "var1":{
 					"type":"string",
@@ -118,13 +122,13 @@ func TestGetExecutionReportInvocation(t *testing.T) {
 				 }
 			  },
 			  "commands_b64" : [],
-			  "automated_execution" : true,
+			  "automated_run" : true,
 			  "executed_by" : "soarca"
 		   }
 		},
 		"request_interval":5
 	}`
-	expectedResponseData := api_model.PlaybookExecutionReport{}
+	expectedResponseData := api_model.PlaybookRunReport{}
 	err = json.Unmarshal([]byte(expectedResponse), &expectedResponseData)
 	if err != nil {
 		t.Log(err)
@@ -132,7 +136,7 @@ func TestGetExecutionReportInvocation(t *testing.T) {
 		t.Fail()
 	}
 
-	receivedData := api_model.PlaybookExecutionReport{}
+	receivedData := api_model.PlaybookRunReport{}
 	err = json.Unmarshal(recorder.Body.Bytes(), &receivedData)
 	if err != nil {
 		t.Log(err)
@@ -145,5 +149,5 @@ func TestGetExecutionReportInvocation(t *testing.T) {
 	t.Log("received response")
 	t.Log(receivedData)
 	assert.Equal(t, expectedResponseData, receivedData)
-	mock_cache_reporter.AssertExpectations(t)
+	mock_runstate_reporter.AssertExpectations(t)
 }

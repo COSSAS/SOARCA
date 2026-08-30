@@ -18,12 +18,10 @@ After completing the [Getting Started](/docs/getting-started/_index.md) setup fo
 | ENABLE_TLS                 | `false`                          | Enable TLS for secure communication. Default is `false`.                    |
 | CERT_FILE                  | `"/certs/server.crt"`            | Path to the TLS certificate file. Default is `"/certs/server.crt"`.         |
 | CERT_KEY_FILE              | `"/certs/server.key"`            | Path to the TLS certificate key file. Default is `"/certs/server.key"`.     |
-| MAX_EXECUTIONS             | `1000`                           | The number of historical executions saved, including the current one. Default is `1000`. |
+| MAX_RUNS                   | `1000`                           | The number of historical runs saved, including the current one. Default is `1000`. |
 | SOARCA_ALLOWED_ORIGINS     | `*`                              | Set allowed origins for cross-origin requests. Default is `*`.              |
 | GIN_MODE                   | `release`                        | Set the GIN mode. Default is `release`.                                     |
-| DATABASE                   | `false`                          | Set if you want to run with an external database. Default is `false`.       |
-| MONGODB_URI                | `mongodb://localhost:27017`      | Set the MongoDB URI. Default is `mongodb://localhost:27017`.                |
-| DATABASE_NAME              | `soarca`                         | Set the MongoDB database name when using Docker. Default is `soarca`.       |
+| DATABASE_URL               | `sqlite://soarca.db`             | Database URL. Use `sqlite://:memory:` for in-memory use or a `postgres://` URL for PostgreSQL. |
 | DB_USERNAME                | `root`                           | Set the MongoDB database user when using Docker. Default is `root`.         |
 | DB_PASSWORD                | `rootpassword`                   | Set the MongoDB database user password when using Docker. **Change this in production!** Default is `rootpassword`. |
 | PLAYBOOK_API_LOG_LEVEL     | `trace`                          | Set the log level for the playbook API. Default is `trace`.                 |
@@ -32,9 +30,6 @@ After completing the [Getting Started](/docs/getting-started/_index.md) setup fo
 | LOG_MODE                   | `development`                    | Set the logging mode. If `production`, `LOG_GLOBAL_LEVEL` is used for all modules. Default is `development`. |
 | LOG_FILE_PATH              | `""`                             | Path to the logfile for all logging. Default is `""` (empty string).        |
 | LOG_FORMAT                 | `json`                           | Set the logging format. Either `text` or `json`. Default is `json`.         |
-| ENABLE_FINS                | `false`                          | Enable FINS in SOARCA. Default is `false`.                                  |
-| MQTT_BROKER                | `localhost`                      | The broker address for SOARCA to connect to for communication with FINS. Default is `localhost`. |
-| MQTT_PORT                  | `1883`                           | The port for the MQTT broker. Default is `1883`.                            |
 | HTTP_SKIP_CERT_VALIDATION  | `false`                          | Set whether to skip certificate validation for HTTP connections. Default is `false`. |
 | VALIDATION_SCHEMA_URL      | `""`                             | Set a custom validation schema to validate playbooks. Default is `""` to use the internal schema. **Note:** Changing this can heavily impact performance. |
 

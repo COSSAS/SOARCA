@@ -1,11 +1,13 @@
+//go:build integration
+
 package ssh_integration_test
 
 import (
 	"fmt"
-	"soarca/pkg/core/capability"
-	"soarca/pkg/core/capability/ssh"
-	"soarca/pkg/models/cacao"
-	"soarca/pkg/models/execution"
+	"soarca/internal/workflow/capability"
+	"soarca/internal/workflow/capability/ssh"
+	"soarca/pkg/cacao"
+	"soarca/internal/runs/model"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
@@ -39,15 +41,14 @@ func TestSshConnection(t *testing.T) {
 		Value: "testing",
 	}
 
-	var executionId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	var runId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	var playbookId = "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
 	var stepId = "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
-	var metadata = execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId, StepId: stepId}
+	var metadata = run.Metadata{RunId: runId, PlaybookId: playbookId, StepId: stepId}
 	data := capability.Context{
-		Command:        expectedCommand,
-		Target:         expectedTarget,
-		Authentication: expectedAuthenticationInformation,
-		Variables:      cacao.NewVariables(expectedVariables),
+		Commands:  []cacao.Command{expectedCommand},
+		Targets:   []capability.ResolvedTarget{{Target: expectedTarget, Authentication: expectedAuthenticationInformation}},
+		Variables: cacao.NewVariables(expectedVariables),
 	}
 	results, err := sshCapability.Execute(metadata,
 		data)
@@ -87,15 +88,14 @@ func TestSshConnectionToNonExistingServer(t *testing.T) {
 		Value: "testing",
 	}
 
-	var executionId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	var runId, _ = uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	var playbookId = "playbook--d09351a2-a075-40c8-8054-0b7c423db83f"
 	var stepId = "step--81eff59f-d084-4324-9e0a-59e353dbd28f"
-	var metadata = execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId, StepId: stepId}
+	var metadata = run.Metadata{RunId: runId, PlaybookId: playbookId, StepId: stepId}
 	data := capability.Context{
-		Command:        expectedCommand,
-		Target:         expectedTarget,
-		Authentication: expectedAuthenticationInformation,
-		Variables:      cacao.NewVariables(expectedVariables),
+		Commands:  []cacao.Command{expectedCommand},
+		Targets:   []capability.ResolvedTarget{{Target: expectedTarget, Authentication: expectedAuthenticationInformation}},
+		Variables: cacao.NewVariables(expectedVariables),
 	}
 	results, err := sshCapability.Execute(metadata,
 		data)

@@ -1,13 +1,15 @@
+//go:build integration
+
 package http_integrations_test
 
 import (
 	"fmt"
 	"testing"
 
-	"soarca/pkg/core/capability"
-	"soarca/pkg/core/capability/http"
-	"soarca/pkg/models/cacao"
-	"soarca/pkg/models/execution"
+	"soarca/internal/workflow/capability"
+	"soarca/internal/workflow/capability/http"
+	"soarca/pkg/cacao"
+	"soarca/internal/runs/model"
 	httpUtil "soarca/pkg/utils/http"
 
 	"github.com/go-playground/assert/v2"
@@ -36,14 +38,14 @@ func TestHttpConnection(t *testing.T) {
 		Value: "",
 	}
 
-	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	runId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	playbookId, _ := uuid.Parse("playbook--d09351a2-a075-40c8-8054-0b7c423db83f")
 	stepId, _ := uuid.Parse("action--81eff59f-d084-4324-9e0a-59e353dbd28f")
 
-	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId.String(), StepId: stepId.String()}
+	metadata := run.Metadata{RunId: runId, PlaybookId: playbookId.String(), StepId: stepId.String()}
 	data := capability.Context{
-		Command:   expectedCommand,
-		Target:    target,
+		Commands:  []cacao.Command{expectedCommand},
+		Targets:   []capability.ResolvedTarget{{Target: target}},
 		Variables: cacao.NewVariables(variable1),
 	}
 	// But what to do if there is no target and no AuthInfo?
@@ -81,15 +83,14 @@ func TestHttpOAuth2(t *testing.T) {
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
 
-	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	runId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	playbookId, _ := uuid.Parse("d09351a2-a075-40c8-8054-0b7c423db83f")
 	stepId, _ := uuid.Parse("81eff59f-d084-4324-9e0a-59e353dbd28f")
-	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId.String(), StepId: stepId.String()}
+	metadata := run.Metadata{RunId: runId, PlaybookId: playbookId.String(), StepId: stepId.String()}
 	data := capability.Context{
-		Command:        command,
-		Target:         target,
-		Authentication: auth,
-		Variables:      cacao.NewVariables(),
+		Commands:  []cacao.Command{command},
+		Targets:   []capability.ResolvedTarget{{Target: target, Authentication: auth}},
+		Variables: cacao.NewVariables(),
 	}
 	results, err := httpCapability.Execute(
 		metadata,
@@ -128,15 +129,14 @@ func TestHttpBasicAuth(t *testing.T) {
 		Command: "GET / HTTP/1.1",
 		Headers: map[string][]string{"accept": {"application/json"}},
 	}
-	executionId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	runId, _ := uuid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	playbookId, _ := uuid.Parse("d09351a2-a075-40c8-8054-0b7c423db83f")
 	stepId, _ := uuid.Parse("81eff59f-d084-4324-9e0a-59e353dbd28f")
-	metadata := execution.Metadata{ExecutionId: executionId, PlaybookId: playbookId.String(), StepId: stepId.String()}
+	metadata := run.Metadata{RunId: runId, PlaybookId: playbookId.String(), StepId: stepId.String()}
 	data := capability.Context{
-		Command:        command,
-		Target:         target,
-		Authentication: auth,
-		Variables:      cacao.NewVariables(),
+		Commands:  []cacao.Command{command},
+		Targets:   []capability.ResolvedTarget{{Target: target, Authentication: auth}},
+		Variables: cacao.NewVariables(),
 	}
 	results, err := httpCapability.Execute(
 		metadata,

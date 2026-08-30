@@ -59,7 +59,7 @@ One can generate playbooks using LLMs using the [playbook generation guide](/doc
 
 ### SOARCA Fin(s): Extending the core capabilities
 
-SOARCA can be extended with custom extensions or rather so-called FIN (inspired by the majestic orca). A fin can be integrated within the SOARCA core. Technical descriptions of the components can be found [here](/docs/soarca-extensions/fin-protocol). Fins communicate with the SOARCA core using a pre-defined MQTT protocol. 
+SOARCA can be extended with custom extensions or rather so-called FIN (inspired by the majestic orca). A fin can be integrated within the SOARCA core. Fins communicate with the SOARCA core over a simple pull-based HTTP/JSON protocol. Technical descriptions of the components can be found [here](/docs/soarca-extensions).
 
 
 ## Join the SOARCA Community

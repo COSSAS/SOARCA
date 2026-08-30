@@ -5,589 +5,319 @@ description: >
 categories: [extensions, architecture]
 tags: [fin]
 weight: 2
-date: 2023-01-05
+date: 2026-08-26
 ---
 
 ## Goals
-The goal of the protocol is to provide a simple and robust way to communicate between the SOARCA orchestrator and the capabilities (Fins) that can provide extra functions. 
 
-## MQTT
-To allow for dynamic communication MQTT is used to provide the backbone for the fin communication. SOARCA can be configured using the environment to use MQTT or just run stand-alone. 
+The goal of the protocol is to provide a simple and robust way to
+communicate between the SOARCA orchestrator and the capabilities (Fins)
+that can provide extra functions. Fins are external, independently-deployed
+processes: they register once with SOARCA, then repeatedly poll for work,
+execute it, and report the result back. All calls are outbound from the
+Fin — no inbound connectivity, firewall holes, or message broker are
+required on the Fin side.
 
-The Fin will use the protocol to register itself to SOARCA via the register message. Once register, it will communicate over the channel new channel designated by the fin UUID. 
+{{% alert title="Note" color="info" %}}
+This replaces the previous MQTT-based Fin protocol. There is no migration
+path: any existing MQTT-based Fin implementation is not compatible with
+this protocol.
+{{% /alert %}}
 
-Commands to a specific capability will be communicated of the capability UUID channel.
+## Transport and authentication
 
-## Messages
-Messages defined in the protocol
+The protocol is plain HTTP(S) + JSON. There is no separate framing or
+message-envelope layer — each protocol "message" from the previous MQTT
+design is now just the body of a regular HTTP request/response.
 
-- ack
-- nack
-- register
-- unregister
-- command
-- pause
-- resume
-- stop
+Three separate credentials/schemes are involved, each scoped to a different
+purpose:
 
-### legend
+| Credential | Used for | Sent as |
+| ---------- | -------- | ------- |
+| `FIN_REGISTRATION_TOKEN` | one-time, gating `POST /fin/register` | `registration_token` field in the request body |
+| `fin_token` | every other Fin-initiated call (poll/result/status/unregister) | `Authorization: Bearer <fin_token>` header |
+| SOARCA admin JWT | the read-only discovery endpoints (`GET /fin/`, `GET /fin/{fin_id}`) | `Authorization: Bearer <jwt>` header, same as the rest of the admin API |
 
-|field |content |type  |description
-|field name have the `(optional)` key if the field is not required |content indication |type of the value could be string, int etc. |A description for the field to provide extra information and context
+`FIN_REGISTRATION_TOKEN` is a coarse, instance-level shared secret
+configured server-side and distributed to Fin operators out-of-band. If it
+is not configured (empty), registration is disabled entirely — SOARCA fails
+closed rather than silently accepting any registration attempt.
 
+`fin_token` is returned once, at registration (see below), and is expected
+to be persisted locally by the Fin (e.g. in a local config file) so a
+restarted Fin process can start polling again immediately, without
+re-registering. SOARCA never stores the plaintext token — only a one-way
+hash of it — so a database read or leak alone cannot recover a usable
+credential.
 
+Fin registrations are itself persisted (database-backed, mirroring how
+playbooks are persisted): SOARCA does not need Fins to re-register every
+time it restarts or is updated. The in-memory job queue, by contrast, is
+*not* persisted — SOARCA does not persist or resume in-flight executions
+across a restart either, so persisting only the job queue would add
+complexity for no real gain (see
+[EXECUTION-MODEL.md](https://github.com/COSSAS/SOARCA/blob/main/docs/adr/EXECUTION-MODEL.md)).
+A restart loses in-flight jobs the same way it loses everything else about
+an in-flight execution — any Fin still holding a claimed job simply has its
+next status ping/result submission rejected, and the step fails once its
+own timeout elapses.
 
-### ack
-The ack message is used to acknowledge messages. 
+## Endpoints
 
+| Method | Path | Auth | Purpose |
+| ------ | ---- | ---- | ------- |
+| `POST` | `/fin/register` | registration token | Register a new Fin identity and obtain a `fin_token` |
+| `POST` | `/fin/poll` | fin_token | Long-poll for the next job matching this Fin's registered capability types |
+| `PUT` | `/fin/jobs/{job_id}` | fin_token | Submit the result of a claimed job |
+| `PATCH` | `/fin/jobs/{job_id}/status` | fin_token | Extend a claimed job's lease and check for a pending instruction (e.g. cancellation) |
+| `DELETE` | `/fin/` | fin_token | Unregister the calling Fin itself - the fin_id is inferred from the token, never sent explicitly |
+| `GET` | `/fin/` | admin JWT | List all currently-registered Fins and their capabilities |
+| `GET` | `/fin/{fin_id}` | admin JWT | Look up a specific registered Fin by id |
+| `DELETE` | `/fin/{fin_id}` | admin JWT | Forcibly remove any Fin's registration (e.g. one that is stale/offline and will never unregister itself) |
 
-|field | content | type | description |
-| ---- | ------- | ---- | ----------- |
-|type |ack |string  |The ack message type
-|message_id |UUID |string  |message id that the ack is referring to
+The full request/response bodies are documented in the generated
+[OpenAPI/Swagger reference](/docs/soarca-api/), under the `fin` tag.
 
+### Registering a Fin
 
-```plantuml
-@startjson
+A Fin process declares one or more **capabilities** at registration time —
+each capability has a `type` (the routing key playbook authors write into
+`agent_definitions[...].type`), plus optional `description`, `version`, and
+illustrative `step_examples` (full CACAO action steps, shown to playbook
+authors to demonstrate how to invoke the capability — never interpreted or
+validated by SOARCA itself).
+
+Multiple, independently-deployed Fin processes may register the same
+capability `type`. SOARCA treats them as one interchangeable pool: any of
+them may claim a job queued under that type, competing via long-poll
+(load-balancing and failover across a pool is "whichever Fin happens to be
+idle and polling", with no separate leader-election or assignment logic).
+
+```json
+POST /fin/register
 {
-    "type": "ack",
-    "message_id": "uuid"
-}
-@endjson
-```
-
-### nack
-The nack message is used to non acknowledgements, message was unimplemented or unsuccessful.
-
-
-|field | content | type | description |
-| ---- | ------- | ---- | ----------- |
-|type |nack |string  |The ack message type
-|message_id |UUID |string  |message id that the nack is referring to
-
-
-```plantuml
-@startjson
-{
-    "type": "nack",
-    "message_id": "uuid"
-}
-@endjson
-```
-
-
-
-
-### register
-The message is used to register a fin to SOARCA. It has the following payload. 
-
-
-|field              |content                |type               | description |
-| ----------------- | --------------------- | ----------------- | ----------- |
-|type               |register               |string             |The register message type
-|message_id         |UUID                   |string             |Message UUID 
-|fin_id             |UUID                   |string             |Fin uuid separate form the capability id
-|Name               |Name                   |string             |Fin name 
-|protocol_version   |version                |string             |Version information of the protocol in [semantic version](https://semver.org) schema e.g. 1.2.4-beta
-|security           |security information   |[Security](#security)           |Security information for protocol see security structure
-|capabilities       |list of capability structure    |list of [capability structure](#capability-structure)    |Capability structure information for protocol see security structure
-|meta   |meta dict |[Meta](#meta) |Meta information for the fin protocol structure
-
-
-
-
-#### capability structure
-
-|field              |content        |type    | description |
-| ----------------- | ------------- | ------ | ----------- |
-|capability_id      |UUID           |string  |Capability id to identify the unique capability a fin can have multiple
-|type               |action         | [workflow-step-type-enum](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256479) | Most common is action
-|name               |name           |string  |capability name 
-|version            |version        |string  |Version information of the Fin implementation used in [semantic version](https://semver.org) schema e.g. 1.2.4-beta
-|step               |step structure |[step structure](#step-structure)    |Step to specify an example for the step so it can be queried in the SOARCA API
-|agent              |agent structure|[agent structure](#agent-structure)   |Agent to specify the agent definition to match in playbooks for SOARCA 
-
-
-#### step structure
-|field              |content        |   type            | description |
-| ----------------- | ------------- | ----------------- | ----------- |
-|type               |action         |string                     |Action type 
-|name               |name           |string                     |message id 
-|description        |description    |string                     |Description of the step 
-|external_references|<references>   |list of [external reference](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256542) |References to external recourses to further enhance the step also see CACAO V2 10.9.
-|command            |command        |string                     |Command to execute
-|target             |UUID           |string                     |Target UUID cto execute command against
-
-
-#### agent structure
-
-|field              |content        |   type            | description |
-| ----------------- | ------------- | ----------------- | ----------- |
-|type               |soarca-fin     |string     |SOARCA Fin type, a custom type used to specify Fins
-|name               |name           |string     |SOARCA Fin name in the following form: `soarca-fin-<name>-<uuid>`, this grantees the fin is unique
-
-```plantuml
-@startjson
-{
-    "type": "register",
-    "message_id": "uuid",
-    "fin_id" : "uuid",
-    "name": "Fin name",
-    "protocol_version": "<semantic-version>",
-    "security": {
-        "version": "0.0.0",
-        "channel_security": "plaintext"
-    },
+    "registration_token": "<shared secret>",
+    "display_name": "example-ssh-fin",
+    "protocol_version": "1.0.0",
     "capabilities": [
         {
-            "capability_id": "uuid",
-            "name": "ssh executer",
-            "version": "0.1.0", 
-            "step": { 
-                "type": "action",
-                "name": "<step_name>",
-                "description": "<description>",
-                "external_references": { 
-                    "name": "<reference name>",
-                    "...": "..."
-                    },
-                "command": "<command string example>",
-                "target": "<target uuid>"
-            },
-            "agent" : {
-                "soarca-fin--<uuid>": {
-                    "type": "soarca-fin",
-                    "name": "soarca-fin--<name>-<capability_uuid>"
+            "type": "custom-ssh-fin",
+            "description": "SSH command execution",
+            "version": "0.1.0",
+            "step_examples": [
+                {
+                    "type": "action",
+                    "name": "Restart the nginx service",
+                    "agent": "custom-ssh-fin--f3f0194f-99e6-4966-8512-de3806fecfdf",
+                    "commands": [
+                        {
+                            "type": "manual",
+                            "command": "sudo systemctl restart nginx"
+                        }
+                    ]
                 }
-            }
-
+            ]
         }
-    ],
-    "meta": {
-
-        "timestamp": "string: <utc-timestamp-nanoes + timezone-offset>",
-        "sender_id": "uuid"
-    }
+    ]
 }
-@endjson
 ```
 
-
-                
-
-### unregister
-The message is used to unregister a fin to SOARCA. It has the following payload.
-
-|field              |content        |type    | description |
-| ----------------- | ------------- | ------ | ----------- |
-|type           |unregister     |string     |Unregister message type
-|message_id     |UUID           |string     |Message UUID 
-|capability_id  |UUID           |string     |Capability id or null (either capability_id != null, fin_id != null or all == true need to be set)
-|fin_id         |UUID           |string     |Fin id or null (either capability_id != null, fin_id != null or all == true need to be set)
-|all            |bool           |bool       |True to address all fins to unregister otherwise false (either capability_id != null, fin_id != null or all == true need to be set)
-
-```plantuml
-@startjson
+```json
+201 Created
 {
-    "type": "unregister",
-    "message_id": "uuid",
-    "capability_id" : "capability uuid",
-    "fin_id" : "fin uuid",
-    "all" : "true | false"
+    "fin_id": "<server-assigned uuid>",
+    "fin_token": "<one-time credential, persist this>",
+    "poll_interval_seconds": 5,
+    "long_poll_timeout_seconds": 25,
+    "job_lease_seconds": 60
 }
-@endjson
 ```
 
-### command
-The message is used to send a command from SOARCA. It has the following payload. 
+`poll_interval_seconds`/`long_poll_timeout_seconds`/`job_lease_seconds` are
+server-chosen operational defaults, echoed back so a Fin implementation
+doesn't need its own hardcoded copy of them.
 
-|field              |content        |type    | description |
-| ----------------- | ------------- | ------ | ----------- |
-|type               |command        |string     |Command message type
-|message_id         |UUID           |string     |Message UUID 
-|command            |command        |[command substructure](#command-substructure) |command structure
-|meta               |meta dict      |[Meta](#meta)          |Meta information for the fin protocol structure
+### Polling for work
 
+A Fin repeatedly calls `POST /fin/poll`, authenticated with its
+`fin_token`. SOARCA long-polls the request: it holds the connection open
+until a job matching one of the Fin's registered capability types becomes
+available, or `long_poll_timeout_seconds` elapses — whichever comes first.
+An empty body plus `204 No Content` means "no work right now, just poll
+again"; this is the expected, common case, not an error.
 
-#### command substructure
-|field              |content        |type    | description |
-| ----------------- | ------------- | ------ | ----------- |
-|command            |command        |string     |The command to be executed
-|authentication `(optional)`    |authentication information | [authentication information](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256503) | CACAO authentication information
-|context            |cacao context  |[Context](#context) | Context form the playbook
-|variables          |dict of variables      |dict of [Variables](#variables) | From the playbook
-
-
-```plantuml
-@startjson
+```json
+POST /fin/poll
 {
-    "type": "command",
-    "message_id": "uuid",
-    "command": {
-        "command": "command",
-        "authentication": {"auth-uuid": "<cacao authentication struct"},
-        "context": {
-            "generated_on": "string: <utc-timestamp-nanoes + timezone-offset>",
-            "timeout": "string: <utc-timestamp-nanoes + timezone-offset>",
-            "step_id": "uuid",
-            "playbook_id": "uuid",
-            "execution_id": "uuid"
+    "concurrency_available": 1
+}
+```
+
+```json
+200 OK
+{
+    "job": {
+        "job_id": "<uuid>",
+        "execution_id": "<uuid>",
+        "playbook_id": "playbook--...",
+        "step_id": "action--...",
+        "step_execution_id": "<uuid>",
+        "capability_type": "custom-ssh-fin",
+        "lease_expires_in_seconds": 60,
+        "step": {
+            "name": "Restart the nginx service",
+            "description": "...",
+            "timeout": 60,
+            "delay": 0
         },
-        "variables": {
-            "__<var1>__": {
-                "type": "<cacao.variable-type-ov>",
-                "name": "__<var1>__",
-                "description": "<string>",
-                "value": "<string>",
-                "constant": "<bool>",
-                "external": "<bool>"
-            },
-            "__<var2>__": {
-                "type": "<cacao.variable-type-ov>",
-                "name": "__<var2>__",
-                "description": "<string>",
-                "value": "<string>",
-                "constant": "<bool>",
-                "external": "<bool>"
+        "commands": [
+            { "type": "manual", "command": "sudo systemctl restart nginx" }
+        ],
+        "targets": [
+            {
+                "target": { "type": "ipv4-addr", "name": "web-01", "address": ["10.0.0.5"] },
+                "authentication": { "type": "user-auth", "username": "deploy" }
             }
-        }
-    },
-    "meta": {
-        "timestamp": "string: <utc-timestamp-nanoes + timezone-offset>",
-        "sender_id": "uuid"
+        ],
+        "variables": {}
     }
 }
-@endjson
 ```
 
-### result
-The message is used to send a response from the Fin to SOARCA. It has the following payload.
+`commands` and `targets` are both plain arrays (0, 1, or many). SOARCA
+never splits a single step across multiple jobs — one poll-able `Job`
+always corresponds to exactly one step invocation, and it is entirely up to
+the claiming Fin how to execute across however many targets it was given
+(sequentially, or fanned out internally). An empty `targets` array is a
+valid, spec-permitted shape: the Fin still runs `commands` once, without a
+resolved target/authentication context, rather than SOARCA treating "no
+targets" as "nothing to do."
 
-|field              |content        |type    | description |
-| ----------------- | ------------- | ------ | ----------- |
-|type               |result     |string     |Unregister message type
-|message_id         |UUID       |string     |Message UUID 
-|result             |result structure |[result structure](#result-structure)| The result of the execution 
-|meta               |meta dict      |[Meta](#meta)          |Meta information for the fin protocol structure
+`targets[].target`/`targets[].authentication` reuse the same resolved
+target/authentication shape used internally throughout SOARCA (and by the
+Manual capability's API) — see
+[`capability.ResolvedTarget`](https://github.com/COSSAS/SOARCA/blob/main/pkg/core/capability/capability.go).
 
+### Submitting a result
 
-#### result structure
+Once a Fin has finished (or given up on) a job, it submits the result via
+`PUT /fin/jobs/{job_id}`. Only the Fin the job is currently leased to may
+submit a result for it — a valid `fin_token` alone is not sufficient to act
+on another Fin's job.
 
-|field              |content        |type    | description |
-| ----------------- | ------------- | ------ | ----------- |
-|state            |succes or failure  |string | The execution state of the playbook
-|context            |cacao context  |[Context](#context) | Context form the playbook
-|variables             |dict of variables        |dict of [variables](#variables) |Dictionary of CACAO compatible variables
-
-
-```plantuml
-@startjson
-{   
-    "type": "result",
-    "message_id": "uuid",
-    "result": {
-        "state": "enum(success | failure)",
-        "context": {
-            "generated_on": "string: <utc-timestamp-nanoes + timezone-offset>",
-            "timeout": "string: <utc-timestamp-nanoes + timezone-offset>",
-            "step_id": "uuid",
-            "playbook_id": "uuid",
-            "execution_id": "uuid"
-        },
-        "variables": {
-            "__<var1>__": {
-                "type": "<cacao.variable-type-ov>",
-                "name": "__<var1>__",
-                "description": "<string>",
-                "value": "<string>",
-                "constant": "<bool>",
-                "external": "<bool>"
-            },
-            "__<var2>__": {
-                "type": "<cacao.variable-type-ov>",
-                "name": "__<var2>__",
-                "description": "<string>",
-                "value": "<string>",
-                "constant": "<bool>",
-                "external": "<bool>"
-            }
-        }
-    },
-    "meta": {
-        "timestamp": "string: <utc-timestamp-nanoes + timezone-offset>",
-        "sender_id": "uuid"
+```json
+PUT /fin/jobs/{job_id}
+{
+    "state": "success",
+    "variables": {
+        "__example__": { "type": "string", "value": "output" }
     }
 }
-@endjson
 ```
 
+`state` is `"success"` or `"failure"` and, together with `variables`, is
+the only part of the result SOARCA's step machinery (`on_completion`
+branching, downstream variable interpolation) actually reads — matching
+CACAO's own model, which has no notion of per-target outcomes. If a Fin
+processed multiple targets, it computes this single aggregated
+success/failure using a fail-if-any policy, and a last-write-wins merge for
+`variables`.
 
+An optional `target_results` array may additionally be included, giving
+per-target diagnostic detail (which target, which command index failed,
+per-target variables/error) — this is purely additive, for
+reporting/audit/dashboards, and is never consulted by playbook control
+flow.
 
-### control
-|field              |content        |type    | description |
-| ----------------- | ------------- | ------ | ----------- |
-|type            |pause or resume or stop or progress    |string     |Message type
-|message_id                 |UUID           |string     |message uuid 
-|capability_id            |UUID        |string     |Capability uuid to control
+### Status pings (long-running jobs)
 
-#### pause
-The message is used to halt the further execution of the Fin. The following command will be responded to with a nack, unless it is resumed or stopped.
+For jobs that take more than a few seconds, a Fin should periodically call
+`PATCH /fin/jobs/{job_id}/status`. This extends the job's lease (so it
+isn't requeued for another Fin while still legitimately being worked on),
+and gives SOARCA a place to piggyback a pending instruction — currently
+only job cancellation, surfaced as `{"action": "cancel"}` — without needing
+any inbound-facing channel on the Fin side.
 
-```plantuml
-@startjson
+```json
+PATCH /fin/jobs/{job_id}/status
 {
-    "type": "pause",
-    "message_id" : "uuid",
-    "capability_id": "uuid"
+    "progress": "connected, running command 2 of 3"
 }
-@endjson
 ```
 
-
-#### resume
-The message is used to resume a paused Fin, the response will be an ack if ok or a nack when the Fin could not be resumed.
-
-```plantuml
-@startjson
+```json
+200 OK
 {
-    "type": "resume",
-    "message_id" : "uuid",
-    "capability_id": "uuid"
+    "action": ""
 }
-@endjson
 ```
 
-#### stop
-The message is used to shut down the Fin. this will be responded to by ack, after that there will follow an unregister. 
+{{% alert title="Note" color="info" %}}
+Job cancellation is specified but not yet implemented — `action` is always
+empty today. The response shape exists so Fin implementations can start
+checking it now.
+{{% /alert %}}
 
-```plantuml
-@startjson
-{
-    "type": "stop",
-    "message_id" : "uuid",
-    "capability_id": "uuid"
-}
-@endjson
-```
+### Unregistering
 
-#### progress
-Ask for the progress of the execution of the 
-```plantuml
-@startjson
-{
-    "type": "progress",
-    "message_id" : "uuid",
-    "capability_id": "uuid"
-}
-@endjson
-```
+`DELETE /fin/`, authenticated with that Fin's own `fin_token`, removes its
+own registration. There is no `fin_id` in the path - it's inferred from the
+token, since a Fin can only ever unregister itself.
 
-### Status response
-|field              |content        |type    | description |
-| ----------------- | ------------- | ------ | ----------- |
-|type            |status    |string     |Message type
-|message_id                 |UUID           |string     |message uuid 
-|capability_id            |UUID        |string     |Capability uuid to control
-|progress            |ready, working, paused, stopped       |string     |Progress of the execution or state it's in.
+An admin/dashboard client can additionally force-remove *any* Fin's
+registration via `DELETE /fin/{fin_id}` (admin JWT, not fin_token) - useful
+for cleaning up a stale/offline Fin that will never come back to
+unregister itself.
 
-Report the progress of the execution of the capability
+### Discovery
 
-```plantuml
-@startjson
-{
-    "type": "status",
-    "message_id" : "uuid",
-    "capability_id": "uuid",
-    "progress": "<execution status>"
-}
-@endjson
-```
+`GET /fin/` and `GET /fin/{fin_id}` are ordinary, admin-JWT-gated reads (the
+same authentication as the rest of SOARCA's admin API) for operators and
+dashboards to see which Fins are registered, their declared capabilities,
+and when they were last seen polling. `last_seen` is observability only —
+a Fin that stops polling is not actively expired or hidden from routing;
+jobs queued under its capability types simply go unclaimed until the
+enqueuing step's own timeout elapses.
 
-### Common
-These contain command parts that are used in different messages.
+## Lease and retry semantics
 
-#### Security
-|field              |content        |type    | description |
-| ----------------- | ------------- | ------ | ----------- |
-|version            |version        |string |Version information of the protocol in [semantic version](https://semver.org) schema e.g. 1.2.4-beta
-|channel_security   |plaintext      |string |Security mechanism used for encrypting the channel and topic, plaintext is only supported at this time
+Every job carries a lease (`lease_expires_in_seconds`, sized off the step's
+own timeout). If the claiming Fin neither submits a result nor sends a
+status ping before the lease expires, the job is automatically requeued for
+any other Fin registered under the same capability type — this is the
+mechanism that provides retry/failover across a pool without SOARCA needing
+to detect a crashed or disconnected Fin explicitly.
 
-
-```plantuml
-@startjson
-{
-    "security": {
-        "version": "0.0.0",
-        "channel_security": "plaintext"
-    }
-}
-@endjson
-```
-
-#### Variables
-Variables information structure
-
-|field              |content        |type    | description |
-| ----------------- | ------------- | ------ | ----------- |
-|type |variable type |[variable-type-ov](https://docs.oasis-open.org/cacao/security-playbooks/v2.0/cs01/security-playbooks-v2.0-cs01.html#_Toc152256556)  | The cacao variable type see CACAO V2 chapter 10.18, 10.18.4 Variable Type Vocabulary
-|name               |name           |string                     |Name of the variable this `must` be the same as the key on the map
-|description        |description    |string                     |Description of the variable 
-|value              |value          |string                     |Value of the variable 
-|constant           |true or false  |bool                       |whether it is constant  
-|external           |true or false  |bool                       |whether it is external to the playbook
-
-
-```plantuml
-@startjson
-{
-    "__<var1>__": {
-        "type": "<cacao.variable-type-ov>",
-        "name": "<string>",
-        "description": "<string>",
-        "value": "<string>",
-        "constant": "<bool>",
-        "external": "<bool>"
-        }
-}
-@endjson
-```
-
-#### Context
-CACAO playbook context information structure
-
-|field              |content        |type    | description |
-| ----------------- | ------------- | ------ | ----------- |
-|completed_on `(optional)` |timestamp |string  | <utc-timestamp-nanoes + timezone-offset>
-|generated_on `(optional)` |timestamp |string  | <utc-timestamp-nanoes + timezone-offset>
-|timeout `(optional)` |duration |string  | <utc-timestamp-nanoes + timezone-offset>
-|step_id |UUID |string  |Step uuid that is referred to
-|playbook_id  |UUID |string  |Playbook uuid that is referred to
-|execution_id  |UUID |string  |SOARCA execution uuid
-
-```plantuml
-@startjson
-{
-    "context": {
-        "completed_on": "string: <utc-timestamp-nanoes + timezone-offset>",
-        "generated_on": "string: <utc-timestamp-nanoes + timezone-offset>",
-        "timeout": "string: <utc-timestamp-nanoes + timezone-offset>",
-        "step_id": "uuid",
-        "playbook_id": "uuid",
-        "execution_id": "uuid"
-    }
-}
-@endjson
-```
-
-#### Meta
-Meta information for the fin protocol structure
-
-|field              |content        |type    | description |
-| ----------------- | ------------- | ------ | ----------- |
-|timestamp      |timestamp |string  | <utc-timestamp-nanoes + timezone-offset>
-|sender_id      |UUID |string  |Step uuid that is referred to
-
-
-```plantuml
-@startjson
-{
-    "meta": {
-        "timestamp": "string: <utc-timestamp-nanoes + timezone-offset>",
-        "sender_id": "uuid"
-    }
-}
-@endjson
-```
-
-## Sequences
-
-### Registering a capability
+## Sequence overview
 
 ```plantuml
 @startuml
-
 participant "SOARCA" as soarca
-participant Capability as fin
+participant "Fin" as fin
 
-soarca -> soarca : create [soarca] topic
+fin -> soarca : POST /fin/register (registration_token)
+soarca --> fin : 201 (fin_id, fin_token)
 
-fin -> fin : create [fin UUID] topic
-soarca <- fin : [soarca] register
-soarca --> fin : [fin UUID] ack 
+loop poll loop
+    fin -> soarca : POST /fin/poll (fin_token)
+    soarca --> fin : 204 (no work) or 200 (job)
+end
 
+note over fin : job claimed, executing...
+
+opt long-running job
+    fin -> soarca : PATCH /fin/jobs/{job_id}/status
+    soarca --> fin : 200 (action, if any)
+end
+
+fin -> soarca : PUT /fin/jobs/{job_id} (result)
+soarca --> fin : 204
 @enduml
 ```
 
-### Sending command
+## Example playbook
 
-```plantuml
-@startuml
-
-participant "SOARCA" as soarca
-participant Capability as fin
-
-soarca -> fin : [capability UUID] command
-soarca <-- fin : [capability UUID] ack 
-
-.... processing .... 
-
-soarca <- fin : [capability UUID] result
-soarca --> fin: ack
-
-@enduml
-```
-
-### Unregistering a capability
-
-
-```plantuml
-@startuml
-
-participant "SOARCA" as soarca
-participant Capability as fin
-participant "Second capability" as fin2
-
-... SOARCA initiate unregistering one fin ...
-
-soarca -> fin : [SOARCA] unregister fin-id
-soarca <-- fin : [SOARCA] ack 
-note right fin2
-    This capability does not respond to this message
-end note
-
-... Fin initiate unregistering ...
-
-soarca <- fin : [SOARCA] unregister fin-id
-soarca --> fin : [SOARCA] ack 
-note right fin2
-    This capability does not respond to this message
-end note
-
-... SOARCA unregister all ...
-
-soarca -> fin : [SOARCA] unregister all == true
-soarca <-- fin : [SOARCA] ack 
-soarca <-- fin2 : [SOARCA] ack
-note over soarca, fin2
-    soarca will go down after this command
-end note
-@enduml
-```
-
-### Control
-
-```plantuml
-@startuml
-
-participant "SOARCA" as soarca
-participant Capability as fin
-
-
-soarca -> fin : [fin UUID] control message
-soarca <-- fin : [fin UUID] status 
-
-@enduml
-```
-
-
-
+See [`examples/fin-playbook.json`](https://github.com/COSSAS/SOARCA/blob/main/examples/fin-playbook.json)
+for a worked example combining a native (SSH) capability step with a step
+targeting a registered Fin capability type.

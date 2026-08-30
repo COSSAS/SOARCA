@@ -6,28 +6,40 @@
         "version": "1.0.0"
     },
     "paths": {
-        "/keymanagement/": {
+        "/fin/": {
             "get": {
-                "description": "return all keys in the KMS",
+                "description": "list all currently-registered fins and their capabilities",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "keymanagement"
+                    "fin"
                 ],
-                "summary": "gets all keys from the KMS",
+                "summary": "list all currently-registered fins and their capabilities",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/fin.ListResponse"
                         }
+                    }
+                }
+            },
+            "delete": {
+                "description": "delete this Fin's own registration. The fin_id is inferred from the fin_token presented in the Authorization header - a Fin can only ever delete its own registration, so it never needs to name itself explicitly.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "fin"
+                ],
+                "summary": "delete this Fin's own registration",
+                "responses": {
+                    "204": {
+                        "description": "No Content"
                     },
-                    "400": {
-                        "description": "Bad Request",
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/api.Error"
                         }
@@ -35,24 +47,89 @@
                 }
             }
         },
-        "/keymanagement/:keyname/": {
+        "/fin/jobs/{job_id}": {
             "put": {
-                "description": "adds a key to the KMS; load key into cache and write file",
+                "description": "submit the result of a claimed job. Only the Fin the job is currently leased to may submit a result for it.",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "keymanagement"
+                    "fin"
                 ],
-                "summary": "add key to KMS",
+                "summary": "submit the result of a claimed job",
                 "parameters": [
                     {
-                        "description": "key",
+                        "type": "string",
+                        "description": "job ID",
+                        "name": "job_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "job result",
                         "name": "data",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.KeyManagementKey"
+                            "$ref": "#/definitions/fin.ResultRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Error"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/fin/jobs/{job_id}/status": {
+            "patch": {
+                "description": "extend a claimed job's lease (so a legitimately long-running job isn't requeued out from under the Fin still working on it), and check for a pending instruction such as cancellation",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "fin"
+                ],
+                "summary": "extend a claimed job's lease, and check for a pending cancellation instruction",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "job ID",
+                        "name": "job_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "progress",
+                        "name": "data",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/fin.StatusPingRequest"
                         }
                     }
                 ],
@@ -60,11 +137,146 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "json"
+                            "$ref": "#/definitions/fin.StatusPingResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Error"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/fin/poll": {
+            "post": {
+                "description": "long-poll for the next job matching this Fin's registered capability types. Returns 204 No Content if long_poll_timeout_seconds elapses with no job available - callers should simply poll again.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "fin"
+                ],
+                "summary": "long-poll for the next job matching this Fin's registered capability types",
+                "parameters": [
+                    {
+                        "description": "poll hints",
+                        "name": "data",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/fin.PollRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fin.PollResponse"
+                        }
+                    },
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/fin/register": {
+            "post": {
+                "description": "register a new Fin process, declaring the capability types it can execute, and obtain its fin_id/fin_token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "fin"
+                ],
+                "summary": "register a new Fin and obtain its fin_token",
+                "parameters": [
+                    {
+                        "description": "registration",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fin.RegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/fin.RegisterResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Error"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/fin/{fin_id}": {
+            "get": {
+                "description": "look up a specific registered fin by id",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "fin"
+                ],
+                "summary": "look up a specific registered fin by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "fin ID",
+                        "name": "fin_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fin.Record"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/api.Error"
                         }
@@ -72,49 +284,29 @@
                 }
             },
             "delete": {
-                "description": "revokes the key by moving it to .revoked and renaming it",
+                "description": "forcibly remove a registered fin's record, e.g. one that is stale/offline and will never come back to unregister itself. This is an admin/dashboard action, not Fin-authenticated - unlike Unregister, it is not restricted to a fin removing its own registration.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "keymanagement"
+                    "fin"
                 ],
-                "summary": "remove key from KMS",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "json"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Error"
-                        }
+                "summary": "forcibly remove a registered fin (admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "fin ID",
+                        "name": "fin_id",
+                        "in": "path",
+                        "required": true
                     }
-                }
-            }
-        },
-        "/keymanagement/refresh/": {
-            "post": {
-                "description": "refresh the KMS and re-parse the underlying directory",
-                "produces": [
-                    "application/json"
                 ],
-                "tags": [
-                    "keymanagement"
-                ],
-                "summary": "refresh the KMS system, which allows the user to include manually added files in the KMS",
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "json"
-                        }
+                    "204": {
+                        "description": "No Content"
                     },
-                    "400": {
-                        "description": "Bad Request",
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/api.Error"
                         }
@@ -157,61 +349,7 @@
                 }
             }
         },
-        "/manual/continue": {
-            "post": {
-                "description": "updates the value of a variable according to the manual interaction",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "manual"
-                ],
-                "summary": "updates the value of a variable according to the manual interaction",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "execution ID",
-                        "name": "exec_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "step ID",
-                        "name": "step_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "playbook",
-                        "name": "data",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/api.ManualOutArgsUpdatePayload"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Execution"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Error"
-                        }
-                    }
-                }
-            }
-        },
-        "/manual/{exec_id}/{step_id}": {
+        "/manual/{exec_id}/{step_execution_id}": {
             "get": {
                 "description": "get a specific manual command that still needs a value to be returned",
                 "consumes": [
@@ -234,8 +372,8 @@
                     },
                     {
                         "type": "string",
-                        "description": "step ID",
-                        "name": "step_id",
+                        "description": "step execution ID (identifies a specific pending step invocation; see GET /manual/ to discover it, as multiple pending commands may share the same step ID)",
+                        "name": "step_execution_id",
                         "in": "path",
                         "required": true
                     }
@@ -245,6 +383,58 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/api.InteractionCommandData"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Error"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "resolve a specific pending manual command by supplying its out args. This is a PUT\non the same resource GET /manual/{exec_id}/{step_execution_id} identifies, not a\ngeneric RPC-style action, so the ids live in the path, not the body.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "manual"
+                ],
+                "summary": "resolve a specific pending manual command by supplying its out args",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "execution ID",
+                        "name": "exec_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "step execution ID (identifies a specific pending step invocation; see GET /manual/ to discover it, as multiple pending commands may share the same step ID)",
+                        "name": "step_execution_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "resolution",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.ManualOutArgsUpdatePayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Execution"
                         }
                     },
                     "400": {
@@ -713,27 +903,22 @@
         "api.InteractionCommandData": {
             "type": "object",
             "required": [
-                "command",
-                "description",
+                "commands",
                 "execution_id",
                 "out_args",
                 "playbook_id",
+                "step_execution_id",
                 "step_id",
-                "target",
+                "targets",
                 "type"
             ],
             "properties": {
-                "command": {
-                    "description": "The command for the agent either command",
-                    "type": "string"
-                },
-                "commandb64": {
-                    "description": "Indicates if the command is in b64",
-                    "type": "boolean"
-                },
-                "description": {
-                    "description": "The description from the workflow step",
-                    "type": "string"
+                "commands": {
+                    "description": "All commands of the step, in order. A manual step is a single unit of work resolved by one response, but may list multiple commands/instructions",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ManualCommand"
+                    }
                 },
                 "execution_id": {
                     "description": "The id of the execution",
@@ -751,17 +936,20 @@
                     "description": "The id of the CACAO playbook executed by the execution",
                     "type": "string"
                 },
+                "step_execution_id": {
+                    "description": "The id of this specific step invocation. Distinguishes concurrent/repeated pending commands that share the same StepId (e.g. overlapping loop iterations)",
+                    "type": "string"
+                },
                 "step_id": {
                     "description": "The id of the step executed by the execution",
                     "type": "string"
                 },
-                "target": {
-                    "description": "Map of cacao agent-target with the target(s) of this command",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/cacao.AgentTarget"
-                        }
-                    ]
+                "targets": {
+                    "description": "All targets of the step, in order, together with their resolved authentication information (needed by a human operator to perform the step manually)",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/capability.ResolvedTarget"
+                    }
                 },
                 "type": {
                     "description": "The type of this content",
@@ -770,13 +958,23 @@
                 }
             }
         },
-        "api.KeyManagementKey": {
+        "api.ManualCommand": {
             "type": "object",
+            "required": [
+                "command",
+                "description"
+            ],
             "properties": {
-                "private": {
+                "command": {
+                    "description": "The command for the agent, either plain or base64",
                     "type": "string"
                 },
-                "public": {
+                "commandb64": {
+                    "description": "Indicates if the command is in b64",
+                    "type": "boolean"
+                },
+                "description": {
+                    "description": "The description from the workflow step",
                     "type": "string"
                 }
             }
@@ -784,22 +982,11 @@
         "api.ManualOutArgsUpdatePayload": {
             "type": "object",
             "required": [
-                "execution_id",
-                "playbook_id",
                 "response_out_args",
                 "response_status",
-                "step_id",
                 "type"
             ],
             "properties": {
-                "execution_id": {
-                    "description": "The id of the execution",
-                    "type": "string"
-                },
-                "playbook_id": {
-                    "description": "The id of the CACAO playbook executed by the execution",
-                    "type": "string"
-                },
                 "response_out_args": {
                     "description": "Map of cacao variables storing the out args value, handled in the step out args, with current values and definitions",
                     "allOf": [
@@ -815,10 +1002,6 @@
                             "$ref": "#/definitions/manual.ManualResponseStatus"
                         }
                     ]
-                },
-                "step_id": {
-                    "description": "The id of the step executed by the execution",
-                    "type": "string"
                 },
                 "type": {
                     "description": "The type of this content",
@@ -948,6 +1131,9 @@
                     "type": "string"
                 },
                 "status_text": {
+                    "type": "string"
+                },
+                "step_execution_id": {
                     "type": "string"
                 },
                 "step_id": {
@@ -1729,6 +1915,293 @@
                 "$ref": "#/definitions/cacao.Step"
             }
         },
+        "capability.ResolvedTarget": {
+            "type": "object",
+            "required": [
+                "target"
+            ],
+            "properties": {
+                "authentication": {
+                    "$ref": "#/definitions/cacao.AuthenticationInformation"
+                },
+                "target": {
+                    "$ref": "#/definitions/cacao.AgentTarget"
+                }
+            }
+        },
+        "fin.Command": {
+            "type": "object",
+            "properties": {
+                "command": {
+                    "type": "string"
+                },
+                "command_b64": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "content_b64": {
+                    "type": "string"
+                },
+                "headers": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "fin.Job": {
+            "type": "object",
+            "properties": {
+                "capability_type": {
+                    "description": "CapabilityType is the routing key this job was queued under — it\nmatches Capability.Type of whichever Fin ultimately claims it.",
+                    "type": "string"
+                },
+                "commands": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/fin.Command"
+                    }
+                },
+                "execution_id": {
+                    "description": "ExecutionId/PlaybookId/StepId/StepExecutionId identify which\nexecution/playbook/step invocation this job belongs to.\nStepExecutionId disambiguates concurrent/repeated invocations of the\nsame StepId within one execution (e.g. while-loop iterations),\nmatching how the rest of the execution model is keyed.",
+                    "type": "string"
+                },
+                "job_id": {
+                    "description": "JobId identifies this specific poll-able unit of work (== the lease\nhandle used for result submission and status pings).",
+                    "type": "string"
+                },
+                "lease_expires_in_seconds": {
+                    "description": "LeaseExpiresInSeconds mirrors a queue visibility timeout: sized off\nthe step's own timeout, and expected to cover however many targets\nthe claiming Fin ends up processing. If no result or status ping\narrives before it elapses, the job is requeued for any other Fin\nregistered under the same CapabilityType.",
+                    "type": "integer"
+                },
+                "playbook_id": {
+                    "type": "string"
+                },
+                "step": {
+                    "$ref": "#/definitions/fin.StepInfo"
+                },
+                "step_execution_id": {
+                    "type": "string"
+                },
+                "step_id": {
+                    "type": "string"
+                },
+                "targets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/capability.ResolvedTarget"
+                    }
+                },
+                "variables": {
+                    "$ref": "#/definitions/cacao.Variables"
+                }
+            }
+        },
+        "fin.JobState": {
+            "type": "string",
+            "enum": [
+                "success",
+                "failure"
+            ],
+            "x-enum-varnames": [
+                "JobStateSuccess",
+                "JobStateFailure"
+            ]
+        },
+        "fin.ListResponse": {
+            "type": "object",
+            "properties": {
+                "fins": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/fin.Record"
+                    }
+                }
+            }
+        },
+        "fin.PollRequest": {
+            "type": "object",
+            "properties": {
+                "concurrency_available": {
+                    "description": "ConcurrencyAvailable is an optional hint: how many more jobs this Fin\ncould take on right now. Lets SOARCA prefer idle Fins in a capability\npool over busy ones. A Fin that only ever runs one job at a time can\nomit it or always send 1/0.",
+                    "type": "integer"
+                }
+            }
+        },
+        "fin.PollResponse": {
+            "type": "object",
+            "properties": {
+                "job": {
+                    "$ref": "#/definitions/fin.Job"
+                }
+            }
+        },
+        "fin.Record": {
+            "type": "object",
+            "properties": {
+                "capabilities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pkg_models_fin.Capability"
+                    }
+                },
+                "display_name": {
+                    "description": "DisplayName is free text for humans/logs only; it plays no role in\nrouting or identity.",
+                    "type": "string"
+                },
+                "fin_id": {
+                    "description": "FinId is server-assigned at registration (never client-chosen),\navoiding id collisions and any implicit trust that a Fin picks a\nunique id for itself.",
+                    "type": "string"
+                },
+                "last_seen": {
+                    "description": "LastSeen is updated on every /poll call (whether or not a job was\nreturned), every job result submission, and every status ping (the\nheartbeat for a long-running job, §2.5) — so a Fin busy working a\njob via status pings is not wrongly treated as gone dark just\nbecause it isn't polling. Surfaced via List/Get for operator/\ndashboard visibility into which registered Fins are actually still\nalive, and used to derive Stale below. A Fin that stops all of the\nabove is never actively\nexpired or removed from routing (see\ndocs/adr/FIN-WEBHOOK-PROTOCOL-PROPOSAL.md §2.4): its registration\nstays in place, but pkg/core/capability/fin.Capability's fail-fast\nliveness check uses LastSeen to decide whether a step should even\nbother enqueuing a job for it - once every Fin declaring a given\ncapability type is stale, new jobs of that type are failed\nimmediately instead of being enqueued to wait out the step's own\ntimeout unclaimed.",
+                    "type": "string"
+                },
+                "protocol_version": {
+                    "type": "string"
+                },
+                "registered_at": {
+                    "type": "string"
+                },
+                "stale": {
+                    "description": "Stale is computed (never persisted - bson:\"-\") by pkg/api/fin's\nList/Get handlers, using the same staleness threshold as\npkg/core/capability/fin.Capability's fail-fast liveness check: true\nonce this Fin hasn't been seen (via /poll) in longer than that\nthreshold, so a dashboard can flag it as likely no longer running\nwithout SOARCA having to actively expire or hide the registration\nitself.",
+                    "type": "boolean"
+                }
+            }
+        },
+        "fin.RegisterRequest": {
+            "type": "object",
+            "required": [
+                "capabilities",
+                "registration_token"
+            ],
+            "properties": {
+                "capabilities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pkg_models_fin.Capability"
+                    }
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "protocol_version": {
+                    "type": "string"
+                },
+                "registration_token": {
+                    "description": "RegistrationToken gates *creating* a new Fin identity. It is a\ncoarse, admin/instance-level shared secret (configured server-side as\nFIN_REGISTRATION_TOKEN, distributed out-of-band), sent as a plain\nbody field because registration is the one call that happens before\na Fin has any credential of its own to put in a header.",
+                    "type": "string"
+                }
+            }
+        },
+        "fin.RegisterResponse": {
+            "type": "object",
+            "properties": {
+                "fin_id": {
+                    "type": "string"
+                },
+                "fin_token": {
+                    "type": "string"
+                },
+                "job_lease_seconds": {
+                    "type": "integer"
+                },
+                "long_poll_timeout_seconds": {
+                    "type": "integer"
+                },
+                "poll_interval_seconds": {
+                    "description": "PollIntervalSeconds/LongPollTimeoutSeconds/JobLeaseSeconds are\nserver-chosen operational defaults, echoed back so a Fin doesn't need\nits own hardcoded copy of them.",
+                    "type": "integer"
+                }
+            }
+        },
+        "fin.ResultRequest": {
+            "type": "object",
+            "required": [
+                "state"
+            ],
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "state": {
+                    "$ref": "#/definitions/fin.JobState"
+                },
+                "target_results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/fin.TargetResult"
+                    }
+                },
+                "variables": {
+                    "$ref": "#/definitions/cacao.Variables"
+                }
+            }
+        },
+        "fin.StatusPingRequest": {
+            "type": "object",
+            "properties": {
+                "progress": {
+                    "type": "string"
+                }
+            }
+        },
+        "fin.StatusPingResponse": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                }
+            }
+        },
+        "fin.StepInfo": {
+            "type": "object",
+            "properties": {
+                "delay": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "timeout": {
+                    "type": "integer"
+                }
+            }
+        },
+        "fin.TargetResult": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "failed_command_index": {
+                    "description": "FailedCommandIndex identifies which command in Commands aborted this\ntarget's sequence, if any.",
+                    "type": "integer"
+                },
+                "state": {
+                    "$ref": "#/definitions/fin.JobState"
+                },
+                "target_index": {
+                    "description": "TargetIndex identifies which entry in the job's Targets this result\nis for. Nil when the job had no targets at all.",
+                    "type": "integer"
+                },
+                "variables": {
+                    "$ref": "#/definitions/cacao.Variables"
+                }
+            }
+        },
         "manual.ManualResponseStatus": {
             "type": "string",
             "enum": [
@@ -1739,6 +2212,33 @@
                 "ManualResponseSuccessStatus",
                 "ManualResponseFailureStatus"
             ]
+        },
+        "pkg_models_fin.Capability": {
+            "type": "object",
+            "required": [
+                "type"
+            ],
+            "properties": {
+                "description": {
+                    "description": "Description is free text for humans (dashboards, logs) — it plays no\nrole in routing.",
+                    "type": "string"
+                },
+                "step_examples": {
+                    "description": "StepExamples are optional, illustrative CACAO action steps showing\nhow a playbook author would invoke this capability (agent, commands,\ntargets, ...), surfaced to help playbook authors — they are never\ninterpreted or validated by SOARCA. A capability may offer more than\none example (e.g. to illustrate different commands or target shapes).",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/cacao.Step"
+                    }
+                },
+                "type": {
+                    "description": "Type is the routing key: the value playbook authors write into\nagent_definitions[...].type to target this capability pool. Multiple\nindependently-deployed Fin processes may register the same Type;\nSOARCA treats them as one interchangeable pool and load-balances/\nfails over across them (see docs/adr/FIN-WEBHOOK-PROTOCOL-PROPOSAL.md\n§2.1b).",
+                    "type": "string"
+                },
+                "version": {
+                    "description": "Version is the capability implementation's own version string, for\noperator/debugging visibility only.",
+                    "type": "string"
+                }
+            }
         }
     }
 }

@@ -17,11 +17,9 @@ SOARCA features a set of [native capabilities](/docs/soarca-extensions/native-ca
 
 ## Extending the native capabilities
 
-The native capabilities supported by SOARCA can be extended through a mechanism we named Fins. Your capability can be integrated with SOARCA by implementing the Fin protocol. This protocol regulates communication between SOARCA and the extension capabilities over an MQTT bus.
-
-MQTT is a lightweight messaging protocol with libraries written in various programming languages. To integrate with SOARCA, you can write your own implementation of the Fin protocol, or use our [python](https://www.python.org/) or [golang](https://go.dev/) libraries for easier integration.
+The native capabilities supported by SOARCA can be extended through a mechanism we named Fins. Your capability can be integrated with SOARCA by implementing the Fin protocol. This protocol regulates communication between SOARCA and the extension capabilities over a simple, pull-based HTTP/JSON API — a Fin only ever makes outbound calls to SOARCA (register, then repeatedly poll for work and report results), so no inbound connectivity or message broker is required on the Fin side.
 
 ## Fin protocol
 
-The underlying protocol for the SOARCA fins can be found [here](/docs/soarca-extensions/fin-protocol).
+The underlying protocol for SOARCA Fins can be found [here](/docs/soarca-extensions/fin-protocol).
 

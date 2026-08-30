@@ -1,3 +1,7 @@
+//go:build integration
+
+// These tests require the httpbin service from deployments/docker/testing.
+
 package http
 
 import (
@@ -7,7 +11,7 @@ import (
 	"strconv"
 	"testing"
 
-	"soarca/pkg/models/cacao"
+	"soarca/pkg/cacao"
 
 	"github.com/go-playground/assert/v2"
 )
