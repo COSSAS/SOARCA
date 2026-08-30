@@ -1,15 +1,16 @@
 version: "3.7"
 services:
-  mongodb_container:
-    image: mongo:latest
-    container_name: mongo_soarca_stack
+  postgres:
+    image: postgres:17
+    container_name: postgres_soarca_stack
     environment:
-      MONGO_INITDB_ROOT_USERNAME: "root"
-      MONGO_INITDB_ROOT_PASSWORD: "rootpassword"
+      POSTGRES_USER: "soarca"
+      POSTGRES_PASSWORD: "soarca"
+      POSTGRES_DB: "soarca"
     networks:
       - db-net
     volumes:
-      - mongodb_data_container:/data/db
+      - postgres_data_container:/var/lib/postgresql/data
 
   cert-generator:
     image: alpine
@@ -41,12 +42,8 @@ services:
       CERT_KEY_FILE: "/app/certs/server.key"
       SOARCA_ALLOWED_ORIGINS: "*"
       GIN_MODE: "release"
-      MONGODB_URI: "mongodb://mongodb_container:27017"
-      DATABASE_NAME: "soarca"
-      DB_USERNAME: "root"
-      DB_PASSWORD: "rootpassword"
+      DATABASE_URL: "postgres://soarca:soarca@postgres:5432/soarca?sslmode=disable"
       PLAYBOOK_API_LOG_LEVEL: trace
-      DATABASE: "false"
       HTTP_SKIP_CERT_VALIDATION: false
       AUTH_ENABLED: false #OPTIONAL for OIDC Based auth
       OIDC_PROVIDER: "https://authentikuri:9443/application/o/soarca/"
@@ -55,7 +52,7 @@ services:
     ports:
       - 127.0.0.1:8080:8080
     depends_on:
-      - mongodb_container
+      - postgres
       - cert-generator
 
   loki:
@@ -82,6 +79,6 @@ networks:
   db-net:
 
 volumes:
-  mongodb_data_container:
+  postgres_data_container:
   certs_data_containter:
   loki_data_container:

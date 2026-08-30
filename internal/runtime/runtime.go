@@ -14,8 +14,7 @@ import (
 	manualsvc "soarca/internal/services/manual"
 	playbookservice "soarca/internal/services/playbook"
 	"soarca/internal/storage"
-	storagememory "soarca/internal/storage/memory"
-	storagemongo "soarca/internal/storage/mongodb"
+	storagesql "soarca/internal/storage/sql"
 	"soarca/pkg/core/capability/fin/queue"
 	"soarca/pkg/core/capability/manual/interaction"
 	"soarca/pkg/reporting/reporter/downstream_reporter/cache"
@@ -53,6 +52,7 @@ type Operations struct {
 // Runtime owns construction and lifetime of the orchestrator's dependencies.
 type Runtime struct {
 	// Core infrastructure (shared across services)
+	store         storage.Store
 	playbookStore storage.PlaybookStore
 	finStore      storage.FinStore
 	cache         *cache.Cache
@@ -122,22 +122,15 @@ func New(opts Options) (*Runtime, error) {
 	return runtime, nil
 }
 
-// initializeStorage sets up the playbook and fin stores based on config.
+// initializeStorage opens the SQL store and applies migrations.
 func (r *Runtime) initializeStorage(storageCfg config.StorageConfig) error {
-	var store storage.Store
-	var err error
-
-	if storageCfg.UseDatabase {
-		log.Info("Initializing MongoDB storage")
-		store, err = storagemongo.New(context.Background(), storagemongo.Config{URI: storageCfg.MongoDBURI})
-		if err != nil {
-			return fmt.Errorf("failed to create MongoDB store: %w", err)
-		}
-	} else {
-		log.Info("Initializing in-memory storage")
-		store = storagememory.New()
+	log.Infof("Initializing storage from %s", storageCfg.DatabaseURL)
+	store, err := storagesql.New(context.Background(), storageCfg.DatabaseURL)
+	if err != nil {
+		return err
 	}
 
+	r.store = store
 	r.playbookStore = store.Playbooks()
 	r.finStore = store.Fins()
 	return nil
@@ -147,6 +140,9 @@ func (r *Runtime) initializeStorage(storageCfg config.StorageConfig) error {
 func (r *Runtime) Close() error {
 	if r.finQueue != nil {
 		r.finQueue.Close()
+	}
+	if r.store != nil {
+		return r.store.Close(context.Background())
 	}
 	return nil
 }

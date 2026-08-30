@@ -11,7 +11,7 @@ import (
 
 	finservice "soarca/internal/services/fin"
 	"soarca/internal/storage"
-	"soarca/internal/storage/memory"
+	"soarca/internal/storage/storagetest"
 	"soarca/pkg/core/capability/fin/queue"
 	finmodels "soarca/pkg/models/fin"
 	"soarca/test/unittest/mocks/mock_guid"
@@ -25,7 +25,7 @@ const registrationToken = "test-registration-token"
 
 func newTestHandler(t *testing.T) (*FinHandler, storage.FinStore, *queue.Queue, *mock_guid.Mock_Guid) {
 	t.Helper()
-	repo := memory.New().Fins()
+	repo := storagetest.New(t).Fins()
 	jobQueue := queue.New()
 	t.Cleanup(jobQueue.Close)
 
@@ -151,7 +151,7 @@ func TestRegisterFailsWithoutCapabilities(t *testing.T) {
 }
 
 func TestRegisterFailsWhenNotConfigured(t *testing.T) {
-	repo := memory.New().Fins()
+	repo := storagetest.New(t).Fins()
 	jobQueue := queue.New()
 	defer jobQueue.Close()
 	guidMock := new(mock_guid.Mock_Guid)

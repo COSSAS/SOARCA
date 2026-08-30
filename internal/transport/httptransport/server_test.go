@@ -13,7 +13,7 @@ func testOperations(t *testing.T) appruntime.Operations {
 	t.Helper()
 
 	runtime, err := appruntime.New(appruntime.Options{
-		Storage: config.StorageConfig{UseDatabase: false},
+		Storage: config.StorageConfig{DatabaseURL: "sqlite://:memory:"},
 		Cache:   config.CacheConfig{MaxExecutions: 2},
 	})
 	if err != nil {

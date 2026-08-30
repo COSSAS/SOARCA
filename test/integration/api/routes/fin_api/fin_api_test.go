@@ -10,7 +10,7 @@ import (
 	"time"
 
 	finservice "soarca/internal/services/fin"
-	storagememory "soarca/internal/storage/memory"
+	storagetest "soarca/internal/storage/storagetest"
 	api_routes "soarca/pkg/api"
 	fin_handler "soarca/pkg/api/fin"
 	"soarca/pkg/core/capability/fin/queue"
@@ -28,7 +28,7 @@ const registrationToken = "test-registration-token"
 func newFinTestApp(t *testing.T, regToken string) *gin.Engine {
 	t.Helper()
 
-	store := storagememory.New()
+	store := storagetest.New(t)
 	q := queue.New()
 	t.Cleanup(q.Close)
 

@@ -12,6 +12,10 @@ import (
 
 var log *logger.Log
 
+// DefaultDatabaseURL keeps a development database in the working directory so a
+// fresh checkout runs without any configuration.
+const DefaultDatabaseURL = "sqlite://soarca.db"
+
 func init() {
 	log = logger.Logger(reflect.TypeOf(Config{}).PkgPath(), logger.Info, "", logger.Json)
 }
@@ -35,8 +39,9 @@ type ServerConfig struct {
 }
 
 type StorageConfig struct {
-	UseDatabase bool
-	MongoDBURI  string
+	// DatabaseURL selects the backend by scheme, e.g. sqlite://soarca.db or
+	// postgres://user:pass@host:5432/soarca.
+	DatabaseURL string
 }
 
 type FinConfig struct {
@@ -86,7 +91,7 @@ func Load() (Config, error) {
 	v.SetDefault("ENABLE_TLS", false)
 	v.SetDefault("CERT_FILE", "./certs/server.crt")
 	v.SetDefault("CERT_KEY_FILE", "./certs/server.key")
-	v.SetDefault("DATABASE", false)
+	v.SetDefault("DATABASE_URL", DefaultDatabaseURL)
 	v.SetDefault("FIN_POLL_INTERVAL_SECONDS", 5)
 	v.SetDefault("FIN_LONG_POLL_TIMEOUT_SECONDS", 25)
 	v.SetDefault("FIN_JOB_LEASE_SECONDS", 60)
@@ -108,8 +113,7 @@ func Load() (Config, error) {
 			CertKey:   v.GetString("CERT_KEY_FILE"),
 		},
 		Storage: StorageConfig{
-			UseDatabase: v.GetBool("DATABASE"),
-			MongoDBURI:  v.GetString("MONGODB_URI"),
+			DatabaseURL: v.GetString("DATABASE_URL"),
 		},
 		Fin: FinConfig{
 			PollIntervalSeconds:    v.GetInt("FIN_POLL_INTERVAL_SECONDS"),
@@ -151,8 +155,8 @@ func Load() (Config, error) {
 
 // Validate checks required configuration values.
 func (c Config) Validate() error {
-	if c.Storage.UseDatabase && c.Storage.MongoDBURI == "" {
-		return errors.New("DATABASE is enabled but MONGODB_URI is not set")
+	if c.Storage.DatabaseURL == "" {
+		return errors.New("DATABASE_URL must be set")
 	}
 	if c.Fin.LongPollTimeoutSeconds <= 0 {
 		return errors.New("FIN_LONG_POLL_TIMEOUT_SECONDS must be greater than 0")
@@ -174,15 +178,12 @@ func (c Config) LogSettings() {
 	log.Info("Configuration loaded:")
 	log.Infof("  Server Port: %s", c.Server.Port)
 	log.Infof("  Server TLS: %v", c.Server.EnableTLS)
-	log.Infof("  Storage: %s", storageType(c.Storage.UseDatabase))
+	log.Infof("  Storage: %s", c.Storage.DatabaseURL)
 	log.Infof("  Cache Size: %d", c.Cache.MaxExecutions)
 	log.Infof("  Auth Enabled: %v", c.Auth.Enabled)
 	log.Infof("  TheHive Activated: %v", c.TheHive.Activate)
 }
 
-func storageType(useMongo bool) string {
-	if useMongo {
-		return "MongoDB"
-	}
-	return "Memory"
+func storageType(cfg StorageConfig) string {
+	return cfg.DatabaseURL
 }

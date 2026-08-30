@@ -9,7 +9,7 @@ import (
 func TestNewInitializesDependencies(t *testing.T) {
 	runtime, err := New(Options{
 		Storage: config.StorageConfig{
-			UseDatabase: false,
+			DatabaseURL: "sqlite://:memory:",
 		},
 		Cache: config.CacheConfig{
 			MaxExecutions: 3,

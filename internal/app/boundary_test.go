@@ -111,8 +111,7 @@ func TestConfigBoundary(t *testing.T) {
 
 func mockStorageConfig() config.StorageConfig {
 	return config.StorageConfig{
-		UseDatabase: false,
-		MongoDBURI:  "",
+		DatabaseURL: "sqlite://:memory:",
 	}
 }
 

@@ -39,7 +39,7 @@ func TestRunWiresRuntimeAndTransport(t *testing.T) {
 	cfg := config.Config{
 		Server: config.ServerConfig{Port: "8080"},
 		Storage: config.StorageConfig{
-			UseDatabase: false,
+			DatabaseURL: "sqlite://:memory:",
 		},
 		Fin:   config.FinConfig{StaleAfterMultiplier: 1, LongPollTimeoutSeconds: 1},
 		Cache: config.CacheConfig{MaxExecutions: 5},
