@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"testing"
 
-	"soarca/pkg/models/cacao"
+	"soarca/pkg/cacao"
 
 	"github.com/go-playground/assert/v2"
 )

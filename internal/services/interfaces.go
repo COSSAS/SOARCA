@@ -3,11 +3,11 @@ package services
 import (
 	"context"
 
-	"soarca/pkg/models/api"
-	"soarca/pkg/models/cacao"
-	"soarca/pkg/models/execution"
+	manual "soarca/internal/manual/model"
+	"soarca/internal/playbooks"
+	run "soarca/internal/runs/model"
+	"soarca/pkg/cacao"
 	"soarca/pkg/models/fin"
-	"soarca/pkg/models/manual"
 
 	"github.com/google/uuid"
 )
@@ -19,7 +19,7 @@ import (
 // FinRegistry manages FIN registration and admin lifecycle.
 //
 // Dependencies: FinStore (only)
-// Does NOT depend on: playbook execution, job leasing.
+// Does NOT depend on: playbook run, job leasing.
 type FinRegistry interface {
 	// RegisterFin registers a new FIN with the given capabilities.
 	RegisterFin(ctx context.Context, req fin.RegisterRequest) (finID string, token string, err error)
@@ -44,9 +44,9 @@ type FinRegistry interface {
 // FinWorkService manages leased FIN work items.
 //
 // Dependencies: FinQueue, FinStore (only)
-// Does NOT depend on: playbook execution, manual commands, HTTP.
+// Does NOT depend on: playbook run, manual commands, HTTP.
 //
-// Lease semantics belong here, not in the execution runtime.
+// Lease semantics belong here, not in the run runtime.
 type FinWorkService interface {
 	// PollJob polls for available work matching FIN's capabilities.
 	// Long-polls until a job is available or context timeout/cancellation.
@@ -59,21 +59,21 @@ type FinWorkService interface {
 	HeartbeatJob(ctx context.Context, finToken string, jobID uuid.UUID) error
 }
 
-// ManualInbox manages manual step resolution during playbook execution.
-// Depends on: Interaction controller
+// ManualInbox manages manual step resolution during playbook run.
+// Depends on: manual inbox
 // Does NOT depend on: FIN leasing or claim semantics.
 //
 // Responsibility: tracking pending manual commands, allowing operators to
 // view pending steps, and providing responses for outstanding manual work.
 type ManualInbox interface {
-	// ListPendingCommands returns all pending manual steps across all executions.
+	// ListPendingCommands returns all pending manual steps across all runs.
 	ListPendingCommands() (commands []manual.CommandInfo, err error)
 
 	// GetPendingCommand retrieves a specific pending manual step.
-	GetPendingCommand(metadata execution.Metadata) (command manual.CommandInfo, err error)
+	GetPendingCommand(metadata run.Metadata) (command manual.CommandInfo, err error)
 
 	// ContinuePendingCommand resolves a pending manual step with the operator's response.
-	ContinuePendingCommand(response manual.InteractionResponse) error
+	ContinuePendingCommand(response manual.Response) error
 }
 
 // ============================================================================
@@ -102,7 +102,7 @@ type PlaybookService interface {
 	DeletePlaybook(ctx context.Context, playbookID string) error
 
 	// ListPlaybookMetas returns metadata for all playbooks (efficient list).
-	ListPlaybookMetas(ctx context.Context) (metas []api.PlaybookMeta, err error)
+	ListPlaybookMetas(ctx context.Context) (metas []playbooks.Meta, err error)
 }
 
 // ============================================================================
@@ -113,7 +113,7 @@ type PlaybookService interface {
 Dependency Flow (what depends on what):
 
   runs.Runner (core kernel)
-    └─ owns: engine (decomposer factory), PlaybookStore, Cache
+    └─ owns: engine (decomposer factory), PlaybookStore, RunState
 
   FinRegistry (independent)
     └─ owns: FinStore
@@ -122,7 +122,7 @@ Dependency Flow (what depends on what):
     └─ owns: FinQueue, FinStore
 
   ManualInbox
-    └─ depends on: Interaction controller
+    └─ depends on: manual inbox
 
   PlaybookService (CRUD adapter)
     └─ depends on: PlaybookStore

@@ -13,10 +13,10 @@ import (
 
 // corePackages are the orchestrator-side package trees.
 var corePackages = []string{
-	"soarca/internal/runtime/...",
+	"soarca/internal/orchestrator/...",
 	"soarca/internal/runs/...",
-	"soarca/internal/services/...",
-	"soarca/internal/storage/...",
+	"soarca/internal/orchestrator/...",
+	"soarca/internal/store/...",
 }
 
 // forbiddenInCore are inbound-transport dependencies. Note that net/http is
@@ -28,7 +28,7 @@ var forbiddenInCore = []string{
 	"github.com/COSSAS/gauth",
 	"github.com/swaggo/",
 	"soarca/internal/transport",
-	"soarca/pkg/api",
+	"soarca/internal/transport/http/handlers",
 }
 
 func deps(t *testing.T, packages ...string) []string {

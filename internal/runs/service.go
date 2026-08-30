@@ -10,10 +10,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"soarca/internal/storage"
+	"soarca/internal/store"
 	"soarca/internal/workflow"
-	"soarca/pkg/models/cacao"
-	"soarca/pkg/models/cache"
+	"soarca/pkg/cacao"
+	"soarca/internal/runs/state"
 )
 
 // Runner is the run use case surface offered to any driver
@@ -26,16 +26,16 @@ type Runner interface {
 	StartByID(ctx context.Context, playbookID string, variables cacao.Variables) (runID uuid.UUID, err error)
 
 	// List returns all recorded run summaries.
-	List(ctx context.Context) ([]cache.ExecutionEntry, error)
+	List(ctx context.Context) ([]runstate.RunEntry, error)
 
 	// Report returns the detailed report for a single run.
-	Report(ctx context.Context, runID uuid.UUID) (cache.ExecutionEntry, error)
+	Report(ctx context.Context, runID uuid.UUID) (runstate.RunEntry, error)
 }
 
 // Reports reads recorded run state.
 type Reports interface {
-	GetExecutions() ([]cache.ExecutionEntry, error)
-	GetExecutionReport(runID uuid.UUID) (cache.ExecutionEntry, error)
+	GetRuns() ([]runstate.RunEntry, error)
+	GetRunReport(runID uuid.UUID) (runstate.RunEntry, error)
 }
 
 // ValidationError marks a rejected run request.
@@ -90,20 +90,20 @@ func (s *Service) Start(ctx context.Context, playbook *cacao.Playbook, variables
 	case <-ctx.Done():
 		return uuid.Nil, ctx.Err()
 	case r := <-results:
-		return r.ExecutionId, nil
+		return r.RunId, nil
 	}
 }
 
 // List returns all recorded run summaries.
-func (s *Service) List(ctx context.Context) ([]cache.ExecutionEntry, error) {
+func (s *Service) List(ctx context.Context) ([]runstate.RunEntry, error) {
 	_ = ctx
-	return s.reports.GetExecutions()
+	return s.reports.GetRuns()
 }
 
 // Report returns the detailed report for a single run.
-func (s *Service) Report(ctx context.Context, runID uuid.UUID) (cache.ExecutionEntry, error) {
+func (s *Service) Report(ctx context.Context, runID uuid.UUID) (runstate.RunEntry, error) {
 	_ = ctx
-	return s.reports.GetExecutionReport(runID)
+	return s.reports.GetRunReport(runID)
 }
 
 func mergeVariablesInPlaybook(playbook *cacao.Playbook, payloadVariables cacao.Variables) error {

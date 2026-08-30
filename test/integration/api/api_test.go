@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 	"soarca/internal/app"
-	"soarca/pkg/models/api"
+	"soarca/internal/transport/http/schema"
 	"testing"
 	"time"
 

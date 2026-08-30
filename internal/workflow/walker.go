@@ -7,11 +7,11 @@ import (
 	"reflect"
 
 	"soarca/internal/logger"
-	"soarca/pkg/core/executors"
-	"soarca/pkg/models/cacao"
-	"soarca/pkg/models/execution"
-	"soarca/pkg/reporting/cases"
-	"soarca/pkg/reporting/reporter"
+	"soarca/internal/workflow/steps"
+	"soarca/pkg/cacao"
+	"soarca/internal/runs/model"
+	"soarca/internal/reporting/cases"
+	"soarca/internal/reporting/reporter"
 	"soarca/pkg/utils/guid"
 	timeUtil "soarca/pkg/utils/time"
 
@@ -29,9 +29,9 @@ var (
 
 // Result is the outcome of walking one playbook.
 type Result struct {
-	ExecutionId uuid.UUID
-	PlaybookId  string
-	Variables   cacao.Variables
+	RunId      uuid.UUID
+	PlaybookId string
+	Variables  cacao.Variables
 }
 
 // Walker walks one playbook's workflow graph. One per run: it holds per-run state.
@@ -127,13 +127,13 @@ func (w *Walk) walk(playbook cacao.Playbook) error {
 	variables.Merge(playbook.PlaybookVariables)
 
 	// Reporting workflow instantiation
-	w.reporter.ReportWorkflowStart(w.result.ExecutionId, playbook, w.time.Now())
+	w.reporter.ReportWorkflowStart(w.result.RunId, playbook, w.time.Now())
 
 	outputVariables, err := w.ExecuteBranch(stepId, variables)
 
 	w.result.Variables = outputVariables
 	// Reporting workflow end
-	w.reporter.ReportWorkflowEnd(w.result.ExecutionId, playbook, err, w.time.Now())
+	w.reporter.ReportWorkflowEnd(w.result.RunId, playbook, err, w.time.Now())
 
 	return err
 }
@@ -163,7 +163,7 @@ func (w *Walk) ExecuteBranch(stepId string, scopeVariables cacao.Variables) (cac
 		// to become workflow branching properties, with the addition of a success_condition
 		// boolean evaluation at step level.
 		// Effectively, we should thus only check for existance of on_completion, and
-		// report execution errors as such, not as playbook step failures - which will be handled
+		// report run errors as such, not as playbook step failures - which will be handled
 		// with upcoming said on_success, on_failure, and success_condition properties
 		onCompletionStepId := currentStep.OnCompletion
 		if onCompletionStepId == "" {
@@ -183,23 +183,23 @@ func (w *Walk) ExecuteBranch(stepId string, scopeVariables cacao.Variables) (cac
 			returnVariables.Merge(outputVariables)
 			scopeVariables.Merge(outputVariables)
 		} else {
-			return cacao.NewVariables(), fmt.Errorf("playbook execution failed at step [ %s ]. See step log for error information", stepId)
+			return cacao.NewVariables(), fmt.Errorf("playbook run failed at step [ %s ]. See step log for error information", stepId)
 		}
 	}
 
 	return returnVariables, nil
 }
 
-// newStepMetadata builds the execution.Metadata for one invocation of stepId,
-// minting a fresh StepExecutionId each time it is called. Call it once per
+// newStepMetadata builds the run.Metadata for one invocation of stepId,
+// minting a fresh StepRunId each time it is called. Call it once per
 // actual dispatch of a step (including once per while-loop iteration), never
 // reuse a previously-built value across separate invocations.
-func (w *Walk) newStepMetadata(stepId string) execution.Metadata {
-	return execution.Metadata{
-		ExecutionId:     w.result.ExecutionId,
-		PlaybookId:      w.result.PlaybookId,
-		StepId:          stepId,
-		StepExecutionId: w.guid.New(),
+func (w *Walk) newStepMetadata(stepId string) run.Metadata {
+	return run.Metadata{
+		RunId:      w.result.RunId,
+		PlaybookId: w.result.PlaybookId,
+		StepId:     stepId,
+		StepRunId:  w.guid.New(),
 	}
 }
 
@@ -259,7 +259,7 @@ func (w *Walk) executeLoop(step cacao.Step,
 	loop := true
 
 	for loop {
-		// A fresh StepExecutionId per iteration: each pass through the loop
+		// A fresh StepRunId per iteration: each pass through the loop
 		// re-evaluates this same while-condition step.
 		metadata := w.newStepMetadata(step.ID)
 		stepId, branch, err := w.condition.Execute(metadata,

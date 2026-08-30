@@ -3,8 +3,7 @@ package assignment
 import (
 	"testing"
 
-	"soarca/pkg/models/cacao"
-	assignmentModel "soarca/pkg/models/extensions/soarca/assignment"
+	"soarca/pkg/cacao"
 
 	"github.com/go-playground/assert/v2"
 )
@@ -22,7 +21,7 @@ func source(body string) cacao.Variables {
 func TestAssignPassthrough(t *testing.T) {
 	body := `{"status": 200, "body": "ok"}`
 	out := New().AssignAndEvaluate(Context{
-		AssignmentModel: assignmentModel.Assignment{
+		AssignmentModel: Assignment{
 			Type:       "soarca-assignment",
 			StepResult: httpResultName,
 			Variable:   "__raw_result__",
@@ -40,11 +39,11 @@ func TestAssignPassthrough(t *testing.T) {
 func TestAssignWithJqExpression(t *testing.T) {
 	body := `{"status": 200, "headers": {"location": "https://example.test/here"}}`
 	out := New().AssignAndEvaluate(Context{
-		AssignmentModel: assignmentModel.Assignment{
+		AssignmentModel: Assignment{
 			Type:       "soarca-assignment",
 			StepResult: httpResultName,
 			Variable:   "__location__",
-			Expression: assignmentModel.Expression{Type: "jq", Expression: ".headers.location"},
+			Expression: Expression{Type: "jq", Expression: ".headers.location"},
 		},
 		Source: source(body),
 	})
@@ -56,7 +55,7 @@ func TestAssignWithJqExpression(t *testing.T) {
 
 func TestAssignMissingStepResult(t *testing.T) {
 	out := New().AssignAndEvaluate(Context{
-		AssignmentModel: assignmentModel.Assignment{StepResult: "__does_not_exist__", Variable: "__out__"},
+		AssignmentModel: Assignment{StepResult: "__does_not_exist__", Variable: "__out__"},
 		Source:          source(`{}`),
 	})
 	assert.Equal(t, len(out), 0)
@@ -64,10 +63,10 @@ func TestAssignMissingStepResult(t *testing.T) {
 
 func TestAssignUnknownEngine(t *testing.T) {
 	out := New().AssignAndEvaluate(Context{
-		AssignmentModel: assignmentModel.Assignment{
+		AssignmentModel: Assignment{
 			StepResult: httpResultName,
 			Variable:   "__out__",
-			Expression: assignmentModel.Expression{Type: "sed", Expression: "s/a/b/"},
+			Expression: Expression{Type: "sed", Expression: "s/a/b/"},
 		},
 		Source: source(`{}`),
 	})
@@ -76,10 +75,10 @@ func TestAssignUnknownEngine(t *testing.T) {
 
 func TestAssignJqError(t *testing.T) {
 	out := New().AssignAndEvaluate(Context{
-		AssignmentModel: assignmentModel.Assignment{
+		AssignmentModel: Assignment{
 			StepResult: httpResultName,
 			Variable:   "__out__",
-			Expression: assignmentModel.Expression{Type: "jq", Expression: ".headers["},
+			Expression: Expression{Type: "jq", Expression: ".headers["},
 		},
 		Source: source(`{"headers": {}}`),
 	})
@@ -88,7 +87,7 @@ func TestAssignJqError(t *testing.T) {
 
 func TestAssignMissingVariableName(t *testing.T) {
 	out := New().AssignAndEvaluate(Context{
-		AssignmentModel: assignmentModel.Assignment{StepResult: httpResultName, Variable: ""},
+		AssignmentModel: Assignment{StepResult: httpResultName, Variable: ""},
 		Source:          source(`{}`),
 	})
 	assert.Equal(t, len(out), 0)

@@ -3,7 +3,7 @@ package storage
 import (
 	"context"
 
-	"soarca/pkg/models/api"
+	"soarca/internal/playbooks"
 	"soarca/pkg/models/cacao"
 )
 
@@ -19,5 +19,5 @@ type PlaybookStore interface {
 	// List returns all stored playbooks.
 	List(ctx context.Context) ([]cacao.Playbook, error)
 	// ListMeta returns lightweight metadata for all stored playbooks.
-	ListMeta(ctx context.Context) ([]api.PlaybookMeta, error)
+	ListMeta(ctx context.Context) ([]playbooks.Meta, error)
 }

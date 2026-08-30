@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	api_model "soarca/pkg/models/api"
-	"soarca/pkg/models/cacao"
-	cache_model "soarca/pkg/models/cache"
-	"soarca/pkg/models/execution"
-	"soarca/pkg/reporting/reporter/downstream_reporter/cache"
+	api_model "soarca/internal/transport/http/schema"
+	"soarca/pkg/cacao"
+	runstate_model "soarca/internal/runs/state"
+	"soarca/internal/runs/model"
+	"soarca/internal/reporting/reporter/downstream_reporter/runstate"
 	mock_time "soarca/test/unittest/mocks/mock_utils/time"
 	"testing"
 	"time"
 
-	api_routes "soarca/pkg/api"
+	api_routes "soarca/internal/transport/http/handlers"
 
 	runsservice "soarca/internal/runs"
 
@@ -24,9 +24,9 @@ import (
 	"github.com/go-playground/assert/v2"
 )
 
-func TestGetExecutions(t *testing.T) {
+func TestGetRuns(t *testing.T) {
 	mock_time := new(mock_time.MockTime)
-	cacheReporter := cache.New(mock_time, 10)
+	cacheReporter := runstate.New(mock_time, 10)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -84,14 +84,14 @@ func TestGetExecutions(t *testing.T) {
 
 		Workflow: map[string]cacao.Step{step1.ID: step1, end.ID: end},
 	}
-	executionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
-	executionId1 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c1")
-	executionId2 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c2")
+	runId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
+	runId1 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c1")
+	runId2 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c2")
 
-	executionIds := []uuid.UUID{
-		executionId0,
-		executionId1,
-		executionId2,
+	runIds := []uuid.UUID{
+		runId0,
+		runId1,
+		runId2,
 	}
 
 	layout := "2006-01-02T15:04:05.000Z"
@@ -102,15 +102,15 @@ func TestGetExecutions(t *testing.T) {
 	expectedStarted, _ := time.Parse(layout, str)
 	expectedEnded, _ := time.Parse(layout, "0001-01-01T00:00:00Z")
 
-	expectedStatus := cache_model.Ongoing.String()
-	expectedStatusText, _ := api_model.GetCacheStatusText(expectedStatus, "playbook")
+	expectedStatus := runstate_model.Ongoing.String()
+	expectedStatusText, _ := api_model.GetRunStatusText(expectedStatus, "playbook")
 
-	expectedExecutionsReport := []api_model.PlaybookRunReport{}
-	for _, executionId := range executionIds {
-		t.Log(executionId)
+	expectedRunsReport := []api_model.PlaybookRunReport{}
+	for _, runId := range runIds {
+		t.Log(runId)
 		entry := api_model.PlaybookRunReport{
 			Type:            "run_status",
-			RunId:           executionId.String(),
+			RunId:           runId.String(),
 			PlaybookId:      "test",
 			Name:            "ssh-test",
 			Started:         expectedStarted,
@@ -120,19 +120,19 @@ func TestGetExecutions(t *testing.T) {
 			StepResults:     map[string]api_model.StepRunReport{},
 			RequestInterval: 5,
 		}
-		expectedExecutionsReport = append(expectedExecutionsReport, entry)
+		expectedRunsReport = append(expectedRunsReport, entry)
 	}
 
-	err := cacheReporter.ReportWorkflowStart(executionId0, playbook, mock_time.Now())
+	err := cacheReporter.ReportWorkflowStart(runId0, playbook, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
 
-	err = cacheReporter.ReportWorkflowStart(executionId1, playbook, mock_time.Now())
+	err = cacheReporter.ReportWorkflowStart(runId1, playbook, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
-	err = cacheReporter.ReportWorkflowStart(executionId2, playbook, mock_time.Now())
+	err = cacheReporter.ReportWorkflowStart(runId2, playbook, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
@@ -149,7 +149,7 @@ func TestGetExecutions(t *testing.T) {
 	}
 
 	app.ServeHTTP(recorder, request)
-	expectedByte, err := json.Marshal(expectedExecutionsReport)
+	expectedByte, err := json.Marshal(expectedRunsReport)
 	if err != nil {
 		t.Log("failed to decode expected struct to json")
 		t.Fail()
@@ -162,12 +162,12 @@ func TestGetExecutions(t *testing.T) {
 	mock_time.AssertExpectations(t)
 }
 
-func TestGetExecutionReport(t *testing.T) {
-	// Create real cache, create real reporter api object
-	// Do executions, test retrieval via api
+func TestGetRunReport(t *testing.T) {
+	// Create real runstate, create real reporter api object
+	// Do runs, test retrieval via api
 
 	mock_time := new(mock_time.MockTime)
-	cacheReporter := cache.New(mock_time, 10)
+	cacheReporter := runstate.New(mock_time, 10)
 
 	expectedCommand := cacao.Command{
 		Type:    "ssh",
@@ -225,18 +225,18 @@ func TestGetExecutionReport(t *testing.T) {
 		Workflow:                      map[string]cacao.Step{step1.ID: step1, end.ID: end},
 	}
 
-	executionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
-	executionId1 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c1")
-	executionId2 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c2")
-	stepExecutionId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c9")
-	metadata0 := execution.Metadata{ExecutionId: executionId0, StepId: step1.ID, StepExecutionId: stepExecutionId0}
+	runId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c0")
+	runId1 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c1")
+	runId2 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c2")
+	stepRunId0 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c9")
+	metadata0 := run.Metadata{RunId: runId0, StepId: step1.ID, StepRunId: stepRunId0}
 
 	layout := "2006-01-02T15:04:05.000Z"
 	str := "2014-11-12T11:45:26.371Z"
 	timeNow, _ := time.Parse(layout, str)
 	mock_time.On("Now").Return(timeNow)
 
-	err := cacheReporter.ReportWorkflowStart(executionId0, playbook, mock_time.Now())
+	err := cacheReporter.ReportWorkflowStart(runId0, playbook, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
@@ -245,11 +245,11 @@ func TestGetExecutionReport(t *testing.T) {
 		t.Fail()
 	}
 
-	err = cacheReporter.ReportWorkflowStart(executionId1, playbook, mock_time.Now())
+	err = cacheReporter.ReportWorkflowStart(runId1, playbook, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
-	err = cacheReporter.ReportWorkflowStart(executionId2, playbook, mock_time.Now())
+	err = cacheReporter.ReportWorkflowStart(runId2, playbook, mock_time.Now())
 	if err != nil {
 		t.Fail()
 	}
@@ -282,7 +282,7 @@ func TestGetExecutionReport(t *testing.T) {
 			  "started":"2014-11-12T11:45:26.371Z",
 			  "ended":"2014-11-12T11:45:26.371Z",
 			  "status":"successfully_executed",
-			  "status_text": "step execution completed successfully",
+			  "status_text": "step run completed successfully",
 			  "variables":{
 				 "var1":{
 					"type":"string",
@@ -291,7 +291,7 @@ func TestGetExecutionReport(t *testing.T) {
 				 }
 			  },
 			  "commands_b64" : ["c3NoIGxzIC1sYQ=="],
-			  "automated_execution" : true,
+			  "automated_run" : true,
 			  "executed_by" : "soarca"
 		   }
 		},
@@ -311,7 +311,7 @@ func TestGetExecutionReport(t *testing.T) {
 	}
 	fmt.Print(string(b))
 
-	request, err := http.NewRequest("GET", fmt.Sprintf("/reporter/%s", executionId0), nil)
+	request, err := http.NewRequest("GET", fmt.Sprintf("/reporter/%s", runId0), nil)
 	if err != nil {
 		t.Log(err)
 		t.Fail()

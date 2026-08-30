@@ -2,9 +2,9 @@ package mock_database_controller
 
 import (
 	"context"
-	"soarca/internal/storage"
-	"soarca/pkg/models/api"
-	"soarca/pkg/models/cacao"
+	"soarca/internal/store"
+	"soarca/internal/transport/http/schema"
+	"soarca/pkg/cacao"
 
 	"github.com/stretchr/testify/mock"
 )

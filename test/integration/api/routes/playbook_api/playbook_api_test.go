@@ -8,13 +8,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	api_routes "soarca/pkg/api"
-	"soarca/pkg/models/api"
-	"soarca/pkg/models/cacao"
-	"soarca/pkg/models/decoder"
+	api_routes "soarca/internal/transport/http/handlers"
+	"soarca/internal/transport/http/schema"
+	"soarca/pkg/cacao"
+	"soarca/internal/playbooks/decoder"
 	"testing"
 
-	playbookservice "soarca/internal/services/playbook"
+	playbookservice "soarca/internal/playbooks/library"
 	mock_playbook "soarca/test/unittest/mocks/mock_playbook_database"
 
 	"github.com/gin-gonic/gin"

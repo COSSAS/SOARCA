@@ -7,8 +7,8 @@ import (
 	"errors"
 	"fmt"
 
+	"soarca/internal/playbooks"
 	"soarca/internal/storage"
-	"soarca/pkg/models/api"
 	"soarca/pkg/models/cacao"
 )
 
@@ -110,7 +110,7 @@ func (s *playbookStore) List(ctx context.Context) ([]cacao.Playbook, error) {
 }
 
 // ListMeta reads the extracted columns so whole playbooks never need decoding.
-func (s *playbookStore) ListMeta(ctx context.Context) ([]api.PlaybookMeta, error) {
+func (s *playbookStore) ListMeta(ctx context.Context) ([]playbooks.Meta, error) {
 	const query = `SELECT id, name, description, valid_from, valid_until, labels
 		FROM playbooks ORDER BY id`
 
@@ -120,10 +120,10 @@ func (s *playbookStore) ListMeta(ctx context.Context) ([]api.PlaybookMeta, error
 	}
 	defer rows.Close()
 
-	metas := make([]api.PlaybookMeta, 0)
+	metas := make([]playbooks.Meta, 0)
 	for rows.Next() {
 		var (
-			meta       api.PlaybookMeta
+			meta       playbooks.Meta
 			validFrom  databasesql.NullTime
 			validUntil databasesql.NullTime
 			labels     []byte

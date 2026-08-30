@@ -3,8 +3,8 @@ package playbook
 import (
 	"context"
 
+	"soarca/internal/playbooks"
 	"soarca/internal/storage"
-	"soarca/pkg/models/api"
 	"soarca/pkg/models/cacao"
 )
 
@@ -49,6 +49,6 @@ func (s *Service) DeletePlaybook(ctx context.Context, playbookID string) error {
 }
 
 // ListPlaybookMetas returns playbook metadata entries.
-func (s *Service) ListPlaybookMetas(ctx context.Context) ([]api.PlaybookMeta, error) {
+func (s *Service) ListPlaybookMetas(ctx context.Context) ([]playbooks.Meta, error) {
 	return s.store.ListMeta(ctx)
 }

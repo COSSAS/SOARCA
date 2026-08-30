@@ -6,7 +6,7 @@ import (
 	api "soarca/api"
 	"soarca/internal/app"
 	"soarca/internal/logger"
-	"soarca/pkg/api/status"
+	"soarca/internal/transport/http/handlers/status"
 	"soarca/pkg/utils"
 
 	"github.com/joho/godotenv"

@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"soarca/internal/config"
-	appruntime "soarca/internal/runtime"
-	httptransport "soarca/internal/transport/httptransport"
+	orchestrator "soarca/internal/orchestrator"
+	httptransport "soarca/internal/transport/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -42,7 +42,7 @@ func TestRunWiresRuntimeAndTransport(t *testing.T) {
 			DatabaseURL: "sqlite://:memory:",
 		},
 		Fin:   config.FinConfig{StaleAfterMultiplier: 1, LongPollTimeoutSeconds: 1},
-		Cache: config.CacheConfig{MaxExecutions: 5},
+		RunState: config.RunStateConfig{MaxRuns: 5},
 		HTTP:  config.HTTPConfig{SkipCertValidation: true},
 		Auth:  config.AuthConfig{Enabled: false},
 		TheHive: config.TheHiveConfig{
@@ -51,18 +51,18 @@ func TestRunWiresRuntimeAndTransport(t *testing.T) {
 		CORS: config.CORSConfig{AllowedOrigins: "*"},
 	}
 
-	var gotRuntimeOpts appruntime.Options
+	var gotRuntimeOpts orchestrator.Options
 	var gotTransportOpts httptransport.Options
 	fake := &fakeTransport{}
 
 	loadConfig = func() (config.Config, error) {
 		return cfg, nil
 	}
-	newRuntime = func(opts appruntime.Options) (*appruntime.Runtime, error) {
+	newRuntime = func(opts orchestrator.Options) (*orchestrator.Runtime, error) {
 		gotRuntimeOpts = opts
-		return &appruntime.Runtime{}, nil
+		return &orchestrator.Runtime{}, nil
 	}
-	newTransport = func(ops appruntime.Operations, opts httptransport.Options) transport {
+	newTransport = func(ops orchestrator.Operations, opts httptransport.Options) transport {
 		gotTransportOpts = opts
 		return fake
 	}
@@ -74,8 +74,8 @@ func TestRunWiresRuntimeAndTransport(t *testing.T) {
 	if gotRuntimeOpts.Storage != cfg.Storage {
 		t.Fatalf("runtime options storage mismatch: %#v", gotRuntimeOpts.Storage)
 	}
-	if gotRuntimeOpts.Cache != cfg.Cache {
-		t.Fatalf("runtime options cache mismatch: %#v", gotRuntimeOpts.Cache)
+	if gotRuntimeOpts.RunState != cfg.RunState {
+		t.Fatalf("runtime options runstate mismatch: %#v", gotRuntimeOpts.RunState)
 	}
 	if gotRuntimeOpts.HTTP != cfg.HTTP {
 		t.Fatalf("runtime options http mismatch: %#v", gotRuntimeOpts.HTTP)

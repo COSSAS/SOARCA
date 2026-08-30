@@ -2,7 +2,7 @@ package mock_walker
 
 import (
 	"soarca/internal/workflow"
-	"soarca/pkg/models/cacao"
+	"soarca/pkg/cacao"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
@@ -16,9 +16,9 @@ func (mock *Mock_Walker) ExecuteAsync(playbook cacao.Playbook, results chan work
 	args := mock.Called(playbook, results)
 	if results != nil {
 		results <- workflow.Result{
-			ExecutionId: args.Get(2).(uuid.UUID),
-			PlaybookId:  playbook.ID,
-			Variables:   cacao.NewVariables(),
+			RunId:      args.Get(2).(uuid.UUID),
+			PlaybookId: playbook.ID,
+			Variables:  cacao.NewVariables(),
 		}
 	}
 }

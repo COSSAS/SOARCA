@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
-	finservice "soarca/internal/services/fin"
-	storagetest "soarca/internal/storage/storagetest"
-	api_routes "soarca/pkg/api"
-	fin_handler "soarca/pkg/api/fin"
-	"soarca/pkg/core/capability/fin/queue"
-	"soarca/pkg/models/fin"
+	finservice "soarca/internal/fins"
+	storagetest "soarca/internal/store/storagetest"
+	api_routes "soarca/internal/transport/http/handlers"
+	fin_handler "soarca/internal/transport/http/handlers/fin"
+	"soarca/internal/workflow/capability/fin/queue"
+	"soarca/pkg/fins/protocol"
 	"soarca/pkg/utils/guid"
 
 	"github.com/gin-gonic/gin"

@@ -4,27 +4,27 @@ import (
 	"testing"
 
 	"soarca/internal/config"
-	appruntime "soarca/internal/runtime"
-	httptransport "soarca/internal/transport/httptransport"
+	orchestrator "soarca/internal/orchestrator"
+	httptransport "soarca/internal/transport/http"
 )
 
 // TestRuntimeBoundary verifies the runtime exposes its use cases as behaviour
-// only. Operations must carry no infrastructure: if a store, cache, queue or
+// only. Operations must carry no infrastructure: if a store, runstate, queue or
 // walker factory ever appears here, transport can reach through it again.
 func TestRuntimeBoundary(t *testing.T) {
-	runtime, err := appruntime.New(mockRuntimeOptions())
+	app, err := orchestrator.New(mockRuntimeOptions())
 	if err != nil {
 		t.Fatalf("Failed to create runtime: %v", err)
 	}
-	defer runtime.Close()
+	defer app.Close()
 
-	ops := runtime.Operations()
+	ops := app.Operations()
 
 	if ops.Playbooks == nil {
 		t.Error("Operations.Playbooks is nil")
 	}
-	if ops.Executions == nil {
-		t.Error("Operations.Executions is nil")
+	if ops.Runs == nil {
+		t.Error("Operations.Runs is nil")
 	}
 	if ops.Fins == nil {
 		t.Error("Operations.Fins is nil")
@@ -46,13 +46,13 @@ func TestRuntimeBoundary(t *testing.T) {
 // TestTransportBoundary verifies the transport layer only does route
 // registration and startup, driven purely by Operations.
 func TestTransportBoundary(t *testing.T) {
-	runtime, err := appruntime.New(mockRuntimeOptions())
+	app, err := orchestrator.New(mockRuntimeOptions())
 	if err != nil {
 		t.Fatalf("Failed to create runtime: %v", err)
 	}
-	defer runtime.Close()
+	defer app.Close()
 
-	server := httptransport.New(runtime.Operations(), mockTransportOptions())
+	server := httptransport.New(app.Operations(), mockTransportOptions())
 
 	engine, err := server.SetupServer()
 	if err != nil {
@@ -76,8 +76,8 @@ func TestTransportBoundary(t *testing.T) {
 func TestConfigBoundary(t *testing.T) {
 	runtimeOpts := mockRuntimeOptions()
 
-	if runtimeOpts.Cache.MaxExecutions != 5 {
-		t.Error("Runtime should own Cache config")
+	if runtimeOpts.RunState.MaxRuns != 5 {
+		t.Error("Runtime should own RunState config")
 	}
 	if runtimeOpts.TheHive.Activate != false {
 		t.Error("Runtime should own TheHive config")
@@ -115,9 +115,9 @@ func mockStorageConfig() config.StorageConfig {
 	}
 }
 
-func mockCacheConfig() config.CacheConfig {
-	return config.CacheConfig{
-		MaxExecutions: 5,
+func mockRunStateConfig() config.RunStateConfig {
+	return config.RunStateConfig{
+		MaxRuns: 5,
 	}
 }
 
@@ -131,11 +131,11 @@ func mockFinConfig() config.FinConfig {
 	}
 }
 
-func mockRuntimeOptions() appruntime.Options {
-	return appruntime.Options{
-		Storage: mockStorageConfig(),
-		Cache:   mockCacheConfig(),
-		Fin:     mockFinConfig(),
+func mockRuntimeOptions() orchestrator.Options {
+	return orchestrator.Options{
+		Storage:  mockStorageConfig(),
+		RunState: mockRunStateConfig(),
+		Fin:      mockFinConfig(),
 		HTTP: config.HTTPConfig{
 			SkipCertValidation: false,
 		},
