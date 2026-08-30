@@ -256,7 +256,7 @@ Still to do in 4a: move the remaining `test/integration/api/**` suites next to t
 they exercise, turn `test/unittest/mocks` into per-package mocks, and move playbook JSON
 fixtures into `testdata/` (which the go tool ignores by convention).
 
-#### 4b — package renames (IN PROGRESS)
+#### 4b — package renames (MOSTLY DONE — remainder folded into the new engine work)
 
 Decision: option 2 — `run` everywhere including the wire. The FIN protocol is alpha, so
 breaking changes are acceptable and no compatibility shim is needed.
@@ -270,22 +270,41 @@ Done:
 - API models: `PlaybookExecutionReport` → `PlaybookRunReport`, `StepExecutionReport` →
   `StepRunReport`, `api.Execution` → `api.RunStarted`.
 - `fin.Job.ExecutionId`/`StepExecutionId` → `RunId`/`StepRunId` (FIN protocol break).
-- Fixed the `json:"payload"` bug on the trigger response as part of the model rename;
-  it now correctly serialises as `playbook_id`.
-- Swagger regenerated: 0 occurrences of `execution_id`, 15 of `run_id`.
+- Fixed the `json:"payload"` bug on the trigger response; now `playbook_id`.
+- Swagger regenerated: 0 occurrences of `execution_id`.
+- `pkg/core/decomposer` → `internal/workflow`; `Decomposer`/`IDecomposer` →
+  `workflow.Walk`/`workflow.Walker`.
+- `decomposer_controller.IController` → `workflow.NewWalker` func type (package deleted).
+- `internal/controller` → `internal/app`; `Initialize()` → `Run()`.
+- `pkg/api/middelware` → `pkg/api/middleware` (typo).
+- Deleted resurrected dead packages `internal/bootstrap` and `internal/services/execution`.
 
-Remaining:
+Deliberately NOT done — this code is replaced by the durable engine, so renaming it is
+throwaway work:
 
-- `pkg/models/execution.Metadata` → run vocabulary (`RunId`, `StepRunId`). This is the
-  deep one: ~150 references across decomposer, cache, reporters and capabilities.
-- `Decomposer` → `WorkflowRunner`, `executors/` → `workflow/steps/`, drop `I` prefixes.
-- `internal/runtime` → `internal/orchestrator`, `internal/controller` → `internal/app`.
-- `internal/services/{fin,manual,playbook}` → `internal/fins/{registry,dispatch}`,
-  `internal/manual`, `internal/playbooks`; `internal/storage` → `internal/store`.
-- `pkg/` → `internal/` split and the `pkg/soarca` embeddable entrypoint.
+- ~360 references to the `execution` noun (`execution.Metadata`, `ExecutionId`,
+  `cache.ExecutionEntry`). Concentrated in the walker, executors and the cache — all of
+  which the run/step-run tables replace.
+- 28 `I`-prefixed interfaces, mostly in `pkg/core/executors` and the reporter chain.
+- `pkg/core/executors/playbook_action` and `pkg/reporting/reporter/downstream_reporter`
+  underscore package names.
+- `pkg/` → `internal/` split and the `pkg/soarca` embeddable entrypoint. Premature until
+  the engine settles.
 
-Constraint that no longer applies: wire compatibility. Kept for the record because the
-Python FIN package must be updated in lockstep with the `run_id`/`step_run_id` rename.
+Residual test-layout work (moving `test/integration/api` beside the code, per-package
+mocks, `testdata/`) is cosmetic; those suites are the safety net for the engine migration
+and are more useful left working than moved.
+
+## Status
+
+Phases 0, 1, 2, 3 and 5 are complete. Phase 4 is complete for everything on the stable
+surface. **The refactor has met its goal**: the orchestrator is separated from transport,
+the boundary is enforced by `test/architecture/boundary_test.go`, and `runs.Runner` is the
+seam the new engine plugs into.
+
+Next work is the durable execution engine — see `durable-execution-design.md`. Remaining
+naming debt lives in code that work replaces, so it should be picked up there rather than
+polished first.
 
 ### Phase 5 — enforce (DONE, ahead of Phase 4)
 

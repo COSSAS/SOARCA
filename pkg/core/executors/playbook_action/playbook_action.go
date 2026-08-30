@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"soarca/internal/workflow"
 	"soarca/internal/logger"
 	"soarca/internal/storage"
+	"soarca/internal/workflow"
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
 	"soarca/pkg/reporting/reporter"
@@ -16,9 +16,9 @@ import (
 
 type PlaybookAction struct {
 	newWalker     workflow.NewWalker
-	playbookStore        storage.PlaybookStore
-	reporter             reporter.IStepReporter
-	time                 timeUtil.ITime
+	playbookStore storage.PlaybookStore
+	reporter      reporter.IStepReporter
+	time          timeUtil.ITime
 }
 
 var component = reflect.TypeOf(PlaybookAction{}).PkgPath()

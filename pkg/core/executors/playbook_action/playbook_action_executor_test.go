@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"soarca/internal/workflow"
-	"soarca/test/unittest/mocks/mock_walker"
 	mocks_playbook_test "soarca/test/unittest/mocks/mock_playbook_database"
 	"soarca/test/unittest/mocks/mock_reporter"
 	mock_time "soarca/test/unittest/mocks/mock_utils/time"
+	"soarca/test/unittest/mocks/mock_walker"
 
 	"soarca/pkg/models/cacao"
 	"soarca/pkg/models/execution"
