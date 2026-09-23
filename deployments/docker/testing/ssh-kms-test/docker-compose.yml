@@ -1,0 +1,8 @@
+ services:  
+  ssh_kms_server:
+    container_name: ssh_kms_server
+    build:
+      dockerfile: Dockerfile
+    ports:
+      - 2223:22
+    

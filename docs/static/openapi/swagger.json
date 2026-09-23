@@ -37,7 +37,7 @@
         },
         "/keymanagement/:keyname/": {
             "put": {
-                "description": "adds a key to the KMS; load key into cache and write file",
+                "description": "adds a key to the KMS; load key into cache and write to database",
                 "produces": [
                     "application/json"
                 ],
@@ -94,18 +94,27 @@
                         }
                     }
                 }
-            }
-        },
-        "/keymanagement/refresh/": {
-            "post": {
-                "description": "refresh the KMS and re-parse the underlying directory",
+            },
+            "patch": {
+                "description": "update a key in the KMS; load key into cache and write to database",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "keymanagement"
                 ],
-                "summary": "refresh the KMS system, which allows the user to include manually added files in the KMS",
+                "summary": "update key in KMS",
+                "parameters": [
+                    {
+                        "description": "key",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.KeyManagementKey"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -773,6 +782,9 @@
         "api.KeyManagementKey": {
             "type": "object",
             "properties": {
+                "passphrase": {
+                    "type": "string"
+                },
                 "private": {
                     "type": "string"
                 },
