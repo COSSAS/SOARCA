@@ -1,0 +1,28 @@
+{
+    "$id": "https://raw.githubusercontent.com/COSSAS/SOARCA/refs/heads/development/extensions/soarca-assignment/expression/expression.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "expression",
+    "description": "The expression is the part of the extension to manipulate the raw output of steps. Multiple engines can be selected.",
+    "type": "object",
+    "properties": {
+        "type": {
+            "type": "string",
+            "enum": [
+                "regex",
+                "jq",
+                "awk",
+                "sed",
+                "grep"
+            ],
+            "description": "The engine string that needs to be used with the expression"
+        },
+        "expression": {
+            "type": "string",
+            "description": "The verbatim expression to be used by SOARCA."
+        }
+    },
+    "required": [
+        "type",
+        "expression"
+    ]
+}
