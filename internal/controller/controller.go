@@ -24,6 +24,7 @@ import (
 	"soarca/pkg/core/executors/playbook_action"
 	"soarca/pkg/extensions/soarca/assignment"
 	"soarca/pkg/keymanagement"
+	"soarca/pkg/keymanagement/loader"
 	"soarca/pkg/reporting/cases"
 	"soarca/pkg/reporting/reporter"
 	"soarca/pkg/utils"
@@ -188,6 +189,15 @@ func (controller *Controller) setupDatabase() error {
 func (controller *Controller) setupKeyManagement() error {
 	if utils.GetEnv("ENABLE_SSH_KMS", "false") == "true" {
 		controller.keyManagement = keymanagement.New(controller.keyManagementRepo)
+		// Load keys from directory
+		kmsDir := utils.GetEnv("SSH_KMS_DIR", "")
+		if kmsDir != "" {
+			err := loader.Load(kmsDir, controller.keyManagement)
+			if err != nil {
+				log.Error("failed to load kms dir: ", err)
+			}
+			log.Info("loaded kms keys from: ", kmsDir)
+		}
 		log.Info("KMS is enabled")
 	} else {
 		log.Trace("KMS is not enabled")
