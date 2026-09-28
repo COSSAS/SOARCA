@@ -1,4 +1,4 @@
-.PHONY: all test integration-test ci-test clean build docker run pre-docker-build swagger sbom
+.PHONY: all test integration-test ci-test clean build docker run pre-docker-build swagger sbom build 
 
 BINARY_NAME=soarca
 DIRECTORY = $(sort $(dir $(wildcard ./test/*/)))
@@ -22,11 +22,12 @@ swagger:
 	swag init -o api -d ./ -g cmd/soarca/main.go
 
 lint: swagger
-	
 	golangci-lint run --max-same-issues 0 --timeout 5m -v  
 
-build: swagger
-	CGO_ENABLED=0 go build -o ./build/soarca $(GOFLAGS) ./cmd/soarca/main.go
+build: swagger build/soarca build/soarca-conversion
+
+build/%: $(wildcard **/*.go)
+	CGO_ENABLED=0 go build -o $@ $(GOFLAGS) ./cmd/$(@F)/main.go
 
 test: swagger
 	go test ./pkg/... -v
