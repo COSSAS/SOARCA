@@ -1,0 +1,117 @@
+{
+    "type": "playbook",
+    "spec_version": "cacao-2.0",
+    "id": "playbook--300270f9-0e64-42c8-93cc-0927edbe3ae7",
+    "name": "Example ssh",
+    "description": "This playbook demonstrates ssh functionality",
+    "playbook_types": [
+        "notification"
+    ],
+    "created_by": "identity--96abab60-238a-44ff-8962-5806aa60cbce",
+    "created": "2023-11-20T15:56:00.123456Z",
+    "modified": "2023-11-20T15:56:00.123456Z",
+    "valid_from": "2023-11-20T15:56:00.123456Z",
+    "valid_until": "2123-11-20T15:56:00.123456Z",
+    "priority": 1,
+    "severity": 1,
+    "impact": 1,
+    "labels": [
+        "soarca",
+        "ssh",
+        "example"
+    ],
+    "authentication_info_definitions": {
+        "user-auth--b7ddc2ea-9f6a-4e82-8eaa-be202e942090": {
+            "type": "user-auth",
+            "kms":true,
+            "kms_key_identifier": "test",
+            "username": "linuxserver.io"
+        }
+    },
+    "agent_definitions": {
+        "soarca--00010001-1000-1000-a000-000100010001": {
+            "type": "soarca",
+            "name": "soarca-ssh"
+        }
+    },
+    "target_definitions": {
+        "ssh--1c3900b4-f86b-430d-b415-12312b9e31f4": {
+            "type": "ssh",
+            "name": "system 1",
+            "address": {
+                "ipv4": [
+                    "127.0.0.1"
+                ]
+            },
+            "port": "2223",
+            "authentication_info": "user-auth--b7ddc2ea-9f6a-4e82-8eaa-be202e942090"
+        }
+    },
+    "external_references": [
+        {
+            "name": "TNO COSSAS",
+            "description": "TNO COSSAS",
+            "source": "TNO COSSAS",
+            "url": "https://cossas-project.org"
+        }
+    ],
+    "workflow_start": "start--9e7d62b2-88ac-4656-94e1-dbd4413ba008",
+    "workflow_exception": "end--a6f0b81e-affb-4bca-b4f6-a2d5af908958",
+    "workflow": {
+        "start--9e7d62b2-88ac-4656-94e1-dbd4413ba008": {
+            "type": "start",
+            "name": "Start ssh example",
+            "on_completion": "action--eb9372d4-d524-49fc-bf24-be26ea084779"
+        },
+        "action--eb9372d4-d524-49fc-bf24-be26ea084779": {
+            "type": "action",
+            "name": "Execute command",
+            "description": "Execute command specified in variable",
+            "on_completion": "action--88f4c4df-fa96-44e6-b310-1c06d193ea55",
+            "commands": [
+                {
+                    "type": "ssh",
+                    "command": "__command__:value"
+                }
+            ],
+            "targets": [
+                "ssh--1c3900b4-f86b-430d-b415-12312b9e31f4"
+            ],
+            "agent": "soarca--00010001-1000-1000-a000-000100010001",
+            "step_variables": {
+                "__command__": {
+                    "type": "string",
+                    "value": "ls -la",
+                    "constant": true
+                }
+            }
+        },
+        "action--88f4c4df-fa96-44e6-b310-1c06d193ea55": {
+            "type": "action",
+            "name": "Touch file",
+            "description": "Touch file at path specified by variable",
+            "on_completion": "end--a6f0b81e-affb-4bca-b4f6-a2d5af908958",
+            "commands": [
+                {
+                    "type": "ssh",
+                    "command": "touch __path__:value"
+                }
+            ],
+            "targets": [
+                "ssh--1c3900b4-f86b-430d-b415-12312b9e31f4"
+            ],
+            "agent": "soarca--00010001-1000-1000-a000-000100010001",
+            "step_variables": {
+                "__path__": {
+                    "type": "string",
+                    "value": "touchy",
+                    "constant": true
+                }
+            }
+        },
+        "end--a6f0b81e-affb-4bca-b4f6-a2d5af908958": {
+            "type": "end",
+            "name": "End Flow"
+        }
+    }
+}

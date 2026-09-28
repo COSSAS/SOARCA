@@ -29,14 +29,14 @@ func TestAuthenticationValidationUserAuth(t *testing.T) {
 func TestAuthenticationValidationUserAuthMissingPassword(t *testing.T) {
 	auth := cacao.AuthenticationInformation{Type: "user-auth", Username: "root"}
 	result := CheckSshAuthenticationInfo(auth)
-	err := errors.New("password is empty")
+	err := errors.New("password is empty and KMS is not indicated")
 	assert.Equal(t, result, err)
 }
 
 func TestAuthenticationValidationUserAuthSpacesAsPassword(t *testing.T) {
 	auth := cacao.AuthenticationInformation{Type: "user-auth", Username: "root", Password: "   "}
 	result := CheckSshAuthenticationInfo(auth)
-	err := errors.New("password is empty")
+	err := errors.New("password is empty and KMS is not indicated")
 	assert.Equal(t, result, err)
 }
 
@@ -102,4 +102,14 @@ func TestAddressAndPortCombinationNoIpv4Address(t *testing.T) {
 	expectedFqdn := ""
 	result := CombinePortAndAddress(ipv4, port)
 	assert.Equal(t, result, expectedFqdn)
+}
+
+// This test needs to be here to see if the sshCapability won't panic when KMS is not set
+func TestKmsIsNill(t *testing.T) {
+	ssh := &SshCapability{Keys: nil}
+
+	auth := cacao.AuthenticationInformation{ID: "1", Type: "user-auth", Kms: true, KmsKeyIdentifier: "id"}
+
+	_, err := ssh.getConfig(auth)
+	assert.Equal(t, err, errors.New("no KMS was set so it cannot be used by the playbook"))
 }
