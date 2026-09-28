@@ -78,6 +78,7 @@ SOARCA reads its configuration from the environment variables or a `.env` file. 
 
 {{< tabpane langEqualsHeader=false  >}}
 {{< tab header="`.env`" lang="txt" >}}
+HOST: localhost
 PORT: 8080
 SOARCA_ALLOWED_ORIGINS: "*"
 GIN_MODE: "release"
