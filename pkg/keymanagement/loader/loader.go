@@ -27,7 +27,7 @@ func Load(keyDirectoryPath string, api IKms) error {
 		return err
 	}
 	if !info.IsDir() {
-		return errors.New("provided path is not a dir: " + err.Error())
+		return errors.New("provided path is not a directory")
 	}
 	err = loadDir(keyDirectoryPath, api)
 	if err != nil {
