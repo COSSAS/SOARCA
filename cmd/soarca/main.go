@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	api "soarca/api"
+	"soarca/internal/config"
 	"soarca/internal/controller"
 	"soarca/internal/logger"
 	"soarca/pkg/api/status"
-	"soarca/pkg/utils"
 
 	"github.com/joho/godotenv"
 )
@@ -47,12 +47,18 @@ func main() {
 	if err != nil {
 		log.Warning("Failed to read env variables because of error: ", err, " , but will continue.")
 	}
-	Host = "localhost:" + utils.GetEnv("PORT", "8080")
+	configuration, err := config.Load()
+	if err != nil {
+		log.Fatal("Invalid configuration: ", err)
+		panic(err)
+	}
+
+	Host = fmt.Sprintf("localhost:%d", configuration.Static.Server.Port)
 	api.SwaggerInfo.Host = Host
 
 	// Version is only available here
 	status.SetVersion(Version)
-	err = controller.Initialize()
+	err = controller.Initialize(configuration)
 	if err != nil {
 		log.Fatal("Something Went wrong with setting-up the app, msg: ", err)
 		panic(err)
