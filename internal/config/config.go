@@ -14,7 +14,6 @@ import (
 	"sync/atomic"
 
 	"github.com/caarlos0/env/v11"
-	"github.com/joho/godotenv"
 )
 
 type Static struct {
@@ -136,9 +135,22 @@ func (dynamic Dynamic) Validate() error {
 	if len(dynamic.AllowedOrigins) == 0 {
 		return errors.New("allowed_origins cannot be empty")
 	}
+	for _, origin := range dynamic.AllowedOrigins {
+		if origin == "*" {
+			if len(dynamic.AllowedOrigins) > 1 {
+				return errors.New("allowed_origins: \"*\" cannot be combined with other origins")
+			}
+			continue
+		}
+		if !strings.HasPrefix(origin, "http://") && !strings.HasPrefix(origin, "https://") {
+			return fmt.Errorf("allowed_origins: %q must start with http:// or https://", origin)
+		}
+	}
 	return nil
 }
 
+// clone returns a deep copy. A plain struct copy would share the
+// AllowedOrigins backing array with the original.
 func (dynamic Dynamic) clone() Dynamic {
 	dynamic.AllowedOrigins = append([]string(nil), dynamic.AllowedOrigins...)
 	return dynamic
@@ -147,16 +159,13 @@ func (dynamic Dynamic) clone() Dynamic {
 type Config struct {
 	Static Static
 
-	dynamic   atomic.Pointer[Dynamic]
+	current   atomic.Pointer[Dynamic]
 	mutex     sync.Mutex
-	listeners []func(previous Dynamic, current Dynamic)
+	listeners []func(before Dynamic, after Dynamic)
 }
 
-// Load reads .env (if present) and the environment. Real environment
-// variables win over .env, since godotenv never overwrites existing ones.
-func Load(envFiles ...string) (*Config, error) {
-	_ = godotenv.Load(envFiles...)
-
+// Load parses the process environment. Load any .env file before calling it.
+func Load() (*Config, error) {
 	var static Static
 	if err := env.Parse(&static); err != nil {
 		return nil, err
@@ -176,42 +185,69 @@ func Load(envFiles ...string) (*Config, error) {
 		return nil, err
 	}
 
-	config := &Config{Static: static}
-	config.dynamic.Store(&dynamic)
-	return config, nil
+	configuration := &Config{Static: static}
+	configuration.current.Store(&dynamic)
+	return configuration, nil
 }
 
 // Dynamic returns a copy of the current runtime settings. Call it at the
 // point of use; don't store the result.
-func (config *Config) Dynamic() Dynamic {
-	return config.dynamic.Load().clone()
+func (configuration *Config) Dynamic() Dynamic {
+	return configuration.current.Load().clone()
 }
 
-// OnChange registers a callback for components that hold their own state,
-// like logrus loggers. Callbacks run after the new value is visible.
-func (config *Config) OnChange(listener func(previous Dynamic, current Dynamic)) {
-	config.mutex.Lock()
-	defer config.mutex.Unlock()
-	config.listeners = append(config.listeners, listener)
+// OnChange registers a listener for components that hold their own state,
+// like logrus loggers. Listeners run after the new settings are current.
+func (configuration *Config) OnChange(listener func(before Dynamic, after Dynamic)) {
+	configuration.mutex.Lock()
+	defer configuration.mutex.Unlock()
+	configuration.listeners = append(configuration.listeners, listener)
 }
 
-// Update applies change to a copy of the current Dynamic config, validates it
-// and swaps it in. Nothing changes if change or validation fails.
-func (config *Config) Update(change func(*Dynamic) error) error {
-	config.mutex.Lock()
-	defer config.mutex.Unlock()
+// DynamicPatch describes a change to Dynamic. Nil fields are left as they
+// are, so a JSON body only needs the fields it changes.
+type DynamicPatch struct {
+	LogLevel               *string   `json:"log_level"`
+	HttpSkipCertValidation *bool     `json:"http_skip_cert_validation"`
+	ValidationSchemaUrl    *string   `json:"validation_schema_url"`
+	AllowedOrigins         *[]string `json:"allowed_origins"`
+}
 
-	previous := config.dynamic.Load().clone()
-	next := previous.clone()
-	if err := change(&next); err != nil {
-		return err
+func (patch DynamicPatch) applyTo(dynamic *Dynamic) {
+	if patch.LogLevel != nil {
+		dynamic.LogLevel = *patch.LogLevel
 	}
-	if err := next.Validate(); err != nil {
-		return err
+	if patch.HttpSkipCertValidation != nil {
+		dynamic.HttpSkipCertValidation = *patch.HttpSkipCertValidation
 	}
-	config.dynamic.Store(&next)
-	for _, listener := range config.listeners {
-		listener(previous, next.clone())
+	if patch.ValidationSchemaUrl != nil {
+		dynamic.ValidationSchemaUrl = *patch.ValidationSchemaUrl
 	}
-	return nil
+	if patch.AllowedOrigins != nil {
+		// Copy so the caller's slice never becomes part of the live settings.
+		dynamic.AllowedOrigins = append([]string(nil), (*patch.AllowedOrigins)...)
+	}
+}
+
+// Update applies patch to the current settings, validates the result and only
+// then makes it current. Reading and writing happen under one lock, so two
+// concurrent updates to different fields both survive. On error nothing
+// changes. It returns the settings that are now current.
+func (configuration *Config) Update(patch DynamicPatch) (Dynamic, error) {
+	configuration.mutex.Lock()
+	defer configuration.mutex.Unlock()
+
+	before := configuration.Dynamic()
+	after := before.clone()
+	patch.applyTo(&after)
+	if err := after.Validate(); err != nil {
+		return before, err
+	}
+	configuration.current.Store(&after)
+
+	// after is now the live value; listeners get copies so they can't change it.
+	for _, listener := range configuration.listeners {
+		listener(before.clone(), after.clone())
+	}
+	return after.clone(), nil
 }
