@@ -39,7 +39,7 @@ type Server struct {
 	CertKeyFile string `env:"CERT_KEY_FILE" envDefault:"./certs/server.key"`
 	// Read by gin itself during package init; kept here so it is documented
 	// and can be applied explicitly with gin.SetMode.
-	GinMode string `env:"GIN_MODE" envDefault:"debug"`
+	GinMode string `env:"GIN_MODE" envDefault:"release"`
 }
 
 type Database struct {
