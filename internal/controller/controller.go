@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"soarca/internal/config"
 	keymanagementrepository "soarca/internal/database/keymanagement"
 	"soarca/internal/database/memory"
 	memorykms "soarca/internal/database/memory/keymanagement"
@@ -27,11 +28,8 @@ import (
 	"soarca/pkg/keymanagement/loader"
 	"soarca/pkg/reporting/cases"
 	"soarca/pkg/reporting/reporter"
-	"soarca/pkg/utils"
 	"soarca/pkg/utils/guid"
 	"soarca/pkg/utils/stix/expression/comparison"
-	"strconv"
-	"strings"
 
 	finExecutor "soarca/pkg/core/capability/fin"
 	finChannelController "soarca/pkg/core/capability/fin/controller"
@@ -65,6 +63,7 @@ func init() {
 }
 
 type Controller struct {
+	configuration     *config.Config
 	finController     finChannelController.IFinController
 	playbookRepo      playbookrepository.IPlaybookRepository
 	keyManagementRepo keymanagementrepository.IKeyManagementRepository
@@ -75,8 +74,6 @@ var mainController = Controller{}
 
 var mainCache = cache.Cache{}
 
-const defaultCacheSize int = 10
-
 // One manual interaction per SOARCA instance
 var mainInteraction = interaction.New(registerManualIntegration())
 
@@ -84,7 +81,8 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	ssh := &ssh.SshCapability{Keys: controller.keyManagement}
 	capabilities := map[string]capability.ICapability{ssh.GetType(): ssh}
 
-	skip, _ := strconv.ParseBool(utils.GetEnv("HTTP_SKIP_CERT_VALIDATION", "false"))
+	// Read per decomposer, so an update applies to the next execution.
+	skip := controller.configuration.Dynamic().HttpSkipCertValidation
 
 	httpUtil := new(httpUtil.HttpRequest)
 	httpUtil.SkipCertificateValidation(skip)
@@ -100,10 +98,9 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 	man := manual.New(mainInteraction)
 	capabilities[man.GetType()] = &man
 
-	enableFins, _ := strconv.ParseBool(utils.GetEnv("ENABLE_FINS", "false"))
-
-	if enableFins {
-		broker, port := getMqttDetails()
+	fins := controller.configuration.Static.Fins
+	if fins.Enabled {
+		broker, port := fins.MqttBroker, fins.MqttPort
 
 		finCapabilities := controller.finController.GetRegisteredCapabilities()
 		for key := range finCapabilities {
@@ -119,7 +116,7 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 
 	// Reporter integrations
 
-	thehive_reporter, theHiveCaseManager := initializeIntegrationTheHiveReporting()
+	thehive_reporter, theHiveCaseManager := initializeIntegrationTheHiveReporting(controller.configuration.Static.TheHive)
 	if thehive_reporter != nil {
 		downstreamReporters = append(downstreamReporters, thehive_reporter)
 	}
@@ -146,23 +143,16 @@ func (controller *Controller) NewDecomposer() decomposer.IDecomposer {
 }
 
 func (controller *Controller) setupDatabase() error {
-	initMongoDatabase, _ := strconv.ParseBool(utils.GetEnv("DATABASE", "false"))
+	database := controller.configuration.Static.Database
 
-	if initMongoDatabase {
+	if database.Enabled {
 		log.Info("Setting up mongo database")
 
 		mongo.LoadComponent()
 
 		log.Info("SOARCA API Trying to start")
-		uri := os.Getenv("MONGODB_URI")
-		username := os.Getenv("DB_USERNAME")
-		password := os.Getenv("DB_PASSWORD")
-
-		if uri == "" || username == "" || password == "" {
-			log.Error("you must set 'MONGODB_URI' or 'DB_USERNAME' or 'DB_PASSWORD' in the environment variable")
-			return errors.New("could not obtain required environment settings")
-		}
-		err := mongo.SetupMongodb(uri, username, password)
+		// config.Load already checked that uri, username and password are set.
+		err := mongo.SetupMongodb(database.Uri, database.Username, database.Password)
 		if err != nil {
 			return err
 		}
@@ -187,10 +177,11 @@ func (controller *Controller) setupDatabase() error {
 }
 
 func (controller *Controller) setupKeyManagement() error {
-	if utils.GetEnv("ENABLE_SSH_KMS", "false") == "true" {
+	sshKms := controller.configuration.Static.SshKms
+	if sshKms.Enabled {
 		controller.keyManagement = keymanagement.New(controller.keyManagementRepo)
 		// Load keys from directory
-		kmsDir := utils.GetEnv("SSH_KMS_DIR", "")
+		kmsDir := sshKms.Dir
 		if kmsDir != "" {
 			err := loader.Load(kmsDir, controller.keyManagement)
 			if err != nil {
@@ -209,29 +200,39 @@ func (controller *Controller) GetDatabaseInstance() playbookrepository.IPlaybook
 	return controller.playbookRepo
 }
 
-func Initialize() error {
+// Config returns the configuration SOARCA was initialized with, for API
+// handlers that read or update the dynamic settings.
+func (controller *Controller) Config() *config.Config {
+	return controller.configuration
+}
+
+func Initialize(configuration *config.Config) error {
+	if configuration == nil {
+		return errors.New("controller needs a configuration")
+	}
+	mainController.configuration = configuration
+
+	gin.SetMode(configuration.Static.Server.GinMode)
 	app := gin.New()
 	log.Info("Log level is info")
 	log.Debug("Log level is debug")
 	log.Trace("Log level is trace")
 
-	enableFins, _ := strconv.ParseBool(utils.GetEnv("ENABLE_FINS", "false"))
-	if enableFins {
+	if configuration.Static.Fins.Enabled {
 		if err := mainController.setupAndRunMqtt(); err != nil {
 			log.Error(err)
 		}
 	}
 
-	cacheSize, _ := strconv.Atoi(utils.GetEnv("MAX_EXECUTIONS", strconv.Itoa(defaultCacheSize)))
-	mainCache = *cache.New(&timeUtil.Time{}, cacheSize)
+	mainCache = *cache.New(&timeUtil.Time{}, configuration.Static.MaxExecutions)
 
-	err := initializeCore(app)
+	err := initializeCore(app, configuration)
 	if err != nil {
 		log.Error("Failed to init core")
 		return err
 	}
 
-	err = run(app)
+	err = run(app, configuration.Static.Server)
 	if err != nil {
 		log.Error("failed to run gin")
 	}
@@ -252,14 +253,12 @@ func validateCertificates(certFile string, keyFile string) error {
 	return nil
 }
 
-func run(app *gin.Engine) error {
-	port := utils.GetEnv("PORT", "8080")
-	port = ":" + port
-	enableTLS, _ := strconv.ParseBool(utils.GetEnv("ENABLE_TLS", "false"))
-	certFile := utils.GetEnv("CERT_FILE", "./certs/server.crt")
-	keyFile := utils.GetEnv("CERT_KEY_FILE", "./certs/server.key")
+func run(app *gin.Engine, server config.Server) error {
+	port := fmt.Sprintf(":%d", server.Port)
+	certFile := server.CertFile
+	keyFile := server.CertKeyFile
 
-	if enableTLS {
+	if server.EnableTls {
 		err := validateCertificates(certFile, keyFile)
 		if err != nil {
 			return fmt.Errorf("TLS configuration error: %w", err)
@@ -273,11 +272,12 @@ func run(app *gin.Engine) error {
 	return app.Run(port)
 }
 
-func initializeCore(app *gin.Engine) error {
-	origins := strings.Split(strings.ReplaceAll(utils.GetEnv("SOARCA_ALLOWED_ORIGINS", "*"), " ", ""), ",")
-	routes.Cors(app, origins)
+func initializeCore(app *gin.Engine, configuration *config.Config) error {
+	routes.Cors(app, func() []string {
+		return configuration.Dynamic().AllowedOrigins
+	})
 
-	err := intializeAuthenticationMiddleware(app)
+	err := intializeAuthenticationMiddleware(app, configuration.Static.Auth)
 	if err != nil {
 		log.Error("Failed to setup Authentication middleware")
 		return err
@@ -326,7 +326,8 @@ func initializeCore(app *gin.Engine) error {
 }
 
 func (controller *Controller) setupAndRunMqtt() error {
-	broker, port := getMqttDetails()
+	fins := controller.configuration.Static.Fins
+	broker, port := fins.MqttBroker, fins.MqttPort
 	mqttClient := finChannelController.NewClient(protocol.Broker(broker), port)
 	finChannelController := finChannelController.New(*mqttClient)
 	controller.finController = finChannelController
@@ -347,26 +348,24 @@ func registerManualIntegration() []interaction.IInteractionIntegrationNotifier {
 	return []interaction.IInteractionIntegrationNotifier{}
 }
 
-func initializeIntegrationTheHiveReporting() (downstreamReporter.IDownStreamReporter, cases.ICasesManager) {
-	initTheHiveReporter, _ := strconv.ParseBool(utils.GetEnv("THEHIVE_ACTIVATE", "false"))
-	if !initTheHiveReporter {
+func initializeIntegrationTheHiveReporting(theHive config.TheHive) (downstreamReporter.IDownStreamReporter, cases.ICasesManager) {
+	if !theHive.Activate {
 		return nil, nil
 	}
 	log.Info("initializing The Hive reporting integration")
 
-	thehiveApiToken := utils.GetEnv("THEHIVE_API_TOKEN", "")
-	thehiveApiBaseUrl := utils.GetEnv("THEHIVE_API_BASE_URL", "")
+	thehiveApiToken := theHive.ApiToken
+	thehiveApiBaseUrl := theHive.ApiBaseUrl
 	if len(thehiveApiBaseUrl) < 1 || len(thehiveApiToken) < 1 {
 		log.Warning("could not initialize The Hive reporting integration. Check to have configured the env variables correctly.")
 		return nil, nil
 	}
 
-	theHiveInsecureConnection, _ := strconv.ParseBool(utils.GetEnv("THEHIVE_ALLOW_INSECURE", "true"))
+	theHiveInsecureConnection := theHive.AllowInsecure
 
 	log.Info(fmt.Sprintf("creating new The hive connector with API base url at : %s", thehiveApiBaseUrl))
 	theHiveConnector := connector.NewConnector(thehiveApiBaseUrl, thehiveApiToken, theHiveInsecureConnection)
-	caseReporting, _ := strconv.ParseBool(utils.GetEnv("THEHIVE_REPORTER", "false"))
-	if caseReporting {
+	if theHive.Reporter {
 		log.Info("enabling the hive reporter")
 		theHiveCases := thehiveCases.NewCaseManager(theHiveConnector)
 		return theHiveCases, theHiveCases
@@ -375,10 +374,17 @@ func initializeIntegrationTheHiveReporting() (downstreamReporter.IDownStreamRepo
 	return theHiveReporter, nil
 }
 
-func intializeAuthenticationMiddleware(app *gin.Engine) error {
-	authEnabled, _ := strconv.ParseBool(utils.GetEnv("AUTH_ENABLED", "false"))
-	if authEnabled {
-		auth, err := gauth.New(gauth.DefaultConfig())
+func intializeAuthenticationMiddleware(app *gin.Engine, authConfig config.Auth) error {
+	if authConfig.Enabled {
+		// Same settings gauth.DefaultConfig() builds, but from SOARCA's config
+		// instead of gauth reading the environment itself.
+		auth, err := gauth.New(&gauth.Config{
+			Mode:              gauth.ModeVerify,
+			IssuerUri:         authConfig.Issuer,
+			ClientID:          authConfig.ClientId,
+			Provider:          gauth.Authentik,
+			SkipTLSValidation: authConfig.SkipTlsVerify,
+		})
 		if err != nil {
 			log.Error("Failed to initialize authenticator:", err)
 			return err
@@ -388,13 +394,4 @@ func intializeAuthenticationMiddleware(app *gin.Engine) error {
 
 	}
 	return nil
-}
-
-func getMqttDetails() (string, int) {
-	broker := utils.GetEnv("MQTT_BROKER", "localhost")
-	port, err := strconv.Atoi(utils.GetEnv("MQTT_PORT", "1883"))
-	if err != nil {
-		port = 1883
-	}
-	return broker, port
 }

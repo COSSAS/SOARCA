@@ -2,6 +2,9 @@ package api
 
 import (
 	"reflect"
+	"slices"
+	"sync"
+
 	open_api "soarca/api"
 	"soarca/internal/controller/database"
 	"soarca/internal/controller/decomposer_controller"
@@ -74,10 +77,30 @@ func Api(app *gin.Engine,
 	return nil
 }
 
-func Cors(app *gin.Engine, origins []string) {
-	config := cors.DefaultConfig()
-	config.AllowOrigins = origins
-	app.Use(cors.New(config))
+// Cors installs CORS handling that follows allowedOrigins at runtime. The
+// gin-contrib/cors handler is rebuilt only when the origin list changes, so
+// "*" still answers with a literal "*" as before.
+func Cors(app *gin.Engine, allowedOrigins func() []string) {
+	var (
+		mutex          sync.Mutex
+		currentOrigins []string
+		currentHandler gin.HandlerFunc
+	)
+	app.Use(func(context *gin.Context) {
+		origins := allowedOrigins()
+
+		mutex.Lock()
+		if currentHandler == nil || !slices.Equal(origins, currentOrigins) {
+			config := cors.DefaultConfig()
+			config.AllowOrigins = origins
+			currentHandler = cors.New(config)
+			currentOrigins = origins
+		}
+		handler := currentHandler
+		mutex.Unlock()
+
+		handler(context)
+	})
 }
 
 func Swagger(app *gin.Engine) {
