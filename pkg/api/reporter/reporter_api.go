@@ -40,6 +40,9 @@ func NewReportHandler(informer informer.IExecutionInformer) *reportHandler {
 //	@Produce		json
 //	@success		200	{array}		api.PlaybookExecutionReport
 //	@failure		400	{object}	api.Error
+//	@failure		401	{object}	api.Error
+//	@failure		403	{object}	api.Error
+//	@Security		BearerAuth
 //	@Router			/reporter [GET]
 func (reportHandler *reportHandler) GetExecutions(g *gin.Context) {
 	executions, err := reportHandler.informer.GetExecutions()
@@ -75,6 +78,9 @@ func (reportHandler *reportHandler) GetExecutions(g *gin.Context) {
 //	@Param			id	path		string	true	"execution identifier"
 //	@success		200	{object}	api.PlaybookExecutionReport
 //	@failure		400	{object}	api.Error
+//	@failure		401	{object}	api.Error
+//	@failure		403	{object}	api.Error
+//	@Security		BearerAuth
 //	@Router			/reporter/{id} [GET]
 func (handler *reportHandler) GetExecutionReport(g *gin.Context) {
 	id := g.Param("id")

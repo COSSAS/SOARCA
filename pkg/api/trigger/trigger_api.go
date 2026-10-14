@@ -60,6 +60,9 @@ func NewTriggerHandler(controller decomposer_controller.IController, database da
 //	@Param			data	body		cacao.Variables	true	"playbook"
 //	@Success		200		{object}	api.Execution
 //	@failure		400		{object}	api.Error
+//	@failure		401	{object}	api.Error
+//	@failure		403	{object}	api.Error
+//	@Security		BearerAuth
 //	@Router			/trigger/playbook/{id} [POST]
 func (handler *TriggerHandler) ExecuteById(context *gin.Context) {
 	log.Trace("received execute by ID")
@@ -101,6 +104,9 @@ func (handler *TriggerHandler) ExecuteById(context *gin.Context) {
 //	@Param			playbook	body		cacao.Playbook	true	"execute playbook by payload"
 //	@Success		200			{object}	api.Execution
 //	@failure		400			{object}	api.Error
+//	@failure		401	{object}	api.Error
+//	@failure		403	{object}	api.Error
+//	@Security		BearerAuth
 //	@Router			/trigger/playbook [POST]
 func (handler *TriggerHandler) Execute(context *gin.Context) {
 	log.Trace("received execute with body")
