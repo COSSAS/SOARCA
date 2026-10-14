@@ -11,20 +11,8 @@ SOARCA accepts access tokens that Entra ID issues for a dedicated **SOARCA API**
 
 You need an account that can create app registrations and grant admin consent, for example *Application Administrator*. Note your **tenant ID** from the Entra admin center overview page.
 
-## How it fits together
+## Entra components: users and applications
 
-```
-SOARCA API (app registration)
-  Application ID URI  api://soarca
-  Scope               access_as_user
-  App roles           Playbook.Read, Playbook.Write, Playbook.Execute, SOARCA.Admin
-     ^                                        ^
-     | delegated scope                        | application permission
-     | + the user's assigned app roles        | (app role assigned to the application)
-     |                                        |
-A client that signs users in            An integration or managed identity
-(authorization code flow)               (client credentials flow)
-```
 ```plantuml
 @startuml
 skinparam componentStyle rectangle
