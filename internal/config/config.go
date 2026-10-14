@@ -36,9 +36,7 @@ type Server struct {
 	EnableTls   bool   `env:"ENABLE_TLS" envDefault:"false"`
 	CertFile    string `env:"CERT_FILE" envDefault:"./certs/server.crt"`
 	CertKeyFile string `env:"CERT_KEY_FILE" envDefault:"./certs/server.key"`
-	// Read by gin itself during package init; kept here so it is documented
-	// and can be applied explicitly with gin.SetMode.
-	GinMode string `env:"GIN_MODE" envDefault:"release"`
+	GinMode     string `env:"GIN_MODE" envDefault:"release"`
 }
 
 type Database struct {
@@ -70,12 +68,59 @@ type TheHive struct {
 	Reporter      bool   `env:"THEHIVE_REPORTER" envDefault:"false"`
 }
 
-// Auth mirrors what github.com/COSSAS/gauth DefaultConfig() reads.
+// Auth configures who may call the API. With AUTH_ENABLED=true, at least one
+// identity provider must be configured. The OIDC_* settings are the ones
+// gauth used.
 type Auth struct {
 	Enabled       bool   `env:"AUTH_ENABLED" envDefault:"false"`
 	Issuer        string `env:"OIDC_ISSUER"`
 	ClientId      string `env:"OIDC_CLIENT_ID"`
 	SkipTlsVerify bool   `env:"OIDC_SKIP_TLS_VERIFY" envDefault:"false"`
+	// Members of AUTH_GROUP get every permission, as they did with gauth.
+	AdminGroup string `env:"AUTH_GROUP" envDefault:"soarca_admin"`
+	Entra      Entra
+	// JSON file with hashed static API keys. Empty disables API keys.
+	ApiKeysFile string `env:"AUTH_API_KEYS_FILE"`
+}
+
+// Entra configures Microsoft Entra ID; it's enabled when tenants are set.
+type Entra struct {
+	TenantIds         []string `env:"AUTH_ENTRA_TENANT_IDS" envSeparator:","`
+	ApiClientId       string   `env:"AUTH_ENTRA_API_CLIENT_ID"`
+	ApiAppIdUri       string   `env:"AUTH_ENTRA_API_APP_ID_URI"`
+	AllowedClientIds  []string `env:"AUTH_ENTRA_ALLOWED_CLIENT_IDS" envSeparator:","`
+	RequiredUserScope string   `env:"AUTH_ENTRA_REQUIRED_USER_SCOPE" envDefault:"access_as_user"`
+	AcceptV1Tokens    bool     `env:"AUTH_ENTRA_ACCEPT_V1" envDefault:"false"`
+	Authority         string   `env:"AUTH_ENTRA_AUTHORITY" envDefault:"https://login.microsoftonline.com"`
+}
+
+// OidcEnabled reports whether a generic OIDC provider is configured.
+func (auth Auth) OidcEnabled() bool {
+	return auth.Issuer != "" || auth.ClientId != ""
+}
+
+// EntraEnabled reports whether Entra ID is configured.
+func (auth Auth) EntraEnabled() bool {
+	return len(auth.Entra.TenantIds) > 0 || auth.Entra.ApiClientId != ""
+}
+
+// validate only applies with AUTH_ENABLED=true: the shipped docker-compose.yaml
+// sets OIDC_CLIENT_ID with auth disabled, and that must keep starting.
+func (auth Auth) validate() []error {
+	if !auth.Enabled {
+		return nil
+	}
+	var errs []error
+	if auth.OidcEnabled() && (auth.Issuer == "" || auth.ClientId == "") {
+		errs = append(errs, errors.New("OIDC_ISSUER and OIDC_CLIENT_ID must be set together"))
+	}
+	if auth.EntraEnabled() && (len(auth.Entra.TenantIds) == 0 || auth.Entra.ApiClientId == "") {
+		errs = append(errs, errors.New("AUTH_ENTRA_TENANT_IDS and AUTH_ENTRA_API_CLIENT_ID must be set together"))
+	}
+	if !auth.OidcEnabled() && !auth.EntraEnabled() && auth.ApiKeysFile == "" {
+		errs = append(errs, errors.New("AUTH_ENABLED=true requires OIDC_ISSUER, AUTH_ENTRA_TENANT_IDS or AUTH_API_KEYS_FILE"))
+	}
+	return errs
 }
 
 type SshKms struct {
@@ -86,14 +131,10 @@ type SshKms struct {
 // Dynamic is everything that may be changed while SOARCA runs. Secrets never
 // go here: this struct is what an API handler reads and writes.
 type Dynamic struct {
-	// Applied with logrus SetLevel on live loggers when changed.
-	LogLevel string `env:"LOG_GLOBAL_LEVEL" envDefault:"info" json:"log_level"`
-	// Read every time a decomposer is built (per trigger/playbook action).
-	HttpSkipCertValidation bool `env:"HTTP_SKIP_CERT_VALIDATION" envDefault:"false" json:"http_skip_cert_validation"`
-	// Read on every CACAO v2 validation. Empty means use the embedded schema.
-	ValidationSchemaUrl string `env:"VALIDATION_SCHEMA_URL" json:"validation_schema_url"`
-	// Needs the CORS middleware to read config per request instead of once.
-	AllowedOrigins []string `env:"SOARCA_ALLOWED_ORIGINS" envSeparator:"," envDefault:"*" json:"allowed_origins"`
+	LogLevel               string   `env:"LOG_GLOBAL_LEVEL" envDefault:"info" json:"log_level"`
+	HttpSkipCertValidation bool     `env:"HTTP_SKIP_CERT_VALIDATION" envDefault:"false" json:"http_skip_cert_validation"`
+	ValidationSchemaUrl    string   `env:"VALIDATION_SCHEMA_URL" json:"validation_schema_url"`
+	AllowedOrigins         []string `env:"SOARCA_ALLOWED_ORIGINS" envSeparator:"," envDefault:"*" json:"allowed_origins"`
 }
 
 var validLogLevels = map[string]bool{
@@ -110,9 +151,7 @@ func (static Static) Validate() error {
 	if database.Enabled && (database.Uri == "" || database.Username == "" || database.Password == "") {
 		errs = append(errs, errors.New("DATABASE=true requires MONGODB_URI, DB_USERNAME and DB_PASSWORD"))
 	}
-	if static.Auth.Enabled && (static.Auth.Issuer == "" || static.Auth.ClientId == "") {
-		errs = append(errs, errors.New("AUTH_ENABLED=true requires OIDC_ISSUER and OIDC_CLIENT_ID"))
-	}
+	errs = append(errs, static.Auth.validate()...)
 	if static.MaxExecutions < 1 {
 		errs = append(errs, errors.New("MAX_EXECUTIONS must be at least 1"))
 	}
@@ -170,6 +209,8 @@ func Load() (*Config, error) {
 	if err := env.Parse(&static); err != nil {
 		return nil, err
 	}
+	static.Auth.Entra.TenantIds = trimList(static.Auth.Entra.TenantIds)
+	static.Auth.Entra.AllowedClientIds = trimList(static.Auth.Entra.AllowedClientIds)
 	if err := static.Validate(); err != nil {
 		return nil, err
 	}
@@ -188,6 +229,17 @@ func Load() (*Config, error) {
 	configuration := &Config{Static: static}
 	configuration.current.Store(&dynamic)
 	return configuration, nil
+}
+
+// trimList trims each item of a comma-separated setting and drops empty ones.
+func trimList(items []string) []string {
+	var trimmed []string
+	for _, item := range items {
+		if item = strings.TrimSpace(item); item != "" {
+			trimmed = append(trimmed, item)
+		}
+	}
+	return trimmed
 }
 
 // Dynamic returns a copy of the current runtime settings. Call it at the
