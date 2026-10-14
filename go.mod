@@ -5,9 +5,11 @@ go 1.25.0
 require (
 	github.com/COSSAS/gauth v1.0.3
 	github.com/caarlos0/env/v11 v11.4.1
+	github.com/coreos/go-oidc/v3 v3.11.0
 	github.com/eclipse/paho.mqtt.golang v1.5.1
 	github.com/gin-contrib/cors v1.7.1
 	github.com/gin-gonic/gin v1.12.0
+	github.com/go-jose/go-jose/v4 v4.0.5
 	github.com/go-playground/assert/v2 v2.2.0
 	github.com/go-playground/validator/v10 v10.30.1
 	github.com/gofrs/uuid v4.4.0+incompatible
@@ -38,11 +40,9 @@ require (
 	github.com/bytedance/sonic v1.15.0 // indirect
 	github.com/bytedance/sonic/loader v0.5.0 // indirect
 	github.com/cloudwego/base64x v0.1.6 // indirect
-	github.com/coreos/go-oidc/v3 v3.11.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.12 // indirect
 	github.com/gin-contrib/sse v1.1.0 // indirect
-	github.com/go-jose/go-jose/v4 v4.0.5 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.6 // indirect

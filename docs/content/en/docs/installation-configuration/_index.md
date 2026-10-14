@@ -18,7 +18,7 @@ After completing the [Getting Started](/docs/getting-started/_index.md) setup fo
 | ENABLE_TLS                 | `false`                          | Enable TLS for secure communication. Default is `false`.                    |
 | CERT_FILE                  | `"/certs/server.crt"`            | Path to the TLS certificate file. Default is `"/certs/server.crt"`.         |
 | CERT_KEY_FILE              | `"/certs/server.key"`            | Path to the TLS certificate key file. Default is `"/certs/server.key"`.     |
-| MAX_EXECUTIONS             | `1000`                           | The number of historical executions saved, including the current one. Default is `1000`. |
+| MAX_EXECUTIONS             | `1000`                           | The number of historical executions saved, including the current one. Default is `10`. |
 | SOARCA_ALLOWED_ORIGINS     | `*`                              | Set allowed origins for cross-origin requests. Default is `*`.              |
 | GIN_MODE                   | `release`                        | Set the GIN mode. Default is `release`.                                     |
 | DATABASE                   | `false`                          | Set if you want to run with an external database. Default is `false`.       |
@@ -27,7 +27,7 @@ After completing the [Getting Started](/docs/getting-started/_index.md) setup fo
 | DB_USERNAME                | `root`                           | Set the MongoDB database user when using Docker. Default is `root`.         |
 | DB_PASSWORD                | `rootpassword`                   | Set the MongoDB database user password when using Docker. **Change this in production!** Default is `rootpassword`. |
 | PLAYBOOK_API_LOG_LEVEL     | `trace`                          | Set the log level for the playbook API. Default is `trace`.                 |
-| MAX_REPORTERS              | `5`                              | Set the maximum number of downstream reporters. Default is `5`.             |
+| MAX_REPORTERS              | `10`                              | Set the maximum number of downstream reporters. Default is `10`.             |
 | LOG_GLOBAL_LEVEL           | `info`                           | One of the specified log levels. Default is `info`.                         |
 | LOG_MODE                   | `development`                    | Set the logging mode. If `production`, `LOG_GLOBAL_LEVEL` is used for all modules. Default is `development`. |
 | LOG_FILE_PATH              | `""`                             | Path to the logfile for all logging. Default is `""` (empty string).        |
@@ -55,18 +55,23 @@ After completing the [Getting Started](/docs/getting-started/_index.md) setup fo
 ### Authentication
 
 {{% alert title="Note" color="primary" %}}
-More information on setting up authentication can be found [here](/docs/installation-configuration/authentication.md).
+More information on setting up authentication can be found [here](/docs/installation-configuration/authentication/).
 {{% /alert %}}
-| Variable               | Content                                    | Description                                                                                 |
-|------------------------|---------------------------------------------|---------------------------------------------------------------------------------------------|
-| AUTH_ENABLED           | `false`                                    | Enable authentication. Default is `false`.                                                  |
-| OIDC_ISSUER            | `https://localhost:9443/application/u/test/` | The OIDC issuer URL.                                                                         |
-| OIDC_CLIENT_ID         | `SOME_CLIENT_ID`                           | Set the OIDC client ID.                                                                     |
-| OIDC_CLIENT_SECRET     | `SOME_CLIENT_SECRET`                       | Set the OIDC client secret.                                                                 |
-| OIDC_REDIRECT_URL      | `http://localhost:8081/auth/soarca_gui/callback` | Set the OIDC redirect URL.                                                                 |
-| COOKIE_SECRET_KEY      | `SOME_COOKIE_SECRET`                       | Optional: Secret key for cookies. Generate using `openssl rand -base64 32` or `head -c 32 /dev/urandom | base64`. |
-| OIDC_SKIP_TLS_VERIFY   | `true`                                     | Set whether to skip TLS verification. Default is `true`.                                    |
-| AUTH_GROUP             | `soarca_admin`                             | Specify the group users must belong to for authentication against SOARCA.                  |
+| Variable | Content | Description |
+|---|---|---|
+| AUTH_ENABLED | `false` | Require a valid credential on every API request. Default is `false`. |
+| OIDC_ISSUER | `https://authentik.example.com/application/o/soarca/` | Issuer URL of the OIDC provider (authentik). |
+| OIDC_CLIENT_ID | `SOME_CLIENT_ID` | Client ID of the OIDC provider; the expected token audience. |
+| OIDC_SKIP_TLS_VERIFY | `false` | Skip certificate checks towards the OIDC provider. Default is `false`. |
+| AUTH_GROUP | `soarca_admin` | OIDC group whose members get every permission. Default is `soarca_admin`. |
+| AUTH_ENTRA_TENANT_IDS | `<tenant-id>` | Comma-separated Entra ID tenants whose tokens SOARCA accepts. |
+| AUTH_ENTRA_API_CLIENT_ID | `<client-id>` | Client ID of the SOARCA API app registration in Entra ID. |
+| AUTH_ENTRA_API_APP_ID_URI | `api://soarca` | Application ID URI of that registration. Optional. |
+| AUTH_ENTRA_ALLOWED_CLIENT_IDS | `<client-id>,<client-id>` | Applications allowed to call SOARCA. Empty allows all in the tenant. |
+| AUTH_ENTRA_REQUIRED_USER_SCOPE | `access_as_user` | Delegated scope user tokens must carry. Default is `access_as_user`. |
+| AUTH_ENTRA_ACCEPT_V1 | `false` | Also accept Entra ID v1 tokens. Default is `false`. |
+| AUTH_ENTRA_AUTHORITY | `https://login.microsoftonline.com` | Entra ID login host; change only for national clouds. |
+| AUTH_API_KEYS_FILE | `/etc/soarca/api-keys.json` | JSON file with hashed API keys. Empty disables API keys. |
 
 -----
 

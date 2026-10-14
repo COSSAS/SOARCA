@@ -148,3 +148,58 @@ func TestConcurrentUpdatesToDifferentFieldsBothSurvive(t *testing.T) {
 	assert.Equal(t, config.Dynamic().LogLevel, "debug")
 	assert.Equal(t, config.Dynamic().AllowedOrigins, []string{"https://gui.example"})
 }
+
+func TestLoadAcceptsExistingGauthSettings(t *testing.T) {
+	t.Setenv("AUTH_ENABLED", "true")
+	t.Setenv("OIDC_ISSUER", "https://authentik.example/application/o/soarca/")
+	t.Setenv("OIDC_CLIENT_ID", "soarca")
+
+	config, err := Load()
+	assert.Equal(t, err, nil)
+	assert.Equal(t, config.Static.Auth.OidcEnabled(), true)
+	assert.Equal(t, config.Static.Auth.EntraEnabled(), false)
+	assert.Equal(t, config.Static.Auth.AdminGroup, "soarca_admin")
+}
+
+func TestLoadReadsEntraSettings(t *testing.T) {
+	t.Setenv("AUTH_ENABLED", "true")
+	t.Setenv("AUTH_ENTRA_TENANT_IDS", " tenant-a, tenant-b,, ")
+	t.Setenv("AUTH_ENTRA_API_CLIENT_ID", "api")
+	t.Setenv("AUTH_ENTRA_REQUIRED_USER_SCOPE", "")
+
+	config, err := Load()
+	assert.Equal(t, err, nil)
+	entra := config.Static.Auth.Entra
+	assert.Equal(t, entra.TenantIds, []string{"tenant-a", "tenant-b"})
+	assert.Equal(t, entra.RequiredUserScope, "access_as_user")
+	assert.Equal(t, entra.Authority, "https://login.microsoftonline.com")
+}
+
+func TestLoadAcceptsApiKeysAsOnlyProvider(t *testing.T) {
+	t.Setenv("AUTH_ENABLED", "true")
+	t.Setenv("AUTH_API_KEYS_FILE", "/etc/soarca/keys.json")
+
+	_, err := Load()
+	assert.Equal(t, err, nil)
+}
+
+func TestLoadRejectsHalfConfiguredProviders(t *testing.T) {
+	t.Setenv("AUTH_ENABLED", "true")
+	t.Setenv("OIDC_ISSUER", "https://authentik.example/application/o/soarca/")
+	_, err := Load()
+	assert.NotEqual(t, err, nil)
+
+	t.Setenv("OIDC_ISSUER", "")
+	t.Setenv("AUTH_ENTRA_TENANT_IDS", "tenant-a")
+	_, err = Load()
+	assert.NotEqual(t, err, nil)
+}
+
+func TestLoadIgnoresAuthSettingsWhenAuthDisabled(t *testing.T) {
+	// The shipped docker-compose.yaml sets OIDC_CLIENT_ID with auth disabled.
+	t.Setenv("AUTH_ENABLED", "false")
+	t.Setenv("OIDC_CLIENT_ID", "some client ID")
+
+	_, err := Load()
+	assert.Equal(t, err, nil)
+}
