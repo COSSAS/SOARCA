@@ -44,6 +44,9 @@ func GetPong(g *gin.Context) {
 //	@Produce		json
 //	@success		200	{object}	api.Status
 //	@failure		400	{object}	api.Error
+//	@failure		401	{object}	api.Error
+//	@failure		403	{object}	api.Error
+//	@Security		BearerAuth
 //	@Router			/status [GET]
 func GetApi(g *gin.Context) {
 	status.Uptime.Milliseconds = uint64(time.Since(status.Uptime.Since).Milliseconds())
