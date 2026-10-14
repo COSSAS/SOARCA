@@ -46,12 +46,12 @@ import (
 
 	downstreamReporter "soarca/pkg/reporting/reporter/downstream_reporter"
 
-	"github.com/COSSAS/gauth"
 	"github.com/gin-gonic/gin"
 
 	mongo "soarca/internal/database/mongodb"
 	playbookrepository "soarca/internal/database/playbook"
 	routes "soarca/pkg/api"
+	apiAuth "soarca/pkg/api/auth"
 )
 
 var log *logger.Log
@@ -277,9 +277,10 @@ func initializeCore(app *gin.Engine, configuration *config.Config) error {
 		return configuration.Dynamic().AllowedOrigins
 	})
 
-	err := intializeAuthenticationMiddleware(app, configuration.Static.Auth)
+	// Before any route is registered, so it covers all of them.
+	err := initializeAuthentication(app, configuration.Static.Auth)
 	if err != nil {
-		log.Error("Failed to setup Authentication middleware")
+		log.Error("Failed to set up authentication: ", err)
 		return err
 	}
 	err = mainController.setupDatabase()
@@ -374,24 +375,13 @@ func initializeIntegrationTheHiveReporting(theHive config.TheHive) (downstreamRe
 	return theHiveReporter, nil
 }
 
-func intializeAuthenticationMiddleware(app *gin.Engine, authConfig config.Auth) error {
-	if authConfig.Enabled {
-		// Same settings gauth.DefaultConfig() builds, but from SOARCA's config
-		// instead of gauth reading the environment itself.
-		auth, err := gauth.New(&gauth.Config{
-			Mode:              gauth.ModeVerify,
-			IssuerUri:         authConfig.Issuer,
-			ClientID:          authConfig.ClientId,
-			Provider:          gauth.Authentik,
-			SkipTLSValidation: authConfig.SkipTlsVerify,
-		})
-		if err != nil {
-			log.Error("Failed to initialize authenticator:", err)
-			return err
-		}
-		app.Use(auth.LoadAuthContext())
-		app.Use(auth.Middleware([]string{"soarca_admin"}))
-
+// initializeAuthentication puts every route registered after it behind the
+// authenticator and the route permissions in routes.Permissions.
+func initializeAuthentication(app *gin.Engine, authConfig config.Auth) error {
+	authenticator, err := newAuthenticator(authConfig)
+	if err != nil {
+		return err
 	}
+	app.Use(apiAuth.Protect(authenticator, routes.Permissions))
 	return nil
 }
