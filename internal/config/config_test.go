@@ -2,10 +2,14 @@ package config
 
 import (
 	"encoding/json"
+	"os"
+	"reflect"
+	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
+	"github.com/joho/godotenv"
 )
 
 // patch mirrors what an API handler does with a request body.
@@ -202,4 +206,81 @@ func TestLoadIgnoresAuthSettingsWhenAuthDisabled(t *testing.T) {
 
 	_, err := Load()
 	assert.Equal(t, err, nil)
+}
+
+// envSettings returns every setting SOARCA reads, keyed by its env tag.
+func envSettings() map[string]reflect.StructTag {
+	settings := map[string]reflect.StructTag{}
+	var collect func(typ reflect.Type)
+	collect = func(typ reflect.Type) {
+		for index := 0; index < typ.NumField(); index++ {
+			field := typ.Field(index)
+			if field.Type.Kind() == reflect.Struct {
+				collect(field.Type)
+			} else if name := field.Tag.Get("env"); name != "" {
+				settings[name] = field.Tag
+			}
+		}
+	}
+	collect(reflect.TypeOf(Static{}))
+	collect(reflect.TypeOf(Dynamic{}))
+	return settings
+}
+
+// envExample returns every variable in .env.example, commented out or not,
+// with its value unquoted.
+func envExample(t *testing.T) map[string]string {
+	content, err := os.ReadFile("../../.env.example")
+	assert.Equal(t, err, nil)
+	listed := map[string]string{}
+	for _, match := range regexp.MustCompile(`(?m)^#?\s*([A-Z][A-Z0-9_]+):\s*(.*)$`).FindAllStringSubmatch(string(content), -1) {
+		listed[match[1]] = strings.Trim(strings.TrimSpace(match[2]), `"`)
+	}
+	return listed
+}
+
+// TestEnvExampleListsEverySetting keeps .env.example in step with the
+// structs above: every env tag must appear in it, commented out or not,
+// and it must not list variables SOARCA doesn't read.
+func TestEnvExampleListsEverySetting(t *testing.T) {
+	listed := envExample(t)
+	known := envSettings()
+
+	for name := range known {
+		if _, ok := listed[name]; !ok {
+			t.Errorf("%s is read by SOARCA but missing from .env.example", name)
+		}
+	}
+	for name := range listed {
+		if _, ok := known[name]; !ok {
+			t.Errorf("%s is in .env.example but SOARCA doesn't read it", name)
+		}
+	}
+}
+
+// TestEnvExampleShowsDefaults makes sure .env.example doesn't suggest a
+// default that differs from the code. Settings without a default may hold
+// any example value.
+func TestEnvExampleShowsDefaults(t *testing.T) {
+	listed := envExample(t)
+	for name, tag := range envSettings() {
+		fallback, hasDefault := tag.Lookup("envDefault")
+		value, ok := listed[name]
+		if hasDefault && ok && value != fallback {
+			t.Errorf("%s is %q in .env.example but defaults to %q", name, value, fallback)
+		}
+	}
+}
+
+// TestEnvExampleLoads checks that the example, as shipped, is valid.
+func TestEnvExampleLoads(t *testing.T) {
+	values, err := godotenv.Read("../../.env.example")
+	assert.Equal(t, err, nil)
+	for name, value := range values {
+		t.Setenv(name, value)
+	}
+
+	config, err := Load()
+	assert.Equal(t, err, nil)
+	assert.Equal(t, config.Static.Auth.Issuer, "https://authentikuri:9443/application/o/soarca/")
 }
