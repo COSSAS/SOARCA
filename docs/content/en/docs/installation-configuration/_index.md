@@ -73,18 +73,6 @@ More information on setting up authentication can be found [here](/docs/installa
 | AUTH_ENTRA_AUTHORITY | `https://login.microsoftonline.com` | Entra ID login host; change only for national clouds. |
 | AUTH_API_KEYS_FILE | `/etc/soarca/api-keys.json` | JSON file with hashed API keys. Empty disables API keys. |
 
-`OIDC_CLIENT_SECRET`, `OIDC_REDIRECT_URL` and `COOKIE_SECRET_KEY` are used by [SOARCA-GUI](/docs/soarca-gui/) for signing users in; SOARCA itself doesn't read them.
-
-------------------------|---------------------------------------------|---------------------------------------------------------------------------------------------|
-| AUTH_ENABLED           | `false`                                    | Enable authentication. Default is `false`.                                                  |
-| OIDC_ISSUER            | `https://localhost:9443/application/u/test/` | The OIDC issuer URL.                                                                         |
-| OIDC_CLIENT_ID         | `SOME_CLIENT_ID`                           | Set the OIDC client ID.                                                                     |
-| OIDC_CLIENT_SECRET     | `SOME_CLIENT_SECRET`                       | Set the OIDC client secret.                                                                 |
-| OIDC_REDIRECT_URL      | `http://localhost:8081/auth/soarca_gui/callback` | Set the OIDC redirect URL.                                                                 |
-| COOKIE_SECRET_KEY      | `SOME_COOKIE_SECRET`                       | Optional: Secret key for cookies. Generate using `openssl rand -base64 32` or `head -c 32 /dev/urandom | base64`. |
-| OIDC_SKIP_TLS_VERIFY   | `true`                                     | Set whether to skip TLS verification. Default is `true`.                                    |
-| AUTH_GROUP             | `soarca_admin`                             | Specify the group users must belong to for authentication against SOARCA.                  |
-
 -----
 
 #### Key management system
