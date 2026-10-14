@@ -77,3 +77,17 @@ func TestEveryProviderTogether(t *testing.T) {
 	_, err = authenticator.Authenticate(context.Background(), "")
 	assert.NotEqual(t, err, nil)
 }
+
+func TestAdminApiKeyReachesEveryPermission(t *testing.T) {
+	plaintext, hash, _ := apikey.Generate()
+	path := writeKeys(t, `[{"name":"admin","sha256":"`+hash+`","permissions":["soarca:admin"],"expires":"2999-01-01T00:00:00Z"}]`)
+
+	authenticator, err := newAuthenticator(config.Auth{Enabled: true, ApiKeysFile: path})
+	assert.Equal(t, err, nil)
+
+	principal, err := authenticator.Authenticate(context.Background(), plaintext)
+	assert.Equal(t, err, nil)
+	for _, permission := range roles.All() {
+		assert.Equal(t, principal.Has(permission), true)
+	}
+}

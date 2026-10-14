@@ -15,6 +15,14 @@ func TestHas(t *testing.T) {
 	assert.Equal(t, principal.Has(roles.PlaybookExecute), false)
 }
 
+func TestAdminHasEveryPermission(t *testing.T) {
+	principal := &Principal{Permissions: map[roles.Permission]bool{roles.Admin: true}}
+
+	for _, permission := range roles.All() {
+		assert.Equal(t, principal.Has(permission), true)
+	}
+}
+
 func TestNilPrincipalHasNothing(t *testing.T) {
 	var principal *Principal
 
