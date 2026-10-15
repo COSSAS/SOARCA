@@ -38,6 +38,11 @@ const banner = `
 
 // @title		SOARCA API
 // @version	1.0.0
+//
+// @securityDefinitions.apikey	BearerAuth
+// @in							header
+// @name						Authorization
+// @description				"Bearer " followed by an access token or API key. Not needed when AUTH_ENABLED is false.
 func main() {
 	fmt.Print(banner)
 	log.Info("Version: ", Version)

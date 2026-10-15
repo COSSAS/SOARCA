@@ -2,7 +2,7 @@ package oidc
 
 import "soarca/pkg/auth/roles"
 
-// DefaultAdminGroup is the group that gauth-based SOARCA required for all
+// DefaultAdminGroup is the group that older SOARCA versions required for all
 // access. It keeps full access.
 const DefaultAdminGroup = "soarca_admin"
 

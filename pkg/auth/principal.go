@@ -39,9 +39,10 @@ type Principal struct {
 	GroupsIncomplete bool `json:"groups_incomplete,omitempty"`
 }
 
-// Has reports whether the principal holds permission.
+// Has reports whether the principal holds permission. roles.Admin implies
+// every permission, whichever provider granted it.
 func (principal *Principal) Has(permission roles.Permission) bool {
-	return principal != nil && principal.Permissions[permission]
+	return principal != nil && (principal.Permissions[permission] || principal.Permissions[roles.Admin])
 }
 
 // Self returns the subject that identifies the caller itself.
