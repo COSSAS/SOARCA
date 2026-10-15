@@ -75,8 +75,8 @@ type Auth struct {
 	Issuer        string `env:"OIDC_ISSUER"`
 	ClientId      string `env:"OIDC_CLIENT_ID"`
 	SkipTlsVerify bool   `env:"OIDC_SKIP_TLS_VERIFY" envDefault:"false"`
-	// Members of AUTH_GROUP get every permission.
-	AdminGroup string `env:"AUTH_GROUP" envDefault:"soarca_admin"`
+	// Members of AUTH_ADMIN_GROUP get every permission.
+	AdminGroup string `env:"AUTH_ADMIN_GROUP" envDefault:"soarca_admin"`
 	Entra      Entra
 	// JSON file with hashed static API keys. Empty disables API keys.
 	ApiKeysFile string `env:"AUTH_API_KEYS_FILE"`
