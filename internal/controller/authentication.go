@@ -1,11 +1,15 @@
 package controller
 
 import (
+	"fmt"
+	"strings"
+
 	"soarca/internal/config"
 	"soarca/pkg/auth"
 	"soarca/pkg/auth/providers/apikey"
 	"soarca/pkg/auth/providers/entra"
 	"soarca/pkg/auth/providers/oidc"
+	"soarca/pkg/models/api"
 )
 
 // newAuthenticator builds the authenticator for every provider that
@@ -60,4 +64,32 @@ func newAuthenticator(authConfig config.Auth) (auth.IAuthenticator, error) {
 	}
 
 	return auth.New(providers)
+}
+
+// newAuthConfig lists the providers users can sign in with.
+func newAuthConfig(authConfig config.Auth) api.AuthConfig {
+	published := api.AuthConfig{AuthenticationEnabled: authConfig.Enabled, Providers: []api.AuthProvider{}}
+	if !authConfig.Enabled {
+		return published
+	}
+	if authConfig.OidcEnabled() {
+		published.Providers = append(published.Providers, api.AuthProvider{
+			Id:       "oidc",
+			Issuer:   authConfig.Issuer,
+			ClientId: authConfig.ClientId,
+			Scopes:   []string{},
+		})
+	}
+	entraConfig := authConfig.Entra
+	if authConfig.EntraEnabled() && entraConfig.PublicClientId != "" {
+		for _, tenantId := range entraConfig.TenantIds {
+			published.Providers = append(published.Providers, api.AuthProvider{
+				Id:       entra.Name,
+				Issuer:   fmt.Sprintf("%s/%s/v2.0", strings.TrimRight(entraConfig.Authority, "/"), tenantId),
+				ClientId: entraConfig.PublicClientId,
+				Scopes:   []string{entraConfig.UserScope()},
+			})
+		}
+	}
+	return published
 }

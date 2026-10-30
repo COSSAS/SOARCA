@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -91,6 +92,23 @@ type Entra struct {
 	RequiredUserScope string   `env:"AUTH_ENTRA_REQUIRED_USER_SCOPE" envDefault:"access_as_user"`
 	AcceptV1Tokens    bool     `env:"AUTH_ENTRA_ACCEPT_V1" envDefault:"false"`
 	Authority         string   `env:"AUTH_ENTRA_AUTHORITY" envDefault:"https://login.microsoftonline.com"`
+	// PublicClientId is the public client app registration users sign in
+	// with. It is published on /auth/config. Empty offers no Entra sign-in.
+	PublicClientId string `env:"AUTH_ENTRA_PUBLIC_CLIENT_ID"`
+}
+
+// UserScope is the API scope users request, so their tokens pass the
+// RequiredUserScope check.
+func (entra Entra) UserScope() string {
+	appIdUri := entra.ApiAppIdUri
+	if appIdUri == "" {
+		appIdUri = "api://" + entra.ApiClientId
+	}
+	scope := entra.RequiredUserScope
+	if scope == "" {
+		scope = ".default"
+	}
+	return strings.TrimSuffix(appIdUri, "/") + "/" + scope
 }
 
 // OidcEnabled reports whether a generic OIDC provider is configured.
@@ -118,6 +136,13 @@ func (auth Auth) validate() []error {
 	}
 	if !auth.OidcEnabled() && !auth.EntraEnabled() && auth.ApiKeysFile == "" {
 		errs = append(errs, errors.New("AUTH_ENABLED=true requires OIDC_ISSUER, AUTH_ENTRA_TENANT_IDS or AUTH_API_KEYS_FILE"))
+	}
+	publicClientId := auth.Entra.PublicClientId
+	if publicClientId != "" && !auth.EntraEnabled() {
+		errs = append(errs, errors.New("AUTH_ENTRA_PUBLIC_CLIENT_ID requires AUTH_ENTRA_TENANT_IDS and AUTH_ENTRA_API_CLIENT_ID"))
+	}
+	if publicClientId != "" && len(auth.Entra.AllowedClientIds) > 0 && !slices.Contains(auth.Entra.AllowedClientIds, publicClientId) {
+		errs = append(errs, errors.New("AUTH_ENTRA_ALLOWED_CLIENT_IDS must include AUTH_ENTRA_PUBLIC_CLIENT_ID"))
 	}
 	return errs
 }

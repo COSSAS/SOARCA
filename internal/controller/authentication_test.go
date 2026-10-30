@@ -10,6 +10,7 @@ import (
 	"soarca/pkg/auth"
 	"soarca/pkg/auth/providers/apikey"
 	"soarca/pkg/auth/roles"
+	"soarca/pkg/models/api"
 
 	"github.com/go-playground/assert/v2"
 )
@@ -90,4 +91,33 @@ func TestAdminApiKeyReachesEveryPermission(t *testing.T) {
 	for _, permission := range roles.All() {
 		assert.Equal(t, principal.Has(permission), true)
 	}
+}
+
+func TestAuthConfigPublishesEveryProviderUsersCanSignInWith(t *testing.T) {
+	authConfig := config.Auth{
+		Enabled:  true,
+		Issuer:   "https://authentik.example.com/application/o/soarca/",
+		ClientId: "soarca",
+		Entra: config.Entra{
+			TenantIds:         []string{"tenant-a", "tenant-b"},
+			ApiClientId:       "api",
+			RequiredUserScope: "access_as_user",
+			Authority:         "https://login.microsoftonline.com/",
+			PublicClientId:    "public",
+		},
+	}
+
+	published := newAuthConfig(authConfig)
+	assert.Equal(t, published.AuthenticationEnabled, true)
+	assert.Equal(t, published.Providers, []api.AuthProvider{
+		{Id: "oidc", Issuer: "https://authentik.example.com/application/o/soarca/", ClientId: "soarca", Scopes: []string{}},
+		{Id: "entra", Issuer: "https://login.microsoftonline.com/tenant-a/v2.0", ClientId: "public", Scopes: []string{"api://api/access_as_user"}},
+		{Id: "entra", Issuer: "https://login.microsoftonline.com/tenant-b/v2.0", ClientId: "public", Scopes: []string{"api://api/access_as_user"}},
+	})
+
+	authConfig.Entra.PublicClientId = ""
+	assert.Equal(t, len(newAuthConfig(authConfig).Providers), 1)
+
+	authConfig.Enabled = false
+	assert.Equal(t, newAuthConfig(authConfig).Providers, []api.AuthProvider{})
 }
