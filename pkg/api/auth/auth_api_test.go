@@ -97,6 +97,9 @@ func getPermissions(t *testing.T, authenticator auth.IAuthenticator, authorizati
 func TestPrincipalPermissionsListsWhatTheCallerHolds(t *testing.T) {
 	executorWithProvider := *executor
 	executorWithProvider.Provider = "entra"
+	executorWithProvider.Permissions = map[roles.Permission]bool{
+		roles.PrincipalReader: true, roles.PlaybookRead: true, roles.PlaybookExecute: true,
+	}
 	authenticator := authenticatorFor(map[string]*auth.Principal{
 		"executor": &executorWithProvider,
 		"admin":    {Provider: "authentik", Subjects: []string{"authentik:user:admin"}, Permissions: map[roles.Permission]bool{roles.Admin: true}},
@@ -108,12 +111,12 @@ func TestPrincipalPermissionsListsWhatTheCallerHolds(t *testing.T) {
 	assert.Equal(t, body, api.PrincipalPermissions{
 		Subject:     "entra:tenant:app:terminal",
 		Provider:    "entra",
-		Permissions: []string{"playbook:read", "playbook:execute"},
+		Permissions: []string{"principal:read", "playbook:read", "playbook:execute"},
 	})
 
 	// soarca:admin is expanded, so clients don't need to know what it implies.
 	_, body = getPermissions(t, authenticator, "Bearer admin")
-	assert.Equal(t, body.Permissions, []string{"status:read", "playbook:read", "playbook:write", "playbook:execute", "soarca:admin"})
+	assert.Equal(t, body.Permissions, []string{"status:read", "principal:read", "playbook:read", "playbook:write", "playbook:execute", "soarca:admin"})
 
 	// Without any permission the answer is a 403, which tells a client the
 	// caller signed in but has no access to SOARCA.

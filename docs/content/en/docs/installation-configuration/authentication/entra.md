@@ -32,9 +32,9 @@ One registration represents SOARCA. Everything that calls SOARCA gets its own re
 
 | App role value | SOARCA permissions |
 |---|---|
-| `Playbook.Read` | `playbook:read` |
-| `Playbook.Write` | `playbook:read`, `playbook:write` |
-| `Playbook.Execute` | `playbook:read`, `playbook:execute` |
+| `Playbook.Read` | `principal:read`, `playbook:read` |
+| `Playbook.Write` | `principal:read`, `playbook:read`, `playbook:write` |
+| `Playbook.Execute` | `principal:read`, `playbook:read`, `playbook:execute` |
 | `SOARCA.Admin` | all permissions |
 
 The values are case-sensitive and must match exactly.

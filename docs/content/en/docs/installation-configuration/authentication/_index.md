@@ -21,7 +21,7 @@ You can enable any combination. SOARCA looks at each credential and hands it to 
 
 ## Permissions
 
-SOARCA grants access through five permissions. Each identity provider maps its own roles or groups onto them; see the provider pages below for the exact names.
+SOARCA grants access through six permissions. Each identity provider maps its own roles or groups onto them; see the provider pages below for the exact names.
 
 | Permission | Allows |
 |---|---|
@@ -29,15 +29,17 @@ SOARCA grants access through five permissions. Each identity provider maps its o
 | `playbook:write` | Creating, updating and deleting playbooks |
 | `playbook:execute` | Triggering playbooks and answering manual steps |
 | `status:read` | Read SOARCA status API |
+| `principal:read` | Reading your own permissions, so a client knows what to show |
 | `soarca:admin` | Everything, including key management |
 
-Every role that grants `playbook:write` or `playbook:execute` also grants `playbook:read`.
+Every role grants `principal:read`, and every role that grants `playbook:write` or `playbook:execute` also grants `playbook:read`.
 
 | Route | Required permission |
 |---|---|
 | `GET /playbook/`, `GET /playbook/meta/`, `GET /playbook/:id` | `playbook:read` |
 | `POST /playbook/`, `PUT /playbook/:id`, `DELETE /playbook/:id` | `playbook:write` |
-| `GET /reporter/`, `GET /reporter/:id`, `GET /principal/permissions` | `playbook:read` |
+| `GET /reporter/`, `GET /reporter/:id` | `playbook:read` |
+| `GET /principal/permissions` | `principal:read` |
 | `GET /status/` | `status:read` |
 | `GET /status/ping`, `GET /.well-known/oauth-protected-resource` | None (public) |
 | `POST /trigger/playbook`, `POST /trigger/playbook/:id` | `playbook:execute` |
@@ -100,13 +102,13 @@ The document contains your Entra ID tenant IDs. They aren't secret (Entra ID pub
 {
   "subject": "entra:11111111-1111-1111-1111-111111111111:user:3f2c…",
   "provider": "entra",
-  "permissions": ["playbook:read", "playbook:execute"]
+  "permissions": ["principal:read", "playbook:read", "playbook:execute"]
 }
 ```
 
 `soarca:admin` is expanded, so an administrator gets the full list and clients don't need to know which permission implies which.
 
-The endpoint needs `playbook:read`, which every role grants. A caller that signed in but holds no permission gets `403 Forbidden`, which clients can show as "no access to SOARCA". An API key that only holds `playbook:execute` can't call it.
+The endpoint needs `principal:read`, which every role grants. A caller that signed in but holds no role gets `403 Forbidden`, which clients can show as "no access to SOARCA". API keys only get it when it is listed in the key's permissions.
 
 ## Setting up a provider
 

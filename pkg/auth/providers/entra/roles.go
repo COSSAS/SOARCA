@@ -6,9 +6,9 @@ import "soarca/pkg/auth/roles"
 // registration in Entra ID to SOARCA permissions.
 func DefaultRoles() roles.RoleMap {
 	return roles.RoleMap{
-		"Playbook.Read":    {roles.PlaybookRead},
-		"Playbook.Write":   {roles.PlaybookRead, roles.PlaybookWrite},
-		"Playbook.Execute": {roles.PlaybookRead, roles.PlaybookExecute},
+		"Playbook.Read":    {roles.PrincipalReader, roles.PlaybookRead},
+		"Playbook.Write":   {roles.PrincipalReader, roles.PlaybookRead, roles.PlaybookWrite},
+		"Playbook.Execute": {roles.PrincipalReader, roles.PlaybookRead, roles.PlaybookExecute},
 		"SOARCA.Admin":     roles.All(),
 	}
 }

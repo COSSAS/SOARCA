@@ -9,6 +9,7 @@ type Permission string
 
 const (
 	StatusReader    Permission = "status:read"
+	PrincipalReader Permission = "principal:read"
 	PlaybookRead    Permission = "playbook:read"
 	PlaybookWrite   Permission = "playbook:write"
 	PlaybookExecute Permission = "playbook:execute"
@@ -17,7 +18,7 @@ const (
 
 // All returns every permission.
 func All() []Permission {
-	return []Permission{StatusReader, PlaybookRead, PlaybookWrite, PlaybookExecute, Admin}
+	return []Permission{StatusReader, PrincipalReader, PlaybookRead, PlaybookWrite, PlaybookExecute, Admin}
 }
 
 // RoleMap maps a role or group name from an identity provider to the

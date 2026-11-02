@@ -38,7 +38,7 @@ func TestAppToken(t *testing.T) {
 	assert.Equal(t, principal.ClientId, terminalApp)
 	assert.Equal(t, principal.Subject, "sp-oid")
 	assert.Equal(t, principal.Self(), "entra:"+tenant+":app:"+terminalApp)
-	assert.Equal(t, principal.Permissions, map[roles.Permission]bool{roles.PlaybookRead: true, roles.PlaybookExecute: true})
+	assert.Equal(t, principal.Permissions, map[roles.Permission]bool{roles.PrincipalReader: true, roles.PlaybookRead: true, roles.PlaybookExecute: true})
 	assert.Equal(t, principal.ExpiresAt, token.Expiry)
 }
 

@@ -34,7 +34,7 @@ func TestEmptyRoleMapGrantsNothing(t *testing.T) {
 func TestAllListsEveryPermission(t *testing.T) {
 	granted := testRoles.Permissions([]string{"admin"})
 
-	assert.Equal(t, len(granted), 5)
+	assert.Equal(t, len(granted), 6)
 	for _, permission := range All() {
 		assert.Equal(t, granted[permission], true)
 	}
