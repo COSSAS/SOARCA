@@ -113,7 +113,7 @@ func TestPrincipalPermissionsListsWhatTheCallerHolds(t *testing.T) {
 
 	// soarca:admin is expanded, so clients don't need to know what it implies.
 	_, body = getPermissions(t, authenticator, "Bearer admin")
-	assert.Equal(t, body.Permissions, []string{"playbook:read", "playbook:write", "playbook:execute", "soarca:admin"})
+	assert.Equal(t, body.Permissions, []string{"status:read", "playbook:read", "playbook:write", "playbook:execute", "soarca:admin"})
 
 	// Without any permission the answer is a 403, which tells a client the
 	// caller signed in but has no access to SOARCA.

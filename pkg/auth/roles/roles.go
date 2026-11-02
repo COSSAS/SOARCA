@@ -17,7 +17,7 @@ const (
 
 // All returns every permission.
 func All() []Permission {
-	return []Permission{PlaybookRead, PlaybookWrite, PlaybookExecute, Admin}
+	return []Permission{StatusReader, PlaybookRead, PlaybookWrite, PlaybookExecute, Admin}
 }
 
 // RoleMap maps a role or group name from an identity provider to the

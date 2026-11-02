@@ -21,11 +21,11 @@ You can enable any combination. SOARCA looks at each credential and hands it to 
 
 ## Permissions
 
-SOARCA grants access through four permissions. Each identity provider maps its own roles or groups onto them; see the provider pages below for the exact names.
+SOARCA grants access through five permissions. Each identity provider maps its own roles or groups onto them; see the provider pages below for the exact names.
 
 | Permission | Allows |
 |---|---|
-| `playbook:read` | Reading playbooks, execution reports and status |
+| `playbook:read` | Reading playbooks and execution reports |
 | `playbook:write` | Creating, updating and deleting playbooks |
 | `playbook:execute` | Triggering playbooks and answering manual steps |
 | `status:read` | Read SOARCA status API |
