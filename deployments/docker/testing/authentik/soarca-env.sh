@@ -7,4 +7,4 @@ AUTH_ENABLED=true
 OIDC_ISSUER=http://localhost:9000/application/o/soarca/
 OIDC_CLIENT_ID=soarca
 OIDC_SKIP_TLS_VERIFY=false
-AUTH_GROUP=soarca_admin
+AUTH_ADMIN_GROUP=soarca_admin
