@@ -1,7 +1,5 @@
 package api
 
-import "soarca/pkg/auth"
-
 // ProtectedResourceMetadata describes SOARCA as an OAuth protected resource
 // (RFC 9728). Clients read it to learn which identity providers SOARCA
 // accepts tokens from.
@@ -16,6 +14,14 @@ type ProtectedResourceMetadata struct {
 	BearerMethodsSupported []string `json:"bearer_methods_supported"`
 }
 
-type AuthUser struct {
-	Principal *auth.Principal `json:"principal"`
+// PrincipalPermissions is what the caller may do in SOARCA.
+type PrincipalPermissions struct {
+	// Subject identifies the caller across providers, e.g.
+	// "entra:<tenant>:user:<id>".
+	Subject string `json:"subject"`
+	// Provider names the identity provider that accepted the credential.
+	Provider string `json:"provider"`
+	// Permissions lists every permission the caller holds, with what
+	// soarca:admin implies already expanded.
+	Permissions []string `json:"permissions"`
 }

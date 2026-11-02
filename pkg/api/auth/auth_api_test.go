@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"soarca/pkg/auth"
+	"soarca/pkg/auth/roles"
 	"soarca/pkg/models/api"
 
 	"github.com/gin-gonic/gin"
@@ -75,4 +77,47 @@ func TestUnauthenticatedResponseUsesTheConfiguredResource(t *testing.T) {
 	assert.Equal(t, recorder.Code, http.StatusUnauthorized)
 	assert.Equal(t, recorder.Header().Get("WWW-Authenticate"),
 		`Bearer realm="soarca", resource_metadata="https://soarca.example.com/.well-known/oauth-protected-resource"`)
+}
+
+func getPermissions(t *testing.T, authenticator auth.IAuthenticator, authorization string) (int, api.PrincipalPermissions) {
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	router.Use(Protect(authenticator, testPolicy, ""))
+	router.GET("/principal/permissions", NewAuthHandler(nil, nil, "").GetPrincipalPermissions)
+	recorder := serve(router, http.MethodGet, "/principal/permissions", authorization)
+
+	var body api.PrincipalPermissions
+	if recorder.Code == http.StatusOK {
+		assert.Equal(t, recorder.Header().Get("Cache-Control"), "no-store")
+		assert.Equal(t, json.Unmarshal(recorder.Body.Bytes(), &body), nil)
+	}
+	return recorder.Code, body
+}
+
+func TestPrincipalPermissionsListsWhatTheCallerHolds(t *testing.T) {
+	executorWithProvider := *executor
+	executorWithProvider.Provider = "entra"
+	authenticator := authenticatorFor(map[string]*auth.Principal{
+		"executor": &executorWithProvider,
+		"admin":    {Provider: "authentik", Subjects: []string{"authentik:user:admin"}, Permissions: map[roles.Permission]bool{roles.Admin: true}},
+		"nobody":   {Provider: "apikey", Subjects: []string{"apikey:app:nobody"}},
+	})
+
+	code, body := getPermissions(t, authenticator, "Bearer executor")
+	assert.Equal(t, code, http.StatusOK)
+	assert.Equal(t, body, api.PrincipalPermissions{
+		Subject:     "entra:tenant:app:terminal",
+		Provider:    "entra",
+		Permissions: []string{"playbook:read", "playbook:execute"},
+	})
+
+	// soarca:admin is expanded, so clients don't need to know what it implies.
+	_, body = getPermissions(t, authenticator, "Bearer admin")
+	assert.Equal(t, body.Permissions, []string{"playbook:read", "playbook:write", "playbook:execute", "soarca:admin"})
+
+	_, body = getPermissions(t, authenticator, "Bearer nobody")
+	assert.Equal(t, body.Permissions, []string{})
+
+	code, _ = getPermissions(t, authenticator, "")
+	assert.Equal(t, code, http.StatusUnauthorized)
 }

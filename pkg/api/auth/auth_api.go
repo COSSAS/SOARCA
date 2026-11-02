@@ -3,6 +3,7 @@ package auth
 import (
 	"net/http"
 
+	"soarca/pkg/auth/roles"
 	"soarca/pkg/models/api"
 
 	"github.com/gin-gonic/gin"
@@ -44,16 +45,29 @@ func (handler *AuthHandler) GetProtectedResourceMetadata(ginContext *gin.Context
 	})
 }
 
-// GetMe returns the caller.
+// GetPrincipalPermissions returns the permissions of the caller, whether a
+// user, an application or an API key, so clients can hide what it may not
+// do. SOARCA still checks every permission on each call.
 //
-//	@Summary	gets the signed-in caller
+//	@Summary	gets the permissions of the caller
 //	@Tags		auth
 //	@Produce	json
-//	@success	200	{object}	api.AuthUser
+//	@success	200	{object}	api.PrincipalPermissions
 //	@failure	401	{object}	api.Error
 //	@Security	BearerAuth
-//	@Router		/auth/me [GET]
-func (handler *AuthHandler) GetMe(ginContext *gin.Context) {
+//	@Router		/principal/permissions [GET]
+func (handler *AuthHandler) GetPrincipalPermissions(ginContext *gin.Context) {
+	principal := PrincipalFromContext(ginContext)
+	permissions := []string{}
+	for _, permission := range roles.All() {
+		if principal.Has(permission) {
+			permissions = append(permissions, string(permission))
+		}
+	}
 	ginContext.Header("Cache-Control", "no-store")
-	ginContext.JSON(http.StatusOK, api.AuthUser{Principal: PrincipalFromContext(ginContext)})
+	ginContext.JSON(http.StatusOK, api.PrincipalPermissions{
+		Subject:     principal.Self(),
+		Provider:    principal.Provider,
+		Permissions: permissions,
+	})
 }

@@ -187,11 +187,11 @@ func KeyManagementRoutes(route *gin.Engine, keyManagementHandler *keymanagement_
 }
 
 // GET     /.well-known/oauth-protected-resource
-// GET     /auth/me
+// GET     /principal/permissions
 func AuthRoutes(route *gin.Engine, authHandler *apiAuth.AuthHandler) {
 	route.GET(apiAuth.ProtectedResourcePath, authHandler.GetProtectedResourceMetadata)
-	authRoutes := route.Group("/auth")
+	principalRoutes := route.Group("/principal")
 	{
-		authRoutes.GET("/me", authHandler.GetMe)
+		principalRoutes.GET("/permissions", authHandler.GetPrincipalPermissions)
 	}
 }

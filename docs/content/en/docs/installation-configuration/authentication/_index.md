@@ -38,7 +38,7 @@ Every role that grants `playbook:write` or `playbook:execute` also grants `playb
 | `GET /playbook/`, `GET /playbook/meta/`, `GET /playbook/:id` | `playbook:read` |
 | `POST /playbook/`, `PUT /playbook/:id`, `DELETE /playbook/:id` | `playbook:write` |
 | `GET /reporter/`, `GET /reporter/:id` | `playbook:read` |
-| `GET /status/`, `GET /auth/me` | Any valid credential |
+| `GET /status/`, `GET /principal/permissions` | Any valid credential |
 | `GET /status/ping`, `GET /.well-known/oauth-protected-resource` | None (public) |
 | `POST /trigger/playbook`, `POST /trigger/playbook/:id` | `playbook:execute` |
 | `GET /manual/`, `GET /manual/:exec_id/:step_id`, `POST /manual/continue` | `playbook:execute` |
@@ -91,6 +91,20 @@ WWW-Authenticate: Bearer realm="soarca", resource_metadata="https://soarca.examp
 {{% alert title="Public information" color="info" %}}
 The document contains your Entra ID tenant IDs. They aren't secret (Entra ID publishes them through its own discovery documents), but anyone who can reach SOARCA can read them.
 {{% /alert %}}
+
+## Checking what a caller may do
+
+`GET /principal/permissions` returns the permissions of whoever calls it: a user, an application or an API key. Clients such as SOARCA-GUI use it to hide actions the caller can't perform. SOARCA still checks the permission on every call.
+
+```json
+{
+  "subject": "entra:11111111-1111-1111-1111-111111111111:user:3f2c…",
+  "provider": "entra",
+  "permissions": ["playbook:read", "playbook:execute"]
+}
+```
+
+`soarca:admin` is expanded, so an administrator gets the full list and clients don't need to know which permission implies which.
 
 ## Setting up a provider
 

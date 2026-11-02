@@ -17,10 +17,10 @@ var admin = &auth.Principal{
 }
 
 var testPolicy = Policy{
-	RouteKey(http.MethodGet, "/status/ping"):       {Public: true},
-	RouteKey(http.MethodGet, "/auth/me"):           {AuthenticatedOnly: true},
-	RouteKey(http.MethodGet, "/playbook/:id"):      {Permission: roles.PlaybookRead},
-	RouteKey(http.MethodPost, "/trigger/playbook"): {Permission: roles.PlaybookExecute},
+	RouteKey(http.MethodGet, "/status/ping"):           {Public: true},
+	RouteKey(http.MethodGet, "/principal/permissions"): {AuthenticatedOnly: true},
+	RouteKey(http.MethodGet, "/playbook/:id"):          {Permission: roles.PlaybookRead},
+	RouteKey(http.MethodPost, "/trigger/playbook"):     {Permission: roles.PlaybookExecute},
 }
 
 func newProtectedRouter(authenticator auth.IAuthenticator) *gin.Engine {
@@ -32,7 +32,7 @@ func newProtectedRouter(authenticator auth.IAuthenticator) *gin.Engine {
 	}
 	router.GET("/status/ping", func(ginContext *gin.Context) { ginContext.String(http.StatusOK, "pong") })
 	router.GET("/playbook/:id", ok)
-	router.GET("/auth/me", ok)
+	router.GET("/principal/permissions", ok)
 	router.POST("/trigger/playbook", ok)
 	router.GET("/unlisted", ok)
 	return router
@@ -63,8 +63,8 @@ func TestAuthenticatedOnlyRouteNeedsNoPermission(t *testing.T) {
 	nobody := &auth.Principal{Subjects: []string{"oidc:user:nobody"}}
 	router := newProtectedRouter(authenticatorFor(map[string]*auth.Principal{"nobody": nobody}))
 
-	assert.Equal(t, serve(router, http.MethodGet, "/auth/me", "").Code, http.StatusUnauthorized)
-	assert.Equal(t, serve(router, http.MethodGet, "/auth/me", "Bearer nobody").Code, http.StatusOK)
+	assert.Equal(t, serve(router, http.MethodGet, "/principal/permissions", "").Code, http.StatusUnauthorized)
+	assert.Equal(t, serve(router, http.MethodGet, "/principal/permissions", "Bearer nobody").Code, http.StatusOK)
 }
 
 func TestRouteWithoutRuleNeedsAdmin(t *testing.T) {
