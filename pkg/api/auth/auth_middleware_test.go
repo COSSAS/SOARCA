@@ -29,7 +29,7 @@ var reader = &auth.Principal{
 func newRouter(authenticator auth.IAuthenticator) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	routes := router.Group("/", Middleware(authenticator))
+	routes := router.Group("/", Middleware(authenticator, ""))
 	routes.GET("/playbook/", RequireAll(roles.PlaybookRead), func(ginContext *gin.Context) {
 		ginContext.String(http.StatusOK, PrincipalFromContext(ginContext).Self())
 	})
@@ -93,7 +93,8 @@ func TestErrorUsesTheSoarcaErrorFormat(t *testing.T) {
 
 	recorder := serve(router, http.MethodGet, "/playbook/", "")
 
-	assert.Equal(t, recorder.Header().Get("WWW-Authenticate"), `Bearer realm="soarca"`)
+	assert.Equal(t, recorder.Header().Get("WWW-Authenticate"),
+		`Bearer realm="soarca", resource_metadata="http://example.com/.well-known/oauth-protected-resource"`)
 	var body map[string]string
 	assert.Equal(t, json.Unmarshal(recorder.Body.Bytes(), &body), nil)
 	assert.Equal(t, body["status"], "401")

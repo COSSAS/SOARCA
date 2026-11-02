@@ -27,3 +27,7 @@ func TestAnonymousReturnsAFreshPrincipal(t *testing.T) {
 	second, _ := auth.Anonymous{}.Authenticate(context.Background(), "")
 	assert.Equal(t, second.Has(roles.Admin), true)
 }
+
+func TestAnonymousHasNoIssuers(t *testing.T) {
+	assert.Equal(t, auth.Anonymous{}.Issuers(), []string{})
+}

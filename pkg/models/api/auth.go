@@ -2,20 +2,18 @@ package api
 
 import "soarca/pkg/auth"
 
-// AuthProvider is an identity provider users can sign in with, using the
-// authorization code flow with PKCE. ClientId is a public client; there is
-// no secret.
-type AuthProvider struct {
-	// Id matches the provider of the resulting principal.
-	Id       string   `json:"id"`
-	Issuer   string   `json:"issuer"`
-	ClientId string   `json:"client_id"`
-	Scopes   []string `json:"scopes"`
-}
-
-type AuthConfig struct {
-	AuthenticationEnabled bool           `json:"authentication_enabled"`
-	Providers             []AuthProvider `json:"providers"`
+// ProtectedResourceMetadata describes SOARCA as an OAuth protected resource
+// (RFC 9728). Clients read it to learn which identity providers SOARCA
+// accepts tokens from.
+type ProtectedResourceMetadata struct {
+	// Resource is SOARCA's public URL.
+	Resource     string `json:"resource"`
+	ResourceName string `json:"resource_name"`
+	// AuthorizationServers lists the issuer of every identity provider
+	// SOARCA accepts tokens from. Empty when authentication is disabled.
+	AuthorizationServers   []string `json:"authorization_servers"`
+	ScopesSupported        []string `json:"scopes_supported,omitempty"`
+	BearerMethodsSupported []string `json:"bearer_methods_supported"`
 }
 
 type AuthUser struct {

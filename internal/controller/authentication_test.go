@@ -10,7 +10,6 @@ import (
 	"soarca/pkg/auth"
 	"soarca/pkg/auth/providers/apikey"
 	"soarca/pkg/auth/roles"
-	"soarca/pkg/models/api"
 
 	"github.com/go-playground/assert/v2"
 )
@@ -93,31 +92,46 @@ func TestAdminApiKeyReachesEveryPermission(t *testing.T) {
 	}
 }
 
-func TestAuthConfigPublishesEveryProviderUsersCanSignInWith(t *testing.T) {
+func TestMetadataListsEveryIssuerTheAuthenticatorAccepts(t *testing.T) {
+	_, hash, _ := apikey.Generate()
 	authConfig := config.Auth{
-		Enabled:  true,
-		Issuer:   "https://authentik.example.com/application/o/soarca/",
-		ClientId: "soarca",
+		Enabled:    true,
+		Issuer:     "https://authentik.example.com/application/o/soarca/",
+		ClientId:   "soarca",
+		AdminGroup: "soarca_admin",
 		Entra: config.Entra{
 			TenantIds:         []string{"tenant-a", "tenant-b"},
 			ApiClientId:       "api",
 			RequiredUserScope: "access_as_user",
-			Authority:         "https://login.microsoftonline.com/",
-			PublicClientId:    "public",
+			AcceptV1Tokens:    true,
+			Authority:         "https://login.microsoftonline.com",
 		},
+		ApiKeysFile: writeKeys(t, `[{"name":"webhook","sha256":"`+hash+`","permissions":["playbook:read"],"expires":"2999-01-01T00:00:00Z"}]`),
 	}
 
-	published := newAuthConfig(authConfig)
-	assert.Equal(t, published.AuthenticationEnabled, true)
-	assert.Equal(t, published.Providers, []api.AuthProvider{
-		{Id: "oidc", Issuer: "https://authentik.example.com/application/o/soarca/", ClientId: "soarca", Scopes: []string{}},
-		{Id: "entra", Issuer: "https://login.microsoftonline.com/tenant-a/v2.0", ClientId: "public", Scopes: []string{"api://api/access_as_user"}},
-		{Id: "entra", Issuer: "https://login.microsoftonline.com/tenant-b/v2.0", ClientId: "public", Scopes: []string{"api://api/access_as_user"}},
+	authenticator, err := newAuthenticator(authConfig)
+	assert.Equal(t, err, nil)
+	// API keys aren't listed: nobody signs in with them.
+	assert.Equal(t, authenticator.Issuers(), []string{
+		"https://authentik.example.com/application/o/soarca/",
+		"https://login.microsoftonline.com/tenant-a/v2.0",
+		"https://login.microsoftonline.com/tenant-b/v2.0",
+		"https://sts.windows.net/tenant-a/",
+		"https://sts.windows.net/tenant-b/",
 	})
+	assert.Equal(t, scopesSupported(authConfig), []string{"api://api/access_as_user"})
 
-	authConfig.Entra.PublicClientId = ""
-	assert.Equal(t, len(newAuthConfig(authConfig).Providers), 1)
+	authConfig.Entra = config.Entra{}
+	assert.Equal(t, len(scopesSupported(authConfig)), 0)
+}
 
-	authConfig.Enabled = false
-	assert.Equal(t, newAuthConfig(authConfig).Providers, []api.AuthProvider{})
+func TestMetadataWithAuthDisabledListsNothing(t *testing.T) {
+	authConfig := config.Auth{
+		Enabled: false,
+		Entra:   config.Entra{TenantIds: []string{"tenant-a"}, ApiClientId: "api"},
+	}
+	authenticator, err := newAuthenticator(authConfig)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, authenticator.Issuers(), []string{})
+	assert.Equal(t, len(scopesSupported(authConfig)), 0)
 }

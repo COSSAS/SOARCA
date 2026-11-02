@@ -26,3 +26,8 @@ func (anonymous Anonymous) Authenticate(ctx context.Context, credential string) 
 		Subjects:    []string{AnonymousName},
 	}, nil
 }
+
+// Issuers is empty: with authentication disabled nobody needs to sign in.
+func (anonymous Anonymous) Issuers() []string {
+	return []string{}
+}

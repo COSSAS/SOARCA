@@ -17,6 +17,12 @@ func (authenticator *MockAuthenticator) Authenticate(ctx context.Context, creden
 	return principal, args.Error(1)
 }
 
+func (authenticator *MockAuthenticator) Issuers() []string {
+	args := authenticator.Called()
+	issuers, _ := args.Get(0).([]string)
+	return issuers
+}
+
 type MockIdentityProvider struct {
 	mock.Mock
 }

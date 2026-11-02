@@ -26,7 +26,7 @@ var testPolicy = Policy{
 func newProtectedRouter(authenticator auth.IAuthenticator) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	router.Use(Protect(authenticator, testPolicy))
+	router.Use(Protect(authenticator, testPolicy, ""))
 	ok := func(ginContext *gin.Context) {
 		ginContext.String(http.StatusOK, PrincipalFromContext(ginContext).Self())
 	}

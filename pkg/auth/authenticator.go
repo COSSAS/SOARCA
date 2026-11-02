@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -71,6 +72,17 @@ func (authenticator *Authenticator) Authenticate(ctx context.Context, raw string
 	}
 	principal.Provider = provider.Name()
 	return principal, nil
+}
+
+// Issuers lists every issuer whose tokens the providers verify, as declared
+// in their Handles.
+func (authenticator *Authenticator) Issuers() []string {
+	issuers := make([]string, 0, len(authenticator.byIssuer))
+	for issuer := range authenticator.byIssuer {
+		issuers = append(issuers, issuer)
+	}
+	sort.Strings(issuers)
+	return issuers
 }
 
 func (authenticator *Authenticator) route(raw string) (IIdentityProvider, Credential, error) {

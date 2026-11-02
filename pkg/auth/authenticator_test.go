@@ -109,3 +109,20 @@ func TestPeekIssuer(t *testing.T) {
 	assert.Equal(t, err, nil)
 	assert.Equal(t, issuer, "https://issuer.example/")
 }
+
+func TestIssuersListsEveryIssuerProvidersHandle(t *testing.T) {
+	entra := provider("entra", auth.Match{Issuers: []string{
+		"https://login.example/tenant/v2.0",
+		"https://sts.example/tenant/",
+	}})
+	authentik := provider("authentik", auth.Match{Issuers: []string{"https://authentik.example/application/o/soarca/"}})
+	apiKeys := provider("apikey", auth.Match{Prefix: "soarca_"})
+
+	authenticator, err := auth.New([]auth.IIdentityProvider{entra, authentik, apiKeys})
+	assert.Equal(t, err, nil)
+	assert.Equal(t, authenticator.Issuers(), []string{
+		"https://authentik.example/application/o/soarca/",
+		"https://login.example/tenant/v2.0",
+		"https://sts.example/tenant/",
+	})
+}

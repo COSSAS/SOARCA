@@ -37,7 +37,9 @@ Every role that grants `playbook:write` or `playbook:execute` also grants `playb
 |---|---|
 | `GET /playbook/`, `GET /playbook/meta/`, `GET /playbook/:id` | `playbook:read` |
 | `POST /playbook/`, `PUT /playbook/:id`, `DELETE /playbook/:id` | `playbook:write` |
-| `GET /reporter/`, `GET /reporter/:id`, `GET /status/`, `GET /status/ping` | `playbook:read` |
+| `GET /reporter/`, `GET /reporter/:id` | `playbook:read` |
+| `GET /status/`, `GET /auth/me` | Any valid credential |
+| `GET /status/ping`, `GET /.well-known/oauth-protected-resource` | None (public) |
 | `POST /trigger/playbook`, `POST /trigger/playbook/:id` | `playbook:execute` |
 | `GET /manual/`, `GET /manual/:exec_id/:step_id`, `POST /manual/continue` | `playbook:execute` |
 | `/keymanagement/*` | `soarca:admin` |
@@ -52,6 +54,43 @@ A request without a valid credential gets `401 Unauthorized`. A valid credential
   "downstream-call": ""
 }
 ```
+
+## Discovering the accepted identity providers
+
+SOARCA publishes which identity providers it accepts as OAuth protected resource metadata ([RFC 9728](https://www.rfc-editor.org/rfc/rfc9728)). The document is public, so clients can read it before anyone signs in:
+
+```bash
+curl https://soarca.example.com/.well-known/oauth-protected-resource
+```
+
+```json
+{
+  "resource": "https://soarca.example.com",
+  "resource_name": "SOARCA",
+  "authorization_servers": [
+    "https://authentik.example.com/application/o/soarca/",
+    "https://login.microsoftonline.com/11111111-1111-1111-1111-111111111111/v2.0"
+  ],
+  "scopes_supported": ["api://soarca/access_as_user"],
+  "bearer_methods_supported": ["header"]
+}
+```
+
+`authorization_servers` lists the issuer of every token SOARCA accepts: the OIDC issuer, one Entra ID issuer per tenant, and with `AUTH_ENTRA_ACCEPT_V1` also the v1 issuers. API keys aren't listed, since nobody signs in with them. With `AUTH_ENABLED: false` the list is empty, which tells clients they can skip sign-in. `scopes_supported` holds the Entra ID scope that user tokens must carry, when Entra ID is enabled.
+
+A client such as SOARCA-GUI keeps its own client registration per provider. It offers sign-in only for providers whose issuer appears in `authorization_servers`, and can warn at startup when a provider it is configured for isn't listed, instead of every call failing with `401` after sign-in.
+
+A `401` response points at the document in its `WWW-Authenticate` header, so a client can discover it from a failed call:
+
+```
+WWW-Authenticate: Bearer realm="soarca", resource_metadata="https://soarca.example.com/.well-known/oauth-protected-resource"
+```
+
+`resource` is taken from the host the request came in on. Behind a reverse proxy, set `AUTH_RESOURCE_URL` to SOARCA's public URL.
+
+{{% alert title="Public information" color="info" %}}
+The document contains your Entra ID tenant IDs. They aren't secret (Entra ID publishes them through its own discovery documents), but anyone who can reach SOARCA can read them.
+{{% /alert %}}
 
 ## Setting up a provider
 
@@ -68,6 +107,7 @@ Authentication is turned on with `AUTH_ENABLED: true`. SOARCA then refuses to st
 | Variable | Default | Description |
 |---|---|---|
 | `AUTH_ENABLED` | `false` | Require a valid credential on every API request. |
+| `AUTH_RESOURCE_URL` | | SOARCA's public URL, e.g. `https://soarca.example.com`, published in the [protected resource metadata](#discovering-the-accepted-identity-providers). Empty takes it from each request. Must not contain a path. |
 
 ### OpenID Connect (authentik)
 

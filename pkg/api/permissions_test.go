@@ -55,9 +55,9 @@ func TestEveryPermissionHasARoute(t *testing.T) {
 
 func TestPublicRoutesAreExplicit(t *testing.T) {
 	public := map[string]bool{
-		"GET /status/ping":  true,
-		"GET /swagger/*any": true,
-		"GET /auth/config":  true,
+		"GET /status/ping":                          true,
+		"GET /swagger/*any":                         true,
+		"GET /.well-known/oauth-protected-resource": true,
 	}
 	for key, rule := range Permissions {
 		if rule.Public != public[key] {

@@ -9,22 +9,39 @@ import (
 )
 
 type AuthHandler struct {
-	config api.AuthConfig
+	issuers     []string
+	scopes      []string
+	resourceUrl string
 }
 
-func NewAuthHandler(config api.AuthConfig) *AuthHandler {
-	return &AuthHandler{config: config}
+// NewAuthHandler publishes issuers and scopes as the protected resource
+// metadata. resourceUrl is SOARCA's public URL; empty takes it from each
+// request.
+func NewAuthHandler(issuers []string, scopes []string, resourceUrl string) *AuthHandler {
+	if issuers == nil {
+		issuers = []string{}
+	}
+	return &AuthHandler{issuers: issuers, scopes: scopes, resourceUrl: resourceUrl}
 }
 
-// GetConfig returns the providers users can sign in with.
+// GetProtectedResourceMetadata returns the OAuth protected resource metadata
+// (RFC 9728): the identity providers SOARCA accepts tokens from and the
+// scopes to request. An empty authorization_servers list means
+// authentication is disabled.
 //
-//	@Summary	gets the sign-in options
+//	@Summary	gets the OAuth protected resource metadata
 //	@Tags		auth
 //	@Produce	json
-//	@success	200	{object}	api.AuthConfig
-//	@Router		/auth/config [GET]
-func (handler *AuthHandler) GetConfig(ginContext *gin.Context) {
-	ginContext.JSON(http.StatusOK, handler.config)
+//	@success	200	{object}	api.ProtectedResourceMetadata
+//	@Router		/.well-known/oauth-protected-resource [GET]
+func (handler *AuthHandler) GetProtectedResourceMetadata(ginContext *gin.Context) {
+	ginContext.JSON(http.StatusOK, api.ProtectedResourceMetadata{
+		Resource:               ResourceUrl(ginContext, handler.resourceUrl),
+		ResourceName:           "SOARCA",
+		AuthorizationServers:   handler.issuers,
+		ScopesSupported:        handler.scopes,
+		BearerMethodsSupported: []string{"header"},
+	})
 }
 
 // GetMe returns the caller.

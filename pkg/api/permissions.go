@@ -11,8 +11,9 @@ import (
 // table in docs/content/en/docs/installation-configuration/authentication.
 // A route missing from it needs roles.Admin.
 var Permissions = apiAuth.Policy{
-	route(http.MethodGet, "/auth/config"): {Public: true},
-	route(http.MethodGet, "/auth/me"):     {AuthenticatedOnly: true},
+	// RFC 9728 metadata: which identity providers SOARCA accepts.
+	route(http.MethodGet, apiAuth.ProtectedResourcePath): {Public: true},
+	route(http.MethodGet, "/auth/me"):                    {AuthenticatedOnly: true},
 	// Lets anything check that SOARCA is up.
 	route(http.MethodGet, "/status/ping"): {Public: true},
 	// The Swagger UI and spec. Calls made from the UI need a token, which

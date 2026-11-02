@@ -208,20 +208,18 @@ func TestLoadIgnoresAuthSettingsWhenAuthDisabled(t *testing.T) {
 	assert.Equal(t, err, nil)
 }
 
-func TestLoadChecksEntraPublicClient(t *testing.T) {
-	t.Setenv("AUTH_ENABLED", "true")
-	t.Setenv("AUTH_ENTRA_PUBLIC_CLIENT_ID", "public")
-	_, err := Load()
-	assert.NotEqual(t, err, nil)
-
-	t.Setenv("AUTH_ENTRA_TENANT_IDS", "tenant-a")
-	t.Setenv("AUTH_ENTRA_API_CLIENT_ID", "api")
-	_, err = Load()
-	assert.Equal(t, err, nil)
-
-	t.Setenv("AUTH_ENTRA_ALLOWED_CLIENT_IDS", "terminal")
-	_, err = Load()
-	assert.NotEqual(t, err, nil)
+func TestLoadChecksResourceUrl(t *testing.T) {
+	for _, valid := range []string{"https://soarca.example.com", "http://localhost:8080"} {
+		t.Setenv("AUTH_RESOURCE_URL", valid)
+		_, err := Load()
+		assert.Equal(t, err, nil)
+	}
+	// Checked with authentication disabled too: the metadata is always served.
+	for _, invalid := range []string{"soarca.example.com", "https://soarca.example.com/", "https://soarca.example.com/soarca", "ftp://soarca.example.com"} {
+		t.Setenv("AUTH_RESOURCE_URL", invalid)
+		_, err := Load()
+		assert.NotEqual(t, err, nil)
+	}
 }
 
 // envSettings returns every setting SOARCA reads, keyed by its env tag.

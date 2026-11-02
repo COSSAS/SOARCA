@@ -382,7 +382,7 @@ func initializeAuthentication(app *gin.Engine, authConfig config.Auth) error {
 	if err != nil {
 		return err
 	}
-	app.Use(apiAuth.Protect(authenticator, routes.Permissions))
-	routes.AuthRoutes(app, apiAuth.NewAuthHandler(newAuthConfig(authConfig)))
+	app.Use(apiAuth.Protect(authenticator, routes.Permissions, authConfig.ResourceUrl))
+	routes.AuthRoutes(app, apiAuth.NewAuthHandler(authenticator.Issuers(), scopesSupported(authConfig), authConfig.ResourceUrl))
 	return nil
 }

@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -81,6 +80,9 @@ type Auth struct {
 	Entra      Entra
 	// JSON file with hashed static API keys. Empty disables API keys.
 	ApiKeysFile string `env:"AUTH_API_KEYS_FILE"`
+	// ResourceUrl is SOARCA's public URL, published as the "resource" of the
+	// protected resource metadata. Empty takes it from each request.
+	ResourceUrl string `env:"AUTH_RESOURCE_URL"`
 }
 
 // Entra configures Microsoft Entra ID; it's enabled when tenants are set.
@@ -92,13 +94,11 @@ type Entra struct {
 	RequiredUserScope string   `env:"AUTH_ENTRA_REQUIRED_USER_SCOPE" envDefault:"access_as_user"`
 	AcceptV1Tokens    bool     `env:"AUTH_ENTRA_ACCEPT_V1" envDefault:"false"`
 	Authority         string   `env:"AUTH_ENTRA_AUTHORITY" envDefault:"https://login.microsoftonline.com"`
-	// PublicClientId is the public client app registration users sign in
-	// with. It is published on /auth/config. Empty offers no Entra sign-in.
-	PublicClientId string `env:"AUTH_ENTRA_PUBLIC_CLIENT_ID"`
 }
 
 // UserScope is the API scope users request, so their tokens pass the
-// RequiredUserScope check.
+// RequiredUserScope check. It is published in the protected resource
+// metadata.
 func (entra Entra) UserScope() string {
 	appIdUri := entra.ApiAppIdUri
 	if appIdUri == "" {
@@ -121,13 +121,18 @@ func (auth Auth) EntraEnabled() bool {
 	return len(auth.Entra.TenantIds) > 0 || auth.Entra.ApiClientId != ""
 }
 
-// validate only applies with AUTH_ENABLED=true: the shipped docker-compose.yaml
-// sets OIDC_CLIENT_ID with auth disabled, and that must keep starting.
+// validate checks the provider settings only with AUTH_ENABLED=true: the
+// shipped docker-compose.yaml sets OIDC_CLIENT_ID with auth disabled, and that
+// must keep starting. AUTH_RESOURCE_URL is checked either way, since the
+// protected resource metadata is always served.
 func (auth Auth) validate() []error {
-	if !auth.Enabled {
-		return nil
-	}
 	var errs []error
+	if err := validateResourceUrl(auth.ResourceUrl); err != nil {
+		errs = append(errs, err)
+	}
+	if !auth.Enabled {
+		return errs
+	}
 	if auth.OidcEnabled() && (auth.Issuer == "" || auth.ClientId == "") {
 		errs = append(errs, errors.New("OIDC_ISSUER and OIDC_CLIENT_ID must be set together"))
 	}
@@ -137,14 +142,22 @@ func (auth Auth) validate() []error {
 	if !auth.OidcEnabled() && !auth.EntraEnabled() && auth.ApiKeysFile == "" {
 		errs = append(errs, errors.New("AUTH_ENABLED=true requires OIDC_ISSUER, AUTH_ENTRA_TENANT_IDS or AUTH_API_KEYS_FILE"))
 	}
-	publicClientId := auth.Entra.PublicClientId
-	if publicClientId != "" && !auth.EntraEnabled() {
-		errs = append(errs, errors.New("AUTH_ENTRA_PUBLIC_CLIENT_ID requires AUTH_ENTRA_TENANT_IDS and AUTH_ENTRA_API_CLIENT_ID"))
-	}
-	if publicClientId != "" && len(auth.Entra.AllowedClientIds) > 0 && !slices.Contains(auth.Entra.AllowedClientIds, publicClientId) {
-		errs = append(errs, errors.New("AUTH_ENTRA_ALLOWED_CLIENT_IDS must include AUTH_ENTRA_PUBLIC_CLIENT_ID"))
-	}
 	return errs
+}
+
+// validateResourceUrl accepts an empty value or an absolute http(s) URL
+// without a path. SOARCA serves the metadata at the root of its host, which
+// RFC 9728 only allows for a resource URL without a path.
+func validateResourceUrl(resourceUrl string) error {
+	if resourceUrl == "" {
+		return nil
+	}
+	parsed, err := url.Parse(resourceUrl)
+	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Host == "" ||
+		parsed.Path != "" || parsed.RawQuery != "" || parsed.Fragment != "" {
+		return fmt.Errorf("AUTH_RESOURCE_URL must be an http(s) URL without a path, e.g. https://soarca.example.com, not %q", resourceUrl)
+	}
+	return nil
 }
 
 type SshKms struct {

@@ -186,12 +186,12 @@ func KeyManagementRoutes(route *gin.Engine, keyManagementHandler *keymanagement_
 	}
 }
 
-// GET     /auth/config
+// GET     /.well-known/oauth-protected-resource
 // GET     /auth/me
 func AuthRoutes(route *gin.Engine, authHandler *apiAuth.AuthHandler) {
+	route.GET(apiAuth.ProtectedResourcePath, authHandler.GetProtectedResourceMetadata)
 	authRoutes := route.Group("/auth")
 	{
-		authRoutes.GET("/config", authHandler.GetConfig)
 		authRoutes.GET("/me", authHandler.GetMe)
 	}
 }
