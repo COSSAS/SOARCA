@@ -115,8 +115,10 @@ func TestPrincipalPermissionsListsWhatTheCallerHolds(t *testing.T) {
 	_, body = getPermissions(t, authenticator, "Bearer admin")
 	assert.Equal(t, body.Permissions, []string{"playbook:read", "playbook:write", "playbook:execute", "soarca:admin"})
 
-	_, body = getPermissions(t, authenticator, "Bearer nobody")
-	assert.Equal(t, body.Permissions, []string{})
+	// Without any permission the answer is a 403, which tells a client the
+	// caller signed in but has no access to SOARCA.
+	code, _ = getPermissions(t, authenticator, "Bearer nobody")
+	assert.Equal(t, code, http.StatusForbidden)
 
 	code, _ = getPermissions(t, authenticator, "")
 	assert.Equal(t, code, http.StatusUnauthorized)

@@ -13,7 +13,7 @@ import (
 var Permissions = apiAuth.Policy{
 	// RFC 9728 metadata: which identity providers SOARCA accepts.
 	route(http.MethodGet, apiAuth.ProtectedResourcePath): {Public: true},
-	route(http.MethodGet, "/principal/permissions"):      {AuthenticatedOnly: true},
+	route(http.MethodGet, "/principal/permissions"):      {Permission: roles.PlaybookRead},
 	// Lets anything check that SOARCA is up.
 	route(http.MethodGet, "/status/ping"): {Public: true},
 	// The Swagger UI and spec. Calls made from the UI need a token, which

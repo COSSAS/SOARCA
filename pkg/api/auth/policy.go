@@ -11,8 +11,6 @@ import (
 type Rule struct {
 	// Public routes need no credential at all.
 	Public bool
-	// AuthenticatedOnly routes need a valid credential but no permission.
-	AuthenticatedOnly bool
 	// Permission the caller must hold. Ignored for public routes.
 	Permission roles.Permission
 }
@@ -53,7 +51,7 @@ func Protect(authenticator auth.IAuthenticator, policy Policy, resourceUrl strin
 			return
 		}
 
-		if fullPath != "" && !rule.AuthenticatedOnly {
+		if fullPath != "" {
 			required := roles.Admin
 			if known {
 				required = rule.Permission

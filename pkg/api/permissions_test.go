@@ -63,11 +63,8 @@ func TestPublicRoutesAreExplicit(t *testing.T) {
 		if rule.Public != public[key] {
 			t.Errorf("%s: Public is %v, want %v", key, rule.Public, public[key])
 		}
-		if !rule.Public && !rule.AuthenticatedOnly && rule.Permission == "" {
-			t.Errorf("%s needs a permission, Public or AuthenticatedOnly", key)
-		}
-		if rule.AuthenticatedOnly && (rule.Public || rule.Permission != "") {
-			t.Errorf("%s mixes AuthenticatedOnly with Public or a permission", key)
+		if !rule.Public && rule.Permission == "" {
+			t.Errorf("%s needs a permission or Public", key)
 		}
 	}
 }

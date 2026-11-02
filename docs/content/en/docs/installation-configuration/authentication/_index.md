@@ -37,8 +37,8 @@ Every role that grants `playbook:write` or `playbook:execute` also grants `playb
 |---|---|
 | `GET /playbook/`, `GET /playbook/meta/`, `GET /playbook/:id` | `playbook:read` |
 | `POST /playbook/`, `PUT /playbook/:id`, `DELETE /playbook/:id` | `playbook:write` |
-| `GET /reporter/`, `GET /reporter/:id` | `playbook:read` |
-| `GET /status/`, `GET /principal/permissions` | Any valid credential |
+| `GET /reporter/`, `GET /reporter/:id`, `GET /principal/permissions` | `playbook:read` |
+| `GET /status/` | `status:read` |
 | `GET /status/ping`, `GET /.well-known/oauth-protected-resource` | None (public) |
 | `POST /trigger/playbook`, `POST /trigger/playbook/:id` | `playbook:execute` |
 | `GET /manual/`, `GET /manual/:exec_id/:step_id`, `POST /manual/continue` | `playbook:execute` |
@@ -105,6 +105,8 @@ The document contains your Entra ID tenant IDs. They aren't secret (Entra ID pub
 ```
 
 `soarca:admin` is expanded, so an administrator gets the full list and clients don't need to know which permission implies which.
+
+The endpoint needs `playbook:read`, which every role grants. A caller that signed in but holds no permission gets `403 Forbidden`, which clients can show as "no access to SOARCA". An API key that only holds `playbook:execute` can't call it.
 
 ## Setting up a provider
 
