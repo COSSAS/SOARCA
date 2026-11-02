@@ -17,7 +17,7 @@ var Permissions = apiAuth.Policy{
 	// the UI's Authorize button adds.
 	route(http.MethodGet, "/swagger/*any"): {Public: true},
 
-	route(http.MethodGet, "/status/"): {Permission: roles.PlaybookRead},
+	route(http.MethodGet, "/status/"): {Permission: roles.StatusReader},
 
 	route(http.MethodGet, "/playbook/"):             {Permission: roles.PlaybookRead},
 	route(http.MethodGet, "/playbook/meta/"):        {Permission: roles.PlaybookRead},

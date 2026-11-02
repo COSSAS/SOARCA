@@ -28,6 +28,7 @@ SOARCA grants access through four permissions. Each identity provider maps its o
 | `playbook:read` | Reading playbooks, execution reports and status |
 | `playbook:write` | Creating, updating and deleting playbooks |
 | `playbook:execute` | Triggering playbooks and answering manual steps |
+| `status:read` | Read SOARCA status API |
 | `soarca:admin` | Everything, including key management |
 
 Every role that grants `playbook:write` or `playbook:execute` also grants `playbook:read`.
@@ -75,7 +76,7 @@ Authentication is turned on with `AUTH_ENABLED: true`. SOARCA then refuses to st
 | `OIDC_ISSUER` | | Issuer URL, exactly as it appears in the tokens' `iss` claim, including any trailing slash. |
 | `OIDC_CLIENT_ID` | | Client ID of the SOARCA provider. Tokens must carry it as their audience. |
 | `OIDC_SKIP_TLS_VERIFY` | `false` | Skip certificate checks towards the provider. Only for test setups with self-signed certificates. |
-| `AUTH_GROUP` | `soarca_admin` | Members of this group get every permission. |
+| `AUTH_ADMIN_GROUP` | `soarca_admin` | Members of this group get every permission. |
 
 `OIDC_ISSUER` and `OIDC_CLIENT_ID` must be set together.
 
