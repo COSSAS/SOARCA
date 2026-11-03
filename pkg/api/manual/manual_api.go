@@ -60,6 +60,9 @@ func NewManualHandler(interaction interaction.IInteractionStorage) *ManualHandle
 //	@Produce		json
 //	@Success		200	{object}	[]api.InteractionCommandData
 //	@failure		400	{object}	[]api.InteractionCommandData
+//	@failure		401	{object}	api.Error
+//	@failure		403	{object}	api.Error
+//	@Security		BearerAuth
 //	@Router			/manual/ [GET]
 func (manualHandler *ManualHandler) GetPendingCommands(g *gin.Context) {
 	commands, err := manualHandler.interactionCapability.GetPendingCommands()
@@ -92,6 +95,9 @@ func (manualHandler *ManualHandler) GetPendingCommands(g *gin.Context) {
 //	@Param			step_id	path		string	true	"step ID"
 //	@Success		200		{object}	api.InteractionCommandData
 //	@failure		400		{object}	api.Error
+//	@failure		401	{object}	api.Error
+//	@failure		403	{object}	api.Error
+//	@Security		BearerAuth
 //	@Router			/manual/{exec_id}/{step_id} [GET]
 func (manualHandler *ManualHandler) GetPendingCommand(g *gin.Context) {
 	execution_id := g.Param("exec_id")
@@ -137,6 +143,9 @@ func (manualHandler *ManualHandler) GetPendingCommand(g *gin.Context) {
 //	@Param			data	body		api.ManualOutArgsUpdatePayload	true	"playbook"
 //	@Success		200		{object}	api.Execution
 //	@failure		400		{object}	api.Error
+//	@failure		401	{object}	api.Error
+//	@failure		403	{object}	api.Error
+//	@Security		BearerAuth
 //	@Router			/manual/continue [POST]
 func (manualHandler *ManualHandler) PostContinue(g *gin.Context) {
 

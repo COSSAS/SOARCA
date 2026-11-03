@@ -28,18 +28,25 @@ const principalKey = "soarca.auth.principal"
 // caller for PrincipalFromContext. It responds 401 when that fails.
 func Middleware(authenticator auth.IAuthenticator) gin.HandlerFunc {
 	return func(ginContext *gin.Context) {
-		credential := bearerCredential(ginContext.GetHeader("Authorization"))
-		principal, err := authenticator.Authenticate(ginContext.Request.Context(), credential)
-		if err != nil {
-			log.Debug(fmt.Sprintf("authentication failed for %s: %s", ginContext.FullPath(), err))
-			ginContext.Header("WWW-Authenticate", `Bearer realm="soarca"`)
-			apiError.SendErrorResponse(ginContext, http.StatusUnauthorized, "unauthenticated", originalCall(ginContext), "")
-			ginContext.Abort()
-			return
+		if _, ok := authenticate(ginContext, authenticator); ok {
+			ginContext.Next()
 		}
-		ginContext.Set(principalKey, principal)
-		ginContext.Next()
 	}
+}
+
+// authenticate stores the caller on the context, or responds 401 and aborts.
+func authenticate(ginContext *gin.Context, authenticator auth.IAuthenticator) (*auth.Principal, bool) {
+	credential := bearerCredential(ginContext.GetHeader("Authorization"))
+	principal, err := authenticator.Authenticate(ginContext.Request.Context(), credential)
+	if err != nil {
+		log.Debug(fmt.Sprintf("authentication failed for %s: %s", originalCall(ginContext), err))
+		ginContext.Header("WWW-Authenticate", `Bearer realm="soarca"`)
+		apiError.SendErrorResponse(ginContext, http.StatusUnauthorized, "unauthenticated", originalCall(ginContext), "")
+		ginContext.Abort()
+		return nil, false
+	}
+	ginContext.Set(principalKey, principal)
+	return principal, true
 }
 
 // RequireAll lets a request through only if the caller holds every permission.

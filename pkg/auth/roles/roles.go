@@ -8,6 +8,7 @@ package roles
 type Permission string
 
 const (
+	StatusReader    Permission = "status:read"
 	PlaybookRead    Permission = "playbook:read"
 	PlaybookWrite   Permission = "playbook:write"
 	PlaybookExecute Permission = "playbook:execute"

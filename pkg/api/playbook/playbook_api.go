@@ -40,6 +40,9 @@ func NewPlaybookHandler(controller database.IController) *playbookHandler {
 //	@Produce		json
 //	@success		200	{array}		cacao.Playbook
 //	@failure		400	{object}	api.Error
+//	@failure		401	{object}	api.Error
+//	@failure		403	{object}	api.Error
+//	@Security		BearerAuth
 //	@Router			/playbook/ [GET]
 func (handler *playbookHandler) GetAllPlaybooks(g *gin.Context) {
 	log.Trace("Trying to obtain all playbook IDs")
@@ -64,6 +67,9 @@ func (handler *playbookHandler) GetAllPlaybooks(g *gin.Context) {
 //	@Produce		json
 //	@success		200	{array}		api.PlaybookMeta
 //	@failure		400	{object}	api.Error
+//	@failure		401	{object}	api.Error
+//	@failure		403	{object}	api.Error
+//	@Security		BearerAuth
 //	@Router			/playbook/meta [GET]
 func (handler *playbookHandler) GetAllPlaybookMetas(g *gin.Context) {
 	log.Trace("Trying to obtain all playbook IDs")
@@ -89,6 +95,9 @@ func (handler *playbookHandler) GetAllPlaybookMetas(g *gin.Context) {
 //	@Param			data	body		cacao.Playbook	true	"playbook"
 //	@Success		200		{object}	cacao.Playbook
 //	@failure		400		{object}	api.Error
+//	@failure		401	{object}	api.Error
+//	@failure		403	{object}	api.Error
+//	@Security		BearerAuth
 //	@Router			/playbook/ [POST]
 func (handler *playbookHandler) SubmitPlaybook(g *gin.Context) {
 	jsonData, err := io.ReadAll(g.Request.Body)
@@ -121,6 +130,9 @@ func (handler *playbookHandler) SubmitPlaybook(g *gin.Context) {
 //	@Param			id	path		string	true	"playbook ID"
 //	@Success		200	{object}	cacao.Playbook
 //	@failure		400	{object}	api.Error
+//	@failure		401	{object}	api.Error
+//	@failure		403	{object}	api.Error
+//	@Security		BearerAuth
 //	@Router			/playbook/{id} [GET]
 func (handler *playbookHandler) GetPlaybookByID(g *gin.Context) {
 	id := g.Param("id")
@@ -147,6 +159,9 @@ func (handler *playbookHandler) GetPlaybookByID(g *gin.Context) {
 //	@Param			data	body		cacao.Playbook	true	"playbook"
 //	@Success		200		{object}	cacao.Playbook
 //	@failure		400		{object}	api.Error
+//	@failure		401	{object}	api.Error
+//	@failure		403	{object}	api.Error
+//	@Security		BearerAuth
 //	@Router			/playbook/{id} [PUT]
 func (handler *playbookHandler) UpdatePlaybookByID(g *gin.Context) {
 	id := g.Param("id")
@@ -178,6 +193,9 @@ func (handler *playbookHandler) UpdatePlaybookByID(g *gin.Context) {
 //	@Param			id	path	string	true	"playbook ID"
 //	@Success		200
 //	@failure		400	{object}	api.Error
+//	@failure		401	{object}	api.Error
+//	@failure		403	{object}	api.Error
+//	@Security		BearerAuth
 //	@Router			/playbook/{id} [DELETE]
 func (handler *playbookHandler) DeleteByPlaybookID(g *gin.Context) {
 	id := g.Param("id")

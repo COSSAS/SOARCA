@@ -40,6 +40,9 @@ func NewKeyManagementHandler(manager *keymanagement.KeyManagement) *KeyManagemen
 //	@Produce		json
 //	@success		200	{array}		string
 //	@failure		400	{object}	api.Error
+//	@failure		401	{object}	api.Error
+//	@failure		403	{object}	api.Error
+//	@Security		BearerAuth
 //	@Router			/keymanagement/ [GET]
 func (handler *KeyManagementHandler) GetKeys(context *gin.Context) {
 	keyInfo, err := handler.Manager.ListAllNames()
@@ -63,6 +66,9 @@ func (handler *KeyManagementHandler) GetKeys(context *gin.Context) {
 //	@Produce		json
 //	@success		200	{json}		Empty
 //	@failure		400	{object}	api.Error
+//	@failure		401	{object}	api.Error
+//	@failure		403	{object}	api.Error
+//	@Security		BearerAuth
 //	@Router			/keymanagement/{keyname} [PUT]
 func (handler *KeyManagementHandler) AddKey(context *gin.Context) {
 	keyname := context.Param("keyname")
@@ -99,6 +105,9 @@ func (handler *KeyManagementHandler) AddKey(context *gin.Context) {
 //	@Produce		json
 //	@success		200	{json}		Empty
 //	@failure		400	{object}	api.Error
+//	@failure		401	{object}	api.Error
+//	@failure		403	{object}	api.Error
+//	@Security		BearerAuth
 //	@Router			/keymanagement/{keyname} [PATCH]
 func (handler *KeyManagementHandler) UpdateKey(context *gin.Context) {
 	keyname := context.Param("keyname")
@@ -133,6 +142,9 @@ func (handler *KeyManagementHandler) UpdateKey(context *gin.Context) {
 //	@Produce		json
 //	@success		200	{json}		Empty
 //	@failure		400	{object}	api.Error
+//	@failure		401	{object}	api.Error
+//	@failure		403	{object}	api.Error
+//	@Security		BearerAuth
 //	@Router			/keymanagement/{keyname} [DELETE]
 func (handler *KeyManagementHandler) RevokeKey(context *gin.Context) {
 	keyname := context.Param("keyname")

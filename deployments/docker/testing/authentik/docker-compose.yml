@@ -1,0 +1,96 @@
+# A preconfigured authentik for testing SOARCA's OIDC authentication.
+#
+#   docker compose up -d      start authentik and apply the SOARCA blueprint
+#   docker compose down -v    stop it and delete its database
+#
+# Every secret below is a fixed test value, and the ports only listen on
+# 127.0.0.1. Never use this setup outside a development machine. Override any
+# value in a .env file next to this one.
+#
+# Based on authentik's own lifecycle/container/compose.yml for 2026.8.3,
+# without the Docker socket (only needed for outposts) and with the SOARCA
+# blueprint mounted.
+
+x-authentik: &authentik
+  image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2026.8.3}
+  environment: &authentik-environment
+    AUTHENTIK_POSTGRESQL__HOST: postgresql
+    AUTHENTIK_POSTGRESQL__NAME: authentik
+    AUTHENTIK_POSTGRESQL__USER: authentik
+    AUTHENTIK_POSTGRESQL__PASSWORD: ${PG_PASS:-soarca-test-database}
+    AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY:-soarca-test-secret-key-do-not-use-outside-development}
+    AUTHENTIK_ERROR_REPORTING__ENABLED: "false"
+    # Admin UI login: akadmin / this password.
+    AUTHENTIK_BOOTSTRAP_PASSWORD: ${AUTHENTIK_BOOTSTRAP_PASSWORD:-soarca-admin}
+    AUTHENTIK_BOOTSTRAP_EMAIL: akadmin@soarca.test
+    # Read by the SOARCA blueprint.
+    SOARCA_CLIENT_ID: ${SOARCA_CLIENT_ID:-soarca}
+    SOARCA_CLIENT_SECRET: ${SOARCA_CLIENT_SECRET:-soarca-test-client-secret}
+    SOARCA_GUI_REDIRECT_URI: ${SOARCA_GUI_REDIRECT_URI:-http://localhost:8081/auth/soarca_gui/callback}
+    SOARCA_TEST_PASSWORD: ${SOARCA_TEST_PASSWORD:-soarca-test}
+  volumes:
+    - ./blueprints:/blueprints/soarca:ro
+  shm_size: 512mb
+  depends_on:
+    postgresql:
+      condition: service_healthy
+
+services:
+  postgresql:
+    image: docker.io/library/postgres:16-alpine
+    environment:
+      POSTGRES_DB: authentik
+      POSTGRES_USER: authentik
+      POSTGRES_PASSWORD: ${PG_PASS:-soarca-test-database}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d authentik -U authentik"]
+      interval: 10s
+      retries: 10
+      start_period: 20s
+      timeout: 5s
+    volumes:
+      - database:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  server:
+    <<: *authentik
+    command: server
+    ports:
+      # SOARCA and your terminal must both use http://localhost:9000, because
+      # authentik puts the host it was called on into the tokens' issuer.
+      - 127.0.0.1:${AUTHENTIK_PORT:-9000}:9000
+    healthcheck:
+      test: ["CMD", "ak", "healthcheck"]
+      interval: 10s
+      retries: 30
+      start_period: 60s
+      timeout: 10s
+    restart: unless-stopped
+
+  worker:
+    <<: *authentik
+    command: worker
+    restart: unless-stopped
+
+  # Applies blueprints/soarca.yaml once authentik is up. The worker also picks
+  # the blueprint up on its own, but only after its own discovery run; this
+  # makes the setup usable as soon as `up` returns. Retries until authentik's
+  # default flows, which the blueprint refers to, exist.
+  blueprint:
+    <<: *authentik
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        for attempt in $$(seq 1 30); do
+          ak apply_blueprint soarca/soarca.yaml && exit 0
+          echo "authentik not ready for the SOARCA blueprint yet, retrying ($$attempt/30)"
+          sleep 10
+        done
+        exit 1
+    depends_on:
+      server:
+        condition: service_healthy
+    restart: "no"
+
+volumes:
+  database:

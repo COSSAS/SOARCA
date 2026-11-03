@@ -20,6 +20,10 @@ Permissions come from the groups a user or service account belongs to:
 
 Group names are case-sensitive. Existing setups where every user is in `soarca_admin` keep working unchanged.
 
+{{% alert title="Try it locally" color="primary" %}}
+`deployments/docker/testing/authentik` in the SOARCA repository starts an authentik with everything below already configured: groups, test users, a service account, the provider and the application. Its README shows how to run SOARCA against it and check the permissions with real tokens.
+{{% /alert %}}
+
 ## 1. Create a provider
 
 In authentik, go to **Applications** → **Providers** → **Create** and select **OAuth2/OpenID Provider**.
