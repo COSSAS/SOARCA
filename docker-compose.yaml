@@ -100,3 +100,4 @@ volumes:
   mongodb_data_container:
   certs_data_container:
   loki_data_container:
+  grafana_data_container:
