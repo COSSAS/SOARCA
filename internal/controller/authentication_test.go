@@ -91,3 +91,47 @@ func TestAdminApiKeyReachesEveryPermission(t *testing.T) {
 		assert.Equal(t, principal.Has(permission), true)
 	}
 }
+
+func TestMetadataListsEveryIssuerTheAuthenticatorAccepts(t *testing.T) {
+	_, hash, _ := apikey.Generate()
+	authConfig := config.Auth{
+		Enabled:    true,
+		Issuer:     "https://authentik.example.com/application/o/soarca/",
+		ClientId:   "soarca",
+		AdminGroup: "soarca_admin",
+		Entra: config.Entra{
+			TenantIds:         []string{"tenant-a", "tenant-b"},
+			ApiClientId:       "api",
+			RequiredUserScope: "access_as_user",
+			AcceptV1Tokens:    true,
+			Authority:         "https://login.microsoftonline.com",
+		},
+		ApiKeysFile: writeKeys(t, `[{"name":"webhook","sha256":"`+hash+`","permissions":["playbook:read"],"expires":"2999-01-01T00:00:00Z"}]`),
+	}
+
+	authenticator, err := newAuthenticator(authConfig)
+	assert.Equal(t, err, nil)
+	// API keys aren't listed: nobody signs in with them.
+	assert.Equal(t, authenticator.Issuers(), []string{
+		"https://authentik.example.com/application/o/soarca/",
+		"https://login.microsoftonline.com/tenant-a/v2.0",
+		"https://login.microsoftonline.com/tenant-b/v2.0",
+		"https://sts.windows.net/tenant-a/",
+		"https://sts.windows.net/tenant-b/",
+	})
+	assert.Equal(t, scopesSupported(authConfig), []string{"api://api/access_as_user"})
+
+	authConfig.Entra = config.Entra{}
+	assert.Equal(t, len(scopesSupported(authConfig)), 0)
+}
+
+func TestMetadataWithAuthDisabledListsNothing(t *testing.T) {
+	authConfig := config.Auth{
+		Enabled: false,
+		Entra:   config.Entra{TenantIds: []string{"tenant-a"}, ApiClientId: "api"},
+	}
+	authenticator, err := newAuthenticator(authConfig)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, authenticator.Issuers(), []string{})
+	assert.Equal(t, len(scopesSupported(authConfig)), 0)
+}

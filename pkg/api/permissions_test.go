@@ -29,6 +29,7 @@ func allRoutes(t *testing.T) gin.RoutesInfo {
 	KeyManagement(app, nil)
 	Manual(app, nil)
 	Swagger(app)
+	AuthRoutes(app, nil)
 	return app.Routes()
 }
 
@@ -52,10 +53,15 @@ func TestEveryPermissionHasARoute(t *testing.T) {
 	}
 }
 
-func TestOnlyPingAndSwaggerArePublic(t *testing.T) {
+func TestPublicRoutesAreExplicit(t *testing.T) {
+	public := map[string]bool{
+		"GET /status/ping":                          true,
+		"GET /swagger/*any":                         true,
+		"GET /.well-known/oauth-protected-resource": true,
+	}
 	for key, rule := range Permissions {
-		if rule.Public && key != "GET /status/ping" && key != "GET /swagger/*any" {
-			t.Errorf("%s is public", key)
+		if rule.Public != public[key] {
+			t.Errorf("%s: Public is %v, want %v", key, rule.Public, public[key])
 		}
 		if !rule.Public && rule.Permission == "" {
 			t.Errorf("%s needs a permission or Public", key)

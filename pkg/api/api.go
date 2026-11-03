@@ -10,6 +10,7 @@ import (
 	"soarca/internal/controller/decomposer_controller"
 	"soarca/internal/controller/informer"
 	"soarca/internal/logger"
+	apiAuth "soarca/pkg/api/auth"
 	keymanagement_handler "soarca/pkg/api/keymanagement"
 	playbook_handler "soarca/pkg/api/playbook"
 	reporter_handler "soarca/pkg/api/reporter"
@@ -182,5 +183,15 @@ func KeyManagementRoutes(route *gin.Engine, keyManagementHandler *keymanagement_
 		keyManagementRoutes.PUT("/:keyname", keyManagementHandler.AddKey)
 		keyManagementRoutes.PATCH("/:keyname", keyManagementHandler.UpdateKey)
 		keyManagementRoutes.DELETE("/:keyname", keyManagementHandler.RevokeKey)
+	}
+}
+
+// GET     /.well-known/oauth-protected-resource
+// GET     /principal/permissions
+func AuthRoutes(route *gin.Engine, authHandler *apiAuth.AuthHandler) {
+	route.GET(apiAuth.ProtectedResourcePath, authHandler.GetProtectedResourceMetadata)
+	principalRoutes := route.Group("/principal")
+	{
+		principalRoutes.GET("/permissions", authHandler.GetPrincipalPermissions)
 	}
 }

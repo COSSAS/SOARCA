@@ -61,3 +61,12 @@ func newAuthenticator(authConfig config.Auth) (auth.IAuthenticator, error) {
 
 	return auth.New(providers)
 }
+
+// scopesSupported lists the scopes clients request to call SOARCA, for the
+// protected resource metadata.
+func scopesSupported(authConfig config.Auth) []string {
+	if !authConfig.Enabled || !authConfig.EntraEnabled() {
+		return nil
+	}
+	return []string{authConfig.Entra.UserScope()}
+}

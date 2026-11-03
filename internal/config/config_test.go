@@ -208,6 +208,20 @@ func TestLoadIgnoresAuthSettingsWhenAuthDisabled(t *testing.T) {
 	assert.Equal(t, err, nil)
 }
 
+func TestLoadChecksResourceUrl(t *testing.T) {
+	for _, valid := range []string{"https://soarca.example.com", "http://localhost:8080"} {
+		t.Setenv("AUTH_RESOURCE_URL", valid)
+		_, err := Load()
+		assert.Equal(t, err, nil)
+	}
+	// Checked with authentication disabled too: the metadata is always served.
+	for _, invalid := range []string{"soarca.example.com", "https://soarca.example.com/", "https://soarca.example.com/soarca", "ftp://soarca.example.com"} {
+		t.Setenv("AUTH_RESOURCE_URL", invalid)
+		_, err := Load()
+		assert.NotEqual(t, err, nil)
+	}
+}
+
 // envSettings returns every setting SOARCA reads, keyed by its env tag.
 func envSettings() map[string]reflect.StructTag {
 	settings := map[string]reflect.StructTag{}

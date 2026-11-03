@@ -13,9 +13,9 @@ Permissions come from the groups a user or service account belongs to:
 
 | Group | SOARCA permissions |
 |---|---|
-| `soarca_read` | `playbook:read` |
-| `soarca_write` | `playbook:read`, `playbook:write` |
-| `soarca_execute` | `playbook:read`, `playbook:execute` |
+| `soarca_read` | `principal:read`, `playbook:read` |
+| `soarca_write` | `principal:read`, `playbook:read`, `playbook:write` |
+| `soarca_execute` | `principal:read`, `playbook:read`, `playbook:execute` |
 | `soarca_admin` (or the value of `AUTH_GROUP`) | all permissions |
 
 Group names are case-sensitive. Existing setups where every user is in `soarca_admin` keep working unchanged.

@@ -34,7 +34,10 @@ func RouteKey(method string, fullPath string) string {
 //     route is closed until someone decides who may call it;
 //   - a path that matches no route still needs a valid credential, so
 //     unauthenticated callers can't probe which routes exist.
-func Protect(authenticator auth.IAuthenticator, policy Policy) gin.HandlerFunc {
+//
+// resourceUrl is SOARCA's public URL for the 401 responses; empty takes it
+// from each request (see ResourceUrl).
+func Protect(authenticator auth.IAuthenticator, policy Policy, resourceUrl string) gin.HandlerFunc {
 	return func(ginContext *gin.Context) {
 		fullPath := ginContext.FullPath()
 		rule, known := policy[RouteKey(ginContext.Request.Method, fullPath)]
@@ -43,7 +46,7 @@ func Protect(authenticator auth.IAuthenticator, policy Policy) gin.HandlerFunc {
 			return
 		}
 
-		principal, ok := authenticate(ginContext, authenticator)
+		principal, ok := authenticate(ginContext, authenticator, resourceUrl)
 		if !ok {
 			return
 		}

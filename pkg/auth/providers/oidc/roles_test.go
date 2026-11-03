@@ -22,7 +22,7 @@ func TestDefaultRolesWithCustomAdminGroup(t *testing.T) {
 func TestDefaultRolesForPlaybookGroups(t *testing.T) {
 	defaults := DefaultRoles("")
 
-	assert.Equal(t, defaults.Permissions([]string{"soarca_read"}), map[roles.Permission]bool{roles.PlaybookRead: true})
-	assert.Equal(t, defaults.Permissions([]string{"soarca_write"}), map[roles.Permission]bool{roles.PlaybookRead: true, roles.PlaybookWrite: true})
-	assert.Equal(t, defaults.Permissions([]string{"soarca_execute"}), map[roles.Permission]bool{roles.PlaybookRead: true, roles.PlaybookExecute: true})
+	assert.Equal(t, defaults.Permissions([]string{"soarca_read"}), map[roles.Permission]bool{roles.PrincipalReader: true, roles.PlaybookRead: true})
+	assert.Equal(t, defaults.Permissions([]string{"soarca_write"}), map[roles.Permission]bool{roles.PrincipalReader: true, roles.PlaybookRead: true, roles.PlaybookWrite: true})
+	assert.Equal(t, defaults.Permissions([]string{"soarca_execute"}), map[roles.Permission]bool{roles.PrincipalReader: true, roles.PlaybookRead: true, roles.PlaybookExecute: true})
 }

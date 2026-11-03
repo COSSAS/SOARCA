@@ -11,9 +11,9 @@ import (
 func TestDefaultRoles(t *testing.T) {
 	defaults := DefaultRoles()
 
-	assert.Equal(t, defaults.Permissions([]string{"Playbook.Read"}), map[roles.Permission]bool{roles.PlaybookRead: true})
-	assert.Equal(t, defaults.Permissions([]string{"Playbook.Write"}), map[roles.Permission]bool{roles.PlaybookRead: true, roles.PlaybookWrite: true})
-	assert.Equal(t, defaults.Permissions([]string{"Playbook.Execute"}), map[roles.Permission]bool{roles.PlaybookRead: true, roles.PlaybookExecute: true})
+	assert.Equal(t, defaults.Permissions([]string{"Playbook.Read"}), map[roles.Permission]bool{roles.PrincipalReader: true, roles.PlaybookRead: true})
+	assert.Equal(t, defaults.Permissions([]string{"Playbook.Write"}), map[roles.Permission]bool{roles.PrincipalReader: true, roles.PlaybookRead: true, roles.PlaybookWrite: true})
+	assert.Equal(t, defaults.Permissions([]string{"Playbook.Execute"}), map[roles.Permission]bool{roles.PrincipalReader: true, roles.PlaybookRead: true, roles.PlaybookExecute: true})
 	assert.Equal(t, len(defaults.Permissions([]string{"SOARCA.Admin"})), len(roles.All()))
 }
 

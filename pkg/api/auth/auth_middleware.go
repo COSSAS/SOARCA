@@ -25,22 +25,25 @@ func init() {
 const principalKey = "soarca.auth.principal"
 
 // Middleware authenticates each request's bearer credential and stores the
-// caller for PrincipalFromContext. It responds 401 when that fails.
-func Middleware(authenticator auth.IAuthenticator) gin.HandlerFunc {
+// caller for PrincipalFromContext. It responds 401 when that fails, pointing
+// at the protected resource metadata for resourceUrl (see ResourceUrl).
+func Middleware(authenticator auth.IAuthenticator, resourceUrl string) gin.HandlerFunc {
 	return func(ginContext *gin.Context) {
-		if _, ok := authenticate(ginContext, authenticator); ok {
+		if _, ok := authenticate(ginContext, authenticator, resourceUrl); ok {
 			ginContext.Next()
 		}
 	}
 }
 
 // authenticate stores the caller on the context, or responds 401 and aborts.
-func authenticate(ginContext *gin.Context, authenticator auth.IAuthenticator) (*auth.Principal, bool) {
+// The 401 names the protected resource metadata (RFC 9728 section 5), so a
+// client can find out which identity providers to sign in with.
+func authenticate(ginContext *gin.Context, authenticator auth.IAuthenticator, resourceUrl string) (*auth.Principal, bool) {
 	credential := bearerCredential(ginContext.GetHeader("Authorization"))
 	principal, err := authenticator.Authenticate(ginContext.Request.Context(), credential)
 	if err != nil {
 		log.Debug(fmt.Sprintf("authentication failed for %s: %s", originalCall(ginContext), err))
-		ginContext.Header("WWW-Authenticate", `Bearer realm="soarca"`)
+		ginContext.Header("WWW-Authenticate", fmt.Sprintf(`Bearer realm="soarca", resource_metadata=%q`, ResourceMetadataUrl(ginContext, resourceUrl)))
 		apiError.SendErrorResponse(ginContext, http.StatusUnauthorized, "unauthenticated", originalCall(ginContext), "")
 		ginContext.Abort()
 		return nil, false

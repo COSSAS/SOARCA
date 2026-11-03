@@ -18,6 +18,9 @@ var ErrUnauthenticated = errors.New("unauthenticated")
 // IAuthenticator turns a raw credential into the calling Principal.
 type IAuthenticator interface {
 	Authenticate(ctx context.Context, credential string) (*Principal, error)
+	// Issuers lists every token issuer the authenticator accepts, sorted.
+	// Prefixed credentials such as API keys have no issuer and aren't listed.
+	Issuers() []string
 }
 
 // IIdentityProvider verifies the credentials it declares in Handles.

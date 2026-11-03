@@ -21,23 +21,27 @@ You can enable any combination. SOARCA looks at each credential and hands it to 
 
 ## Permissions
 
-SOARCA grants access through four permissions. Each identity provider maps its own roles or groups onto them; see the provider pages below for the exact names.
+SOARCA grants access through six permissions. Each identity provider maps its own roles or groups onto them; see the provider pages below for the exact names.
 
 | Permission | Allows |
 |---|---|
-| `playbook:read` | Reading playbooks, execution reports and status |
+| `playbook:read` | Reading playbooks and execution reports |
 | `playbook:write` | Creating, updating and deleting playbooks |
 | `playbook:execute` | Triggering playbooks and answering manual steps |
 | `status:read` | Read SOARCA status API |
+| `principal:read` | Reading your own permissions, so a client knows what to show |
 | `soarca:admin` | Everything, including key management |
 
-Every role that grants `playbook:write` or `playbook:execute` also grants `playbook:read`.
+Every role grants `principal:read`, and every role that grants `playbook:write` or `playbook:execute` also grants `playbook:read`.
 
 | Route | Required permission |
 |---|---|
 | `GET /playbook/`, `GET /playbook/meta/`, `GET /playbook/:id` | `playbook:read` |
 | `POST /playbook/`, `PUT /playbook/:id`, `DELETE /playbook/:id` | `playbook:write` |
-| `GET /reporter/`, `GET /reporter/:id`, `GET /status/`, `GET /status/ping` | `playbook:read` |
+| `GET /reporter/`, `GET /reporter/:id` | `playbook:read` |
+| `GET /principal/permissions` | `principal:read` |
+| `GET /status/` | `status:read` |
+| `GET /status/ping`, `GET /.well-known/oauth-protected-resource` | None (public) |
 | `POST /trigger/playbook`, `POST /trigger/playbook/:id` | `playbook:execute` |
 | `GET /manual/`, `GET /manual/:exec_id/:step_id`, `POST /manual/continue` | `playbook:execute` |
 | `/keymanagement/*` | `soarca:admin` |
@@ -52,6 +56,59 @@ A request without a valid credential gets `401 Unauthorized`. A valid credential
   "downstream-call": ""
 }
 ```
+
+## Discovering the accepted identity providers
+
+SOARCA publishes which identity providers it accepts as OAuth protected resource metadata ([RFC 9728](https://www.rfc-editor.org/rfc/rfc9728)). The document is public, so clients can read it before anyone signs in:
+
+```bash
+curl https://soarca.example.com/.well-known/oauth-protected-resource
+```
+
+```json
+{
+  "resource": "https://soarca.example.com",
+  "resource_name": "SOARCA",
+  "authorization_servers": [
+    "https://authentik.example.com/application/o/soarca/",
+    "https://login.microsoftonline.com/11111111-1111-1111-1111-111111111111/v2.0"
+  ],
+  "scopes_supported": ["api://soarca/access_as_user"],
+  "bearer_methods_supported": ["header"]
+}
+```
+
+`authorization_servers` lists the issuer of every token SOARCA accepts: the OIDC issuer, one Entra ID issuer per tenant, and with `AUTH_ENTRA_ACCEPT_V1` also the v1 issuers. API keys aren't listed, since nobody signs in with them. With `AUTH_ENABLED: false` the list is empty, which tells clients they can skip sign-in. `scopes_supported` holds the Entra ID scope that user tokens must carry, when Entra ID is enabled.
+
+A client such as SOARCA-GUI keeps its own client registration per provider. It offers sign-in only for providers whose issuer appears in `authorization_servers`, and can warn at startup when a provider it is configured for isn't listed, instead of every call failing with `401` after sign-in.
+
+A `401` response points at the document in its `WWW-Authenticate` header, so a client can discover it from a failed call:
+
+```
+WWW-Authenticate: Bearer realm="soarca", resource_metadata="https://soarca.example.com/.well-known/oauth-protected-resource"
+```
+
+`resource` is taken from the host the request came in on. Behind a reverse proxy, set `AUTH_RESOURCE_URL` to SOARCA's public URL.
+
+{{% alert title="Public information" color="info" %}}
+The document contains your Entra ID tenant IDs. They aren't secret (Entra ID publishes them through its own discovery documents), but anyone who can reach SOARCA can read them.
+{{% /alert %}}
+
+## Checking what a caller may do
+
+`GET /principal/permissions` returns the permissions of whoever calls it: a user, an application or an API key. Clients such as SOARCA-GUI use it to hide actions the caller can't perform. SOARCA still checks the permission on every call.
+
+```json
+{
+  "subject": "entra:11111111-1111-1111-1111-111111111111:user:3f2c…",
+  "provider": "entra",
+  "permissions": ["principal:read", "playbook:read", "playbook:execute"]
+}
+```
+
+`soarca:admin` is expanded, so an administrator gets the full list and clients don't need to know which permission implies which.
+
+The endpoint needs `principal:read`, which every role grants. A caller that signed in but holds no role gets `403 Forbidden`, which clients can show as "no access to SOARCA". API keys only get it when it is listed in the key's permissions.
 
 ## Setting up a provider
 
@@ -68,6 +125,7 @@ Authentication is turned on with `AUTH_ENABLED: true`. SOARCA then refuses to st
 | Variable | Default | Description |
 |---|---|---|
 | `AUTH_ENABLED` | `false` | Require a valid credential on every API request. |
+| `AUTH_RESOURCE_URL` | | SOARCA's public URL, e.g. `https://soarca.example.com`, published in the [protected resource metadata](#discovering-the-accepted-identity-providers). Empty takes it from each request. Must not contain a path. |
 
 ### OpenID Connect (authentik)
 

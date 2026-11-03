@@ -17,20 +17,22 @@ var admin = &auth.Principal{
 }
 
 var testPolicy = Policy{
-	RouteKey(http.MethodGet, "/status/ping"):       {Public: true},
-	RouteKey(http.MethodGet, "/playbook/:id"):      {Permission: roles.PlaybookRead},
-	RouteKey(http.MethodPost, "/trigger/playbook"): {Permission: roles.PlaybookExecute},
+	RouteKey(http.MethodGet, "/status/ping"):           {Public: true},
+	RouteKey(http.MethodGet, "/principal/permissions"): {Permission: roles.PrincipalReader},
+	RouteKey(http.MethodGet, "/playbook/:id"):          {Permission: roles.PlaybookRead},
+	RouteKey(http.MethodPost, "/trigger/playbook"):     {Permission: roles.PlaybookExecute},
 }
 
 func newProtectedRouter(authenticator auth.IAuthenticator) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	router.Use(Protect(authenticator, testPolicy))
+	router.Use(Protect(authenticator, testPolicy, ""))
 	ok := func(ginContext *gin.Context) {
 		ginContext.String(http.StatusOK, PrincipalFromContext(ginContext).Self())
 	}
 	router.GET("/status/ping", func(ginContext *gin.Context) { ginContext.String(http.StatusOK, "pong") })
 	router.GET("/playbook/:id", ok)
+	router.GET("/principal/permissions", ok)
 	router.POST("/trigger/playbook", ok)
 	router.GET("/unlisted", ok)
 	return router
@@ -55,6 +57,19 @@ func TestProtectedRouteNeedsCredentialAndPermission(t *testing.T) {
 	assert.Equal(t, recorder.Code, http.StatusOK)
 	assert.Equal(t, recorder.Body.String(), "authentik:user:reader")
 	assert.Equal(t, serve(router, http.MethodPost, "/trigger/playbook", "Bearer executor").Code, http.StatusOK)
+}
+
+func TestValidCredentialWithoutPermissionIsForbidden(t *testing.T) {
+	self := &auth.Principal{
+		Subjects:    []string{"oidc:user:self"},
+		Permissions: map[roles.Permission]bool{roles.PrincipalReader: true},
+	}
+	router := newProtectedRouter(authenticatorFor(map[string]*auth.Principal{"reader": reader, "self": self}))
+
+	assert.Equal(t, serve(router, http.MethodGet, "/principal/permissions", "").Code, http.StatusUnauthorized)
+	// playbook:read doesn't imply principal:read.
+	assert.Equal(t, serve(router, http.MethodGet, "/principal/permissions", "Bearer reader").Code, http.StatusForbidden)
+	assert.Equal(t, serve(router, http.MethodGet, "/principal/permissions", "Bearer self").Code, http.StatusOK)
 }
 
 func TestRouteWithoutRuleNeedsAdmin(t *testing.T) {

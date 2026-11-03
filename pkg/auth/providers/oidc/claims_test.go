@@ -24,7 +24,7 @@ func TestGroupsGrantPermissions(t *testing.T) {
 	assert.Equal(t, principal.Name, "Bob")
 	assert.Equal(t, principal.Email, "bob@example.com")
 	assert.Equal(t, principal.ClientId, "soarca")
-	assert.Equal(t, principal.Permissions, map[roles.Permission]bool{roles.PlaybookRead: true, roles.PlaybookExecute: true})
+	assert.Equal(t, principal.Permissions, map[roles.Permission]bool{roles.PrincipalReader: true, roles.PlaybookRead: true, roles.PlaybookExecute: true})
 	assert.Equal(t, principal.ExpiresAt, token.Expiry)
 }
 
