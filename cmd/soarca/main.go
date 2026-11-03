@@ -37,7 +37,6 @@ const banner = `
 `
 
 // @title		SOARCA API
-// @version	1.0.0
 //
 // @securityDefinitions.apikey	BearerAuth
 // @in							header
@@ -58,8 +57,9 @@ func main() {
 		panic(err)
 	}
 
-	Host = fmt.Sprintf("localhost:%d", configuration.Static.Server.Port)
-	api.SwaggerInfo.Host = Host
+	api.SwaggerInfo.Version = Version
+	api.SwaggerInfo.Host = ""
+	api.SwaggerInfo.Schemes = nil
 
 	// Version is only available here
 	status.SetVersion(Version)
