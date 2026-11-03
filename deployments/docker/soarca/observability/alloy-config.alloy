@@ -34,6 +34,7 @@ loki.process "json_parse" {
   stage.json {
     expressions = {
       level   = "level",
+      component = "component",
       msg     = "msg",
       time    = "time",
     }
@@ -42,6 +43,7 @@ loki.process "json_parse" {
   stage.labels {
     values = {
       level = "level",
+      component = "component",
     }
   }
 
