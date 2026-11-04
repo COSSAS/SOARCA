@@ -3,7 +3,7 @@
 BINARY_NAME=soarca
 DIRECTORY = $(sort $(dir $(wildcard ./test/*/)))
 VERSION = $(shell git describe --tags --dirty)
-BUILDTIME := $(shell  date '+%Y-%m-%dT%T%z')
+BUILDTIME := $(shell  TZ=UTC git --no-pager log -1 --date=format-local:%Y-%m-%dT%H:%M:%SZ --format=%cd)
 
 GOLDFLAGS += -X main.Version=$(VERSION)
 GOLDFLAGS += -X main.Buildtime=$(BUILDTIME)
