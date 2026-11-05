@@ -84,7 +84,7 @@ services:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_AUTH_ANONYMOUS_ENABLED: "false"
-      GF_DEFAUL_THEME: "system"
+      GF_USERS_DEFAULT_THEME: "system"
     volumes:
       - ./deployments/docker/soarca/observability/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
       - grafana_data_container:/var/lib/grafana
