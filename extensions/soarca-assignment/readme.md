@@ -1,0 +1,3 @@
+# SOARCA assignment extension
+
+This is the definition of the SOARCA assignment extension. This extension is used by SOARCA to allow for variable assignment based on step results. All SOARCA action steps have defined results. These defined results can be mapped into specific variables. To allow these variables to be useful the results can be processed by a expression engine. Currently SOARCA supports jq and regex.
